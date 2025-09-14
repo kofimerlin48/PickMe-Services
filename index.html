@@ -1,0 +1,155 @@
+<div style="position:fixed; top:0; left:0; width:100%; height:100%; margin:0; padding:0; overflow:hidden; z-index:9999; background:#000;">
+  <!-- Blurred background -->
+  <div id="flyerBg" 
+       style="position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center; filter:blur(40px) brightness(0.7); transform:scale(1.2); z-index:1;">
+  </div>
+
+  <!-- Flyer image -->
+  <img id="flyer" src="" 
+       style="position:relative; z-index:2; width:90%; height:90%; object-fit:contain; display:block; margin:auto; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.4); opacity:0; transition: opacity 0.8s ease;" />
+
+  <!-- Action buttons -->
+  <div style="position:absolute; bottom:30px; width:100%; display:flex; flex-direction: column; align-items:center; gap:12px; z-index:3; opacity:0; transition: opacity 0.8s ease;">
+    <button id="contactBtn" 
+            style="padding:18px 36px; font-size:18px; border:none; border-radius:8px; background:#28a745; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      Contact Us
+    </button>
+
+    <button id="closeAdBtn" 
+            style="padding:18px 36px; font-size:18px; border:none; border-radius:8px; background:#ff4d6d; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      Close Ad
+    </button>
+
+    <div style="color:#fff; text-align:center; font-size:16px;">
+      Click <a href="#" id="advertLink" style="color:#ffd700; text-decoration:underline;">HERE</a> to add your advert
+    </div>
+  </div>
+
+  <!-- Navigation arrows -->
+  <div id="prevBtn" style="position:absolute; top:50%; left:20px; transform:translateY(-50%); z-index:3; font-size:36px; color:#fff; cursor:pointer; user-select:none;">&#10094;</div>
+  <div id="nextBtn" style="position:absolute; top:50%; right:20px; transform:translateY(-50%); z-index:3; font-size:36px; color:#fff; cursor:pointer; user-select:none;">&#10095;</div>
+</div>
+
+<script>
+  // Flyers list
+  const flyers = [
+    { id: "flyer1", image: "https://lh3.googleusercontent.com/d/15zr4-7CRAIbp0jnOFrxiTtZ8Caz2nR-q", host: "PickMe Services", event: "Premium Drinks Promo", whatsapp: "233534742142", plan: "Monthly", added: "2025-09-02", expiry: "" },
+    { id: "flyer2", image: "https://lh3.googleusercontent.com/d/16BNcj4drcZvDyDXTIpYLqhh2uWrjIzBf", host: "PickMe Services", event: "Summer Special", whatsapp: "", expiry: "2025-12-01", buttonText: "Download Now", buttonLink: "https://play.google.com/store/apps/details?id=com.example.app" },
+    { id: "flyer3", image: "https://lh3.googleusercontent.com/d/16AK1kPjoV-qQlZaEVPM7gA0YhpdzPrT9", host: "PickMe Services", event: "Night Vibes", whatsapp: "233534742142", plan: "Quarterly", added: "2025-08-15", expiry: "" },
+    { id: "flyer4", image: "https://lh3.googleusercontent.com/d/15f6iEkGW4HUWPaCDHjfRizV2S6XnjOs5", host: "PickMe Services", event: "Masquerade Tipsy Night", whatsapp: "", plan: "Semi-Annual", added: "2025-07-01", expiry: "", buttonText: "Register Now", buttonLink: "https://pickme-services.com/register" },
+    { id: "flyer5", image: "https://lh3.googleusercontent.com/d/16H0IOn0jeJTaZ5WkLnijVvvyKa3UAG0J", host: "Manko Pub", event: "All Black Affairs Party", whatsapp: "233534742142", plan: "Annual", added: "2025-01-01", expiry: "" },
+    { id: "flyer6", image: "https://lh3.googleusercontent.com/d/15zqD8v9zv_lzU6tQcNPP7kszFsKraS7l", host: "PickMe Services", event: "Cocktail Friday", whatsapp: "233534742142", expiry: "2025-09-15" }
+  ];
+
+  // Expiry calculator
+  function getExpiryDate(flyer) {
+    if (flyer.expiry) return new Date(flyer.expiry);
+    if (!flyer.plan || !flyer.added) return null;
+    const addedDate = new Date(flyer.added);
+    switch (flyer.plan.toLowerCase()) {
+      case "monthly": addedDate.setMonth(addedDate.getMonth() + 1); break;
+      case "quarterly": addedDate.setMonth(addedDate.getMonth() + 3); break;
+      case "semi-annual":
+      case "semi-annually": addedDate.setMonth(addedDate.getMonth() + 6); break;
+      case "annual":
+      case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;
+    }
+    return addedDate;
+  }
+
+  // Keep only active flyers
+  const today = new Date();
+  let activeFlyers = flyers.filter(f => {
+    const expiry = getExpiryDate(f);
+    return !expiry || today <= expiry;
+  });
+
+  // Randomize flyers order
+  activeFlyers = activeFlyers
+    .map(f => ({ f, r: Math.random() }))
+    .sort((a, b) => a.r - b.r)
+    .map(x => x.f);
+
+  const flyerEl = document.getElementById("flyer");
+  const flyerBg = document.getElementById("flyerBg");
+  const contactBtn = document.getElementById("contactBtn");
+  const closeAdBtn = document.getElementById("closeAdBtn");
+  const advertLink = document.getElementById("advertLink");
+  const buttonContainer = contactBtn.parentElement;
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  let currentIndex = 0;
+
+  function showFlyer(index) {
+    const flyer = activeFlyers[index];
+    if (!flyer) return;
+
+    flyerEl.style.opacity = 0;
+    buttonContainer.style.opacity = 0;
+
+    setTimeout(() => {
+      flyerEl.src = flyer.image;
+      flyerBg.style.backgroundImage = `url(${flyer.image})`;
+
+      if (flyer.buttonText && flyer.buttonLink) {
+        contactBtn.style.display = "inline-block";
+        contactBtn.innerText = flyer.buttonText;
+        contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
+      } else if (flyer.whatsapp) {
+        contactBtn.style.display = "inline-block";
+        contactBtn.innerText = "Contact Us";
+        contactBtn.onclick = () => {
+          const message = `Hi ${encodeURIComponent(flyer.host)}, I saw your announcement on ${encodeURIComponent(flyer.event)} on PickMe Services and I want to make enquiry.`;
+          const whatsappLink = `https://wa.me/${flyer.whatsapp}?text=${message}`;
+          window.open(whatsappLink, "_blank");
+        };
+      } else {
+        contactBtn.style.display = "none";
+      }
+
+      flyerEl.onload = () => {
+        flyerEl.style.opacity = 1;
+        buttonContainer.style.opacity = 1;
+      };
+    }, 300);
+  }
+
+  // Navigation
+  prevBtn.onclick = () => {
+    currentIndex = (currentIndex - 1 + activeFlyers.length) % activeFlyers.length;
+    showFlyer(currentIndex);
+  };
+  nextBtn.onclick = () => {
+    currentIndex = (currentIndex + 1) % activeFlyers.length;
+    showFlyer(currentIndex);
+  };
+
+  // Swipe support
+  let startX = 0;
+  flyerEl.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+  flyerEl.addEventListener("touchend", e => {
+    let endX = e.changedTouches[0].clientX;
+    if (endX - startX > 50) prevBtn.onclick();
+    else if (startX - endX > 50) nextBtn.onclick();
+  });
+
+  // Show first flyer
+  if (activeFlyers.length > 0) {
+    showFlyer(currentIndex);
+  } else {
+    flyerEl.style.display = "none";
+    buttonContainer.style.display = "none";
+    flyerBg.style.background = "#000";
+  }
+
+  // Close Ad button
+  closeAdBtn.onclick = () => {
+    window.location.href = 'index.html'; // Replace with your main homepage link
+  };
+
+  // Advert clickable link
+  advertLink.onclick = () => {
+    window.location.href = '#'; // Replace with your advert page link
+  };
+</script>
