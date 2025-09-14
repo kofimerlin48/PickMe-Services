@@ -1,155 +1,213 @@
-<div style="position:fixed; top:0; left:0; width:100%; height:100%; margin:0; padding:0; overflow:hidden; z-index:9999; background:#000;">
-  <!-- Blurred background -->
-  <div id="flyerBg" 
-       style="position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center; filter:blur(40px) brightness(0.7); transform:scale(1.2); z-index:1;">
-  </div>
-
-  <!-- Flyer image -->
-  <img id="flyer" src="" 
-       style="position:relative; z-index:2; width:90%; height:90%; object-fit:contain; display:block; margin:auto; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.4); opacity:0; transition: opacity 0.8s ease;" />
-
-  <!-- Action buttons -->
-  <div style="position:absolute; bottom:30px; width:100%; display:flex; flex-direction: column; align-items:center; gap:12px; z-index:3; opacity:0; transition: opacity 0.8s ease;">
-    <button id="contactBtn" 
-            style="padding:18px 36px; font-size:18px; border:none; border-radius:8px; background:#28a745; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-      Contact Us
-    </button>
-
-    <button id="closeAdBtn" 
-            style="padding:18px 36px; font-size:18px; border:none; border-radius:8px; background:#ff4d6d; color:#fff; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-      Close Ad
-    </button>
-
-    <div style="color:#fff; text-align:center; font-size:16px;">
-      Click <a href="#" id="advertLink" style="color:#ffd700; text-decoration:underline;">HERE</a> to add your advert
-    </div>
-  </div>
-
-  <!-- Navigation arrows -->
-  <div id="prevBtn" style="position:absolute; top:50%; left:20px; transform:translateY(-50%); z-index:3; font-size:36px; color:#fff; cursor:pointer; user-select:none;">&#10094;</div>
-  <div id="nextBtn" style="position:absolute; top:50%; right:20px; transform:translateY(-50%); z-index:3; font-size:36px; color:#fff; cursor:pointer; user-select:none;">&#10095;</div>
-</div>
-
-<script>
-  // Flyers list
-  const flyers = [
-    { id: "flyer1", image: "https://lh3.googleusercontent.com/d/15zr4-7CRAIbp0jnOFrxiTtZ8Caz2nR-q", host: "PickMe Services", event: "Premium Drinks Promo", whatsapp: "233534742142", plan: "Monthly", added: "2025-09-02", expiry: "" },
-    { id: "flyer2", image: "https://lh3.googleusercontent.com/d/16BNcj4drcZvDyDXTIpYLqhh2uWrjIzBf", host: "PickMe Services", event: "Summer Special", whatsapp: "", expiry: "2025-12-01", buttonText: "Download Now", buttonLink: "https://play.google.com/store/apps/details?id=com.example.app" },
-    { id: "flyer3", image: "https://lh3.googleusercontent.com/d/16AK1kPjoV-qQlZaEVPM7gA0YhpdzPrT9", host: "PickMe Services", event: "Night Vibes", whatsapp: "233534742142", plan: "Quarterly", added: "2025-08-15", expiry: "" },
-    { id: "flyer4", image: "https://lh3.googleusercontent.com/d/15f6iEkGW4HUWPaCDHjfRizV2S6XnjOs5", host: "PickMe Services", event: "Masquerade Tipsy Night", whatsapp: "", plan: "Semi-Annual", added: "2025-07-01", expiry: "", buttonText: "Register Now", buttonLink: "https://pickme-services.com/register" },
-    { id: "flyer5", image: "https://lh3.googleusercontent.com/d/16H0IOn0jeJTaZ5WkLnijVvvyKa3UAG0J", host: "Manko Pub", event: "All Black Affairs Party", whatsapp: "233534742142", plan: "Annual", added: "2025-01-01", expiry: "" },
-    { id: "flyer6", image: "https://lh3.googleusercontent.com/d/15zqD8v9zv_lzU6tQcNPP7kszFsKraS7l", host: "PickMe Services", event: "Cocktail Friday", whatsapp: "233534742142", expiry: "2025-09-15" }
-  ];
-
-  // Expiry calculator
-  function getExpiryDate(flyer) {
-    if (flyer.expiry) return new Date(flyer.expiry);
-    if (!flyer.plan || !flyer.added) return null;
-    const addedDate = new Date(flyer.added);
-    switch (flyer.plan.toLowerCase()) {
-      case "monthly": addedDate.setMonth(addedDate.getMonth() + 1); break;
-      case "quarterly": addedDate.setMonth(addedDate.getMonth() + 3); break;
-      case "semi-annual":
-      case "semi-annually": addedDate.setMonth(addedDate.getMonth() + 6); break;
-      case "annual":
-      case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PickMe Services - Homepage</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f8f8f8;
     }
-    return addedDate;
-  }
 
-  // Keep only active flyers
-  const today = new Date();
-  let activeFlyers = flyers.filter(f => {
-    const expiry = getExpiryDate(f);
-    return !expiry || today <= expiry;
-  });
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
 
-  // Randomize flyers order
-  activeFlyers = activeFlyers
-    .map(f => ({ f, r: Math.random() }))
-    .sort((a, b) => a.r - b.r)
-    .map(x => x.f);
+    .card {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      padding: 20px;
+      height: 80px; /* default height */
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
 
-  const flyerEl = document.getElementById("flyer");
-  const flyerBg = document.getElementById("flyerBg");
-  const contactBtn = document.getElementById("contactBtn");
-  const closeAdBtn = document.getElementById("closeAdBtn");
-  const advertLink = document.getElementById("advertLink");
-  const buttonContainer = contactBtn.parentElement;
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
 
-  let currentIndex = 0;
+    .rectangle { grid-column: span 2; height: 150px; }
+    .square { height: 130px; }
 
-  function showFlyer(index) {
-    const flyer = activeFlyers[index];
-    if (!flyer) return;
+    /* Content text */
+    .content { position: relative; z-index: 2; }
+    .content h3 { margin: 0; }
+    .content p { margin: 5px 0 0; }
 
-    flyerEl.style.opacity = 0;
-    buttonContainer.style.opacity = 0;
+    /* Text sizes */
+    .title-sm { font-size: 14px; }
+    .title-md { font-size: 18px; }
+    .title-lg { font-size: 22px; }
+    .title-xxl { font-size: 25px; }
 
-    setTimeout(() => {
-      flyerEl.src = flyer.image;
-      flyerBg.style.backgroundImage = `url(${flyer.image})`;
+    .desc-sm { font-size: 10px; }
+    .desc-md { font-size: 13px; }
+    .desc-lg { font-size: 16px; }
 
-      if (flyer.buttonText && flyer.buttonLink) {
-        contactBtn.style.display = "inline-block";
-        contactBtn.innerText = flyer.buttonText;
-        contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-      } else if (flyer.whatsapp) {
-        contactBtn.style.display = "inline-block";
-        contactBtn.innerText = "Contact Us";
-        contactBtn.onclick = () => {
-          const message = `Hi ${encodeURIComponent(flyer.host)}, I saw your announcement on ${encodeURIComponent(flyer.event)} on PickMe Services and I want to make enquiry.`;
-          const whatsappLink = `https://wa.me/${flyer.whatsapp}?text=${message}`;
-          window.open(whatsappLink, "_blank");
-        };
-      } else {
-        contactBtn.style.display = "none";
-      }
+    /* Alignment */
+    .top-left { align-items: flex-start; justify-content: flex-start; }
+    .center { align-items: center; justify-content: center; text-align: center; }
+    .bottom-left { align-items: flex-end; justify-content: flex-start; }
 
-      flyerEl.onload = () => {
-        flyerEl.style.opacity = 1;
-        buttonContainer.style.opacity = 1;
-      };
-    }, 300);
-  }
+    /* Font styles */
+    .fancy { font-family: 'Georgia', serif; font-style: italic; }
+    .bold { font-weight: bold; }
 
-  // Navigation
-  prevBtn.onclick = () => {
-    currentIndex = (currentIndex - 1 + activeFlyers.length) % activeFlyers.length;
-    showFlyer(currentIndex);
-  };
-  nextBtn.onclick = () => {
-    currentIndex = (currentIndex + 1) % activeFlyers.length;
-    showFlyer(currentIndex);
-  };
+    /* Backgrounds */
+    .full-bg {
+      background-size: cover;
+      background-position: center;
+      color: white;
+    }
+    .solid { color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .card-cutout { background: #fff; border: 1px solid #ddd; color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-  // Swipe support
-  let startX = 0;
-  flyerEl.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-  flyerEl.addEventListener("touchend", e => {
-    let endX = e.changedTouches[0].clientX;
-    if (endX - startX > 50) prevBtn.onclick();
-    else if (startX - endX > 50) nextBtn.onclick();
-  });
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+      z-index: 1;
+    }
 
-  // Show first flyer
-  if (activeFlyers.length > 0) {
-    showFlyer(currentIndex);
-  } else {
-    flyerEl.style.display = "none";
-    buttonContainer.style.display = "none";
-    flyerBg.style.background = "#000";
-  }
+    /* Images */
+    .cutout-img { max-height: 80px; margin-bottom: 8px; }
+    .full-img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
 
-  // Close Ad button
-  closeAdBtn.onclick = () => {
-    window.location.href = 'index.html'; // Replace with your main homepage link
-  };
+  <div class="grid">
 
-  // Advert clickable link
-  advertLink.onclick = () => {
-    window.location.href = '#'; // Replace with your advert page link
-  };
-</script>
+    <!-- Order a Ride -->
+    <a href="http://apl.bz/w@?l=en_US" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1bTA3VGmsc-jBhWv2d9Z5BXHoBsITBe5P" class="cutout-img" alt="Pragia">
+        <h3 class="title-lg bold">Order a Ride</h3>
+        <p class="desc-sm"></p>
+      </div>
+    </a>
+
+    <!-- Food & Drinks -->
+    <a href="https://sites.google.com/view/pickmeservices/food-drinks?authuser=0" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1Q41KM3i-EBT2f4bclNB1p8XjEOrsDDCS" class="cutout-img" alt="Food">
+        <h3 class="title-md fancy">Food & Drinks</h3>
+        <p class="desc-sm">Order your favorite meals</p>
+      </div>
+    </a>
+
+    <!-- Make Deliveries -->
+    <a href="deliveries.html" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/1410uIW-Pqy3jiNdvB1I8bMW5Z47GPwC-');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Make Deliveries</h3>
+        <p class="desc-md">Send parcels with ease</p>
+      </div>
+    </a>
+
+    <!-- Groceries -->
+    <a href="tech.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1xVwZ3HDiiJoN--vO4v7b-0P01yY4dR0x" class="cutout-img" alt="Tech">
+        <h3 class="title-md fancy">Groceries</h3>
+        <p class="desc-sm">Shop provisions & ingredients</p>
+      </div>
+    </a>
+
+    <!-- Gas Refill -->
+    <a href="Gas.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1b1k60ey-pXHXC_0T1hNH2XRMNz_05Vtc" class="cutout-img" alt="Gas">
+        <h3 class="title-md">Gas Refill</h3>
+        <p class="desc-sm">Refill your gas cylinder at a convenience</p>
+      </div>
+    </a>
+
+    <!-- Fashion -->
+    <a href="deliveries.html" class="card square full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/1Snyca65AUGgqSI282lVuZmMH8edLG6au');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-md">Fashion</h3>
+        <p class="desc-sm">Stay trendy with new style</p>
+      </div>
+    </a>
+
+    <!-- Cosmetics -->
+    <a href="cosmetic.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1A1RyI8XRmn2ldXwryVqy3CmfdMY7p34U" class="cutout-img" alt="Cosmetics">
+        <h3 class="title-md">Cosmetics</h3>
+        <p class="desc-sm">Beauty products at your doorstep</p>
+      </div>
+    </a>
+
+    <!-- Home & Living -->
+    <a href="home.html" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/16lkA7eXXp6SkEzXiJ7m_dx-CeUrhqD2_');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg bold">Home & Living</h3>
+        <p class="desc-md">Find items to keep your home comfortable</p>
+      </div>
+    </a>
+
+    <!-- Accommodation -->
+    <a href="accommodation.html" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/120LyT1v2m1vMGHPzdj7cePL09BSPbVkb');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Accommodation</h3>
+        <p class="desc-md">Book a hotel or rent a house</p>
+      </div>
+    </a>
+
+    <!-- Stationery & Books -->
+    <a href="stationery.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1uHcwk3k1srUCaaW9w9-WLu3LFI4yKOWp" class="cutout-img" alt="Stationery">
+        <h3 class="title-md">Stationery & Books</h3>
+        <p class="desc-sm">Get supplies for school and office</p>
+      </div>
+    </a>
+
+    <!-- Tech & Gadgets -->
+    <a href="tech.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1ADSgAlsR2CjsUuJU1clMlwSKtO1Puy_A" class="cutout-img" alt="Tech">
+        <h3 class="title-md fancy">Tech & Gadgets</h3>
+        <p class="desc-sm">Latest devices and accessories</p>
+      </div>
+    </a>
+
+    <!-- Find Events -->
+    <a href="events.html" class="card rectangle full-bg center" style="background-image:url('https://lh3.googleusercontent.com/d/1z4KpL8ahYM_tpS4-Ijm7TLIT7JGgLiT_');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Find Events</h3>
+        <p class="desc-md">Discover local activities and shows</p>
+      </div>
+    </a>
+
+    <!-- All Other Services -->
+    <a href="events.html" class="card rectangle full-bg center" style="background-image:url('https://lh3.googleusercontent.com/d/1bKhw-KGUlQeQ_hlCk8kuI7EEtPstmzVQ');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-xxl">All Other Services</h3>
+        <p class="desc-md">Explore more services here</p>
+      </div>
+    </a>
+
+  </div>
+
+</body>
+</html>
