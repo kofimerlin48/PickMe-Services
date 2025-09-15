@@ -26,6 +26,13 @@
 </div>  
 
 <style>  
+
+/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
+* {
+  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
+  outline: none !important; /* Remove focus outline */
+}
+  
 .flash-here {  
   color: red;  
   font-weight: bold;  
@@ -183,3 +190,4 @@ document.addEventListener("click", e => {
 });  
 
 </script>
+
