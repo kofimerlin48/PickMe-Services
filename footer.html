@@ -90,12 +90,12 @@ function buildFinalList(arr) {
     result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
     count++;  
     if (count === 5) {  
-      result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here">Click HERE to add your announcement</a>` });  
+      result.push({ text: `📢 Want to advertise? <a href="homepage.html" class="flash-here">Click HERE to add your announcement</a>` });  
       count = 0;  
     }  
   }  
   if (count > 0) {  
-    result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here">Click HERE to add your announcement</a>` });  
+    result.push({ text: `📢 Want to advertise? <a href="homepage.html" class="flash-here">Click HERE to add your announcement</a>` });  
   }  
   return result;  
 }  
@@ -159,3 +159,4 @@ document.addEventListener("click", e => {
   }  
 });  
 </script>
+
