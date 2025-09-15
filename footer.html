@@ -36,6 +36,13 @@
   0%, 100% { color: red; }  
   50% { color: blue; }  
 }  
+
+/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
+* {
+  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
+  outline: none !important; /* Remove focus outline */
+}
+  
 </style>  
 
 <script>  
@@ -174,4 +181,5 @@ document.addEventListener("click", e => {
     window.open(url, "_blank");  
   }  
 });  
+
 </script>
