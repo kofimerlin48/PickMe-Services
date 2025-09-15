@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PickMe Services Ad Page</title>
   <style>
-    /* Force mobile layout */
     body {
       margin: 0;
       padding: 0;
@@ -16,38 +15,32 @@
 
     .mobile-wrapper {
       width: 100%;
-      max-width: 425px; /* mobile screen width */
+      max-width: 425px;
       min-height: 100vh;
       position: relative;
     }
 
-    /* Keep your existing button styling intact */
-    #contactBtn {
+    #contactBtn, #closeAdBtn {
       padding: 18px 36px;
       font-size: 18px;
       border: none;
       border-radius: 8px;
-      background: #28a745;
       color: #fff;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    #closeAdBtn {
-      padding: 18px 36px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      background: #ff4d6d;
-      color: #fff;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+    #contactBtn { background: #28a745; }
+    #closeAdBtn { background: #ff4d6d; }
 
     .advert-text {
       color: #fff;
       text-align: center;
       font-size: 16px;
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      z-index: 4;
     }
 
     .advert-text a {
@@ -55,7 +48,6 @@
       text-decoration: underline;
     }
 
-    /* Positioning for buttons and flyer */
     #flyerBg {
       position:absolute;
       top:0; left:0; width:100%; height:100%;
@@ -78,6 +70,7 @@
       box-shadow:0 8px 24px rgba(0,0,0,0.4);
       opacity:0;
       transition: opacity 0.8s ease;
+      margin-top: 60px;
     }
 
     .button-container {
@@ -110,28 +103,22 @@
 </head>
 <body>
   <div class="mobile-wrapper">
-    <!-- Blurred background -->
+    <div class="advert-text">
+      Click <a href="#" id="advertLink">HERE</a> to add your advert
+    </div>
+
     <div id="flyerBg"></div>
-
-    <!-- Flyer image -->
     <img id="flyer" src="" />
-
-    <!-- Action buttons and advert text -->
     <div class="button-container">
       <button id="contactBtn">Contact Us</button>
       <button id="closeAdBtn">Close Ad</button>
-      <div class="advert-text">
-        Click <a href="#" id="advertLink">HERE</a> to add your advert
-      </div>
     </div>
 
-    <!-- Navigation arrows -->
     <div id="prevBtn">&#10094;</div>
     <div id="nextBtn">&#10095;</div>
   </div>
 
   <script>
-    // Flyers list
     const flyers = [
       { id: "flyer1", image: "https://lh3.googleusercontent.com/d/15zr4-7CRAIbp0jnOFrxiTtZ8Caz2nR-q", host: "PickMe Services", event: "Premium Drinks Promo", whatsapp: "233534742142", plan: "Monthly", added: "2025-09-02", expiry: "" },
       { id: "flyer2", image: "https://lh3.googleusercontent.com/d/16BNcj4drcZvDyDXTIpYLqhh2uWrjIzBf", host: "PickMe Services", event: "Summer Special", whatsapp: "", expiry: "2025-12-01", buttonText: "Download Now", buttonLink: "https://play.google.com/store/apps/details?id=com.example.app" },
@@ -141,7 +128,6 @@
       { id: "flyer6", image: "https://lh3.googleusercontent.com/d/15zqD8v9zv_lzU6tQcNPP7kszFsKraS7l", host: "PickMe Services", event: "Cocktail Friday", whatsapp: "233534742142", expiry: "2025-09-15" }
     ];
 
-    // Expiry calculator
     function getExpiryDate(flyer) {
       if (flyer.expiry) return new Date(flyer.expiry);
       if (!flyer.plan || !flyer.added) return null;
@@ -165,7 +151,7 @@
 
     activeFlyers = activeFlyers
       .map(f => ({ f, r: Math.random() }))
-      .sort((a, b) => a.r - b.r)
+      .sort((a,b) => a.r - b.r)
       .map(x => x.f);
 
     const flyerEl = document.getElementById("flyer");
@@ -178,14 +164,13 @@
     const nextBtn = document.getElementById("nextBtn");
 
     let currentIndex = 0;
+    let startX = 0;
 
     function showFlyer(index) {
       const flyer = activeFlyers[index];
       if (!flyer) return;
-
       flyerEl.style.opacity = 0;
       buttonContainer.style.opacity = 0;
-
       setTimeout(() => {
         flyerEl.src = flyer.image;
         flyerBg.style.backgroundImage = `url(${flyer.image})`;
@@ -217,6 +202,7 @@
       currentIndex = (currentIndex - 1 + activeFlyers.length) % activeFlyers.length;
       showFlyer(currentIndex);
     };
+
     nextBtn.onclick = () => {
       currentIndex = (currentIndex + 1) % activeFlyers.length;
       showFlyer(currentIndex);
@@ -229,24 +215,11 @@
       else if (startX - endX > 50) nextBtn.onclick();
     });
 
-    if (activeFlyers.length > 0) {
-      showFlyer(currentIndex);
-    } else {
-      flyerEl.style.display = "none";
-      buttonContainer.style.display = "none";
-      flyerBg.style.background = "#000";
-    }
+    if(activeFlyers.length > 0) showFlyer(currentIndex);
+    else { flyerEl.style.display = "none"; buttonContainer.style.display = "none"; flyerBg.style.background = "#000"; }
 
-    // Close Ad button
-    closeAdBtn.onclick = () => {
-      window.location.href = 'homepage.html'; // replace with main homepage link
-    };
-
-    // Advert clickable link
-    advertLink.onclick = () => {
-      window.location.href = '#'; // replace with advert page link
-    };
+    closeAdBtn.onclick = () => { window.location.href = 'index.html'; };
+    advertLink.onclick = () => { window.location.href = '#'; };
   </script>
 </body>
 </html>
-
