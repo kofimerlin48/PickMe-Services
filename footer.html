@@ -90,12 +90,13 @@ function buildFinalList(arr) {
     result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
     count++;  
     if (count === 5) {  
-      result.push({ text: `📢 Want to advertise? <a href="homepage.html" class="flash-here">Click HERE to add your announcement</a>` });  
+      // Flashing “Click HERE” is now a span like others
+      result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
       count = 0;  
     }  
   }  
   if (count > 0) {  
-    result.push({ text: `📢 Want to advertise? <a href="homepage.html" class="flash-here">Click HERE to add your announcement</a>` });  
+    result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
   }  
   return result;  
 }  
@@ -107,7 +108,9 @@ const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";
 
 function renderAnnouncements(list, el) {  
   el.innerHTML = list.map(item => {  
-    if (item.owner && item.phone) {  
+    if(item.isFlash) {
+      return `<span class="clickable-announcement flash-here" data-href="${item.href}" style="cursor:pointer;">${item.text}</span>`;
+    } else if (item.owner && item.phone) {  
       return `<span class="clickable-announcement" data-owner="${item.owner}" data-content="${item.text}" data-phone="${item.phone}" style="cursor:pointer;">${item.text}</span>`;  
     } else {  
       return item.text;  
@@ -132,31 +135,30 @@ function animate() {
 }  
 animate();  
 
-// Drag Support  
-const startDrag = (pageX) => { isDragging = true; startX = pageX - posX; };  
+// Drag Support (ignore clicks on announcements)
+const startDrag = (pageX, target) => { if(!target.closest('.clickable-announcement')) { isDragging = true; startX = pageX - posX; } };  
 const drag = (pageX) => { if(isDragging) posX = pageX - startX; };  
 const stopDrag = () => isDragging = false;  
 
-wrapper.addEventListener("mousedown", e => startDrag(e.pageX));  
+wrapper.addEventListener("mousedown", e => startDrag(e.pageX, e.target));  
 wrapper.addEventListener("mousemove", e => drag(e.pageX));  
 wrapper.addEventListener("mouseup", stopDrag);  
 wrapper.addEventListener("mouseleave", stopDrag);  
-wrapper.addEventListener("touchstart", e => startDrag(e.touches[0].pageX));  
+wrapper.addEventListener("touchstart", e => startDrag(e.touches[0].pageX, e.target));  
 wrapper.addEventListener("touchmove", e => drag(e.touches[0].pageX));  
 wrapper.addEventListener("touchend", stopDrag);  
 
-// Click Handlers  
+// Click Handlers
 document.addEventListener("click", e => {  
   if(e.target.classList.contains("clickable-announcement")) {  
-    const phone = e.target.dataset.phone;  
-    const content = e.target.dataset.content;  
-    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
-  }  
-  if(e.target.classList.contains("flash-here")) {  
-    e.stopPropagation();  
-    window.open(e.target.href, "_blank");  
+    if(e.target.dataset.href) {
+      window.open(e.target.dataset.href, "_blank"); // Flashing ad click
+    } else {
+      const phone = e.target.dataset.phone;  
+      const content = e.target.dataset.content;  
+      const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
+      window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
+    }
   }  
 });  
 </script>
-
