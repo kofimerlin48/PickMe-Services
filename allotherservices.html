@@ -77,7 +77,7 @@
     left: 0;
     width: 100%;
     background: white;
-    padding: 10px 20px;
+    padding: 20px 20px;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     border-bottom-left-radius: 20px;
@@ -87,10 +87,21 @@
     justify-content: space-between;
 ">
   <!-- Logo (Left) -->
-  <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo" style="width:40px; height:40px; border-radius:10px; object-fit:cover;">
+  <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2"
+       alt="Logo"
+       style="width:40px; height:40px; border-radius:10px; object-fit:cover;">
 
-  <!-- Title (Center) -->
-  <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 20px; flex-grow:1; text-align:center;">
+  <!-- Title (Absolute Center) -->
+  <h1 style="
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      margin:0;
+      font-weight:bold;
+      color:#c12872;
+      font-size:24px;
+      text-align:center;
+  ">
     All Other Services
   </h1>
 
@@ -115,7 +126,14 @@
   <div style="padding: 15px; font-size: 18px; font-weight: bold; color: #c12872;">
     Navigation
   </div>
-  <div id="navContent" style="padding: 0 15px;"></div>
+  <div id="navContent" style="padding: 0 15px;">
+    <!-- fallback links if fetch fails -->
+    <ul style="list-style:none; padding:0; margin:0;">
+      <li><a href="home.html" style="color:white; text-decoration:none; display:block; padding:8px;">Home</a></li>
+      <li><a href="services.html" style="color:white; text-decoration:none; display:block; padding:8px;">Services</a></li>
+      <li><a href="contact.html" style="color:white; text-decoration:none; display:block; padding:8px;">Contact</a></li>
+    </ul>
+  </div>
 </div>
 
 <!-- Overlay (click to close) -->
@@ -148,12 +166,15 @@ overlay.onclick = () => {
 
 // Load navigation.html content into #navContent
 fetch("navigation.html")
-  .then(res => res.text())
+  .then(res => {
+    if (!res.ok) throw new Error("Navigation file not found");
+    return res.text();
+  })
   .then(html => {
     document.getElementById("navContent").innerHTML = html;
   })
   .catch(err => {
-    document.getElementById("navContent").innerHTML = "<p style='color:gray;'>Navigation could not load.</p>";
+    console.warn("Navigation could not load:", err);
   });
 </script>
 
@@ -835,6 +856,7 @@ fetch("navigation.html")
 
 </body>  
 </html>
+
 
 
 
