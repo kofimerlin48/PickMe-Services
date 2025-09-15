@@ -101,10 +101,11 @@
     #prevBtn { left:20px; }
     #nextBtn { right:20px; }
 
-    /* ==== FIX BLUE HIGHLIGHT ON CLICK ==== */
-    button:focus, button:active, a:focus, a:active {
-      outline: none;
-    }
+/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
+* {
+  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
+  outline: none !important; /* Remove focus outline */
+}
   </style>
 </head>
 <body>
@@ -229,3 +230,4 @@
   </script>
 </body>
 </html>
+
