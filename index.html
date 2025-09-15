@@ -5,25 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PickMe Services Ad Page</title>
 
+  <!-- ====================== ADDED TO REMOVE BLUE HIGHLIGHT ====================== -->
   <style>
-/* Remove blue highlight on click, focus, or active for everything */
-*,
-*:focus,
-*:active,
-*:hover {
-    outline: none !important;
-    box-shadow: none !important;
-}
+    /* Remove blue highlight on click/focus/active for all elements */
+    *,
+    *:focus,
+    *:active,
+    *:hover {
+        outline: none !important;
+        box-shadow: none !important;
+    }
 
-/* Optional: keep card hover smooth and nice */
-.card, a, button {
-    transition: transform 0.15s ease-in-out;
-}
-.card:hover, a:hover, button:hover {
-    transform: scale(1.02);
-    cursor: pointer;
-}
-</style>
+    /* Optional: smooth hover effect for cards, links, buttons */
+    .card, a, button {
+        transition: transform 0.15s ease-in-out;
+    }
+    .card:hover, a:hover, button:hover {
+        transform: scale(1.02);
+        cursor: pointer;
+    }
+
+    /* ====================== ORIGINAL STYLES ====================== */
     body {
       margin: 0;
       padding: 0;
