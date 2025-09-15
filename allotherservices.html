@@ -70,114 +70,237 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
 </head>  
 
-<!-- Fixed Header with Logo + Title + Nav Button -->
-<div style="
+<!-- ===== Final Header + Side Nav (copy-paste this entire block) ===== -->
+<style>
+  /* header */
+  .pm-header {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    background: white;
-    padding: 20px 20px;
-    z-index: 1000;
+    right: 0;
+    background: #ffffff;
+    padding: 20px 16px;
+    z-index: 10000;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
+  }
+  .pm-inner {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 48px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-">
-  <!-- Logo (Left) -->
-  <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2"
-       alt="Logo"
-       style="width:40px; height:40px; border-radius:10px; object-fit:cover;">
+    justify-content: center;
+  }
 
-  <!-- Title (Absolute Center) -->
-  <h1 style="
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      margin:0;
-      font-weight:bold;
-      color:#c12872;
-      font-size:24px;
-      text-align:center;
-  ">
-    All Other Services
-  </h1>
+  /* logo left */
+  .pm-logo {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pm-logo img { width:100%; height:100%; object-fit:cover; display:block; }
 
-  <!-- Nav Button (Right) -->
-  <div id="navToggle" style="cursor:pointer; font-size:26px; color:#333;">&#9776;</div>
-</div>
+  /* centered title: pointer-events none so it never blocks clicks */
+  .pm-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    margin: 0;
+    font-weight: bold;
+    color: #c12872;
+    font-size: 24px; /* restored */
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none; /* <= KEY: prevents overlapping title from stealing clicks */
+  }
 
-<!-- Side Navigation Panel -->
-<div id="sideNav" style="
-    position: fixed;
-    top: 0;
-    left: -260px; /* hidden by default */
-    width: 260px;
-    height: 100%;
-    background: #111;
-    color: white;
-    overflow-y: auto;
-    transition: left 0.3s ease;
-    z-index: 9999;
-    padding-top: 60px;
-">
-  <div style="padding: 15px; font-size: 18px; font-weight: bold; color: #c12872;">
-    Navigation
-  </div>
-  <div id="navContent" style="padding: 0 15px;">
-    <!-- fallback links if fetch fails -->
-    <ul style="list-style:none; padding:0; margin:0;">
-      <li><a href="home.html" style="color:white; text-decoration:none; display:block; padding:8px;">Home</a></li>
-      <li><a href="services.html" style="color:white; text-decoration:none; display:block; padding:8px;">Services</a></li>
-      <li><a href="contact.html" style="color:white; text-decoration:none; display:block; padding:8px;">Contact</a></li>
-    </ul>
-  </div>
-</div>
+  /* nav toggle right */
+  .pm-navbtn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px; height:44px;
+    border-radius:8px;
+    background:transparent;
+    border:0;
+    font-size:22px;
+    color:#222;
+    z-index:10002; /* ensure it's on top */
+    cursor:pointer;
+  }
 
-<!-- Overlay (click to close) -->
-<div id="overlay" style="
+  /* side nav (transform-based) */
+  #sideNav {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 280px;
     height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 9998;
+    background: #111;
+    color: #fff;
+    transform: translateX(-110%);         /* hidden */
+    transition: transform 320ms cubic-bezier(.2,.9,.2,1);
+    z-index: 20000;
+    padding-top: 92px; /* space for header */
+    overflow-y: auto;
+  }
+  #sideNav.open { transform: translateX(0); }
+
+  #sideNav .nav-head { padding: 14px 18px; font-weight:700; color:#ff5990; }
+  #sideNav a { display:block; padding:10px 18px; color:#fff; text-decoration:none; font-weight:600; }
+  #sideNav a:hover { background: rgba(255,255,255,0.03); color:#ff7aa7; }
+
+  /* overlay */
+  #navOverlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 19999;
     display: none;
-"></div>
+  }
+
+  @media (max-width:720px) {
+    .pm-header { padding: 14px 12px; }
+    .pm-title { font-size: 20px; }
+    #sideNav { width: 86%; max-width: 320px; }
+  }
+</style>
+
+<header class="pm-header" role="banner">
+  <div class="pm-inner">
+    <!-- logo: edit src as needed -->
+    <a class="pm-logo" href="/">
+      <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo">
+    </a>
+
+    <!-- centered title -->
+    <h1 class="pm-title">All Other Services</h1>
+
+    <!-- nav toggle -->
+    <button id="navToggle" class="pm-navbtn" aria-label="Open navigation">&#9776;</button>
+  </div>
+</header>
+
+<nav id="sideNav" role="navigation" aria-hidden="true">
+  <div class="nav-head">Navigation</div>
+  <div id="navContent" style="padding-bottom:24px;">
+    <!-- fallback menu (visible immediately if fetch fails) -->
+    <ul style="list-style:none; padding:0; margin:0;">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="navOverlay" tabindex="-1" aria-hidden="true"></div>
 
 <script>
-// Toggle side nav
-const navToggle = document.getElementById("navToggle");
-const sideNav = document.getElementById("sideNav");
-const overlay = document.getElementById("overlay");
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('navToggle');
+  const sideNav = document.getElementById('sideNav');
+  const overlay = document.getElementById('navOverlay');
+  const navContent = document.getElementById('navContent');
+  let isOpen = false;
 
-navToggle.onclick = () => {
-  sideNav.style.left = "0";
-  overlay.style.display = "block";
-};
+  function openNav() {
+    sideNav.classList.add('open');
+    overlay.style.display = 'block';
+    sideNav.setAttribute('aria-hidden','false');
+    overlay.setAttribute('aria-hidden','false');
+    document.documentElement.style.overflow = 'hidden';
+    isOpen = true;
+  }
+  function closeNav() {
+    sideNav.classList.remove('open');
+    overlay.style.display = 'none';
+    sideNav.setAttribute('aria-hidden','true');
+    overlay.setAttribute('aria-hidden','true');
+    document.documentElement.style.overflow = '';
+    isOpen = false;
+  }
 
-overlay.onclick = () => {
-  sideNav.style.left = "-260px";
-  overlay.style.display = "none";
-};
-
-// Load navigation.html content into #navContent
-fetch("navigation.html")
-  .then(res => {
-    if (!res.ok) throw new Error("Navigation file not found");
-    return res.text();
-  })
-  .then(html => {
-    document.getElementById("navContent").innerHTML = html;
-  })
-  .catch(err => {
-    console.warn("Navigation could not load:", err);
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isOpen ? closeNav() : openNav();
   });
-</script>
 
+  overlay.addEventListener('click', closeNav);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNav(); });
+
+  /* Try loading navigation.html from several likely paths; if none work, keep fallback */
+  async function loadNav() {
+    const paths = ['navigation.html','./navigation.html','/navigation.html'];
+    for (const p of paths) {
+      try {
+        const res = await fetch(p, {cache: 'no-store'});
+        if (res.ok) {
+          const html = await res.text();
+          navContent.innerHTML = html;
+          attachCollapsibles(); // wire up multi-level if present
+          console.log('Loaded navigation from', p);
+          return;
+        }
+      } catch (err) { /* ignore and try next */ }
+    }
+    console.warn('navigation.html not found at tried paths. Using fallback menu. If you host on GitHub Pages, ensure navigation.html is in same folder or update the paths array.');
+    attachCollapsibles();
+  }
+
+  /* Collapse/expand helper for nested lists (supports up to 3 levels):
+     If your navigation.html uses <ul><li><a>... and nested <ul>, this will add arrows and collapsible behavior.
+  */
+  function attachCollapsibles() {
+    const liList = navContent.querySelectorAll('li');
+    liList.forEach(li => {
+      const nested = li.querySelector('ul');
+      if (nested && !li.querySelector('.nav-arrow')) {
+        nested.style.display = 'none';
+        const link = li.querySelector('a') || li.firstElementChild;
+        const arrow = document.createElement('button');
+        arrow.type = 'button';
+        arrow.className = 'nav-arrow';
+        arrow.setAttribute('aria-expanded','false');
+        arrow.style.marginLeft = '8px';
+        arrow.style.background = 'transparent';
+        arrow.style.border = '0';
+        arrow.style.color = '#fff';
+        arrow.style.cursor = 'pointer';
+        arrow.textContent = '▸';
+        // insert arrow after link or at start
+        if (link) link.after(arrow); else li.prepend(arrow);
+
+        arrow.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const open = nested.style.display === 'block';
+          nested.style.display = open ? 'none' : 'block';
+          arrow.textContent = open ? '▸' : '▾';
+          arrow.setAttribute('aria-expanded', String(!open));
+        });
+
+        // if parent link is href="#" treat it as toggle
+        if (link && link.getAttribute('href') === '#') {
+          link.addEventListener('click', (ev) => { ev.preventDefault(); arrow.click(); });
+        }
+      }
+    });
+  }
+
+  loadNav();
+});
+</script>
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
   <div class="grid" id="servicesGrid"></div>  
@@ -856,6 +979,7 @@ fetch("navigation.html")
 
 </body>  
 </html>
+
 
 
 
