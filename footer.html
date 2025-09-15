@@ -45,6 +45,12 @@
   user-select: none;                         /* optional: prevent text selection */
 }
 
+/* Prevent drag effect for the add-announcement link */
+.no-drag {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 </style>  
 
 <script>  
@@ -102,7 +108,7 @@ function buildFinalList(arr) {
     result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
     count++;  
     if (count === 5) {  
-      result.push({ text: `📢 Want to advertise? <a href="YOUR_FORM_LINK_HERE" class="flash-here">Click HERE to add your announcement</a>` });  
+      result.push({ text: `📢 Want to advertise? <a href="YOUR_FORM_LINK_HERE" class="flash-here no-drag">Click HERE to add your announcement</a>` });  
       count = 0;  
     }  
   }  
@@ -110,7 +116,7 @@ function buildFinalList(arr) {
     for (let j = 0; j < 5 - count; j++) {  
       result.push({ text: arr[j].content, owner: arr[j].owner, phone: arr[j].phone });  
     }  
-    result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here">Click HERE to add your announcement</a>` });  
+    result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here no-drag">Click HERE to add your announcement</a>` });  
   }  
   return result;  
 }  
@@ -184,7 +190,9 @@ document.addEventListener("click", e => {
   }  
 });  
 
+// ---- Prevent slide drag when clicking "Click HERE" ----  
+document.querySelectorAll('.no-drag').forEach(link => {  
+  link.addEventListener('click', e => e.stopPropagation());  
+});  
+
 </script>
-
-
-
