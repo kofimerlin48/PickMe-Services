@@ -37,34 +37,26 @@
   50% { color: blue; }  
 }  
 
-/* Remove blue flash when clicking/tapping announcements */
 #announcementBar,
 #announcementBar * {
-  -webkit-tap-highlight-color: transparent; /* mobile tap highlight */
-  outline: none !important;                  /* remove focus outline */
-  user-select: none;                         /* optional: prevent text selection */
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+  user-select: none;
 }
 </style>  
 
 <script>  
-// ---- ANNOUNCEMENTS ----  
 const announcements = [  
-  { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01", expiry: "" },  
-  { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15", expiry: "" },  
-  { owner: "PickMe Services", content: "🏨 Book hotels, Guesthouses, Airbnb, Hostel rent, Store rent & House rent directly on PickMe Services!", phone: "+233534742142", plan: "Semi-Annual", added: "2025-07-01", expiry: "" },  
+  { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01" },  
+  { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15" },  
+  { owner: "PickMe Services", content: "🏨 Book hotels, Guesthouses, Airbnb, Hostel rent, Store rent & House rent directly on PickMe Services!", phone: "+233534742142", plan: "Semi-Annual", added: "2025-07-01" },  
   { owner: "WOO ENTERTAINMENT", content: "✨ WOO ENTERTAINMENT is bringing to you the AGOGO NA ME FRI Season 26. Watch Out!!!", phone: "+233534742142", expiry: "2025-09-20" },  
-  { owner: "Manko Pub", content: "🎤 KWAKU FLICK is repping live at Manko Pub on 5th September, 2025. Don't miss it.", phone: "+233534742142", plan: "Annual", added: "2025-01-01", expiry: "" },  
-  { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10", expiry: "" },  
+  { owner: "Manko Pub", content: "🎤 KWAKU FLICK is repping live at Manko Pub on 5th September, 2025. Don't miss it.", phone: "+233534742142", plan: "Annual", added: "2025-01-01" },  
+  { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10" },  
   { owner: "Extra 1", content: "📢 This is a test announcement number 7", phone: "+233534742142" },  
-  { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" },  
-  { owner: "Extra 3", content: "📢 Testing scrolling smoothness 9", phone: "+233534742142" },  
-  { owner: "Extra 4", content: "📢 Sample text number 10", phone: "+233534742142" },  
-  { owner: "Extra 5", content: "📢 Announcement number 11", phone: "+233534742142" },  
-  { owner: "Extra 6", content: "📢 Announcement number 12", phone: "+233534742142" },  
-  { owner: "Extra 7", content: "📢 Announcement number 13", phone: "+233534742142" }  
+  { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" }  
 ];  
 
-// ---- EXPIRY CALCULATOR ----  
 function getExpiryDate(item) {  
   if (item.expiry) return new Date(item.expiry);  
   if (!item.plan || !item.added) return null;  
@@ -80,20 +72,17 @@ function getExpiryDate(item) {
   return addedDate;  
 }  
 
-// ---- FILTER ACTIVE ANNOUNCEMENTS ----  
 const today = new Date();  
 let activeAnnouncements = announcements.filter(a => {  
   const expiryDate = getExpiryDate(a);  
   return !expiryDate || today <= expiryDate;  
 });  
 
-// ---- RANDOMIZE ORDER ----  
 activeAnnouncements = activeAnnouncements  
   .map(a => ({ a, r: Math.random() }))  
   .sort((x, y) => x.r - y.r)  
   .map(({ a }) => a);  
 
-// ---- Insert "Click HERE" after every 5 (wrapping remainder) ----  
 function buildFinalList(arr) {  
   const result = [];  
   let count = 0;  
@@ -101,22 +90,17 @@ function buildFinalList(arr) {
     result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
     count++;  
     if (count === 5) {  
-      result.push({ text: `📢 Want to advertise? <a href="YOUR_FORM_LINK_HERE" class="flash-here">Click HERE to add your announcement</a>` });  
+      result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here">Click HERE to add your announcement</a>` });  
       count = 0;  
     }  
   }  
   if (count > 0) {  
-    for (let j = 0; j < 5 - count; j++) {  
-      result.push({ text: arr[j].content, owner: arr[j].owner, phone: arr[j].phone });  
-    }  
     result.push({ text: `📢 Want to advertise? <a href="https://sites.google.com/view/pickmeservices/add-announcement-payment?authuser=0" class="flash-here">Click HERE to add your announcement</a>` });  
   }  
   return result;  
 }  
 
 const finalList = buildFinalList(activeAnnouncements);  
-
-// ---- Add to DOM with duplicate for seamless scroll ----  
 const contentEl = document.getElementById("announcementContent");  
 const cloneEl = document.getElementById("announcementContentClone");  
 const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";  
@@ -134,7 +118,6 @@ function renderAnnouncements(list, el) {
 renderAnnouncements(finalList, contentEl);  
 renderAnnouncements(finalList, cloneEl);  
 
-// ---- Auto-scroll + drag support ----  
 const wrapper = document.getElementById("announcementWrapper");  
 let posX = 0;  
 let speed = 1;  
@@ -149,43 +132,30 @@ function animate() {
 }  
 animate();  
 
-// Mouse drag  
-wrapper.addEventListener("mousedown", e => {  
-  isDragging = true;  
-  startX = e.pageX - posX;  
-});  
-wrapper.addEventListener("mousemove", e => {  
-  if (!isDragging) return;  
-  posX = e.pageX - startX;  
-});  
-wrapper.addEventListener("mouseup", () => isDragging = false);  
-wrapper.addEventListener("mouseleave", () => isDragging = false);  
+// Drag Support  
+const startDrag = (pageX) => { isDragging = true; startX = pageX - posX; };  
+const drag = (pageX) => { if(isDragging) posX = pageX - startX; };  
+const stopDrag = () => isDragging = false;  
 
-// Touch drag  
-wrapper.addEventListener("touchstart", e => {  
-  isDragging = true;  
-  startX = e.touches[0].pageX - posX;  
-});  
-wrapper.addEventListener("touchmove", e => {  
-  if (!isDragging) return;  
-  posX = e.touches[0].pageX - startX;  
-});  
-wrapper.addEventListener("touchend", () => isDragging = false);  
+wrapper.addEventListener("mousedown", e => startDrag(e.pageX));  
+wrapper.addEventListener("mousemove", e => drag(e.pageX));  
+wrapper.addEventListener("mouseup", stopDrag);  
+wrapper.addEventListener("mouseleave", stopDrag);  
+wrapper.addEventListener("touchstart", e => startDrag(e.touches[0].pageX));  
+wrapper.addEventListener("touchmove", e => drag(e.touches[0].pageX));  
+wrapper.addEventListener("touchend", stopDrag);  
 
-// ---- Direct WhatsApp Click ----  
+// Click Handlers  
 document.addEventListener("click", e => {  
-  if (e.target.classList.contains("clickable-announcement")) {  
+  if(e.target.classList.contains("clickable-announcement")) {  
     const phone = e.target.dataset.phone;  
     const content = e.target.dataset.content;  
     const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-    const url = `https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;  
-    window.open(url, "_blank");  
-  }
-  // ---- Fix “Click HERE to add your announcement” ----
-  if (e.target.classList.contains("flash-here")) {
-    e.stopPropagation();  // prevent slider from breaking
-    window.open(e.target.href, "_blank");
-  }
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
+  }  
+  if(e.target.classList.contains("flash-here")) {  
+    e.stopPropagation();  
+    window.open(e.target.href, "_blank");  
+  }  
 });  
-
 </script>
