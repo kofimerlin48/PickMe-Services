@@ -25,14 +25,7 @@
   </div>  
 </div>  
 
-<style>  
-
-/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
-* {
-  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
-  outline: none !important; /* Remove focus outline */
-}
-  
+<style>   
 .flash-here {  
   color: red;  
   font-weight: bold;  
@@ -44,12 +37,14 @@
   50% { color: blue; }  
 }  
 
-/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
-* {
-  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
-  outline: none !important; /* Remove focus outline */
+/* Remove blue flash when clicking/tapping announcements */
+#announcementBar,
+#announcementBar * {
+  -webkit-tap-highlight-color: transparent; /* mobile tap highlight */
+  outline: none !important;                  /* remove focus outline */
+  user-select: none;                         /* optional: prevent text selection */
 }
-  
+
 </style>  
 
 <script>  
@@ -190,4 +185,5 @@ document.addEventListener("click", e => {
 });  
 
 </script>
+
 
