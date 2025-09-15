@@ -1,28 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PickMe Services Ad Page</title>
 
-    <style>
-/* Remove blue outline/focus ring from everything */
-*:focus {
+  <style>
+/* Remove blue highlight on click, focus, or active for everything */
+*,
+*:focus,
+*:active,
+*:hover {
     outline: none !important;
     box-shadow: none !important;
 }
 
-/* Optional: keep hover effects looking nice */
-.card, button, a {
-    transition: background 0.2s, transform 0.2s;
+/* Optional: keep card hover smooth and nice */
+.card, a, button {
+    transition: transform 0.15s ease-in-out;
 }
-.card:hover, button:hover, a:hover {
+.card:hover, a:hover, button:hover {
     transform: scale(1.02);
+    cursor: pointer;
 }
 </style>
-    
-  <style>
     body {
       margin: 0;
       padding: 0;
@@ -241,22 +242,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
