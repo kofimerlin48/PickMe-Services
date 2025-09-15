@@ -161,47 +161,200 @@
 
   #sideNav .nav-head { padding: 14px 18px; font-weight:700; color:#ff5990; }
   #sideNav a { display:block; padding:10px 18px; color:#fff; text-decoration:none; font-weight:600; }
-  #sideNav a:hover { background: rgba(255,255,255,0.03); color:#ff7aa7; }
+
+<!-- ===== Header + Left-side Nav (copy-paste this whole block) ===== -->
+<style>
+  :root { --pm-header-h: 72px; --nav-w: 280px; --accent: #c12872; --accent-2: #ff7aa7; }
+
+  /* Header */
+  .pm-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 10px 18px;
+    z-index: 12000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    min-height: var(--pm-header-h);
+  }
+  .pm-inner {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: var(--pm-header-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* NAV TOGGLE (LEFT) */
+  .pm-navbtn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px; height:44px;
+    border-radius:8px;
+    background:transparent;
+    border:0;
+    font-size:22px;
+    color:#222;
+    z-index:13000;
+    cursor:pointer;
+  }
+  .pm-navbtn:active { transform: translateY(-50%) scale(.98); }
+
+  /* TITLE centered and non-blocking */
+  .pm-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    margin: 0;
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 24px;               /* restored to 24px */
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;          /* never block clicks under it */
+  }
+
+  /* LOGO (RIGHT) */
+  .pm-logo {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-block;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .pm-logo img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* SIDE NAV (slides from left under header) */
+  #sideNav {
+    position: fixed;
+    left: 0;
+    top: calc(var(--pm-header-h) + 8px);  /* placed below header */
+    transform: translateX(-120%);         /* hidden off-screen left */
+    transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 200ms;
+    width: var(--nav-w);
+    max-width: calc(86vw);
+    background: #111;                      /* near-black */
+    color: #fff;
+    border-radius: 0 12px 12px 0;
+    z-index: 12500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    overflow: visible;
+    /* dynamic height: will grow with content up to a max */
+    max-height: calc(100vh - var(--pm-header-h) - 32px);
+  }
+  #sideNav.open { transform: translateX(0); }
+
+  /* nav inner container */
+  #navInner {
+    padding: 12px 8px 18px 8px;
+  }
+
+  /* nav header */
+  #sideNav .nav-head {
+    padding: 14px 18px;
+    font-weight:700;
+    color: var(--accent);
+    font-size: 16px;
+  }
+
+  /* menu list styling (gives extra left padding from wall) */
+  #navInner ul { list-style:none; margin:0; padding: 6px 6px; }
+  #navInner li.nav-item { opacity: 0; transform: translateX(-8px); transition: transform 260ms ease, opacity 260ms ease; }
+  #sideNav.open li.nav-item.visible { opacity: 1; transform: translateX(0); }
+
+  /* links */
+  #navInner a.nav-link {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding: 12px 18px;
+    margin: 6px 8px;
+    border-radius: 8px;
+    text-decoration:none;
+    color: #fff;
+    font-weight:700;
+    font-size: 18px;   /* larger readable size */
+    line-height: 1.1;
+  }
+  #navInner a.nav-link:hover { background: rgba(255,255,255,0.03); color: var(--accent-2); }
+
+  /* nested lists (submenus) */
+  #navInner ul.nav-sub { padding-left: 12px; margin-top:6px; margin-bottom:6px; }
+  #navInner ul.nav-sub a.nav-link { font-weight:600; font-size:16px; padding-left: 28px; }
+
+  /* nav arrow button (for collapsibles) */
+  .nav-arrow {
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px;
+    margin-left: 8px;
+    opacity: .9;
+  }
 
   /* overlay */
   #navOverlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.45);
-    z-index: 19999;
+    z-index: 12400;
     display: none;
   }
 
+  /* small screens */
   @media (max-width:720px) {
-    .pm-header { padding: 14px 12px; }
+    :root { --nav-w: 92vw; /* nav almost full width on mobile */ }
     .pm-title { font-size: 20px; }
-    #sideNav { width: 86%; max-width: 320px; }
+    .pm-logo { width:40px; height:40px; right:10px; }
   }
 </style>
 
-<header class="pm-header" role="banner">
+<header class="pm-header" role="banner" aria-label="Site header">
   <div class="pm-inner">
-    <!-- logo: edit src as needed -->
-    <a class="pm-logo" href="/">
-      <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo">
-    </a>
+    <!-- NAV TOGGLE left -->
+    <button id="navToggle" class="pm-navbtn" aria-label="Open navigation" title="Menu">☰</button>
 
-    <!-- centered title -->
+    <!-- Title centered -->
     <h1 class="pm-title">All Other Services</h1>
 
-    <!-- nav toggle -->
-    <button id="navToggle" class="pm-navbtn" aria-label="Open navigation">&#9776;</button>
+    <!-- Logo on right (edit src) -->
+    <a class="pm-logo" href="/" aria-label="Home">
+      <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo">
+    </a>
   </div>
 </header>
 
+<!-- Side nav (opens from the left side where the button is) -->
 <nav id="sideNav" role="navigation" aria-hidden="true">
   <div class="nav-head">Navigation</div>
-  <div id="navContent" style="padding-bottom:24px;">
-    <!-- fallback menu (visible immediately if fetch fails) -->
-    <ul style="list-style:none; padding:0; margin:0;">
-      <li><a href="home.html">Home</a></li>
-      <li><a href="services.html">Services</a></li>
-      <li><a href="contact.html">Contact</a></li>
-    </ul>
+  <div id="navInner">
+    <div id="navContent">
+      <!-- fallback: simple list (will be replaced by navigation.html when fetched) -->
+      <ul>
+        <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+      </ul>
+    </div>
   </div>
 </nav>
 
@@ -214,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('navOverlay');
   const navContent = document.getElementById('navContent');
   let isOpen = false;
+  let visibleTimeouts = [];
 
   function openNav() {
     sideNav.classList.add('open');
@@ -222,6 +376,14 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.setAttribute('aria-hidden','false');
     document.documentElement.style.overflow = 'hidden';
     isOpen = true;
+    // stagger-in nav items
+    const items = navContent.querySelectorAll('li.nav-item');
+    items.forEach((li, i) => {
+      // clear previous
+      li.classList.remove('visible');
+      const to = setTimeout(()=> li.classList.add('visible'), 40 * i);
+      visibleTimeouts.push(to);
+    });
   }
   function closeNav() {
     sideNav.classList.remove('open');
@@ -230,6 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.setAttribute('aria-hidden','true');
     document.documentElement.style.overflow = '';
     isOpen = false;
+    // clear stagger timeouts and hide items
+    visibleTimeouts.forEach(t => clearTimeout(t));
+    visibleTimeouts = [];
+    navContent.querySelectorAll('li.nav-item').forEach(li => li.classList.remove('visible'));
   }
 
   toggle.addEventListener('click', (e) => {
@@ -240,7 +406,17 @@ document.addEventListener('DOMContentLoaded', () => {
   overlay.addEventListener('click', closeNav);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNav(); });
 
-  /* Try loading navigation.html from several likely paths; if none work, keep fallback */
+  /* Close nav when clicking a navigation link (optional) */
+  navContent.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    // If link is internal anchor or normal page, close nav to show navigation
+    closeNav();
+  });
+
+  /* Try loading navigation.html from a set of likely paths.
+     If found, it replaces #navContent innerHTML & prepares collapsibles/formatting.
+  */
   async function loadNav() {
     const paths = ['navigation.html','./navigation.html','/navigation.html'];
     for (const p of paths) {
@@ -249,50 +425,81 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.ok) {
           const html = await res.text();
           navContent.innerHTML = html;
-          attachCollapsibles(); // wire up multi-level if present
+          prepareNavItems();
+          attachCollapsibles();
           console.log('Loaded navigation from', p);
           return;
         }
-      } catch (err) { /* ignore and try next */ }
+      } catch (err) { /* try next */ }
     }
-    console.warn('navigation.html not found at tried paths. Using fallback menu. If you host on GitHub Pages, ensure navigation.html is in same folder or update the paths array.');
+    console.warn('navigation.html not found at tried paths. Using fallback menu.');
+    prepareNavItems();
     attachCollapsibles();
   }
 
-  /* Collapse/expand helper for nested lists (supports up to 3 levels):
-     If your navigation.html uses <ul><li><a>... and nested <ul>, this will add arrows and collapsible behavior.
-  */
+  /* Ensure list items have classes & link classes for styling + spacing */
+  function prepareNavItems() {
+    // ensure there is at least a ul at root
+    const rootUl = navContent.querySelector('ul') || (() => {
+      const ul = document.createElement('ul');
+      navContent.appendChild(ul);
+      return ul;
+    })();
+
+    // add classes to li and anchors
+    rootUl.querySelectorAll('li').forEach(li => normalizeLi(li));
+    // also ensure nested uls get 'nav-sub' class
+    navContent.querySelectorAll('ul').forEach(ul => {
+      if (!ul.classList.contains('nav-sub')) ul.classList.add('nav-sub');
+    });
+  }
+
+  function normalizeLi(li) {
+    if (!li.classList.contains('nav-item')) li.classList.add('nav-item');
+    const a = li.querySelector('a');
+    if (a && !a.classList.contains('nav-link')) a.classList.add('nav-link');
+    // ensure nested lists normalized too
+    const nested = li.querySelector('ul');
+    if (nested) {
+      nested.classList.add('nav-sub');
+      // normalize children
+      nested.querySelectorAll('li').forEach(childLi => normalizeLi(childLi));
+    }
+  }
+
+  /* Convert nested <ul> structures into collapsibles (supports up to 3 levels) */
   function attachCollapsibles() {
-    const liList = navContent.querySelectorAll('li');
-    liList.forEach(li => {
-      const nested = li.querySelector('ul');
+    // Look for li with nested ul
+    navContent.querySelectorAll('li.nav-item').forEach(li => {
+      const nested = li.querySelector(':scope > ul.nav-sub');
+      const firstLink = li.querySelector(':scope > a.nav-link');
       if (nested && !li.querySelector('.nav-arrow')) {
+        // hide nested by default
         nested.style.display = 'none';
-        const link = li.querySelector('a') || li.firstElementChild;
+        // create arrow button
         const arrow = document.createElement('button');
         arrow.type = 'button';
         arrow.className = 'nav-arrow';
         arrow.setAttribute('aria-expanded','false');
-        arrow.style.marginLeft = '8px';
-        arrow.style.background = 'transparent';
-        arrow.style.border = '0';
-        arrow.style.color = '#fff';
-        arrow.style.cursor = 'pointer';
         arrow.textContent = '▸';
-        // insert arrow after link or at start
-        if (link) link.after(arrow); else li.prepend(arrow);
-
+        // place the arrow inside the firstLink at the right (or after if no link)
+        if (firstLink) {
+          // ensure arrow sits visually right: wrap content in flex
+          firstLink.style.justifyContent = 'space-between';
+          firstLink.appendChild(arrow);
+        } else {
+          li.appendChild(arrow);
+        }
         arrow.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          const open = nested.style.display === 'block';
-          nested.style.display = open ? 'none' : 'block';
-          arrow.textContent = open ? '▸' : '▾';
-          arrow.setAttribute('aria-expanded', String(!open));
+          const isOpen = nested.style.display === 'block';
+          nested.style.display = isOpen ? 'none' : 'block';
+          arrow.textContent = isOpen ? '▸' : '▾';
+          arrow.setAttribute('aria-expanded', String(!isOpen));
         });
-
-        // if parent link is href="#" treat it as toggle
-        if (link && link.getAttribute('href') === '#') {
-          link.addEventListener('click', (ev) => { ev.preventDefault(); arrow.click(); });
+        // if the parent link is '#' toggle on link click
+        if (firstLink && firstLink.getAttribute('href') === '#') {
+          firstLink.addEventListener('click', (ev) => { ev.preventDefault(); arrow.click(); });
         }
       }
     });
@@ -301,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNav();
 });
 </script>
+  
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
   <div class="grid" id="servicesGrid"></div>  
@@ -979,6 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>  
 </html>
+
 
 
 
