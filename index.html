@@ -2,11 +2,21 @@
 <html lang="en">
 <head>
 
-<style>
+    <style>
+/* Remove blue outline/focus ring from everything */
 *:focus {
-    outline: none;
+    outline: none !important;
+    box-shadow: none !important;
 }
-    </style>
+
+/* Optional: keep hover effects looking nice */
+.card, button, a {
+    transition: background 0.2s, transform 0.2s;
+}
+.card:hover, button:hover, a:hover {
+    transform: scale(1.02);
+}
+</style>
     
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -230,6 +240,7 @@
   </script>
 </body>
 </html>
+
 
 
 
