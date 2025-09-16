@@ -43,6 +43,15 @@
   outline: none !important;
   user-select: none;
 }
+
+/* Fade transition */
+body {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+body.fade-out {
+  opacity: 0;
+}
 </style>  
 
 <script>  
@@ -166,15 +175,18 @@ wrapper.addEventListener("touchmove", e => {
 });
 wrapper.addEventListener("touchend", e => isDragging = false);
 
-// Click Handlers with drag detection
+// Click Handlers with drag detection + fade effect
 document.addEventListener("click", e => {  
   if (!e.target.classList.contains("clickable-announcement")) return;
 
   if (moved) return; // ignore clicks if it was a drag
 
   if (e.target.dataset.href) {
-    // Navigate smoothly in same tab (fix: no black flash)
-    window.location.href = e.target.dataset.href;
+    // Smooth fade-out transition before navigation
+    document.body.classList.add("fade-out");
+    setTimeout(() => {
+      window.location.href = e.target.dataset.href;
+    }, 500); // match CSS transition duration
   } else {
     const phone = e.target.dataset.phone;  
     const content = e.target.dataset.content;  
