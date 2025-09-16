@@ -25,53 +25,109 @@ const navData = [
 </script>
 <!-- =============== END OF EDITABLE SECTION =============== -->
 
+<!-- Styles for nav (keeps spacing, animation, active color) -->
+<style>
+  /* base */
+  #navList { list-style:none; padding:0; margin:0; font-size:18px; color:white; }
+
+  /* link style & slide-in animation */
+  #navList a.nav-link {
+    display:block;
+    color: white;
+    text-decoration: none;
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.35s ease;
+  }
+
+  /* when panel has class menu-open, nav items slide in */
+  #sideNav.menu-open #navList a.nav-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* spacing */
+  #navList li { margin-bottom: 10px; }
+
+  /* sublists */
+  #navList ul.submenu { display: none; padding-left: 14px; margin-top: 6px; list-style:none; }
+
+  /* dropdown toggle style (group or parent with children) */
+  #navList .dropdown-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    padding: 8px 12px;
+  }
+
+  /* arrow rotation */
+  #navList .arrow { transition: transform 0.25s ease; }
+  #navList li.open > .dropdown-toggle .arrow { transform: rotate(90deg); }
+
+  /* active highlight (red-pink) */
+  #navList a.nav-link.active,
+  #navList .toggle-text.active {
+    color: #ff4d6d;
+    font-weight: 600;
+  }
+
+  /* ensure toggle-text (the clickable text inside toggles) looks like links */
+  #navList .toggle-text { color: inherit; text-decoration: none; }
+</style>
+
 <!-- Navigation container -->
-<ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
+<ul id="navList"></ul>
 
 <script>
-// ================== MENU BUILDER ================== //
+// ========== MENU BUILDER (reads navData and renders nested menu) ==========
 function buildMenu(items, parentUl) {
   items.forEach(item => {
-    const li = document.createElement("li");
-    li.style.marginBottom = "15px";
+    const li = document.createElement('li');
 
     // PAGE
-    if(item.type === "page") {
-      if(item.sub && item.sub.length > 0) {
-        // Page with children
-        li.innerHTML = `
-          <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white;">
-            <span>${item.name}</span>
-            <span class="arrow">&#8250;</span>
-          </div>
+    if (item.type === "page") {
+      if (item.sub && item.sub.length > 0) {
+        // page that has children: render a toggle (no direct link)
+        const toggle = document.createElement('div');
+        toggle.className = "dropdown-toggle";
+        toggle.innerHTML = `
+          <span class="toggle-text">${item.name}</span>
+          <span class="arrow">&#8250;</span>
         `;
-        const subUl = document.createElement("ul");
-        subUl.style.listStyle = "none";
-        subUl.style.paddingLeft = "20px";
-        subUl.style.marginTop = "10px";
-        subUl.style.display = "none";
+        li.appendChild(toggle);
+
+        const subUl = document.createElement('ul');
+        subUl.className = "submenu";
         buildMenu(item.sub, subUl);
         li.appendChild(subUl);
       } else {
-        // Simple page
-        li.innerHTML = `<a href="${item.link}" style="color:white; text-decoration:none;">${item.name}</a>`;
+        // simple page link
+        const a = document.createElement('a');
+        a.className = "nav-link";
+        a.href = item.link || "#";
+        a.textContent = item.name;
+        li.appendChild(a);
       }
     }
 
-    // GROUP
-    if(item.type === "group") {
-      li.innerHTML = `
-        <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white; font-weight:bold;">
-          <span>${item.name}</span>
-          <span class="arrow">&#8250;</span>
-        </div>
+    // GROUP (a named collection; behaves like a top-level toggle)
+    if (item.type === "group") {
+      const toggle = document.createElement('div');
+      toggle.className = "dropdown-toggle";
+      toggle.innerHTML = `
+        <span class="toggle-text">${item.name}</span>
+        <span class="arrow">&#8250;</span>
       `;
-      const groupUl = document.createElement("ul");
-      groupUl.style.listStyle = "none";
-      groupUl.style.paddingLeft = "20px";
-      groupUl.style.marginTop = "10px";
-      groupUl.style.display = "none";
-      buildMenu(item.items, groupUl);
+      // visually weight group titles a bit
+      toggle.style.fontWeight = "700";
+      li.appendChild(toggle);
+
+      const groupUl = document.createElement('ul');
+      groupUl.className = "submenu";
+      buildMenu(item.items || [], groupUl);
       li.appendChild(groupUl);
     }
 
@@ -80,25 +136,57 @@ function buildMenu(items, parentUl) {
 }
 
 // Render navigation
-const navList = document.getElementById("navList");
+const navList = document.getElementById('navList');
 buildMenu(navData, navList);
 
-// Dropdown toggle
+// ========== DROPDOWN + ACTIVE HANDLERS ==========
 function initDropdowns() {
-  const toggles = document.querySelectorAll(".dropdown-toggle");
+  // toggles
+  const toggles = navList.querySelectorAll('.dropdown-toggle');
   toggles.forEach(toggle => {
-    toggle.addEventListener("click", () => {
-      const submenu = toggle.nextElementSibling;
-      const arrow = toggle.querySelector(".arrow");
-      if(submenu.style.display === "block") {
-        submenu.style.display = "none";
-        arrow.innerHTML = "&#8250;"; // right
-      } else {
-        submenu.style.display = "block";
-        arrow.innerHTML = "&#709;"; // down
-      }
-    });
+    // remove old handler if re-initializing
+    if (toggle._handler) toggle.removeEventListener('click', toggle._handler);
+
+    const handler = function() {
+      const li = this.parentElement;
+      const submenu = li.querySelector('.submenu');
+      const arrow = this.querySelector('.arrow');
+      const text = this.querySelector('.toggle-text');
+
+      const isOpen = li.classList.toggle('open');
+      if (submenu) submenu.style.display = isOpen ? 'block' : 'none';
+      if (arrow) arrow.innerHTML = isOpen ? '&#709;' : '&#8250;';
+
+      // mark toggle text active (and remove active from links)
+      clearActiveMarks();
+      if (text) text.classList.toggle('active', isOpen);
+    };
+
+    toggle._handler = handler;
+    toggle.addEventListener('click', handler);
+  });
+
+  // link click => set active
+  const links = navList.querySelectorAll('a.nav-link');
+  links.forEach(a => {
+    if (a._handler) a.removeEventListener('click', a._handler);
+    const handler = function(e) {
+      clearActiveMarks();
+      this.classList.add('active');
+      // optionally close the nav when a link is clicked (commented out)
+      // closeNav();
+    };
+    a._handler = handler;
+    a.addEventListener('click', handler);
   });
 }
+
+// helper to clear active classes from links & toggles
+function clearActiveMarks() {
+  navList.querySelectorAll('a.nav-link').forEach(x => x.classList.remove('active'));
+  navList.querySelectorAll('.toggle-text').forEach(x => x.classList.remove('active'));
+}
+
+// initialize
 initDropdowns();
 </script>
