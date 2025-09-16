@@ -290,3 +290,42 @@ function clearActiveMarks() {
 // optional: close panel when user clicks overlay (already wired via overlay onclick)
 document.getElementById('overlay').addEventListener('click', closeNav);
 </script>
+
+<ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
+
+<script>
+// ================== MENU BUILDER ================== //
+function buildMenu(items, parentUl) { ... }
+
+// Render navigation
+const navList = document.getElementById("navList");
+buildMenu(navData, navList);
+
+// Dropdown toggle
+function initDropdowns() { ... }
+initDropdowns();
+</script>
+
+<!-- 🔹 INSERT THIS BLOCK HERE -->
+<style>
+.active-link {
+  color: #ffd700 !important;   /* highlight color */
+  font-weight: bold;
+  text-decoration: underline;
+}
+</style>
+
+<script>
+// Highlight active page in navigation
+function highlightActivePage() {
+  const currentPath = window.location.pathname.split("/").pop(); // e.g. "events.html"
+  const links = document.querySelectorAll("#navList a");
+  links.forEach(link => {
+    const linkPath = link.getAttribute("href");
+    if (linkPath === currentPath) {
+      link.classList.add("active-link");
+    }
+  });
+}
+highlightActivePage();
+</script>
