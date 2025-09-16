@@ -109,41 +109,7 @@
   }
 })();
 </script>
-
-<script>
-function highlightActiveLink() {
-  const currentUrl = window.location.href;
-  const links = document.querySelectorAll("#navList a");
-
-  links.forEach(link => {
-    const href = link.getAttribute("href");
-    if (href && currentUrl.includes(href)) {
-      link.classList.add("active-link");
-
-      // expand parent dropdowns
-      let parent = link.closest("ul");
-      while (parent && parent.id !== "navList") {
-        parent.style.display = "block";
-        const parentLink = parent.previousElementSibling;
-        if (parentLink) parentLink.classList.add("active-link");
-        parent = parent.parentElement.closest("ul");
-      }
-    }
-  });
-}
-
-// ⏳ wait until navigation.html is injected
-document.addEventListener("DOMContentLoaded", () => {
-  const observer = new MutationObserver(() => {
-    if (document.querySelector("#navList a")) {
-      highlightActiveLink();
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-});
-</script>
-
+  
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
   <div class="grid" id="servicesGrid"></div>  
@@ -822,7 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>  
 </html>
-
 
 
 
