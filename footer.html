@@ -90,7 +90,6 @@ function buildFinalList(arr) {
     result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
     count++;  
     if (count === 5) {  
-      // Flashing “Click HERE” is now a span like others
       result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
       count = 0;  
     }  
@@ -127,6 +126,10 @@ let speed = 1;
 let isDragging = false, startX = 0;  
 const contentWidth = contentEl.offsetWidth;  
 
+let dragThreshold = 5; // Minimum movement in pixels to consider as drag
+let pointerDownX = 0;
+let moved = false;
+
 function animate() {  
   if (!isDragging) posX -= speed;  
   if (Math.abs(posX) >= contentWidth) posX = 0;  
@@ -135,30 +138,48 @@ function animate() {
 }  
 animate();  
 
-// Drag Support (ignore clicks on announcements)
-const startDrag = (pageX, target) => { if(!target.closest('.clickable-announcement')) { isDragging = true; startX = pageX - posX; } };  
-const drag = (pageX) => { if(isDragging) posX = pageX - startX; };  
-const stopDrag = () => isDragging = false;  
+// Drag Support (with tap vs drag detection)
+wrapper.addEventListener("mousedown", e => {
+  isDragging = true;
+  pointerDownX = e.pageX;
+  startX = e.pageX - posX;
+  moved = false;
+});
+wrapper.addEventListener("mousemove", e => {
+  if (!isDragging) return;
+  posX = e.pageX - startX;
+  if (Math.abs(e.pageX - pointerDownX) > dragThreshold) moved = true;
+});
+wrapper.addEventListener("mouseup", e => isDragging = false);
+wrapper.addEventListener("mouseleave", e => isDragging = false);
 
-wrapper.addEventListener("mousedown", e => startDrag(e.pageX, e.target));  
-wrapper.addEventListener("mousemove", e => drag(e.pageX));  
-wrapper.addEventListener("mouseup", stopDrag);  
-wrapper.addEventListener("mouseleave", stopDrag);  
-wrapper.addEventListener("touchstart", e => startDrag(e.touches[0].pageX, e.target));  
-wrapper.addEventListener("touchmove", e => drag(e.touches[0].pageX));  
-wrapper.addEventListener("touchend", stopDrag);  
+wrapper.addEventListener("touchstart", e => {
+  isDragging = true;
+  pointerDownX = e.touches[0].pageX;
+  startX = e.touches[0].pageX - posX;
+  moved = false;
+});
+wrapper.addEventListener("touchmove", e => {
+  if (!isDragging) return;
+  posX = e.touches[0].pageX - startX;
+  if (Math.abs(e.touches[0].pageX - pointerDownX) > dragThreshold) moved = true;
+});
+wrapper.addEventListener("touchend", e => isDragging = false);
 
-// Click Handlers
+// Click Handlers with drag detection
 document.addEventListener("click", e => {  
-  if(e.target.classList.contains("clickable-announcement")) {  
-    if(e.target.dataset.href) {
-      window.open(e.target.dataset.href, "_blank"); // Flashing ad click
-    } else {
-      const phone = e.target.dataset.phone;  
-      const content = e.target.dataset.content;  
-      const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-      window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
-    }
-  }  
+  if (!e.target.classList.contains("clickable-announcement")) return;
+
+  if (moved) return; // ignore clicks if it was a drag
+
+  if (e.target.dataset.href) {
+    // Direct navigation without black flash
+    window.location.href = e.target.dataset.href;
+  } else {
+    const phone = e.target.dataset.phone;  
+    const content = e.target.dataset.content;  
+    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
+  }
 });  
 </script>
