@@ -1,100 +1,215 @@
-<!-- ===== navigation.html ===== -->
-<div id="sideNav" style="
-    height:80%;
-    width:0;
+<!-- navigation.html -->
+
+<!-- ===== NAVIGATION DATA ===== -->
+<script>
+const navData = [
+  { type: "page", name: "Home", link: "homepage.html" },
+
+  { type: "group", name: "Our Services", items: [
+      { type: "page", name: "Ride & Delivery", link: "apl.bz/w@?l=en_US" },
+      { type: "page", name: "Shopping", link: "", sub: [
+          { type: "page", name: "Food & Drinks", link: "food.html" },
+          { type: "page", name: "Groceries", link: "groceries.html" },
+          { type: "page", name: "Fashion", link: "fashion.html" },
+          { type: "page", name: "Cosmetics", link: "Cosmetics.html" },
+          { type: "page", name: "Tech & Gadgets", link: "tech.html" },
+          { type: "page", name: "Stationery & Books", link: "stationery.html" },
+          { type: "page", name: "", link: "drinks.html" }
+      ]},
+      { type: "page", name: "Fashion", link: "fashion.html" },
+      { type: "page", name: "Events", link: "events.html" },
+      { type: "page", name: "Accommodation", link: "accommodation.html" }
+  ]},
+
+  { type: "page", name: "About Us", link: "about.html" },
+  { type: "page", name: "Contact", link: "contact.html" }
+];
+</script>
+<!-- ===== END NAVIGATION DATA ===== -->
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeNav()" style="
+    display:none;
     position:fixed;
-    top:0; right:0;
-    margin-top:20px; margin-bottom:30px;
-    background-color:#2b2b2b;
-    overflow-y:auto;
-    transition:0.35s;
-    border-top-left-radius:20px;
-    border-bottom-left-radius:20px;
-    z-index:20;
-    color:white;
-    padding-top:60px;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.4);
+    z-index:15;
+"></div>
+
+<!-- Navigation Panel -->
+<div id="sideNav" style="
+    height: 80%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    background-color: #2b2b2b;
+    overflow-y: auto;
+    transition: 0.35s;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    z-index: 20;
+    color: white;
+    padding-top: 60px;
 ">
   <!-- Close Button -->
-  <a href="javascript:void(0)" onclick="closeNav()" style="
-      position:absolute;
-      top:15px; right:25px;
-      font-size:36px;
-      text-decoration:none;
-      color:white;">&times;</a>
+  <a href="javascript:void(0)" onclick="closeNav()"
+     style="position:absolute; top:15px; right:25px; font-size:36px; text-decoration:none; color:white;">
+     &times;
+  </a>
 
-  <!-- Menu -->
+  <!-- navContent -->
   <div id="navContent" style="padding:20px;">
-    <ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;">
-      <li><a href="homepage.html" class="nav-link">Home</a></li>
-      <li>
-        <div class="dropdown-toggle">
-          <span class="toggle-text">Our Services</span><span class="arrow">&#8250;</span>
-        </div>
-        <ul class="submenu">
-          <li><a href="apl.bz/w@?l=en_US" class="nav-link">Ride & Delivery</a></li>
-          <li>
-            <div class="dropdown-toggle">
-              <span class="toggle-text">Shopping</span><span class="arrow">&#8250;</span>
-            </div>
-            <ul class="submenu">
-              <li><a href="food.html" class="nav-link">Food & Drinks</a></li>
-              <li><a href="groceries.html" class="nav-link">Groceries</a></li>
-              <li><a href="fashion.html" class="nav-link">Fashion</a></li>
-              <li><a href="Cosmetics.html" class="nav-link">Cosmetics</a></li>
-              <li><a href="tech.html" class="nav-link">Tech & Gadgets</a></li>
-              <li><a href="stationery.html" class="nav-link">Stationery & Books</a></li>
-              <li><a href="drinks.html" class="nav-link">Drinks</a></li>
-            </ul>
-          </li>
-          <li><a href="fashion.html" class="nav-link">Fashion</a></li>
-          <li><a href="events.html" class="nav-link">Events</a></li>
-          <li><a href="accommodation.html" class="nav-link">Accommodation</a></li>
-        </ul>
-      </li>
-      <li><a href="about.html" class="nav-link">About Us</a></li>
-      <li><a href="contact.html" class="nav-link">Contact</a></li>
-    </ul>
+    <ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
   </div>
 </div>
 
+<!-- Styles -->
 <style>
-#navList a.nav-link {
-  display:block;
-  color:white;
-  text-decoration:none;
-  padding:10px 12px;
-}
-#navList li { margin-bottom:10px; }
-#navList ul.submenu { display:none; padding-left:28px; margin-top:6px; list-style:none; }
-#navList .dropdown-toggle {
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  color:white;
-  padding:8px 12px;
-}
-#navList .arrow { transition:transform 0.25s ease; }
-#navList li.open > .dropdown-toggle .arrow { transform:rotate(90deg); }
-#navList a.nav-link.active { color:#ff4d6d; font-weight:600; }
+  #navList a.nav-link {
+    display:block;
+    color: white;
+    text-decoration: none;
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.35s ease;
+  }
+  #sideNav.menu-open #navList a.nav-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #navList li { margin-bottom: 10px; }
+  #navList ul.submenu { display: none; padding-left: 28px; margin-top: 6px; list-style:none; }
+  #navList .dropdown-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    padding: 8px 12px;
+  }
+  #navList .arrow { transition: transform 0.25s ease; }
+  #navList li.open > .dropdown-toggle .arrow { transform: rotate(90deg); }
+  #navList a.nav-link.active,
+  #navList .toggle-text.active {
+    color: #ff4d6d;
+    font-weight: 600;
+  }
+  #navList a.nav-link, #navList .dropdown-toggle { padding-left: 18px; padding-right: 18px; }
 </style>
 
+<!-- Scripts -->
 <script>
-function closeNav() {
-  document.getElementById("sideNav").style.width = "0";
-  document.getElementById("overlay").style.display = "none";
-}
-function initDropdowns() {
-  document.querySelectorAll("#sideNav .dropdown-toggle").forEach(toggle => {
-    toggle.onclick = () => {
-      const li = toggle.parentElement;
-      const submenu = li.querySelector(".submenu");
-      const arrow = toggle.querySelector(".arrow");
-      li.classList.toggle("open");
-      if (submenu) submenu.style.display = li.classList.contains("open") ? "block" : "none";
-      if (arrow) arrow.innerHTML = li.classList.contains("open") ? "&#709;" : "&#8250;";
-    };
+let _navRendered = false;
+
+function buildMenu(items, parentUl) {
+  items.forEach(item => {
+    const li = document.createElement('li');
+
+    if (item.type === "page") {
+      if (item.sub && item.sub.length > 0) {
+        const toggle = document.createElement('div');
+        toggle.className = "dropdown-toggle";
+        toggle.innerHTML = `<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`;
+        li.appendChild(toggle);
+
+        const subUl = document.createElement('ul');
+        subUl.className = 'submenu';
+        buildMenu(item.sub, subUl);
+        li.appendChild(subUl);
+      } else {
+        const a = document.createElement('a');
+        a.className = 'nav-link';
+        a.href = item.link || '#';
+        a.textContent = item.name;
+        li.appendChild(a);
+      }
+    }
+
+    if (item.type === "group") {
+      const toggle = document.createElement('div');
+      toggle.className = 'dropdown-toggle';
+      toggle.style.fontWeight = '700';
+      toggle.innerHTML = `<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`;
+      li.appendChild(toggle);
+
+      const groupUl = document.createElement('ul');
+      groupUl.className = 'submenu';
+      buildMenu(item.items || [], groupUl);
+      li.appendChild(groupUl);
+    }
+
+    parentUl.appendChild(li);
   });
 }
-initDropdowns();
+
+function renderNavIfNeeded() {
+  if (_navRendered) return;
+  _navRendered = true;
+
+  const navList = document.getElementById('navList');
+  navList.innerHTML = '';
+  buildMenu(navData, navList);
+  initDropdowns();
+  Array.from(navList.querySelectorAll('li')).forEach((li, i) => {
+    const link = li.querySelector('a.nav-link') || li.querySelector('.toggle-text');
+    if (link) link.style.transitionDelay = (0.05 * i) + 's';
+  });
+}
+
+function closeNav() {
+  const side = document.getElementById("sideNav");
+  const overlay = document.getElementById("overlay");
+  side.style.width = "0";
+  side.classList.remove("menu-open");
+  overlay.style.display = "none";
+}
+
+function initDropdowns() {
+  const navList = document.getElementById('navList');
+  const toggles = navList.querySelectorAll('.dropdown-toggle');
+
+  toggles.forEach(toggle => {
+    if (toggle._handler) toggle.removeEventListener('click', toggle._handler);
+    const handler = function() {
+      const li = this.parentElement;
+      const submenu = li.querySelector('.submenu');
+      const arrow = this.querySelector('.arrow');
+      const text = this.querySelector('.toggle-text');
+      const isOpen = li.classList.toggle('open');
+      if (submenu) submenu.style.display = isOpen ? 'block' : 'none';
+      if (arrow) arrow.innerHTML = isOpen ? '&#709;' : '&#8250;';
+      clearActiveMarks();
+      if (text) text.classList.toggle('active', isOpen);
+    };
+    toggle._handler = handler;
+    toggle.addEventListener('click', handler);
+  });
+
+  const links = navList.querySelectorAll('a.nav-link');
+  links.forEach(a => {
+    if (a._handler) a.removeEventListener('click', a._handler);
+    const handler = function() {
+      clearActiveMarks();
+      this.classList.add('active');
+    };
+    a._handler = handler;
+    a.addEventListener('click', handler);
+  });
+}
+
+function clearActiveMarks() {
+  const navList = document.getElementById('navList');
+  navList.querySelectorAll('a.nav-link').forEach(x => x.classList.remove('active'));
+  navList.querySelectorAll('.toggle-text').forEach(x => x.classList.remove('active'));
+}
+
+// When navigation.html is loaded, render menu immediately
+renderNavIfNeeded();
 </script>
