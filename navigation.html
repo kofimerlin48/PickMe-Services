@@ -1,34 +1,99 @@
-<ul style="list-style:none; padding:0; margin:0; font-size:18px;">
-  <li style="margin-bottom:15px;">
-    <a href="index.html" style="color:white; text-decoration:none;">Home</a>
-  </li>
+<!-- ================== EDITABLE SECTION ================== -->
+<script>
+const navData = [
+  // Single page (no group)
+  { type: "page", name: "Home", link: "index.html" },
 
-  <li style="margin-bottom:15px;">
-    <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white;">
-      <span>Services</span>
-      <span class="arrow">&#8250;</span> <!-- right arrow -->
-    </div>
-    <ul style="list-style:none; padding-left:20px; margin-top:10px; display:none;">
-      <li style="margin-bottom:10px;"><a href="ride.html" style="color:white; text-decoration:none;">Ride-Hailing</a></li>
-      <li style="margin-bottom:10px;"><a href="delivery.html" style="color:white; text-decoration:none;">Delivery</a></li>
-      <li style="margin-bottom:10px;">
-        <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white;">
-          <span>Others</span>
+  // Group with main pages, sub pages, sub-sub pages
+  { type: "group", name: "Our Services", items: [
+      { type: "page", name: "Food & Drinks", link: "food.html", sub: [
+          { type: "page", name: "Food", link: "food-only.html", sub: [
+              { type: "page", name: "Rice", link: "rice.html" },
+              { type: "page", name: "Snacks", link: "snacks.html" }
+          ]},
+          { type: "page", name: "Drinks", link: "drinks.html" }
+      ]},
+      { type: "page", name: "Fashion", link: "fashion.html" },
+      { type: "page", name: "Events", link: "events.html" },
+      { type: "page", name: "Accommodation", link: "accommodation.html" }
+  ]},
+
+  // Other single pages
+  { type: "page", name: "About Us", link: "about.html" },
+  { type: "page", name: "Contact", link: "contact.html" }
+];
+</script>
+<!-- =============== END OF EDITABLE SECTION =============== -->
+
+<ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
+
+<script>
+// Build menu recursively
+function buildMenu(items, parentUl) {
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.style.marginBottom = "15px";
+
+    if(item.type === "page") {
+      if(item.sub && item.sub.length > 0) {
+        li.innerHTML = `
+          <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white;">
+            <span>${item.name}</span>
+            <span class="arrow">&#8250;</span>
+          </div>
+        `;
+        const subUl = document.createElement("ul");
+        subUl.style.listStyle = "none";
+        subUl.style.paddingLeft = "20px";
+        subUl.style.marginTop = "10px";
+        subUl.style.display = "none";
+        buildMenu(item.sub, subUl);
+        li.appendChild(subUl);
+      } else {
+        li.innerHTML = `<a href="${item.link}" style="color:white; text-decoration:none;">${item.name}</a>`;
+      }
+    }
+
+    if(item.type === "group") {
+      li.innerHTML = `
+        <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white; font-weight:bold;">
+          <span>${item.name}</span>
           <span class="arrow">&#8250;</span>
         </div>
-        <ul style="list-style:none; padding-left:20px; margin-top:10px; display:none;">
-          <li style="margin-bottom:10px;"><a href="waste.html" style="color:white; text-decoration:none;">Waste Management</a></li>
-          <li style="margin-bottom:10px;"><a href="rental.html" style="color:white; text-decoration:none;">House Rental</a></li>
-        </ul>
-      </li>
-    </ul>
-  </li>
+      `;
+      const groupUl = document.createElement("ul");
+      groupUl.style.listStyle = "none";
+      groupUl.style.paddingLeft = "20px";
+      groupUl.style.marginTop = "10px";
+      groupUl.style.display = "none";
+      buildMenu(item.items, groupUl);
+      li.appendChild(groupUl);
+    }
 
-  <li style="margin-bottom:15px;">
-    <a href="about.html" style="color:white; text-decoration:none;">About Us</a>
-  </li>
+    parentUl.appendChild(li);
+  });
+}
 
-  <li style="margin-bottom:15px;">
-    <a href="contact.html" style="color:white; text-decoration:none;">Contact</a>
-  </li>
-</ul>
+// Render navigation
+const navList = document.getElementById("navList");
+buildMenu(navData, navList);
+
+// Dropdown arrow toggle
+function initDropdowns() {
+  const toggles = document.querySelectorAll(".dropdown-toggle");
+  toggles.forEach(toggle => {
+    toggle.addEventListener("click", () => {
+      const submenu = toggle.nextElementSibling;
+      const arrow = toggle.querySelector(".arrow");
+      if(submenu.style.display === "block") {
+        submenu.style.display = "none";
+        arrow.innerHTML = "&#8250;"; // right
+      } else {
+        submenu.style.display = "block";
+        arrow.innerHTML = "&#709;"; // down
+      }
+    });
+  });
+}
+initDropdowns();
+</script>
