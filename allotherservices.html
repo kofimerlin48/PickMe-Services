@@ -71,21 +71,69 @@
 </head>  
 
   <!-- Fixed Header -->
-  <div style="
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: white; /* solid white */
-      text-align: center;
-      padding: 20px 0; /* minimal height */
-      z-index: 10;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      border-bottom-left-radius: 20px;  /* curvy bottom left */
-      border-bottom-right-radius: 20px; /* curvy bottom right */
-  ">
-    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px;">All Other Services</h1>
-  </div>
+<div style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: white; /* solid white */
+    text-align: center;
+    padding: 20px 0; /* minimal height */
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-bottom-left-radius: 20px;  /* curvy bottom left */
+    border-bottom-right-radius: 20px; /* curvy bottom right */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+">
+    <!-- Logo (left) -->
+    <img src=""https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo" style="width:40px; height:40px; border-radius:10px; margin-left:15px;">
+
+    <!-- Page Title (center) -->
+    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px; position: absolute; left: 50%; transform: translateX(-50%);">
+        All Other Services
+    </h1>
+
+    <!-- Hamburger Menu (right) -->
+    <div onclick="openNav()" style="font-size: 28px; cursor: pointer; margin-right:15px;">
+        &#9776;
+    </div>
+</div>
+
+<!-- Navigation Panel (empty, will fetch navigation.html) -->
+<div id="sideNav" style="
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: #2b2b2b; /* dark ash */
+    overflow-x: hidden;
+    transition: 0.4s;
+    padding-top: 60px;
+    z-index: 20;
+    color: white;
+">
+    <a href="javascript:void(0)" onclick="closeNav()" style="position:absolute; top:15px; right:25px; font-size:36px; text-decoration:none; color:white;">&times;</a>
+    <div id="navContent" style="padding:20px;">
+        <!-- navigation.html will be loaded here -->
+    </div>
+</div>
+
+<script>
+function openNav() {
+    document.getElementById("sideNav").style.width = "280px";
+    fetch("navigation.html")
+      .then(response => response.text())
+      .then(data => {
+          document.getElementById("navContent").innerHTML = data;
+      });
+}
+function closeNav() {
+    document.getElementById("sideNav").style.width = "0";
+}
+</script>
 
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
@@ -765,6 +813,7 @@
 
 </body>  
 </html>
+
 
 
 
