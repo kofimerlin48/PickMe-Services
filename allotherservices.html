@@ -1,12 +1,21 @@
 <!DOCTYPE html>  
 <html lang="en">  
 <head>  
+
+  <style>
+/* Remove blue outline and tap highlight for clickable cards */
+.card, .card a, .card button {
+    outline: none;                  /* removes the blue focus outline */
+    -webkit-tap-highlight-color: transparent;  /* removes the blue highlight on mobile */
+}
+</style>
+  
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">  
 <title>Service Directory</title>  
 <style>  
   body { font-family: 'Segoe UI', sans-serif; margin: 20px; padding-top: 100px; background:#f9f9f9; }  
-  .search-bar { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }  
+  .search-bar { width: 85%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }  
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 25px; }  
   .service { background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: 0.2s; }  
   .service img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }  
@@ -49,6 +58,13 @@
   border:1px solid #d8e7ff; margin:6px 6px 0 0;
   }
   .tag:hover { background:#e3efff; }
+
+/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
+* {
+  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
+  outline: none !important; /* Remove focus outline */
+}
+  
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
@@ -743,193 +759,13 @@
   });  
   </script>  
 
-    <div id="announcementBar" style="  
-  position:sticky;  
-  top:0;  
-  z-index:9999;  
-  width:100%;  
-  height:60px;  
-  background:transparent;  
-  color:#000;  
-  font-size:18px;  
-  font-weight:600;  
-  font-family:'Segoe UI', Roboto, sans-serif;  
-  text-align:center;  
-  line-height:60px;  
-  overflow:hidden;  
-  white-space:nowrap;  
-  cursor:grab;  
-">  
-  <div id="announcementWrapper" style="  
-    display:inline-block;  
-    white-space:nowrap;  
-    will-change:transform;  
-  ">  
-    <span id="announcementContent"></span>  
-    <span id="announcementContentClone"></span>  
-  </div>  
-</div>  
+  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
+    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
+</div>
 
-<style>   
-.flash-here {  
-  color: red;  
-  font-weight: bold;  
-  text-decoration: underline;  
-  animation: flash 1s infinite;  
-}  
-@keyframes flash {  
-  0%, 100% { color: red; }  
-  50% { color: blue; }  
-}  
-
-#announcementBar,
-#announcementBar * {
-  -webkit-tap-highlight-color: transparent;
-  outline: none !important;
-  user-select: none;
-}
-</style>  
-
-<script>  
-const announcements = [  
-  { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01" },  
-  { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15" },  
-  { owner: "PickMe Services", content: "🏨 Book hotels, Guesthouses, Airbnb, Hostel rent, Store rent & House rent directly on PickMe Services!", phone: "+233534742142", plan: "Semi-Annual", added: "2025-07-01" },  
-  { owner: "WOO ENTERTAINMENT", content: "✨ WOO ENTERTAINMENT is bringing to you the AGOGO NA ME FRI Season 26. Watch Out!!!", phone: "+233534742142", expiry: "2025-09-20" },  
-  { owner: "Manko Pub", content: "🎤 KWAKU FLICK is repping live at Manko Pub on 5th September, 2025. Don't miss it.", phone: "+233534742142", plan: "Annual", added: "2025-01-01" },  
-  { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10" },  
-  { owner: "Extra 1", content: "📢 This is a test announcement number 7", phone: "+233534742142" },  
-  { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" }  
-];  
-
-function getExpiryDate(item) {  
-  if (item.expiry) return new Date(item.expiry);  
-  if (!item.plan || !item.added) return null;  
-  const addedDate = new Date(item.added);  
-  switch (item.plan.toLowerCase()) {  
-    case "monthly": addedDate.setMonth(addedDate.getMonth() + 1); break;  
-    case "quarterly": addedDate.setMonth(addedDate.getMonth() + 3); break;  
-    case "semi-annual":  
-    case "semi-annually": addedDate.setMonth(addedDate.getMonth() + 6); break;  
-    case "annual":  
-    case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;  
-  }  
-  return addedDate;  
-}  
-
-const today = new Date();  
-let activeAnnouncements = announcements.filter(a => {  
-  const expiryDate = getExpiryDate(a);  
-  return !expiryDate || today <= expiryDate;  
-});  
-
-activeAnnouncements = activeAnnouncements  
-  .map(a => ({ a, r: Math.random() }))  
-  .sort((x, y) => x.r - y.r)  
-  .map(({ a }) => a);  
-
-function buildFinalList(arr) {  
-  const result = [];  
-  let count = 0;  
-  for (let i = 0; i < arr.length; i++) {  
-    result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
-    count++;  
-    if (count === 5) {  
-      result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
-      count = 0;  
-    }  
-  }  
-  if (count > 0) {  
-    result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
-  }  
-  return result;  
-}  
-
-const finalList = buildFinalList(activeAnnouncements);  
-const contentEl = document.getElementById("announcementContent");  
-const cloneEl = document.getElementById("announcementContentClone");  
-const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";  
-
-function renderAnnouncements(list, el) {  
-  el.innerHTML = list.map(item => {  
-    if(item.isFlash) {
-      return `<span class="clickable-announcement flash-here" data-href="${item.href}" style="cursor:pointer;">${item.text}</span>`;
-    } else if (item.owner && item.phone) {  
-      return `<span class="clickable-announcement" data-owner="${item.owner}" data-content="${item.text}" data-phone="${item.phone}" style="cursor:pointer;">${item.text}</span>`;  
-    } else {  
-      return item.text;  
-    }  
-  }).join(separator) + separator;  
-}  
-
-renderAnnouncements(finalList, contentEl);  
-renderAnnouncements(finalList, cloneEl);  
-
-const wrapper = document.getElementById("announcementWrapper");  
-let posX = 0;  
-let speed = 1;  
-let isDragging = false, startX = 0;  
-const contentWidth = contentEl.offsetWidth;  
-
-let dragThreshold = 5; // Minimum movement in pixels to consider as drag
-let pointerDownX = 0;
-let moved = false;
-
-function animate() {  
-  if (!isDragging) posX -= speed;  
-  if (Math.abs(posX) >= contentWidth) posX = 0;  
-  wrapper.style.transform = `translateX(${posX}px)`;  
-  requestAnimationFrame(animate);  
-}  
-animate();  
-
-// Drag Support (with tap vs drag detection)
-wrapper.addEventListener("mousedown", e => {
-  isDragging = true;
-  pointerDownX = e.pageX;
-  startX = e.pageX - posX;
-  moved = false;
-});
-wrapper.addEventListener("mousemove", e => {
-  if (!isDragging) return;
-  posX = e.pageX - startX;
-  if (Math.abs(e.pageX - pointerDownX) > dragThreshold) moved = true;
-});
-wrapper.addEventListener("mouseup", e => isDragging = false);
-wrapper.addEventListener("mouseleave", e => isDragging = false);
-
-wrapper.addEventListener("touchstart", e => {
-  isDragging = true;
-  pointerDownX = e.touches[0].pageX;
-  startX = e.touches[0].pageX - posX;
-  moved = false;
-});
-wrapper.addEventListener("touchmove", e => {
-  if (!isDragging) return;
-  posX = e.touches[0].pageX - startX;
-  if (Math.abs(e.touches[0].pageX - pointerDownX) > dragThreshold) moved = true;
-});
-wrapper.addEventListener("touchend", e => isDragging = false);
-
-// Click Handlers with drag detection
-document.addEventListener("click", e => {  
-  if (!e.target.classList.contains("clickable-announcement")) return;
-
-  if (moved) return; // ignore clicks if it was a drag
-
-  if (e.target.dataset.href) {
-    // Open the full destination page directly
-    window.open(e.target.dataset.href, "_self");
-  } else {
-    const phone = e.target.dataset.phone;  
-    const content = e.target.dataset.content;  
-    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
-  }
-});  
-</script>
-  
 </body>  
 </html>
+
+
 
 
