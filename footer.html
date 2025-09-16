@@ -126,7 +126,7 @@ let speed = 1;
 let isDragging = false, startX = 0;  
 const contentWidth = contentEl.offsetWidth;  
 
-let dragThreshold = 5; // Minimum movement in pixels to consider as drag
+let dragThreshold = 5; 
 let pointerDownX = 0;
 let moved = false;
 
@@ -138,7 +138,7 @@ function animate() {
 }  
 animate();  
 
-// Drag Support (with tap vs drag detection)
+// Drag Support
 wrapper.addEventListener("mousedown", e => {
   isDragging = true;
   pointerDownX = e.pageX;
@@ -166,15 +166,15 @@ wrapper.addEventListener("touchmove", e => {
 });
 wrapper.addEventListener("touchend", e => isDragging = false);
 
-// Click Handlers with drag detection
+// Click Handlers
 document.addEventListener("click", e => {  
   if (!e.target.classList.contains("clickable-announcement")) return;
 
   if (moved) return; // ignore clicks if it was a drag
 
   if (e.target.dataset.href) {
-    // Open the full destination page directly
-    window.open(e.target.dataset.href, "_self");
+    // ✅ Force opening in main page (not iframe)
+    window.parent.location.href = e.target.dataset.href;
   } else {
     const phone = e.target.dataset.phone;  
     const content = e.target.dataset.content;  
