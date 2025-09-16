@@ -170,10 +170,11 @@ wrapper.addEventListener("touchend", e => isDragging = false);
 document.addEventListener("click", e => {  
   if (!e.target.classList.contains("clickable-announcement")) return;
 
-  if(moved) return; // ignore clicks if it was a drag
+  if (moved) return; // ignore clicks if it was a drag
 
-  if(e.target.dataset.href) {
-    window.open(e.target.dataset.href, "_blank"); // Flashing ad click
+  if (e.target.dataset.href) {
+    // Navigate smoothly in same tab (fix: no black flash)
+    window.location.href = e.target.dataset.href;
   } else {
     const phone = e.target.dataset.phone;  
     const content = e.target.dataset.content;  
