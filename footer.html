@@ -1,3 +1,4 @@
+<!-- ===== Announcement bar with SPA-safe navigation (no black flash) ===== -->
 <div id="announcementBar" style="  
   position:sticky;  
   top:0;  
@@ -44,110 +45,135 @@
   user-select: none;
 }
 
-/* Fade transition */
+/* Fade transition for navigation */
 body {
   opacity: 1;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.45s ease;
 }
 body.fade-out {
   opacity: 0;
 }
-</style>  
 
-<script>  
-const announcements = [  
-  { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01" },  
-  { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15" },  
-  { owner: "PickMe Services", content: "🏨 Book hotels, Guesthouses, Airbnb, Hostel rent, Store rent & House rent directly on PickMe Services!", phone: "+233534742142", plan: "Semi-Annual", added: "2025-07-01" },  
-  { owner: "WOO ENTERTAINMENT", content: "✨ WOO ENTERTAINMENT is bringing to you the AGOGO NA ME FRI Season 26. Watch Out!!!", phone: "+233534742142", expiry: "2025-09-20" },  
-  { owner: "Manko Pub", content: "🎤 KWAKU FLICK is repping live at Manko Pub on 5th September, 2025. Don't miss it.", phone: "+233534742142", plan: "Annual", added: "2025-01-01" },  
-  { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10" },  
-  { owner: "Extra 1", content: "📢 This is a test announcement number 7", phone: "+233534742142" },  
-  { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" }  
-];  
+/* SPA overlay to mask any repaint/glitch during content swap */
+#spaOverlay {
+  position: fixed;
+  inset: 0;
+  background: #fff; /* set to your page background color to avoid flashes */
+  z-index: 2147483646; /* very high but below browser chrome */
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#spaOverlay.show { display:flex; }
 
-function getExpiryDate(item) {  
-  if (item.expiry) return new Date(item.expiry);  
-  if (!item.plan || !item.added) return null;  
-  const addedDate = new Date(item.added);  
-  switch (item.plan.toLowerCase()) {  
-    case "monthly": addedDate.setMonth(addedDate.getMonth() + 1); break;  
-    case "quarterly": addedDate.setMonth(addedDate.getMonth() + 3); break;  
-    case "semi-annual":  
-    case "semi-annually": addedDate.setMonth(addedDate.getMonth() + 6); break;  
-    case "annual":  
-    case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;  
-  }  
-  return addedDate;  
-}  
+/* optional spinner */
+#spaOverlay .spinner {
+  width:36px; height:36px; border-radius:50%;
+  border:4px solid rgba(0,0,0,0.08);
+  border-top-color: rgba(0,0,0,0.35);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
-const today = new Date();  
-let activeAnnouncements = announcements.filter(a => {  
-  const expiryDate = getExpiryDate(a);  
-  return !expiryDate || today <= expiryDate;  
-});  
+<!-- Cover overlay used during SPA fetch/swap (helps avoid black flash) -->
+<div id="spaOverlay" aria-hidden="true"><div class="spinner" aria-hidden="true"></div></div>
 
-activeAnnouncements = activeAnnouncements  
-  .map(a => ({ a, r: Math.random() }))  
-  .sort((x, y) => x.r - y.r)  
-  .map(({ a }) => a);  
+<script>
+/* === Announcements data and rendering (unchanged behavior) === */
+const announcements = [
+  { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01" },
+  { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15" },
+  { owner: "PickMe Services", content: "🏨 Book hotels, Guesthouses, Airbnb, Hostel rent, Store rent & House rent directly on PickMe Services!", phone: "+233534742142", plan: "Semi-Annual", added: "2025-07-01" },
+  { owner: "WOO ENTERTAINMENT", content: "✨ WOO ENTERTAINMENT is bringing to you the AGOGO NA ME FRI Season 26. Watch Out!!!", phone: "+233534742142", expiry: "2025-09-20" },
+  { owner: "Manko Pub", content: "🎤 KWAKU FLICK is repping live at Manko Pub on 5th September, 2025. Don't miss it.", phone: "+233534742142", plan: "Annual", added: "2025-01-01" },
+  { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10" },
+  { owner: "Extra 1", content: "📢 This is a test announcement number 7", phone: "+233534742142" },
+  { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" }
+];
 
-function buildFinalList(arr) {  
-  const result = [];  
-  let count = 0;  
-  for (let i = 0; i < arr.length; i++) {  
-    result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });  
-    count++;  
-    if (count === 5) {  
-      result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
-      count = 0;  
-    }  
-  }  
-  if (count > 0) {  
-    result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
-  }  
-  return result;  
-}  
+function getExpiryDate(item) {
+  if (item.expiry) return new Date(item.expiry);
+  if (!item.plan || !item.added) return null;
+  const addedDate = new Date(item.added);
+  switch (item.plan.toLowerCase()) {
+    case "monthly": addedDate.setMonth(addedDate.getMonth() + 1); break;
+    case "quarterly": addedDate.setMonth(addedDate.getMonth() + 3); break;
+    case "semi-annual":
+    case "semi-annually": addedDate.setMonth(addedDate.getMonth() + 6); break;
+    case "annual":
+    case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;
+  }
+  return addedDate;
+}
 
-const finalList = buildFinalList(activeAnnouncements);  
-const contentEl = document.getElementById("announcementContent");  
-const cloneEl = document.getElementById("announcementContentClone");  
-const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";  
+const today = new Date();
+let activeAnnouncements = announcements.filter(a => {
+  const expiry = getExpiryDate(a);
+  return !expiry || today <= expiry;
+});
 
-function renderAnnouncements(list, el) {  
-  el.innerHTML = list.map(item => {  
-    if(item.isFlash) {
+activeAnnouncements = activeAnnouncements
+  .map(a => ({ a, r: Math.random() }))
+  .sort((x, y) => x.r - y.r)
+  .map(({ a }) => a);
+
+function buildFinalList(arr) {
+  const result = [];
+  let count = 0;
+  for (let i = 0; i < arr.length; i++) {
+    result.push({ text: arr[i].content, owner: arr[i].owner, phone: arr[i].phone });
+    count++;
+    if (count === 5) {
+      result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });
+      count = 0;
+    }
+  }
+  if (count > 0) {
+    result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });
+  }
+  return result;
+}
+
+const finalList = buildFinalList(activeAnnouncements);
+const contentEl = document.getElementById("announcementContent");
+const cloneEl = document.getElementById("announcementContentClone");
+const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";
+
+function renderAnnouncements(list, el) {
+  el.innerHTML = list.map(item => {
+    if (item.isFlash) {
       return `<span class="clickable-announcement flash-here" data-href="${item.href}" style="cursor:pointer;">${item.text}</span>`;
-    } else if (item.owner && item.phone) {  
-      return `<span class="clickable-announcement" data-owner="${item.owner}" data-content="${item.text}" data-phone="${item.phone}" style="cursor:pointer;">${item.text}</span>`;  
-    } else {  
-      return item.text;  
-    }  
-  }).join(separator) + separator;  
-}  
+    } else if (item.owner && item.phone) {
+      return `<span class="clickable-announcement" data-owner="${item.owner}" data-content="${item.text}" data-phone="${item.phone}" style="cursor:pointer;">${item.text}</span>`;
+    } else {
+      return item.text;
+    }
+  }).join(separator) + separator;
+}
 
-renderAnnouncements(finalList, contentEl);  
-renderAnnouncements(finalList, cloneEl);  
+renderAnnouncements(finalList, contentEl);
+renderAnnouncements(finalList, cloneEl);
 
-const wrapper = document.getElementById("announcementWrapper");  
-let posX = 0;  
-let speed = 1;  
-let isDragging = false, startX = 0;  
-const contentWidth = contentEl.offsetWidth;  
+/* === Slider + drag logic (kept intact) === */
+const wrapper = document.getElementById("announcementWrapper");
+let posX = 0;
+let speed = 1;
+let isDragging = false, startX = 0;
+const contentWidth = contentEl.offsetWidth;
 
-let dragThreshold = 5; // Minimum movement in pixels to consider as drag
+let dragThreshold = 5;
 let pointerDownX = 0;
 let moved = false;
 
-function animate() {  
-  if (!isDragging) posX -= speed;  
-  if (Math.abs(posX) >= contentWidth) posX = 0;  
-  wrapper.style.transform = `translateX(${posX}px)`;  
-  requestAnimationFrame(animate);  
-}  
-animate();  
+function animate() {
+  if (!isDragging) posX -= speed;
+  if (Math.abs(posX) >= contentWidth) posX = 0;
+  wrapper.style.transform = `translateX(${posX}px)`;
+  requestAnimationFrame(animate);
+}
+animate();
 
-// Drag Support (with tap vs drag detection)
 wrapper.addEventListener("mousedown", e => {
   isDragging = true;
   pointerDownX = e.pageX;
@@ -175,23 +201,153 @@ wrapper.addEventListener("touchmove", e => {
 });
 wrapper.addEventListener("touchend", e => isDragging = false);
 
-// Click Handlers with drag detection + fade effect
-document.addEventListener("click", e => {  
-  if (!e.target.classList.contains("clickable-announcement")) return;
+/* === SPA-like navigation: fetch & swap content to avoid full reload (no black flash) === */
+const spaOverlay = document.getElementById('spaOverlay');
 
-  if (moved) return; // ignore clicks if it was a drag
+function showSpaOverlay() {
+  spaOverlay.classList.add('show');
+}
+function hideSpaOverlay() {
+  spaOverlay.classList.remove('show');
+}
 
-  if (e.target.dataset.href) {
-    // Smooth fade-out transition before navigation
-    document.body.classList.add("fade-out");
-    setTimeout(() => {
-      window.location.href = e.target.dataset.href;
-    }, 500); // match CSS transition duration
-  } else {
-    const phone = e.target.dataset.phone;  
-    const content = e.target.dataset.content;  
-    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
+/* Helper: find a matching container selector present in both current document and fetched doc */
+function findMatchingSelector(doc) {
+  const selectors = ['#page-content', 'main', '#main', '#content', '.page', '.content', 'body'];
+  for (const s of selectors) {
+    if (document.querySelector(s) && doc.querySelector(s)) return s;
   }
-});  
+  return null;
+}
+
+/* Helper: run any scripts found inside a node (re-insert so browsers execute) */
+function runInlineAndExternalScripts(container, baseUrl) {
+  const scripts = Array.from(container.querySelectorAll('script'));
+  scripts.forEach(old => {
+    const newScript = document.createElement('script');
+    // copy type if present
+    if (old.type) newScript.type = old.type;
+    if (old.src) {
+      // resolve relative src against fetched page base URL
+      newScript.src = new URL(old.getAttribute('src'), baseUrl).href;
+      newScript.async = false;
+      document.body.appendChild(newScript);
+    } else {
+      newScript.textContent = old.textContent;
+      document.body.appendChild(newScript);
+    }
+  });
+}
+
+/* Handle back/forward to restore saved HTML (if available) */
+window.addEventListener('popstate', (ev) => {
+  if (ev.state && ev.state.selector && ev.state.html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(ev.state.html, 'text/html');
+    const sel = ev.state.selector;
+    const newNode = doc.querySelector(sel);
+    const curNode = document.querySelector(sel);
+    if (newNode && curNode) {
+      curNode.innerHTML = newNode.innerHTML;
+      document.title = ev.state.title || document.title;
+      // run scripts inside swapped content
+      runInlineAndExternalScripts(newNode, location.href);
+    } else {
+      // fallback — do a real navigation
+      location.href = location.href;
+    }
+  } else {
+    // nothing saved: do full reload as safe fallback
+    location.reload();
+  }
+});
+
+/* Click handler:
+   - If announcement has data-href and same-origin: fetch page, swap content, pushState
+   - If cross-origin or fallback: do normal navigation with fade as fallback
+   - WhatsApp clicks remain opening in a new tab
+*/
+document.addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("clickable-announcement")) return;
+  if (moved) return; // it was a drag
+
+  const href = e.target.dataset.href;
+  if (!href) {
+    // WhatsApp behavior (unchanged)
+    const phone = e.target.dataset.phone;
+    const content = e.target.dataset.content;
+    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");
+    return;
+  }
+
+  // Resolve absolute URL
+  const resolved = new URL(href, location.href);
+
+  // If cross-origin, fall back to same-tab navigation with fade overlay
+  if (resolved.origin !== location.origin) {
+    document.body.classList.add('fade-out');
+    showSpaOverlay();
+    setTimeout(() => { window.location.href = resolved.href; }, 450);
+    return;
+  }
+
+  // Same-origin: try SPA fetch + swap
+  showSpaOverlay();
+  try {
+    const res = await fetch(resolved.href, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // find a matching container selector that exists in both documents
+    const selector = findMatchingSelector(doc);
+    if (!selector) {
+      // Can't find a safe swap target — gracefully fall back to normal navigation with fade
+      document.body.classList.add('fade-out');
+      await new Promise(r => setTimeout(r, 450));
+      window.location.href = resolved.href;
+      return;
+    }
+
+    const newNode = doc.querySelector(selector);
+    const curNode = document.querySelector(selector);
+    if (!newNode || !curNode) {
+      document.body.classList.add('fade-out');
+      await new Promise(r => setTimeout(r, 450));
+      window.location.href = resolved.href;
+      return;
+    }
+
+    // Swap content
+    curNode.innerHTML = newNode.innerHTML;
+
+    // Update document title
+    const newTitle = doc.querySelector('title') ? doc.querySelector('title').textContent : document.title;
+    document.title = newTitle;
+
+    // Run scripts found in the new content
+    runInlineAndExternalScripts(newNode, resolved.href);
+
+    // push state so back/forward works (store fetched html & selector & title)
+    const state = { html: html, selector: selector, title: newTitle };
+    window.history.pushState(state, newTitle, resolved.href);
+
+    // scroll top
+    window.scrollTo(0, 0);
+
+    // small UX: brief fade (optional)
+    document.body.classList.remove('fade-out');
+
+  } catch (err) {
+    console.warn('SPA load failed, falling back to full nav:', err);
+    // fallback to full navigation with fade
+    document.body.classList.add('fade-out');
+    await new Promise(r => setTimeout(r, 450));
+    window.location.href = resolved.href;
+  } finally {
+    hideSpaOverlay();
+  }
+});
 </script>
