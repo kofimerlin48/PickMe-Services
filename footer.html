@@ -1,3 +1,4 @@
+<!-- fota.html (footer.html) - corrected -->
 <div id="announcementBar" style="  
   position:sticky;  
   top:0;  
@@ -45,7 +46,8 @@
 }
 </style>  
 
-<script>  
+<script>
+/* === YOUR ORIGINAL ANNOUNCEMENTS (unchanged) === */
 const announcements = [  
   { owner: "PickMe Services", content: "🚖 PickMe Services is now available in Agogo!", phone: "+233534742142", plan: "Monthly", added: "2025-09-01" },  
   { owner: "PickMe Services", content: "🛍️ Shop from your favorite vendors — Fast & Easy!", phone: "+233534742142", plan: "Quarterly", added: "2025-08-15" },  
@@ -55,8 +57,9 @@ const announcements = [
   { owner: "New Promo", content: "🔥 Big promo ongoing, don’t miss out!", phone: "+233534742142", plan: "Monthly", added: "2025-08-10" },  
   { owner: "Extra 1", content: "📢 This is a test announcement number 7", phone: "+233534742142" },  
   { owner: "Extra 2", content: "📢 Another message number 8", phone: "+233534742142" }  
-];  
+];
 
+/* expiry logic & shuffle (unchanged) */
 function getExpiryDate(item) {  
   if (item.expiry) return new Date(item.expiry);  
   if (!item.plan || !item.added) return null;  
@@ -70,18 +73,18 @@ function getExpiryDate(item) {
     case "annually": addedDate.setFullYear(addedDate.getFullYear() + 1); break;  
   }  
   return addedDate;  
-}  
+}
 
 const today = new Date();  
 let activeAnnouncements = announcements.filter(a => {  
   const expiryDate = getExpiryDate(a);  
   return !expiryDate || today <= expiryDate;  
-});  
+});
 
 activeAnnouncements = activeAnnouncements  
   .map(a => ({ a, r: Math.random() }))  
   .sort((x, y) => x.r - y.r)  
-  .map(({ a }) => a);  
+  .map(({ a }) => a);
 
 function buildFinalList(arr) {  
   const result = [];  
@@ -98,33 +101,44 @@ function buildFinalList(arr) {
     result.push({ text: "📢 Want to advertise? Click HERE to add your announcement", href: "homepage.html", isFlash: true });  
   }  
   return result;  
-}  
+}
 
 const finalList = buildFinalList(activeAnnouncements);  
 const contentEl = document.getElementById("announcementContent");  
 const cloneEl = document.getElementById("announcementContentClone");  
-const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";  
+const separator = " &nbsp;&nbsp; • &nbsp;&nbsp; ";
 
+/* Render: keep phone announcements as clickable spans (open WhatsApp), but
+   render the "isFlash/href" item as a real <a target="_top"> link (strong fallback). */
 function renderAnnouncements(list, el) {  
   el.innerHTML = list.map(item => {  
-    if(item.isFlash) {
-      return `<span class="clickable-announcement flash-here" data-href="${item.href}" style="cursor:pointer;">${item.text}</span>`;
+    if (item.isFlash) {
+      // Render as an anchor with target _top. This is the most reliable default behavior
+      // for breaking out of iframes in normal cases.
+      return `<a class="clickable-announcement flash-here" href="${item.href}" target="_top" rel="noopener noreferrer" style="cursor:pointer;">${item.text}</a>`;
     } else if (item.owner && item.phone) {  
+      // keep as span so we can open WhatsApp in a new tab (preserve existing behavior)
       return `<span class="clickable-announcement" data-owner="${item.owner}" data-content="${item.text}" data-phone="${item.phone}" style="cursor:pointer;">${item.text}</span>`;  
     } else {  
       return item.text;  
     }  
   }).join(separator) + separator;  
-}  
+}
 
 renderAnnouncements(finalList, contentEl);  
-renderAnnouncements(finalList, cloneEl);  
+renderAnnouncements(finalList, cloneEl);
 
+/* animation / slider (unchanged) */
 const wrapper = document.getElementById("announcementWrapper");  
 let posX = 0;  
 let speed = 1;  
 let isDragging = false, startX = 0;  
-const contentWidth = contentEl.offsetWidth;  
+let contentWidth = contentEl.offsetWidth || 1;
+
+/* recompute width on resize (helpful when loaded in iframe) */
+window.addEventListener('resize', () => {
+  contentWidth = contentEl.offsetWidth || 1;
+});
 
 let dragThreshold = 5; 
 let pointerDownX = 0;
@@ -135,10 +149,10 @@ function animate() {
   if (Math.abs(posX) >= contentWidth) posX = 0;  
   wrapper.style.transform = `translateX(${posX}px)`;  
   requestAnimationFrame(animate);  
-}  
-animate();  
+}
+animate();
 
-// Drag Support
+/* Drag Support (with tap vs drag detection) */
 wrapper.addEventListener("mousedown", e => {
   isDragging = true;
   pointerDownX = e.pageX;
@@ -166,20 +180,94 @@ wrapper.addEventListener("touchmove", e => {
 });
 wrapper.addEventListener("touchend", e => isDragging = false);
 
-// Click Handlers
-document.addEventListener("click", e => {  
-  if (!e.target.classList.contains("clickable-announcement")) return;
+/* === Robust navigation helper ===
+   Tries several fallbacks (top -> parent -> window.open _top -> anchor trick -> location).
+   Logs errors to console for diagnostics if navigation is blocked (e.g. by sandbox).
+*/
+function breakOutTo(url) {
+  // 1) try top
+  try {
+    if (window.top && window.top !== window) {
+      window.top.location.href = url;
+      console.info('Navigation: used window.top.location.href');
+      return;
+    }
+  } catch (err) {
+    console.warn('Navigation to top blocked:', err);
+  }
 
+  // 2) try parent
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.location.href = url;
+      console.info('Navigation: used window.parent.location.href');
+      return;
+    }
+  } catch (err) {
+    console.warn('Navigation to parent blocked:', err);
+  }
+
+  // 3) try window.open with _top
+  try {
+    window.open(url, '_top');
+    console.info('Navigation: used window.open(_, "_top")');
+    return;
+  } catch (err) {
+    console.warn('window.open(_top) blocked:', err);
+  }
+
+  // 4) fallback: create anchor with target _top and click it (may be blocked by sandbox)
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_top';
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    console.info('Navigation: used anchor target _top fallback');
+    return;
+  } catch (err) {
+    console.warn('anchor _top fallback blocked:', err);
+  }
+
+  // 5) last resort: change current location (may load inside iframe)
+  try {
+    window.location.href = url;
+    console.info('Navigation: used window.location.href (inside iframe)');
+  } catch (err) {
+    console.error('All navigation attempts failed:', err);
+  }
+}
+
+/* Click Handlers with drag detection */
+document.addEventListener("click", e => {  
+  // If click originates from an <a href target=_top> we let browser handle it.
+  // But we still capture clicks on spans (WhatsApp) and span-based hrefs.
   if (moved) return; // ignore clicks if it was a drag
 
-  if (e.target.dataset.href) {
-    // ✅ Force opening in main page (not iframe)
-    window.parent.location.href = e.target.dataset.href;
-  } else {
-    const phone = e.target.dataset.phone;  
-    const content = e.target.dataset.content;  
-    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;  
-    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");  
+  const el = e.target;
+  if (!el.classList.contains("clickable-announcement")) return;
+
+  // If element is an anchor with an href and target=_top, let it go (browser handles)
+  if (el.tagName === 'A' && el.href) {
+    // anchor with target should naturally break out; do nothing here
+    return;
   }
-});  
+
+  if (el.dataset && el.dataset.href) {
+    // Try to force breakout to full window using the robust helper
+    breakOutTo(el.dataset.href);
+    return;
+  }
+
+  // Otherwise treat as phone announcement -> open WhatsApp in new tab
+  const phone = el.dataset.phone;  
+  const content = el.dataset.content || '';
+  if (phone) {
+    const msg = `Hi, I saw your announcement: *${content}* on PickMe Services and I want to make enquiry on it.`;
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, "_blank");
+  }
+});
 </script>
