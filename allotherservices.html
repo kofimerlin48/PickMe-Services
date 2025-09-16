@@ -70,44 +70,293 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
 </head>  
 
-<!-- Header to load -->
-<div id="header-container"></div>
+<!-- header.html (combined header + navigation) -->
+<!-- NOTE: Edit ONLY the navData array in the section marked below. -->
+
+<!-- ===== EDIT NAVIGATION DATA BELOW ===== -->
 <script>
-(async function(){
-  try {
-    const res = await fetch("header.html?nocache=" + Date.now());
-    const text = await res.text();
-    const container = document.getElementById("header-container");
-    container.innerHTML = text;
+/*
+  navData format:
+  - type: "page" (single page) OR "group" (a named collection)
+  - For "page": { type:"page", name:"Title", link:"path.html" }
+    - Optionally: sub: [ ... ] for nested pages (sub/sub-sub)
+  - For "group": { type:"group", name:"Group Name", items: [ ... ] }
+*/
+const navData = [
+  { type: "page", name: "Home", link: "index.html" },
 
-    // Execute any <script> tags that came with header.html, in order
-    const scripts = Array.from(container.querySelectorAll("script"));
-    const infos = scripts.map(s => ({ src: s.src || null, content: s.textContent || "" }));
-    // remove original script tags (they don't execute when inserted)
-    scripts.forEach(s => s.parentNode && s.parentNode.removeChild(s));
+  { type: "group", name: "Our Services", items: [
+      { type: "page", name: "Food & Drinks", link: "food.html", sub: [
+          { type: "page", name: "Food", link: "food-only.html", sub: [
+              { type: "page", name: "Rice", link: "rice.html" },
+              { type: "page", name: "Snacks", link: "snacks.html" }
+          ]},
+          { type: "page", name: "Drinks", link: "drinks.html" }
+      ]},
+      { type: "page", name: "Fashion", link: "fashion.html" },
+      { type: "page", name: "Events", link: "events.html" },
+      { type: "page", name: "Accommodation", link: "accommodation.html" }
+  ]},
 
-    // Run them sequentially so inline scripts can rely on the injected DOM
-    for (const info of infos) {
-      if (info.src) {
-        await new Promise(resolve => {
-          const sc = document.createElement("script");
-          sc.src = info.src;
-          sc.onload = resolve;
-          sc.onerror = resolve;
-          container.appendChild(sc);
-        });
+  { type: "page", name: "About Us", link: "about.html" },
+  { type: "page", name: "Contact", link: "contact.html" }
+];
+</script>
+<!-- ===== END EDITABLE SECTION ===== -->
+
+<!-- Fixed Header (your exact layout/styles preserved) -->
+<div style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    text-align: center;
+    padding: 20px 0;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+">
+    <!-- Logo (left) -->
+    <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo" style="width:40px; height:40px; border-radius:10px; margin-left:15px;">
+
+    <!-- Page Title (center, untouched) -->
+    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px; position: absolute; left: 50%; transform: translateX(-50%);">
+        All Other Services
+    </h1>
+
+    <!-- Hamburger Menu (right) -->
+    <div onclick="openNav()" style="font-size: 28px; cursor: pointer; margin-right:15px;">
+        &#9776;
+    </div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeNav()" style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.4);
+    z-index:15;
+"></div>
+
+<!-- Navigation Panel (dark ash) -->
+<div id="sideNav" style="
+    height: 90%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: #2b2b2b;
+    overflow-y: auto;
+    transition: 0.35s;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    z-index: 20;
+    color: white;
+    padding-top: 60px;
+">
+    <!-- Close Button -->
+    <a href="javascript:void(0)" onclick="closeNav()" style="position:absolute; top:15px; right:25px; font-size:36px; text-decoration:none; color:white;">&times;</a>
+
+    <!-- navContent: menu will be rendered here by the script below -->
+    <div id="navContent" style="padding:20px;">
+        <!-- menu will be injected here -->
+        <ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
+    </div>
+</div>
+
+<!-- Styles specifically for the navigation items (you can leave these) -->
+<style>
+  /* slide-in animation for links (items start hidden, animate when panel open) */
+  #navList a.nav-link {
+    display:block;
+    color: white;
+    text-decoration: none;
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.35s ease;
+  }
+  /* when panel has menu-open class, items slide in */
+  #sideNav.menu-open #navList a.nav-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* spacing */
+  #navList li { margin-bottom: 10px; }
+  /* submenu */
+  #navList ul.submenu { display: none; padding-left: 14px; margin-top: 6px; list-style:none; }
+  /* dropdown toggle style */
+  #navList .dropdown-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    padding: 8px 12px;
+  }
+  #navList .arrow { transition: transform 0.25s ease; }
+  #navList li.open > .dropdown-toggle .arrow { transform: rotate(90deg); }
+  /* active highlight (red-pink) */
+  #navList a.nav-link.active,
+  #navList .toggle-text.active {
+    color: #ff4d6d;
+    font-weight: 600;
+  }
+  /* small visual padding so items don't hug the left edge */
+  #navList a.nav-link, #navList .dropdown-toggle { padding-left: 18px; padding-right: 18px; }
+</style>
+
+<!-- Scripts: render menu from navData and wire behavior -->
+<script>
+/* header.html script: builds the menu DOM from navData,
+   handles toggles, active styling, and open/close behavior.
+*/
+
+let _navRendered = false;
+
+function buildMenu(items, parentUl) {
+  items.forEach(item => {
+    const li = document.createElement('li');
+
+    // PAGE
+    if (item.type === "page") {
+      if (item.sub && item.sub.length > 0) {
+        // page with children -> toggle
+        const toggle = document.createElement('div');
+        toggle.className = "dropdown-toggle";
+        toggle.innerHTML = `<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`;
+        li.appendChild(toggle);
+
+        const subUl = document.createElement('ul');
+        subUl.className = 'submenu';
+        buildMenu(item.sub, subUl);
+        li.appendChild(subUl);
       } else {
-        const sc = document.createElement("script");
-        sc.textContent = info.content;
-        container.appendChild(sc);
-        // let the inline script run
-        await Promise.resolve();
+        // simple link
+        const a = document.createElement('a');
+        a.className = 'nav-link';
+        a.href = item.link || '#';
+        a.textContent = item.name;
+        li.appendChild(a);
       }
     }
-  } catch (err) {
-    console.error("Failed to load header:", err);
-  }
-})();
+
+    // GROUP (top level collection)
+    if (item.type === "group") {
+      const toggle = document.createElement('div');
+      toggle.className = 'dropdown-toggle';
+      toggle.style.fontWeight = '700';
+      toggle.innerHTML = `<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`;
+      li.appendChild(toggle);
+
+      const groupUl = document.createElement('ul');
+      groupUl.className = 'submenu';
+      buildMenu(item.items || [], groupUl);
+      li.appendChild(groupUl);
+    }
+
+    parentUl.appendChild(li);
+  });
+}
+
+function renderNavIfNeeded() {
+  if (_navRendered) return;
+  _navRendered = true;
+
+  const navList = document.getElementById('navList');
+  // clear if anything present
+  navList.innerHTML = '';
+  buildMenu(navData, navList);
+  initDropdowns(); // wire toggle handlers
+  // small stagger: add transition delays to links in order
+  Array.from(navList.querySelectorAll('li')).forEach((li, i) => {
+    const link = li.querySelector('a.nav-link') || li.querySelector('.toggle-text');
+    if (link) {
+      link.style.transitionDelay = (0.05 * i) + 's';
+    }
+  });
+}
+
+async function openNav() {
+  const side = document.getElementById("sideNav");
+  const overlay = document.getElementById("overlay");
+  side.style.width = "280px";
+  side.classList.add("menu-open");
+  overlay.style.display = "block";
+
+  // render menu once (so editing navData in this file changes menu)
+  renderNavIfNeeded();
+}
+
+function closeNav() {
+  const side = document.getElementById("sideNav");
+  const overlay = document.getElementById("overlay");
+  side.style.width = "0";
+  side.classList.remove("menu-open");
+  overlay.style.display = "none";
+}
+
+// init dropdowns & active logic
+function initDropdowns() {
+  const navList = document.getElementById('navList');
+
+  // toggles (group or parent pages)
+  const toggles = navList.querySelectorAll('.dropdown-toggle');
+  toggles.forEach(toggle => {
+    if (toggle._handler) toggle.removeEventListener('click', toggle._handler);
+
+    const handler = function() {
+      const li = this.parentElement;
+      const submenu = li.querySelector('.submenu');
+      const arrow = this.querySelector('.arrow');
+      const text = this.querySelector('.toggle-text');
+
+      const isOpen = li.classList.toggle('open');
+      if (submenu) submenu.style.display = isOpen ? 'block' : 'none';
+      if (arrow) arrow.innerHTML = isOpen ? '&#709;' : '&#8250;';
+      // active marking
+      clearActiveMarks();
+      if (text) text.classList.toggle('active', isOpen);
+    };
+
+    toggle._handler = handler;
+    toggle.addEventListener('click', handler);
+  });
+
+  // links (leaf pages)
+  const links = navList.querySelectorAll('a.nav-link');
+  links.forEach(a => {
+    if (a._handler) a.removeEventListener('click', a._handler);
+    const handler = function(e) {
+      clearActiveMarks();
+      this.classList.add('active');
+      // Do NOT auto-close by default; uncomment if you want it to close:
+      // closeNav();
+    };
+    a._handler = handler;
+    a.addEventListener('click', handler);
+  });
+}
+
+function clearActiveMarks() {
+  const navList = document.getElementById('navList');
+  navList.querySelectorAll('a.nav-link').forEach(x => x.classList.remove('active'));
+  navList.querySelectorAll('.toggle-text').forEach(x => x.classList.remove('active'));
+}
+
+// optional: close panel when user clicks overlay (already wired via overlay onclick)
+document.getElementById('overlay').addEventListener('click', closeNav);
 </script>
   
 <body>  
@@ -788,6 +1037,7 @@
 
 </body>  
 </html>
+
 
 
 
