@@ -110,8 +110,41 @@
 })();
 </script>
   
-// Highligh active page
 <style>
+/* 🔹 Fix close button header inside nav */
+#sidePanel {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 260px;
+  height: 100%;
+  background: #333;
+  z-index: 10000;
+  overflow: hidden; /* prevent entire panel from scrolling */
+  flex-direction: column;
+}
+
+#sidePanelHeader {
+  flex-shrink: 0;
+  padding: 15px;
+  background: #222;
+  color: white;
+  font-size: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: sticky;  /* stays visible */
+  top: 0;
+  z-index: 10001;
+}
+
+#sidePanelContent {
+  overflow-y: auto; /* only content scrolls */
+  padding: 15px;
+  flex-grow: 1;
+}
+
 .active-link {
   color: #e91e63 !important;  /* 🔴 red-pink color */
   font-weight: bold;
@@ -119,6 +152,14 @@
 </style>
 
 <script>
+// Close panel when a link is clicked
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#navList a")) {
+    document.getElementById("sidePanel").style.display = "none";
+  }
+});
+
+// Highlight active link (same logic as before)
 function highlightActiveLink() {
   const currentUrl = window.location.href;
   const links = document.querySelectorAll("#navList a");
@@ -126,10 +167,8 @@ function highlightActiveLink() {
   links.forEach(link => {
     const href = link.getAttribute("href");
     if (href && currentUrl.includes(href)) {
-      // highlight ONLY the current page
       link.classList.add("active-link");
 
-      // expand parent dropdowns (but don't highlight them)
       let parent = link.closest("ul");
       while (parent && parent.id !== "navList") {
         parent.style.display = "block";
@@ -139,7 +178,7 @@ function highlightActiveLink() {
   });
 }
 
-// wait until navigation is injected
+// Run after navigation is injected
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => {
     if (document.querySelector("#navList a")) {
@@ -829,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>  
 </html>
+
 
 
 
