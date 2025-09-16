@@ -109,6 +109,14 @@
   }
 })();
 </script>
+  
+// Highligh active page
+<style>
+.active-link {
+  color: #e91e63 !important;  /* 🔴 red-pink color */
+  font-weight: bold;
+}
+</style>
 
 <script>
 function highlightActiveLink() {
@@ -118,21 +126,20 @@ function highlightActiveLink() {
   links.forEach(link => {
     const href = link.getAttribute("href");
     if (href && currentUrl.includes(href)) {
+      // highlight ONLY the current page
       link.classList.add("active-link");
 
-      // expand parent dropdowns
+      // expand parent dropdowns (but don't highlight them)
       let parent = link.closest("ul");
       while (parent && parent.id !== "navList") {
         parent.style.display = "block";
-        const parentLink = parent.previousElementSibling;
-        if (parentLink) parentLink.classList.add("active-link");
         parent = parent.parentElement.closest("ul");
       }
     }
   });
 }
 
-// ⏳ wait until navigation.html is injected
+// wait until navigation is injected
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => {
     if (document.querySelector("#navList a")) {
@@ -822,6 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>  
 </html>
+
 
 
 
