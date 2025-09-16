@@ -19,6 +19,7 @@
       background: #f4f4f4;
       margin: 0;
       padding: 20px;
+      padding-top: 100px;
     }
     .search-bar {
       width: 100%;
@@ -174,6 +175,24 @@
     .countdown { position: absolute; bottom: 15px; right: 8px; font-size: 10px; font-weight: bold; color: #333; }
   </style>
 </head>
+
+  <!-- Fixed Header -->
+  <div style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: white; /* solid white */
+      text-align: center;
+      padding: 20px 0; /* minimal height */
+      z-index: 10;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-bottom-left-radius: 20px;  /* curvy bottom left */
+      border-bottom-right-radius: 20px; /* curvy bottom right */
+  ">
+    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px;">All Other Services</h1>
+  </div>
+  
 <body>
   <input type="text" id="searchInput" class="search-bar" placeholder="Search events...">
   <div class="categories" id="categories"></div>
@@ -615,3 +634,4 @@ filterEvents("All");
 </body>
 
 </html>
+
