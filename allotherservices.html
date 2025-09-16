@@ -70,136 +70,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
 </head>  
 
-<!-- Header to load -->
-<div id="header-container"></div>
-<script>
-(async function(){
-  try {
-    const res = await fetch("header.html?nocache=" + Date.now());
-    const text = await res.text();
-    const container = document.getElementById("header-container");
-    container.innerHTML = text;
-
-    // Execute any <script> tags that came with header.html, in order
-    const scripts = Array.from(container.querySelectorAll("script"));
-    const infos = scripts.map(s => ({ src: s.src || null, content: s.textContent || "" }));
-    // remove original script tags (they don't execute when inserted)
-    scripts.forEach(s => s.parentNode && s.parentNode.removeChild(s));
-
-    // Run them sequentially so inline scripts can rely on the injected DOM
-    for (const info of infos) {
-      if (info.src) {
-        await new Promise(resolve => {
-          const sc = document.createElement("script");
-          sc.src = info.src;
-          sc.onload = resolve;
-          sc.onerror = resolve;
-          container.appendChild(sc);
-        });
-      } else {
-        const sc = document.createElement("script");
-        sc.textContent = info.content;
-        container.appendChild(sc);
-        // let the inline script run
-        await Promise.resolve();
-      }
-    }
-  } catch (err) {
-    console.error("Failed to load header:", err);
-  }
-})();
-</script>
-  
-<style>
-/* 🔹 Side panel setup */
-#sidePanel {
-  display: none;
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 260px;
-  height: 100%;
-  background: #333;
-  z-index: 10000;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 🔹 Fixed header (Close button area) */
-#sidePanelHeader {
-  flex-shrink: 0;
-  padding: 15px;
-  background: #222;
-  color: white;
-  font-size: 20px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 10001;
-}
-
-/* 🔹 Scrollable nav area */
-#sidePanelContent {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 15px;
-}
-
-/* 🔹 Highlight style */
-.active-link {
-  color: #e91e63 !important;  /* 🔴 red-pink */
-  font-weight: bold;
-}
-</style>
-
-<script>
-// Always close panel when page loads (fix for back navigation issue)
-window.addEventListener("pageshow", () => {
-  document.getElementById("sidePanel").style.display = "none";
-});
-
-// Close panel when a link is clicked
-document.addEventListener("click", (e) => {
-  if (e.target.closest("#navList a")) {
-    document.getElementById("sidePanel").style.display = "none";
-  }
-});
-
-// Highlight active link
-function highlightActiveLink() {
-  const currentUrl = window.location.href;
-  const links = document.querySelectorAll("#navList a");
-
-  links.forEach(link => {
-    const href = link.getAttribute("href");
-    if (href && currentUrl.includes(href)) {
-      link.classList.add("active-link");
-
-      let parent = link.closest("ul");
-      while (parent && parent.id !== "navList") {
-        parent.style.display = "block";
-        parent = parent.parentElement.closest("ul");
-      }
-    }
-  });
-}
-
-// Wait for nav injection
-document.addEventListener("DOMContentLoaded", () => {
-  const observer = new MutationObserver(() => {
-    if (document.querySelector("#navList a")) {
-      highlightActiveLink();
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-});
-</script>
-
 <body>  
-  <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
+
+  <style> /* 🔹 Side panel setup */ #sidePanel { display: none; position: fixed; top: 0; right: 0; width: 260px; height: 100%; background: #333; z-index: 10000; display: flex; flex-direction: column; } /* 🔹 Fixed header (Close button area) */ #sidePanelHeader { flex-shrink: 0; padding: 15px; background: #222; color: white; font-size: 20px; display: flex; justify-content: flex-end; align-items: center; position: sticky; top: 0; z-index: 10001; } /* 🔹 Scrollable nav area */ #sidePanelContent { flex-grow: 1; overflow-y: auto; padding: 15px; } /* 🔹 Highlight style */ .active-link { color: #e91e63 !important;  /* 🔴 red-pink */ font-weight: bold; } </style> <script> // Always close panel when page loads (fix for back navigation issue) window.addEventListener("pageshow", () => { document.getElementById("sidePanel").style.display = "none"; }); // Close panel when a link is clicked document.addEventListener("click", (e) => { if (e.target.closest("#navList a")) { document.getElementById("sidePanel").style.display = "none"; } }); // Highlight active link function highlightActiveLink() { const currentUrl = window.location.href; const links = document.querySelectorAll("#navList a"); links.forEach(link => { const href = link.getAttribute("href"); if (href && currentUrl.includes(href)) { link.classList.add("active-link"); let parent = link.closest("ul"); while (parent && parent.id !== "navList") { parent.style.display = "block"; parent = parent.parentElement.closest("ul"); } } }); } // Wait for nav injection document.addEventListener("DOMContentLoaded", () => { const observer = new MutationObserver(() => { if (document.querySelector("#navList a")) { highlightActiveLink(); obsever.disconnect(); } }); observer.observe(document.body, { childList: true, subtree: true }); }); </script>
+
+  <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  r
   <div class="grid" id="servicesGrid"></div>  
 
   <!-- Modal -->  
@@ -876,6 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>  
 </html>
+
 
 
 
