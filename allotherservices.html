@@ -142,13 +142,30 @@
 function openNav() {
     document.getElementById("sideNav").style.width = "280px";
     document.getElementById("overlay").style.display = "block";
-    fetch("navigation.html")
+
+    // Cache-busting + script execution
+    fetch("navigation.html?nocache=" + new Date().getTime())
       .then(response => response.text())
       .then(data => {
-          document.getElementById("navContent").innerHTML = data;
+          const navContent = document.getElementById("navContent");
+          navContent.innerHTML = data;
+
+          // Execute any <script> tags inside navigation.html
+          const scripts = navContent.querySelectorAll("script");
+          scripts.forEach(oldScript => {
+              const newScript = document.createElement("script");
+              if (oldScript.src) {
+                  newScript.src = oldScript.src;
+              } else {
+                  newScript.textContent = oldScript.textContent;
+              }
+              document.body.appendChild(newScript);
+          });
+
           initDropdowns(); // activate dropdowns after load
       });
 }
+
 function closeNav() {
     document.getElementById("sideNav").style.width = "0";
     document.getElementById("overlay").style.display = "none";
@@ -172,7 +189,7 @@ function initDropdowns() {
     });
 }
 </script>
-
+  
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
   <div class="grid" id="servicesGrid"></div>  
@@ -851,6 +868,7 @@ function initDropdowns() {
 
 </body>  
 </html>
+
 
 
 
