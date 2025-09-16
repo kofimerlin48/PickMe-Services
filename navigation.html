@@ -25,17 +25,20 @@ const navData = [
 </script>
 <!-- =============== END OF EDITABLE SECTION =============== -->
 
+<!-- Navigation container -->
 <ul id="navList" style="list-style:none; padding:0; margin:0; font-size:18px; color:white;"></ul>
 
 <script>
-// Build menu recursively
+// ================== MENU BUILDER ================== //
 function buildMenu(items, parentUl) {
   items.forEach(item => {
     const li = document.createElement("li");
     li.style.marginBottom = "15px";
 
+    // PAGE
     if(item.type === "page") {
       if(item.sub && item.sub.length > 0) {
+        // Page with children
         li.innerHTML = `
           <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white;">
             <span>${item.name}</span>
@@ -50,10 +53,12 @@ function buildMenu(items, parentUl) {
         buildMenu(item.sub, subUl);
         li.appendChild(subUl);
       } else {
+        // Simple page
         li.innerHTML = `<a href="${item.link}" style="color:white; text-decoration:none;">${item.name}</a>`;
       }
     }
 
+    // GROUP
     if(item.type === "group") {
       li.innerHTML = `
         <div class="dropdown-toggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:white; font-weight:bold;">
@@ -78,7 +83,7 @@ function buildMenu(items, parentUl) {
 const navList = document.getElementById("navList");
 buildMenu(navData, navList);
 
-// Dropdown arrow toggle
+// Dropdown toggle
 function initDropdowns() {
   const toggles = document.querySelectorAll(".dropdown-toggle");
   toggles.forEach(toggle => {
