@@ -76,13 +76,13 @@
     top: 0;
     left: 0;
     width: 100%;
-    background: white; /* solid white */
+    background: white;
     text-align: center;
-    padding: 20px 0; /* minimal height */
+    padding: 20px 0;
     z-index: 10;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border-bottom-left-radius: 20px;  /* curvy bottom left */
-    border-bottom-right-radius: 20px; /* curvy bottom right */
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -115,14 +115,14 @@
 
 <!-- Navigation Panel -->
 <div id="sideNav" style="
-    height: 90%; /* hang above footer */
+    height: 90%;
     width: 0;
     position: fixed;
     top: 0;
     right: 0;
-    margin-top: 20px; /* small gap from top */
-    margin-bottom: 20px; /* hang above footer */
-    background-color: #2b2b2b; /* dark ash */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: #2b2b2b;
     overflow-y: auto;
     transition: 0.4s;
     border-top-left-radius: 20px;
@@ -140,19 +140,21 @@
 
 <script>
 function openNav() {
-    document.getElementById("sideNav").style.width = "280px"; // smaller width
+    document.getElementById("sideNav").style.width = "280px";
     document.getElementById("overlay").style.display = "block";
     fetch("navigation.html")
       .then(response => response.text())
       .then(data => {
           document.getElementById("navContent").innerHTML = data;
-          initDropdowns(); // activate dropdown logic after load
+          initDropdowns(); // activate dropdowns after load
       });
 }
 function closeNav() {
     document.getElementById("sideNav").style.width = "0";
     document.getElementById("overlay").style.display = "none";
 }
+
+// Dropdown arrow toggle logic
 function initDropdowns() {
     const toggles = document.querySelectorAll(".dropdown-toggle");
     toggles.forEach(toggle => {
@@ -161,10 +163,10 @@ function initDropdowns() {
             const arrow = toggle.querySelector(".arrow");
             if (submenu.style.display === "block") {
                 submenu.style.display = "none";
-                arrow.innerHTML = "&#8250;"; // right arrow
+                arrow.innerHTML = "&#8250;";
             } else {
                 submenu.style.display = "block";
-                arrow.innerHTML = "&#709;"; // down arrow
+                arrow.innerHTML = "&#709;";
             }
         });
     });
@@ -849,6 +851,7 @@ function initDropdowns() {
 
 </body>  
 </html>
+
 
 
 
