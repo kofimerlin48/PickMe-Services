@@ -87,48 +87,98 @@
     align-items: center;
     justify-content: space-between;
 ">
-  <!-- Logo -->
+  <!-- Logo (left) -->
   <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2"
        alt="Logo"
        style="width:40px; height:40px; border-radius:10px; margin-left:15px;">
 
-  <!-- Page Title -->
-  <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px;
-             position: absolute; left: 50%; transform: translateX(-50%);">
+  <!-- Page Title (center) -->
+  <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px; position: absolute; left: 50%; transform: translateX(-50%);">
     All Other Services
   </h1>
 
-  <!-- Hamburger Icon -->
-  <div onclick="loadNav()"
-       style="font-size: 28px; cursor: pointer; margin-right:15px;">
-    &#9776;
-  </div>
+  <!-- Hamburger Icon (right) -->
+  <div id="hamburger" style="font-size: 28px; cursor: pointer; margin-right:15px;">&#9776;</div>
 </div>
 
-<!-- Placeholder for navigation panel -->
+<!-- Placeholder where navigation.html content will be injected -->
 <div id="navContainer"></div>
 
 <script>
-function loadNav() {
-  // If navigation already loaded, just open it
+/*
+  loadNav() will fetch navigation.html, inject its DOM into #navContainer,
+  and make sure any <script> blocks inside navigation.html execute.
+  This preserves your original navigation.html script behavior exactly.
+*/
+
+async function loadNav() {
+  // if nav already loaded, call openNav() if available (so it toggles/open)
   if (document.getElementById("sideNav")) {
-    document.getElementById("sideNav").style.width = "280px";
-    document.getElementById("overlay").style.display = "block";
+    if (typeof openNav === "function") {
+      openNav();
+    } else {
+      // fallback: set width and show overlay (original nav handles menu-open class)
+      const side = document.getElementById("sideNav");
+      const overlay = document.getElementById("overlay");
+      if (side) side.style.width = "280px";
+      if (overlay) overlay.style.display = "block";
+    }
     return;
   }
 
-  // Fetch navigation.html dynamically
-  fetch("navigation.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("navContainer").innerHTML = html;
+  try {
+    const res = await fetch("navigation.html");
+    if (!res.ok) throw new Error("Failed to fetch navigation.html: " + res.status);
+    const text = await res.text();
 
-      // Open nav
-      document.getElementById("sideNav").style.width = "280px";
-      document.getElementById("overlay").style.display = "block";
-    })
-    .catch(err => console.error("Failed to load navigation:", err));
+    // Parse fetched HTML into a live Document
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, "text/html");
+
+    const container = document.getElementById("navContainer");
+
+    // Import all elements from fetched body into our container (preserves structure)
+    Array.from(doc.body.childNodes).forEach(node => {
+      container.appendChild(document.importNode(node, true));
+    });
+
+    // Execute scripts found in fetched HTML:
+    // For inline scripts, we recreate them and append to body so they run.
+    // For external scripts with src attributes, we recreate script tags so browser loads them.
+    const scripts = doc.querySelectorAll("script");
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement("script");
+      // copy attributes
+      for (let i = 0; i < oldScript.attributes.length; i++) {
+        const attr = oldScript.attributes[i];
+        newScript.setAttribute(attr.name, attr.value);
+      }
+      // if inline, copy text
+      if (oldScript.textContent) newScript.textContent = oldScript.textContent;
+      // ensure scripts run in order by appending synchronously to body
+      document.body.appendChild(newScript);
+    });
+
+    // short delay to let scripts define functions; then open nav
+    setTimeout(() => {
+      if (typeof openNav === "function") {
+        openNav();
+      } else {
+        // fallback
+        const side = document.getElementById("sideNav");
+        const overlay = document.getElementById("overlay");
+        if (side) side.style.width = "280px";
+        if (overlay) overlay.style.display = "block";
+      }
+    }, 40);
+
+  } catch (err) {
+    console.error("loadNav error:", err);
+  }
 }
+
+// wire hamburger to loadNav
+document.getElementById("hamburger").addEventListener("click", loadNav);
 </script>
   
 <body>  
@@ -809,6 +859,7 @@ function loadNav() {
 
 </body>  
 </html>
+
 
 
 
