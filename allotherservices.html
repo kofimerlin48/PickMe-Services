@@ -111,7 +111,7 @@
 </script>
   
 <style>
-/* 🔹 Fix close button header inside nav */
+/* 🔹 Side panel setup */
 #sidePanel {
   display: none;
   position: fixed;
@@ -121,10 +121,11 @@
   height: 100%;
   background: #333;
   z-index: 10000;
-  overflow: hidden; /* prevent entire panel from scrolling */
+  display: flex;
   flex-direction: column;
 }
 
+/* 🔹 Fixed header (Close button area) */
 #sidePanelHeader {
   flex-shrink: 0;
   padding: 15px;
@@ -134,24 +135,31 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  position: sticky;  /* stays visible */
+  position: sticky;
   top: 0;
   z-index: 10001;
 }
 
+/* 🔹 Scrollable nav area */
 #sidePanelContent {
-  overflow-y: auto; /* only content scrolls */
-  padding: 15px;
   flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
 }
 
+/* 🔹 Highlight style */
 .active-link {
-  color: #e91e63 !important;  /* 🔴 red-pink color */
+  color: #e91e63 !important;  /* 🔴 red-pink */
   font-weight: bold;
 }
 </style>
 
 <script>
+// Always close panel when page loads (fix for back navigation issue)
+window.addEventListener("pageshow", () => {
+  document.getElementById("sidePanel").style.display = "none";
+});
+
 // Close panel when a link is clicked
 document.addEventListener("click", (e) => {
   if (e.target.closest("#navList a")) {
@@ -159,7 +167,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Highlight active link (same logic as before)
+// Highlight active link
 function highlightActiveLink() {
   const currentUrl = window.location.href;
   const links = document.querySelectorAll("#navList a");
@@ -178,7 +186,7 @@ function highlightActiveLink() {
   });
 }
 
-// Run after navigation is injected
+// Wait for nav injection
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => {
     if (document.querySelector("#navList a")) {
@@ -868,6 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>  
 </html>
+
 
 
 
