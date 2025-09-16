@@ -1,21 +1,12 @@
 <!DOCTYPE html>  
 <html lang="en">  
 <head>  
-
-  <style>
-/* Remove blue outline and tap highlight for clickable cards */
-.card, .card a, .card button {
-    outline: none;                  /* removes the blue focus outline */
-    -webkit-tap-highlight-color: transparent;  /* removes the blue highlight on mobile */
-}
-</style>
-  
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">  
 <title>Service Directory</title>  
 <style>  
   body { font-family: 'Segoe UI', sans-serif; margin: 20px; padding-top: 100px; background:#f9f9f9; }  
-  .search-bar { width: 85%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }  
+  .search-bar { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }  
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 25px; }  
   .service { background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: 0.2s; }  
   .service img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }  
@@ -58,104 +49,27 @@
   border:1px solid #d8e7ff; margin:6px 6px 0 0;
   }
   .tag:hover { background:#e3efff; }
-
-/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
-* {
-  -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
-  outline: none !important; /* Remove focus outline */
-}
-  
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
 </head>  
 
-<!-- Fixed Header with Logo + Title + Nav Button -->
-<div style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    padding: 10px 20px;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-">
-  <!-- Logo (Left) -->
-  <img src="logo.png" alt="Logo" style="width:40px; height:40px; border-radius:10px; object-fit:cover;">
-
-  <!-- Title (Center) -->
-  <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 20px; flex-grow:1; text-align:center;">
-    All Other Services
-  </h1>
-
-  <!-- Nav Button (Right) -->
-  <div id="navToggle" style="cursor:pointer; font-size:26px; color:#333;">&#9776;</div>
-</div>
-
-<!-- Side Navigation Panel -->
-<div id="sideNav" style="
-    position: fixed;
-    top: 0;
-    left: -260px; /* hidden by default */
-    width: 260px;
-    height: 100%;
-    background: #111;
-    color: white;
-    overflow-y: auto;
-    transition: left 0.3s ease;
-    z-index: 9999;
-    padding-top: 60px;
-">
-  <div style="padding: 15px; font-size: 18px; font-weight: bold; color: #c12872;">
-    Navigation
+  <!-- Fixed Header -->
+  <div style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: white; /* solid white */
+      text-align: center;
+      padding: 20px 0; /* minimal height */
+      z-index: 10;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-bottom-left-radius: 20px;  /* curvy bottom left */
+      border-bottom-right-radius: 20px; /* curvy bottom right */
+  ">
+    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px;">All Other Services</h1>
   </div>
-  <div id="navContent" style="padding: 0 15px;"></div>
-</div>
-
-<!-- Overlay (click to close) -->
-<div id="overlay" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 9998;
-    display: none;
-"></div>
-
-<script>
-// Toggle side nav
-const navToggle = document.getElementById("navToggle");
-const sideNav = document.getElementById("sideNav");
-const overlay = document.getElementById("overlay");
-
-navToggle.onclick = () => {
-  sideNav.style.left = "0";
-  overlay.style.display = "block";
-};
-
-overlay.onclick = () => {
-  sideNav.style.left = "-260px";
-  overlay.style.display = "none";
-};
-
-// Load navigation.html content into #navContent
-fetch("navigation.html")
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById("navContent").innerHTML = html;
-  })
-  .catch(err => {
-    document.getElementById("navContent").innerHTML = "<p style='color:gray;'>Navigation could not load.</p>";
-  });
-</script>
 
 <body>  
   <input type="text" id="search" class="search-bar" placeholder="Search services, subcategories or providers...">  
@@ -828,15 +742,5 @@ fetch("navigation.html")
     renderServices(filtered);  
   });  
   </script>  
-
-  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
-    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
-</div>
-
 </body>  
 </html>
-
-
-
-
-
