@@ -173,8 +173,8 @@ document.addEventListener("click", e => {
   if (moved) return; // ignore clicks if it was a drag
 
   if (e.target.dataset.href) {
-    // Direct navigation without black flash
-    window.location.href = e.target.dataset.href;
+    // Open the full destination page directly
+    window.open(e.target.dataset.href, "_self");
   } else {
     const phone = e.target.dataset.phone;  
     const content = e.target.dataset.content;  
