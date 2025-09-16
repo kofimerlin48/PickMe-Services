@@ -298,25 +298,3 @@ document.getElementById('overlay').addEventListener('click', closeNav);
   text-decoration: underline;
 }
 </style>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const currentUrl = window.location.href; // full URL
-  const links = document.querySelectorAll("#navList a");
-  links.forEach(link => {
-    // compare full href with current URL
-    if (currentUrl.includes(link.getAttribute("href"))) {
-      link.classList.add("active-link");
-
-      // 🔹 Auto-expand parent dropdowns
-      let parent = link.closest("ul");
-      while (parent && parent.id !== "navList") {
-        parent.style.display = "block"; 
-        const parentLink = parent.previousElementSibling;
-        if (parentLink) parentLink.classList.add("active-link");
-        parent = parent.parentElement.closest("ul");
-      }
-    }
-  });
-});
-</script>
