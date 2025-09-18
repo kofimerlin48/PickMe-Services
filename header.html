@@ -2,6 +2,15 @@
 
 <!-- ===== EDIT NAVIGATION DATA BELOW ===== -->
 <script>
+
+<style>
+/* Remove blue outline and tap highlight for clickable cards */
+.card, .card a, .card button {
+    outline: none;                  /* removes the blue focus outline */
+    -webkit-tap-highlight-color: transparent;  /* removes the blue highlight on mobile */
+}
+</style>
+  
 const navData = [
   { type: "page", name: "Home", link: "homepage.html" },
   { type: "group", name: "Our Services", items: [
