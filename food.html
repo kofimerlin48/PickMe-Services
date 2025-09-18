@@ -5,24 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food & Drinks - PickMe Services</title>
   
-<!-- Placeholder for header.html -->
 <div id="header-placeholder"></div>
-
 <script>
-  // Load header.html into the placeholder
-  fetch('header.html')
-    .then(response => {
-      if (!response.ok) throw new Error('Could not load header.html');
-      return response.text();
-    })
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
-    })
-    .catch(error => {
-      console.error('Error loading header:', error);
-      // Optional fallback content
-      document.getElementById('header-placeholder').innerHTML = '<div style="padding:20px; text-align:center; background:#f0f0f0;">Header failed to load</div>';
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    const html = await response.text();
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // Re-run any inline scripts in header.html so menus work
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) newScript.src = oldScript.src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
     });
+  } catch (err) {
+    console.error(err);
+  }
+})();
 </script>
   
 <style>
