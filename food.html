@@ -4,6 +4,161 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food & Drinks - PickMe Services</title>
+  
+<!-- header.html (combined header + navigation) -->
+
+<!-- ===== EDIT NAVIGATION DATA BELOW ===== -->
+<script>
+const navData = [
+  { type: "page", name: "Home", link: "homepage.html" },
+  { type: "group", name: "Our Services", items: [
+      { type: "page", name: "Ride & Delivery", link: "apl.bz/w@?l=en_US" },
+      { type: "page", name: "Shopping", link: "", sub: [
+          { type: "page", name: "Food & Drinks", link: "food.html" },
+          { type: "page", name: "Groceries", link: "groceries.html" },
+          { type: "page", name: "Fashion", link: "fashion.html" },
+          { type: "page", name: "Cosmetics", link: "Cosmetics.html" },
+          { type: "page", name: "Tech & Gadgets", link: "tech.html" },
+          { type: "page", name: "Stationery & Books", link: "stationery.html" },
+          { type: "page", name: "Home & Living", link: "living.html" }
+      ]},
+      { type: "page", name: "Fashion", link: "fashion.html" },
+      { type: "page", name: "Events", link: "events.html" },
+      { type: "page", name: "Accommodation", link: "accommodation.html" }
+  ]},
+  { type: "page", name: "About Us", link: "about.html" },
+  { type: "page", name: "Contact", link: "contact.html" }
+];
+</script>
+<!-- ===== END EDITABLE SECTION ===== -->
+
+<!-- Fixed Header -->
+<div style="position:fixed; top:0; left:0; width:100%; background:white; text-align:center; padding:20px 0; z-index:10; box-shadow:0 2px 5px rgba(0,0,0,0.1); border-bottom-left-radius:20px; border-bottom-right-radius:20px; display:flex; align-items:center; justify-content:space-between;">
+  <a href="homepage.html">
+    <img src="https://lh3.googleusercontent.com/d/1AB7kUBosiN7CyR5GRKyQGloXI-XFd2S2" alt="Logo" style="width:40px;height:40px;border-radius:10px;margin-left:15px;">
+  </a>
+  <h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">
+    Food & Drinks
+  </h1>
+  <div onclick="openNav()" style="font-size:28px; cursor:pointer; margin-right:15px;">&#9776;</div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeNav()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:15;"></div>
+
+<div id="sideNav" style="  
+    position: fixed;  
+    top: 20px;      /* adjust for your margin-top */  
+    right: 0;  
+    width: 0;  
+    height: calc(85% - 20px); /* total height minus top margin */  
+    background-color: #2b2b2b;  
+    border-top-left-radius: 20px;  
+    border-bottom-left-radius: 20px;  
+    overflow: hidden;          /* prevent parent scroll */  
+    transition: 0.35s;  
+    z-index: 20;  
+    color: white;  
+">  <!-- Sticky Close Button -->  
+<div style="  
+    position: sticky;  
+    top: 0;  
+    background: #2b2b2b;  
+    z-index: 25;  
+    padding: 15px;  
+    text-align: right;  
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);  /* optional for separation */  
+">  
+    <a href="javascript:void(0)" onclick="closeNav()" style="font-size: 36px; color: white; text-decoration: none;">&times;</a>  
+</div>  
+
+<!-- Scrollable Menu -->  
+<div id="navContent" style="overflow-y: auto; height: calc(100% - 60px); padding: 0px;">  
+    <ul id="navList" style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: white;"></ul>  
+</div>
+
+</div>
+
+<style>
+  #navList a.nav-link, #navList .dropdown-toggle { display:block; color:white; text-decoration:none; padding:10px 18px; opacity:0; transform:translateX(30px); transition:all 0.35s ease; }
+  #sideNav.menu-open #navList a.nav-link, #sideNav.menu-open #navList .dropdown-toggle { opacity:1; transform:translateX(0); }
+  #navList li { margin-bottom:10px; }
+  #navList ul.submenu { display:none; padding-left:28px; margin-top:6px; list-style:none; }
+  #navList .dropdown-toggle { cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  #navList .arrow { transition: transform 0.25s ease; }
+  #navList li.open > .dropdown-toggle .arrow { transform:rotate(90deg); }
+  #navList a.nav-link.active, #navList .toggle-text.active { color:#ff4d6d; font-weight:600; }
+</style>
+
+<script>
+let _navRendered = false;
+
+function buildMenu(items, parentUl) {
+  items.forEach(item => {
+    const li = document.createElement('li');
+    if(item.type === "page") {
+      if(item.sub?.length){
+        const toggle = document.createElement('div');
+        toggle.className = "dropdown-toggle";
+        toggle.innerHTML = `<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`;
+        li.appendChild(toggle);
+        const subUl = document.createElement('ul'); subUl.className='submenu';
+        buildMenu(item.sub, subUl); li.appendChild(subUl);
+      } else {
+        const a = document.createElement('a'); a.className='nav-link'; a.href=item.link||'#'; a.textContent=item.name; li.appendChild(a);
+      }
+    }
+    if(item.type === "group") {
+      const toggle = document.createElement('div'); toggle.className='dropdown-toggle'; toggle.style.fontWeight='700';
+      toggle.innerHTML=`<span class="toggle-text">${item.name}</span><span class="arrow">&#8250;</span>`; li.appendChild(toggle);
+      const groupUl = document.createElement('ul'); groupUl.className='submenu'; buildMenu(item.items||[], groupUl); li.appendChild(groupUl);
+    }
+    parentUl.appendChild(li);
+  });
+}
+
+function renderNavIfNeeded() {
+  if(_navRendered) return; _navRendered=true;
+  const navList=document.getElementById('navList'); navList.innerHTML='';
+  buildMenu(navData, navList); initDropdowns();
+  Array.from(navList.querySelectorAll('li')).forEach((li,i)=>{
+    const link=li.querySelector('a.nav-link')||li.querySelector('.toggle-text');
+    if(link) link.style.transitionDelay=(0.05*i)+'s';
+  });
+}
+
+function openNav(){ document.getElementById("sideNav").style.width="280px"; document.getElementById("sideNav").classList.add("menu-open"); document.getElementById("overlay").style.display="block"; renderNavIfNeeded(); }
+function closeNav(){ document.getElementById("sideNav").style.width="0"; document.getElementById("sideNav").classList.remove("menu-open"); document.getElementById("overlay").style.display="none"; }
+
+function initDropdowns(){
+  const navList=document.getElementById('navList');
+  navList.querySelectorAll('.dropdown-toggle').forEach(toggle=>{
+    if(toggle._handler) toggle.removeEventListener('click', toggle._handler);
+    const handler=function(){
+      const li=this.parentElement, submenu=li.querySelector('.submenu'), arrow=this.querySelector('.arrow'), text=this.querySelector('.toggle-text');
+      const isOpen=li.classList.toggle('open');
+      if(submenu) submenu.style.display=isOpen?'block':'none';
+      if(arrow) arrow.innerHTML=isOpen?'&#709;':'&#8250;';
+      clearActiveMarks(); if(text) text.classList.toggle('active',isOpen);
+    };
+    toggle._handler=handler; toggle.addEventListener('click',handler);
+  });
+  navList.querySelectorAll('a.nav-link').forEach(a=>{
+    if(a._handler) a.removeEventListener('click',a._handler);
+    const handler=function(){ clearActiveMarks(); this.classList.add('active'); };
+    a._handler=handler; a.addEventListener('click',handler);
+  });
+}
+
+function clearActiveMarks(){
+  const navList=document.getElementById('navList');
+  navList.querySelectorAll('a.nav-link').forEach(x=>x.classList.remove('active'));
+  navList.querySelectorAll('.toggle-text').forEach(x=>x.classList.remove('active'));
+}
+
+document.getElementById('overlay').addEventListener('click',closeNav);
+</script>  
+  
 <style>
     body {
         margin: 0;
@@ -22,9 +177,10 @@
         font-size: 28px;
     }
     .page-header p {
-        color: #555;
+        color: #000;
         margin-top: 5px;
         font-size: 16px;
+        font-weight: bold;
     }
 
     .search-bar {
@@ -64,7 +220,7 @@
     .cards-container {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 20px;
+        gap: 70px;
         padding: 0 20px 50px 20px;
     }
 
@@ -86,7 +242,7 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0));
+        background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
     }
 
     .card-content {
@@ -104,24 +260,33 @@
     .card-description { font-size: 14px; margin-bottom: 10px; flex-grow: 1; }
 
     .btn-order {
-        background-color: #c12872;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        text-align: center;
-        align-self: flex-end; /* move button to right */
-        transition: background 0.2s;
-    }
+    background-color: #c12872;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    align-self: flex-end; /* move button to right */
+    transition: background 0.2s;
+}
+
+/* Force same color on hover, focus, and active states */
+.btn-order:hover,
+.btn-order:focus,
+.btn-order:active {
+    background-color: #c12872 !important;
+    color: white !important;
+    outline: none !important;
+}
     .btn-order:hover { background-color: #0056b3; }
 </style>
 </head>
 <body>
 
 <div class="page-header">
-    <h1>Food & Drinks</h1>
+    <h1></h1>
     <p>Find your favorite restaurants and drink sellers</p>
 </div>
 
@@ -145,14 +310,14 @@
     <div class="card" data-category="foods" data-name="Dollar Days In" data-expiry="2025-12-31" style="background-image:url('https://lh3.googleusercontent.com/d/1zE5BSNNy4Uwrzly6CMlPsfdXzYbByhmu')">
         <div class="card-content">
             <div>
-                <div class="card-title">Dollar Days In</div>
+                <div class="card-title">Dollar Days Inn</div>
                 <div class="card-description">Affordable meals and snacks, perfect for quick bites and better satisfaction.</div>
             </div>
             <button class="btn-order">View Menu</button>
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="BB Foods" data-expiry="2025-11-30" style="background-image:url('images/bbfoods.jpg')">
+    <div class="card" data-category="foods" data-name="BB Foods" data-expiry="2025-11-30" style="background-image:url('https://lh3.googleusercontent.com/d/1YSMF8DuR5MT0rlIz4YH5BnvKqROhrtX5')">
         <div class="card-content">
             <div>
                 <div class="card-title">BB Foods</div>
@@ -162,7 +327,7 @@
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="Masanita Foods" data-expiry="2025-12-15" style="background-image:url('images/masanita.jpg')">
+    <div class="card" data-category="foods" data-name="Masanita Foods" data-expiry="2025-12-15" style="background-image:url('https://lh3.googleusercontent.com/d/1JGlcMe_J0PNlTc64Z7Zseeu9x6xlhDWF')">
         <div class="card-content">
             <div>
                 <div class="card-title">Masanita Foods</div>
@@ -172,10 +337,10 @@
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="Merrington Foods" data-expiry="2026-01-31" style="background-image:url('images/merrington.jpg')">
+    <div class="card" data-category="foods" data-name="Marynton Foods" data-expiry="2026-01-31" style="background-image:url('https://lh3.googleusercontent.com/d/1lrxOv67QdvfpihZocZNQuHHxRu_7LcsH')">
         <div class="card-content">
             <div>
-                <div class="card-title">Merrington Foods</div>
+                <div class="card-title">Marynton Foods</div>
                 <div class="card-description">Premium meals, perfect for family dinners or office lunches.</div>
             </div>
             <button class="btn-order">View Menu</button>
@@ -183,23 +348,33 @@
     </div>
 
     <!-- Drinks sellers -->
-    <div class="card" data-category="drinks" data-name="Chill Drinks" data-expiry="2025-12-20" style="background-image:url('images/chilldrinks.jpg')">
+    <div class="card" data-category="drinks" data-name="Country Side Pub" data-expiry="2025-12-20" style="background-image:url('https://lh3.googleusercontent.com/d/1xNWjn5wBOmsSKLNEebRBk7eZbdsGZf0E')">
         <div class="card-content">
             <div>
-                <div class="card-title">Chill Drinks</div>
+                <div class="card-title">Country Side Pub</div>
                 <div class="card-description">Fresh beverages and smoothies for all ages.</div>
             </div>
-            <button class="btn-order">View Menu</button>
+            <button class="btn-order">Buy From Us</button>
         </div>
     </div>
 
-    <div class="card" data-category="drinks" data-name="Fresh Beverages" data-expiry="2025-11-15" style="background-image:url('images/freshbeverages.jpg')">
+    <div class="card" data-category="drinks" data-name="Manko Pub" data-expiry="2025-11-15" style="background-image:url('https://lh3.googleusercontent.com/d/1l_oDldayxKs65Fu3pxsBWNJaA5gwBj2-')">
         <div class="card-content">
             <div>
-                <div class="card-title">Fresh Beverages</div>
+                <div class="card-title">Manko Pub</div>
                 <div class="card-description">Juices, shakes, and cold drinks made from fresh fruits.</div>
             </div>
-            <button class="btn-order">View Menu</button>
+            <button class="btn-order">Buy From Us</button>
+        </div>
+    </div>
+  
+    <div class="card" data-category="drinks" data-name="Nesto Plaza" data-expiry="2025-11-15" style="background-image:url('https://lh3.googleusercontent.com/d/17whBTTBzM0nnO-GE76438EjxLffGIsbc')">
+        <div class="card-content">
+            <div>
+                <div class="card-title">Nesto Plaza</div>
+                <div class="card-description">The best wholesale for all kinds of drinks .</div>
+            </div>
+            <button class="btn-order">Buy From Us</button>
         </div>
     </div>
 
@@ -260,6 +435,10 @@
         }
     });
 </script>
+  
+  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
+    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
+</div>
 
 </body>
 </html>
