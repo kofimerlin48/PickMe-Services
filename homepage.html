@@ -97,22 +97,30 @@
 </head>
 <body>
 
-  <!-- Fixed Header -->
-  <div style="
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: white; /* solid white */
-      text-align: center;
-      padding: 20px 0; /* minimal height */
-      z-index: 10;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      border-bottom-left-radius: 20px;  /* curvy bottom left */
-      border-bottom-right-radius: 20px; /* curvy bottom right */
-  ">
-    <h1 style="margin: 0; font-weight: bold; color: #c12872; font-size: 24px;">PICKME SERVICES</h1>
-  </div>
+<!-- =========HEADER CODE STARTS HERE ================== --> 
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    const html = await response.text();
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // Re-run any inline scripts in header.html so menus work
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) newScript.src = oldScript.src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+<!-- =========HEADER CODE ENDS HERE ================== --> 
+
 
   <div class="grid" style="padding-top: 70px;">
     <!-- Add welcome text here above the first cards -->
@@ -251,12 +259,15 @@ fetch('footer.html')
   });
 </script>
 
+<!-- =========FOOTER CODE STARTS HERE ================== -->
   <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
     <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
 </div>
+<!-- =========FOOTEE CODE ENDS HERE ================== --> 
     
 </body>
 </html>
+
 
 
 
