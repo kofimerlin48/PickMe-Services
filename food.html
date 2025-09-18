@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food & Drinks - PickMe Services</title>
   
+<!-- =========HEADER CODE STARTS HERE ================== --> 
 <div id="header-placeholder"></div>
 <script>
 (async () => {
@@ -13,6 +14,11 @@
     if (!response.ok) throw new Error('Failed to load header');
     const html = await response.text();
     document.getElementById('header-placeholder').innerHTML = html;
+
+    // Set page-specific header title
+    const pageName = "Food & Drinks"; // << change this for each page
+    const titleEl = document.getElementById('page-title');
+    if(titleEl) titleEl.textContent = pageName;
 
     // Re-run any inline scripts in header.html so menus work
     document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
@@ -26,7 +32,8 @@
   }
 })();
 </script>
-  
+<!-- =========HEADER CODE ENDS HERE ================== -->  
+
 <style>
     body {
         margin: 0;
@@ -304,9 +311,12 @@
     });
 </script>
   
+<!-- =========FOOTER CODE STARTS HERE ================== -->
   <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
     <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
 </div>
+<!-- =========FOOTEE CODE ENDS HERE ================== --> 
+
 
 </body>
 </html>
