@@ -98,26 +98,22 @@
 <body>
 
 <!-- =========HEADER CODE STARTS HERE ================== --> 
-<div id="header-placeholder"></div>
+<!-- Call header.html and set page title in one step -->
+<div id="header-container"></div>
 <script>
-(async () => {
-  try {
-    const response = await fetch('header.html');
-    if (!response.ok) throw new Error('Failed to load header');
-    const html = await response.text();
-    document.getElementById('header-placeholder').innerHTML = html;
+  const pageName = "PICKME SERVICES"; // ← change this for each page
 
-    // Re-run any inline scripts in header.html so menus work
-    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-      const newScript = document.createElement('script');
-      if (oldScript.src) newScript.src = oldScript.src;
-      else newScript.textContent = oldScript.textContent;
-      document.body.appendChild(newScript);
+  fetch('header.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('header-container').innerHTML = data;
+      // set page title dynamically
+      const titleEl = document.getElementById('page-title');
+      if(titleEl) titleEl.textContent = pageName;
+      // re-run any header scripts if needed
+      if(typeof renderNavIfNeeded === "function") renderNavIfNeeded();
+      if(typeof initDropdowns === "function") initDropdowns();
     });
-  } catch (err) {
-    console.error(err);
-  }
-})();
 </script>
 <!-- =========HEADER CODE ENDS HERE ================== --> 
 
@@ -267,6 +263,7 @@ fetch('footer.html')
     
 </body>
 </html>
+
 
 
 
