@@ -15,7 +15,7 @@
     let html = await response.text();
 
     // Replace the <h1> content with the page-specific title
-    const pageTitle = "Food & Drinks"; // <-- CHANGE this per page
+    const pageTitle = "Hotel"; // <-- CHANGE this per page
     html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
 
     document.getElementById('header-placeholder').innerHTML = html;
