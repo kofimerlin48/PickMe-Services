@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotels - PickMe Services</title>
+
+<!-- =========HEADER CODE STARTS HERE ================== -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+
+    // Replace the <h1> content with the page-specific title
+    const pageTitle = "Food & Drinks"; // <-- CHANGE this per page
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // Re-run scripts inside header.html so menus work
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) newScript.src = oldScript.src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+<!-- =========HEADER CODE ENDS HERE ================== -->
+
+<style>
+:root {
+  --theme-color: #c12872;      /* main page primary color */
+  --theme-color-alt: #257d5b;  /* main page secondary color */
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  padding-top: 100px;
+  overflow-x: hidden;
+}
+
+.page-header { text-align:center; margin-bottom:20px; }
+.page-header h1 { color: var(--theme-color); margin:0; font-size:28px; }
+.page-header p { color:#000; margin-top:5px; font-size:16px; font-weight:bold; }
+
+.search-bar { display:flex; justify-content:center; margin-bottom:20px; }
+.search-bar input { width:80%; max-width:400px; padding:10px 15px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+
+.cards-container { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:70px; padding:0 20px 50px 20px; }
+
+.card {
+  position: relative;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  background-size: cover;
+  background-position: center;
+  height: 250px;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 0.2s;
+}
+.card:hover { transform: translateY(-5px); }
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+}
+
+.card-content {
+  position: relative;
+  color: white;
+  padding: 15px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.card-title { font-weight: bold; font-size: 24px; margin-bottom: 10px; }
+.card-description { font-size: 14px; margin-bottom: 10px; flex-grow: 1; }
+
+.btn-explore {
+  background-color: var(--theme-color);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+  align-self: flex-end;
+  transition: background 0.2s;
+}
+.btn-explore:hover, .btn-explore:focus, .btn-explore:active {
+  background-color: var(--theme-color) !important;
+  color: white !important;
+  outline: none !important;
+}
+
+/* =================== DETAILS PANEL =================== */
+#detailsPanel {
+  position: fixed;
+  top: 0; right: -100%;
+  width: 100%;
+  max-width: 1100px;
+  height: 100%;
+  background: #fff;
+  z-index: 9999;
+  overflow-y: auto;
+  transition: right 0.5s ease;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+}
+#detailsPanel.show { right: 0; }
+
+#detailsBackBtn {
+  position: fixed;
+  top: 15px;
+  right: -60px;
+  width: 40px;
+  height: 40px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: right 0.5s ease;
+}
+#detailsPanel.show #detailsBackBtn { right: 15px; }
+
+.banner {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+.banner::after {
+  content: '';
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  background-color: rgba(0,0,0,0.5); z-index:1;
+}
+.banner-text { position: relative; z-index:2; }
+.banner-text h2 { font-size: 18px; margin-bottom:8px; font-weight:normal; }
+.banner-text h1 { font-size:28px; margin-bottom:16px; }
+.banner-text p { font-size:14px; max-width:600px; margin:0 auto; }
+
+.tabs { display:flex; justify-content:space-between; border-bottom:2px solid #eee; margin-top:1rem; overflow-x:auto; }
+.tab { flex:1; text-align:center; padding:1rem 0; cursor:pointer; transition: background 0.3s; white-space:nowrap; }
+.tab.active { border-bottom:3px solid var(--theme-color); color: var(--theme-color); }
+.btn { background-color: var(--theme-color); }
+.tab-content { padding:2rem 1rem; max-width:1100px; margin:0 auto; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.room-card { border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1); overflow:hidden; margin-bottom:2rem; }
+.room-slider { position:relative; width:100%; height:250px; overflow:hidden; }
+.room-slider img { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:100%; opacity:0; }
+.slider-arrow { position:absolute; top:50%; transform:translateY(-50%); font-size:2rem; color:white; cursor:pointer; z-index:2; user-select:none; padding:0 5px; background-color:rgba(0,0,0,0.3); border-radius:50%; }
+.slider-arrow.left { left:10px; }
+.slider-arrow.right { right:10px; }
+.room-info { padding:1rem; display:flex; flex-direction:column; }
+.room-info h3 { margin-bottom:0.5rem; }
+.room-info p { margin-bottom:1rem; }
+.room-buttons { text-align:right; }
+.btn { background-color: var(--theme-color-alt); color:white; border:none; padding:10px 16px; margin-left:0.5rem; cursor:pointer; border-radius:5px; transition:background 0.3s; text-decoration:none; display:inline-block; }
+.btn { background-color: var(--theme-color); color:white; }
+.btn:hover, .btn:active, .btn:focus { background-color: var(--theme-color); color: white; }
+.facility-icons div { display:flex; align-items:center; font-size:1.1rem; padding:0.5rem 0; }
+.facility-icons div i { margin-right:0.5rem; width:24px; text-align:center; }
+.amenities { display: grid; grid-template-columns: repeat(2,1fr); gap:6px; margin:10px 0; }
+.amenities label { font-size:14px; display:flex; align-items:center; gap:6px; }
+.amenities input[type="checkbox"] { accent-color:green; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1></h1>
+  <p>Find and explore the best hotels around you</p>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search hotels...">
+</div>
+
+<div class="cards-container" id="cardsContainer"></div>
+
+<!-- ================= DETAILS PANEL ================= -->
+<div id="detailsPanel">
+  <button id="detailsBackBtn">&times;</button>
+  <section class="banner" id="detailsBanner">
+    <div class="banner-text">
+      <h2>Welcome to</h2>
+      <h1 id="hotelName"></h1>
+      <p id="hotelSlogan"></p>
+    </div>
+  </section>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="photos">Photos</div>
+    <div class="tab" data-tab="rooms">Rooms</div>
+    <div class="tab" data-tab="facilities">Facilities</div>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-panel active" id="photos"></div>
+    <div class="tab-panel" id="rooms"></div>
+    <div class="tab-panel" id="facilities"></div>
+  </div>
+</div>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<script>
+const hotelNameEl = document.getElementById("hotelName");
+const hotelSloganEl = document.getElementById("hotelSlogan");
+const detailsBanner = document.getElementById("detailsBanner");
+const detailsPanel = document.getElementById("detailsPanel");
+const photosPanel = document.getElementById("photos");
+const roomsPanel = document.getElementById("rooms");
+const facilitiesPanel = document.getElementById("facilities");
+const tabs = document.querySelectorAll(".tab");
+const panels = document.querySelectorAll(".tab-panel");
+
+const HOTELS_DATA = [
+  {
+    name: "GEOFRAMBERT HOTEL",
+    description: "Good people. Good thinking. Good feeling.",
+    heroImage: "https://lh3.googleusercontent.com/d/1H24AhCYyhBKW5NJHSCiY28S3kr5LZcu-",
+    bannerImage: "https://lh3.googleusercontent.com/d/1H24AhCYyhBKW5NJHSCiY28S3kr5LZcu-",
+    themeColor: "#2130b0",
+    photos: [
+      "https://lh3.googleusercontent.com/d/15H91jxOYri76IXq7zngSGhMtRFivHn1B",
+      "https://lh3.googleusercontent.com/d/17YDahl1mvTD7j6GK1ucPpOfhyyRZPE7G",
+      "https://lh3.googleusercontent.com/d/1-wC3SDgVBNQo30hhsHWvwhkgQkpu5Phu"
+    ],
+    rooms: [
+      { name:"Standard Twin Room", price:310, images:["https://lh3.googleusercontent.com/d/14E3UytpWpfR3NvB8grg76El5AqlgEO8Z","https://lh3.googleusercontent.com/d/1Lnll39zfeRV0ov1hlrHMuHbtslLKRHl1"], amenities:{"Double-sized Bed":"yes","Air Conditioning":"yes","Free Wi-Fi":"yes","Ensuite Bathroom":"yes","Television":"yes"} },
+      { name:"Standard Room", price:210, images:["https://lh3.googleusercontent.com/d/1iBnu97z2zggJkUz2RU07GCxMK4ua8T4B","https://lh3.googleusercontent.com/d/1Lnll39zfeRV0ov1hlrHMuHbtslLKRHl1"], amenities:{"Queen-sized Bed":"yes","Fan":"yes","Free Wi-Fi":"yes","Television":"yes","l":"No","Fridge":"yes"} }
+    ],
+    facilities: [
+      { icon:"fas fa-wifi", text:"Wi-Fi", available:"yes" },
+      { icon:"fas fa-swimmer", text:"Swimming Pool", available:"yes" },
+      { icon:"fas fa-dumbbell", text:"Gym", available:"yes" },
+      { icon:"fas fa-utensils", text:"Restaurant", available:"yes" }
+    ],
+    whatsapp: "233534742142",
+    bookingLink: "https://paystack.com"
+  },
+  {
+    name: "Sample Hotel 1",
+    description: "A comfortable stay.",
+    heroImage: "https://via.placeholder.com/400x250",
+    bannerImage: "https://via.placeholder.com/1100x400",
+    themeColor: "#b02130",
+    photos: ["https://via.placeholder.com/400x300","https://via.placeholder.com/400x300"],
+    rooms: [],
+    facilities: [],
+    whatsapp: "233000000000",
+    bookingLink: "#"
+  }
+];
+
+const cardsContainer = document.getElementById("cardsContainer");
+function createHotelCard(hotel, index) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.backgroundImage = `url('${hotel.heroImage}')`;
+  const cardContent = document.createElement("div");
+cardContent.className = "card-content";
+cardContent.innerHTML = `
+  <div class="card-title">${hotel.name}</div>
+  <div class="card-description">${hotel.description}</div>
+  <button class="btn-explore" data-index="${index}" 
+      style="background-color: ${hotel.themeColor};">Explore</button>
+`;
+  card.appendChild(cardContent);
+  cardsContainer.appendChild(card);
+}
+
+// Render hotel cards
+HOTELS_DATA.forEach((hotel, index) => createHotelCard(hotel, index));
+
+// Search
+document.getElementById("searchInput").addEventListener("input", e => {
+  const val = e.target.value.toLowerCase();
+  document.querySelectorAll('.card').forEach((card, i) => {
+    card.style.display = HOTELS_DATA[i].name.toLowerCase().includes(val) ? 'flex' : 'none';
+  });
+});
+
+// Explore buttons
+document.querySelectorAll(".btn-explore").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const index = btn.dataset.index;
+    showDetails(HOTELS_DATA[index]);
+  });
+});
+
+// Back button
+document.getElementById("detailsBackBtn").addEventListener("click", () => detailsPanel.classList.remove("show"));
+
+// Show details function
+function showDetails(hotel) {
+  hotelNameEl.textContent = hotel.name;
+  hotelSloganEl.textContent = hotel.description;
+  detailsBanner.style.background = `url('${hotel.bannerImage}') center/cover no-repeat`;
+
+  // Apply per-hotel theme color dynamically
+  document.documentElement.style.setProperty('--theme-color', hotel.themeColor);
+
+  photosPanel.innerHTML = '';
+  hotel.photos.forEach(src => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.style.width = "100%";
+    img.style.marginBottom = "15px";
+    photosPanel.appendChild(img);
+  });
+
+  roomsPanel.innerHTML = '';
+  hotel.rooms.forEach(room => {
+    const card = document.createElement("div");
+    card.className = "room-card";
+
+    const slider = document.createElement("div");
+    slider.className = "room-slider";
+    room.images.forEach((imgSrc, i) => {
+      const img = document.createElement("img");
+      img.src = imgSrc;
+      img.style.left = i===0 ? "0" : "100%";
+      img.style.opacity = i===0 ? "1" : "0";
+      slider.appendChild(img);
+    });
+
+    const leftArrow = document.createElement('div');
+    leftArrow.className='slider-arrow left'; leftArrow.innerHTML='&#10094;';
+    const rightArrow = document.createElement('div');
+    rightArrow.className='slider-arrow right'; rightArrow.innerHTML='&#10095;';
+    slider.appendChild(leftArrow); slider.appendChild(rightArrow);
+
+    const info = document.createElement("div");
+    info.className = "room-info";
+    let amenitiesHTML = '<div class="amenities">';
+    for(const [amenity,val] of Object.entries(room.amenities))
+      if(val==="yes") amenitiesHTML += `<label><input type="checkbox" checked disabled> ${amenity}</label>`;
+    amenitiesHTML += "</div>";
+
+    info.innerHTML = `
+      <h3>${room.name}</h3>
+      ${amenitiesHTML}
+      <p class="room-price"><strong>Price: GH₵ ${room.price}</strong></p>
+      <div class="room-buttons">
+        <a href="#" class="btn check-btn">Check Availability</a>
+        <a href="${hotel.bookingLink}" class="btn book-btn">Book Now</a>
+      </div>
+    `;
+
+    card.appendChild(slider);
+    card.appendChild(info);
+    roomsPanel.appendChild(card);
+
+    // Slider functionality
+    const slides = slider.querySelectorAll("img");
+    let current = 0;
+    const showSlide = (nextIndex) => {
+      if(nextIndex === current) return;
+      const direction = nextIndex > current ? 1 : -1;
+      const nextSlide = slides[(nextIndex + slides.length) % slides.length];
+      const currentSlide = slides[current];
+
+      nextSlide.style.transition = "none";
+      nextSlide.style.left = direction > 0 ? "100%" : "-100%";
+      nextSlide.style.opacity = "1";
+
+      requestAnimationFrame(() => {
+        currentSlide.style.transition = "all 0.5s ease";
+        nextSlide.style.transition = "all 0.5s ease";
+        currentSlide.style.left = direction > 0 ? "-100%" : "100%";
+        currentSlide.style.opacity = "0";
+        nextSlide.style.left = "0";
+      });
+      current = (nextIndex + slides.length) % slides.length;
+    };
+
+    leftArrow.onclick = () => showSlide(current - 1);
+    rightArrow.onclick = () => showSlide(current + 1);
+
+    // Swipe support
+    let startX = 0;
+    slider.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+    slider.addEventListener("touchend", e => {
+      const endX = e.changedTouches[0].clientX;
+      if(startX - endX > 50) showSlide(current + 1);
+      if(endX - startX > 50) showSlide(current - 1);
+    });
+
+    // WhatsApp & Book buttons
+    info.querySelector(".check-btn").onclick = e => {
+      e.preventDefault();
+      const price = info.querySelector('.room-price').innerText;
+      const message = `Hello PickMe Services, I want to check if the room at *${hotel.name}* costing ${price} is available.`;
+      location.href = `https://wa.me/${hotel.whatsapp}?text=${encodeURIComponent(message)}`;
+    };
+    info.querySelector(".book-btn").onclick = e => {
+      e.preventDefault();
+      location.href = hotel.bookingLink;
+    };
+  });
+
+  // Facilities
+  facilitiesPanel.innerHTML = '';
+  const facContainer = document.createElement("div");
+  facContainer.className = "facility-icons";
+  hotel.facilities.forEach(f => {
+    if(f.available === "yes") {
+      const div = document.createElement("div");
+      div.innerHTML = `<i class="${f.icon}"></i> ${f.text}`;
+      facContainer.appendChild(div);
+    }
+  });
+  facilitiesPanel.appendChild(facContainer);
+
+  // Tabs
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      panels.forEach(p=>p.classList.remove('active'));
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    };
+  });
+
+  detailsPanel.classList.add("show");
+}
+</script>
+  
+<!-- =========FOOTER CODE STARTS HERE ================== -->
+  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
+    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
+</div>
+<!-- =========FOOTEE CODE ENDS HERE ================== -->
+  
+</body>
+</html>
