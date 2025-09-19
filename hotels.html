@@ -264,7 +264,8 @@ const HOTELS_DATA = [
       { icon:"fas fa-utensils", text:"Restaurant", available:"yes" }
     ],
     whatsapp: "233534742142",
-    bookingLink: "https://paystack.com"
+    bookingLink: "https://paystack.com",
+    expiry: "2025-09-19"
   },
   {
     name: "Sample Hotel 1",
@@ -276,23 +277,33 @@ const HOTELS_DATA = [
     rooms: [],
     facilities: [],
     whatsapp: "233000000000",
-    bookingLink: "#"
+    bookingLink: "#",
+    expiry: "2025-10-01"
   }
 ];
 
 const cardsContainer = document.getElementById("cardsContainer");
 function createHotelCard(hotel, index) {
+  // Check expiry
+  if(hotel.expiry) {
+    const today = new Date();
+    const expiryDate = new Date(hotel.expiry + "T23:59:59"); // expire at end of day
+    if(today > expiryDate) return; // Skip this hotel if expired
+  }
+
   const card = document.createElement("div");
   card.className = "card";
   card.style.backgroundImage = `url('${hotel.heroImage}')`;
+
   const cardContent = document.createElement("div");
-cardContent.className = "card-content";
-cardContent.innerHTML = `
-  <div class="card-title">${hotel.name}</div>
-  <div class="card-description">${hotel.description}</div>
-  <button class="btn-explore" data-index="${index}" 
-      style="background-color: ${hotel.themeColor};">Explore</button>
-`;
+  cardContent.className = "card-content";
+  cardContent.innerHTML = `
+    <div class="card-title">${hotel.name}</div>
+    <div class="card-description">${hotel.description}</div>
+    <button class="btn-explore" data-index="${index}" 
+        style="background-color: ${hotel.themeColor};">Explore</button>
+  `;
+
   card.appendChild(cardContent);
   cardsContainer.appendChild(card);
 }
