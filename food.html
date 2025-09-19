@@ -182,7 +182,7 @@
     <!-- Just copy one block and update details (name, description, image, expiry date) -->
 
     <!-- Restaurant Cards -->
-    <div class="card" data-category="foods" data-name="Dollar Days In" data-expiry="2025-12-31" style="background-image:url('https://lh3.googleusercontent.com/d/1zE5BSNNy4Uwrzly6CMlPsfdXzYbByhmu')">
+    <div class="card" data-category="foods" data-name="Dollar Days In" data-expiry="2025-12-31" data-link= "https://geofranbert.com" style="background-image:url('https://lh3.googleusercontent.com/d/1zE5BSNNy4Uwrzly6CMlPsfdXzYbByhmu')">
         <div class="card-content">
             <div>
                 <div class="card-title">Dollar Days Inn</div>
@@ -192,7 +192,7 @@
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="BB Foods" data-expiry="2025-11-30" style="background-image:url('https://lh3.googleusercontent.com/d/1YSMF8DuR5MT0rlIz4YH5BnvKqROhrtX5')">
+    <div class="card" data-category="foods" data-name="BB Foods" data-expiry="2025-11-30" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/1YSMF8DuR5MT0rlIz4YH5BnvKqROhrtX5')">
         <div class="card-content">
             <div>
                 <div class="card-title">BB Foods</div>
@@ -202,7 +202,7 @@
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="Masanita Foods" data-expiry="2025-12-15" style="background-image:url('https://lh3.googleusercontent.com/d/1JGlcMe_J0PNlTc64Z7Zseeu9x6xlhDWF')">
+    <div class="card" data-category="foods" data-name="Masanita Foods" data-expiry="2025-12-15" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/1JGlcMe_J0PNlTc64Z7Zseeu9x6xlhDWF')">
         <div class="card-content">
             <div>
                 <div class="card-title">Masanita Foods</div>
@@ -212,7 +212,7 @@
         </div>
     </div>
 
-    <div class="card" data-category="foods" data-name="Marynton Foods" data-expiry="2026-01-31" style="background-image:url('https://lh3.googleusercontent.com/d/1lrxOv67QdvfpihZocZNQuHHxRu_7LcsH')">
+    <div class="card" data-category="foods" data-name="Marynton Foods" data-expiry="2026-01-31" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/1lrxOv67QdvfpihZocZNQuHHxRu_7LcsH')">
         <div class="card-content">
             <div>
                 <div class="card-title">Marynton Foods</div>
@@ -223,7 +223,7 @@
     </div>
 
     <!-- Drinks sellers -->
-    <div class="card" data-category="drinks" data-name="Country Side Pub" data-expiry="2025-12-20" style="background-image:url('https://lh3.googleusercontent.com/d/1xNWjn5wBOmsSKLNEebRBk7eZbdsGZf0E')">
+    <div class="card" data-category="drinks" data-name="Country Side Pub" data-expiry="2025-12-20" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/1xNWjn5wBOmsSKLNEebRBk7eZbdsGZf0E')">
         <div class="card-content">
             <div>
                 <div class="card-title">Country Side Pub</div>
@@ -233,7 +233,7 @@
         </div>
     </div>
 
-    <div class="card" data-category="drinks" data-name="Manko Pub" data-expiry="2025-11-15" style="background-image:url('https://lh3.googleusercontent.com/d/1l_oDldayxKs65Fu3pxsBWNJaA5gwBj2-')">
+    <div class="card" data-category="drinks" data-name="Manko Pub" data-expiry="2025-11-15" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/1l_oDldayxKs65Fu3pxsBWNJaA5gwBj2-')">
         <div class="card-content">
             <div>
                 <div class="card-title">Manko Pub</div>
@@ -243,7 +243,7 @@
         </div>
     </div>
   
-    <div class="card" data-category="drinks" data-name="Nesto Plaza" data-expiry="2025-11-15" style="background-image:url('https://lh3.googleusercontent.com/d/17whBTTBzM0nnO-GE76438EjxLffGIsbc')">
+    <div class="card" data-category="drinks" data-name="Nesto Plaza" data-expiry="2025-11-15" data-link= "" style="background-image:url('https://lh3.googleusercontent.com/d/17whBTTBzM0nnO-GE76438EjxLffGIsbc')">
         <div class="card-content">
             <div>
                 <div class="card-title">Nesto Plaza</div>
@@ -293,10 +293,12 @@
 
     // ORDER BUTTON PLACEHOLDER
     document.querySelectorAll('.btn-order').forEach(btn => {
-        btn.addEventListener('click', () => {
-            alert('This will open the restaurant menu page.');
-        });
+    btn.addEventListener('click', () => {
+        const card = btn.closest('.card');
+        const link = card.getAttribute('data-link');
+        if(link) window.location.href = link;
     });
+});
 
     // EXPIRY DATE CHECK
     const today = new Date();
@@ -309,6 +311,16 @@
             }
         }
     });
+</script>
+  
+<script>
+document.querySelectorAll('.btn-order').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const card = btn.closest('.card');        // get the card that contains this button
+        const link = card.getAttribute('data-link'); // read the link
+        if(link) window.location.href = link;     // navigate to the page
+    });
+});
 </script>
   
 <!-- =========FOOTER CODE STARTS HERE ================== -->
