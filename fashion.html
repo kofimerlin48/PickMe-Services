@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
+  <script async src="https://openfpcdn.io/fingerprintjs/v4"></script>
+
   <style>
     body {
       margin: 0;
@@ -104,6 +106,21 @@
     const userLikesKey = "userLikes";
     let userLikes = JSON.parse(localStorage.getItem(userLikesKey) || "[]");
     let currentBoutiques = [];
+    let visitorId = null;
+
+    // Function to get visitor ID using FingerprintJS
+    async function getVisitorId() {
+      if (visitorId) return visitorId;
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        visitorId = result.visitorId;
+      } catch (err) {
+        console.error("Failed to get visitor ID:", err);
+        visitorId = 'anonymous_' + Math.random().toString(36).slice(2); // Fallback
+      }
+      return visitorId;
+    }
 
     // Load header asynchronously
     (async () => {
@@ -188,7 +205,7 @@
             const wasLiked = userLikes.includes(id);
             const originalCount = parseInt(likeCountEl.textContent || "0", 10);
 
-            // Update UI immediately
+            // Update UI immediately (optimistic update)
             const newCount = wasLiked ? Math.max(0, originalCount - 1) : originalCount + 1;
             likeCountEl.textContent = newCount;
             likeBtn.classList.toggle("liked", !wasLiked);
@@ -205,18 +222,28 @@
             // Re-render sorted list
             renderBoutiques(currentBoutiques.slice());
 
-            // Send like/unlike to server
+            // Send like/unlike to server with userID
             try {
-              await fetch(WEB_APP_URL, {
+              const userID = await getVisitorId();
+              const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: "updateLikes", boutiqueId: id, delta: wasLiked ? -1 : 1 }),
+                body: JSON.stringify({ action: "updateLikes", boutiqueId: id, delta: wasLiked ? -1 : 1, userID }),
                 headers: { "Content-Type": "application/json" }
               });
-              // After successful update, save cache with new likes
+              if (!response.ok) throw new Error('Server update failed');
+              // Optionally, refetch data if needed
               localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
             } catch (err) {
               console.error("Failed to update like on server:", err);
-              // Optionally revert UI if failed, but for now, assume success
+              // Revert optimistic update if failed
+              likeCountEl.textContent = originalCount;
+              likeBtn.classList.toggle("liked", wasLiked);
+              likeBtn.setAttribute("aria-pressed", wasLiked ? 'true' : 'false');
+              if (wasLiked) userLikes.push(id);
+              else userLikes = userLikes.filter(x => x !== id);
+              saveUserLikes();
+              currentBoutiques = currentBoutiques.map(item => item.id === id ? { ...item, likes: originalCount } : item);
+              renderBoutiques(currentBoutiques.slice());
             } finally {
               likeBtn.dataset.processing = "0";
             }
@@ -235,10 +262,11 @@
       applySearchFilter();
     }
 
-    // Update likes from server
+    // Update likes and user likes from server
     async function updateLikes() {
       try {
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
+        const userID = await getVisitorId();
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques&userID=${userID}`);
         const data = await res.json();
 
         if (data.boutiques && data.boutiques.length > 0) {
@@ -250,6 +278,14 @@
               updated = true;
             }
           });
+          if (data.userLikedIds) {
+            const newUserLikes = data.userLikedIds;
+            if (JSON.stringify(newUserLikes) !== JSON.stringify(userLikes)) {
+              userLikes = newUserLikes;
+              saveUserLikes();
+              updated = true;
+            }
+          }
           if (updated) {
             localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
             localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
@@ -290,7 +326,8 @@
 
       // Fetch fresh data
       try {
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
+        const userID = await getVisitorId();
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques&userID=${userID}`);
         const data = await res.json();
 
         if (!data.boutiques || data.boutiques.length === 0) {
@@ -299,6 +336,8 @@
         }
 
         currentBoutiques = data.boutiques;
+        userLikes = data.userLikedIds || userLikes; // Fall back to local if not provided
+        saveUserLikes();
         localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
         localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
         renderBoutiques(currentBoutiques);
