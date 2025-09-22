@@ -99,7 +99,8 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2mUaCeMBmigDcy7mPnIzpjTq4Ck6qrI7vfp9vsWetfsPT_jsjXuO6vsoe_Ty1mhWQ/exec";
     const CACHE_KEY = "boutiquesCache";
     const CACHE_TIMESTAMP_KEY = "boutiquesCacheTimestamp";
-    const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in ms
+    const CACHE_DURATION = 60 * 60 * 1000; // 1 hour for boutique data
+    const POLL_INTERVAL = 10000; // 10 seconds for like updates
     const userLikesKey = "userLikes";
     let userLikes = JSON.parse(localStorage.getItem(userLikesKey) || "[]");
     let currentBoutiques = [];
@@ -149,7 +150,7 @@
     // Render boutiques
     function renderBoutiques(boutiques) {
       const container = document.getElementById("cardsContainer");
-      const fragment = document.createDocumentFragment(); // Use fragment to reduce reflows
+      const fragment = document.createDocumentFragment();
       boutiques.sort((a, b) => (b.likes || 0) - (a.likes || 0));
 
       boutiques.forEach(b => {
@@ -211,8 +212,11 @@
                 body: JSON.stringify({ action: "updateLikes", boutiqueId: id, delta: wasLiked ? -1 : 1 }),
                 headers: { "Content-Type": "application/json" }
               });
+              // After successful update, save cache with new likes
+              localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
             } catch (err) {
               console.error("Failed to update like on server:", err);
+              // Optionally revert UI if failed, but for now, assume success
             } finally {
               likeBtn.dataset.processing = "0";
             }
@@ -231,23 +235,52 @@
       applySearchFilter();
     }
 
+    // Update likes from server
+    async function updateLikes() {
+      try {
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
+        const data = await res.json();
+
+        if (data.boutiques && data.boutiques.length > 0) {
+          let updated = false;
+          data.boutiques.forEach(sb => {
+            const cb = currentBoutiques.find(c => c.id === sb.id);
+            if (cb && cb.likes !== sb.likes) {
+              cb.likes = sb.likes;
+              updated = true;
+            }
+          });
+          if (updated) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
+            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+            renderBoutiques(currentBoutiques);
+          }
+        }
+      } catch (err) {
+        console.error("Error updating likes:", err);
+      }
+    }
+
     // Fetch boutiques with caching
     async function fetchBoutiques() {
       const container = document.getElementById("cardsContainer");
       const cachedData = localStorage.getItem(CACHE_KEY);
       const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
       const now = Date.now();
+      let fromCache = false;
 
       // Load from cache if available and not expired
       if (cachedData && cachedTimestamp && (now - parseInt(cachedTimestamp, 10) < CACHE_DURATION)) {
         try {
           currentBoutiques = JSON.parse(cachedData);
           renderBoutiques(currentBoutiques);
+          fromCache = true;
         } catch (e) {
           console.error("Failed to parse cached data:", e);
-          container.innerHTML = "<p>Failed to load boutiques.</p>";
         }
-      } else {
+      }
+
+      if (!fromCache) {
         container.innerHTML = `
           <div class="skeleton"></div>
           <div class="skeleton"></div>
@@ -255,7 +288,7 @@
         `;
       }
 
-      // Fetch fresh data in the background
+      // Fetch fresh data
       try {
         const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
         const data = await res.json();
@@ -265,26 +298,23 @@
           return;
         }
 
-        // Merge server likes with cached data (to preserve real-time likes)
-        const cachedBoutiques = JSON.parse(cachedData || "[]");
-        currentBoutiques = data.boutiques.map(serverBoutique => {
-          const cachedBoutique = cachedBoutiques.find(cb => cb.id === serverBoutique.id);
-          return { ...serverBoutique, likes: cachedBoutique?.likes || serverBoutique.likes || 0 };
-        });
-
+        currentBoutiques = data.boutiques;
         localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
         localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
         renderBoutiques(currentBoutiques);
       } catch (err) {
         console.error("Error fetching boutiques:", err);
-        if (!cachedData) {
+        if (!fromCache) {
           container.innerHTML = "<p>Failed to load boutiques.</p>";
         }
       }
     }
 
     // Initialize
-    fetchBoutiques();
+    fetchBoutiques().then(() => {
+      setInterval(updateLikes, POLL_INTERVAL);
+      window.addEventListener('focus', updateLikes);
+    });
     document.getElementById("searchInput").addEventListener("input", debounce(applySearchFilter, 300));
   </script>
 </body>
