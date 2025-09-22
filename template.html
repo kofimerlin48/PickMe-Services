@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Boutique UI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="manifest" href="/PickMe-Services/manifest.json">
-  <script src="https://apis.google.com/js/api.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --theme-color: #9e1850; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-    body { background-color: #ffffff; overflow-x: hidden; position: relative; }
+    :root {
+      --theme-color: #9e1850; /* Default, will be overridden by JS */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      overflow-x: hidden;
+      position: relative;
+    }
+
     .top-banner {
       width: 100%;
       height: 280px;
@@ -28,9 +40,11 @@
       flex-direction: column;
       justify-content: space-between;
     }
+
     .top-banner h2 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
     .top-banner h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
     .top-banner p { font-size: 14px; font-weight: 400; opacity: 0.9; }
+
     .banner-buttons {
       position: absolute;
       bottom: 20px;
@@ -39,6 +53,7 @@
       display: flex;
       gap: 10px;
     }
+
     .contact-btn, .pay-btn {
       padding: 12px 24px;
       font-size: 14px;
@@ -49,8 +64,19 @@
       text-align: center;
       white-space: nowrap;
     }
-    .contact-btn { background-color: var(--theme-color); color: white; border: none; }
-    .pay-btn { background-color: white; border: 2px solid var(--theme-color); color: var(--theme-color); }
+
+    .contact-btn {
+      background-color: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
+    .pay-btn {
+      background-color: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+    }
+
     .close-floating {
       position: fixed;
       top: 15px;
@@ -67,6 +93,7 @@
       cursor: pointer;
       z-index: 100001;
     }
+
     .gallery-title {
       text-align: center;
       font-size: 18px;
@@ -75,6 +102,7 @@
       position: relative;
       z-index: 2;
     }
+
     .gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -83,6 +111,7 @@
       position: relative;
       z-index: 2;
     }
+
     .gallery-item {
       border: 1px solid #ddd;
       border-radius: 12px;
@@ -94,25 +123,32 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    .gallery-item:hover { transform: scale(1.03); }
+
+    .gallery-item:hover {
+      transform: scale(1.03);
+    }
+
     .gallery-item img {
       width: 100%;
       height: auto;
       cursor: pointer;
       display: block;
     }
+
     .gallery-item .price {
       font-weight: 600;
       color: var(--theme-color);
       margin: 8px 10px;
       text-align: center;
     }
+
     .gallery-item .sizes {
       font-size: 12px;
       color: #666;
       margin: 0 10px 8px;
       text-align: center;
     }
+
     .gallery-item .add-to-cart {
       background: var(--theme-color);
       color: white;
@@ -124,6 +160,7 @@
       border-top: 1px solid #ddd;
       margin: 0;
     }
+
     .gallery-item .add-to-cart.added {
       background: #333333;
       display: flex;
@@ -131,6 +168,7 @@
       justify-content: center;
       gap: 5px;
     }
+
     .preview-modal {
       display: none;
       position: fixed;
@@ -143,11 +181,13 @@
       touch-action: manipulation;
       flex-direction: column;
     }
+
     .preview-modal img {
       max-width: 90%;
       max-height: 70vh;
       border-radius: 10px;
     }
+
     .preview-modal .add-to-cart {
       background: var(--theme-color);
       color: white;
@@ -158,6 +198,7 @@
       font-weight: 600;
       margin-top: 15px;
     }
+
     .preview-modal .add-to-cart.added {
       background: #333333;
       display: flex;
@@ -165,6 +206,7 @@
       justify-content: center;
       gap: 5px;
     }
+
     .arrow {
       position: absolute;
       top: 50%;
@@ -177,6 +219,7 @@
     }
     .arrow.left { left: 20px; }
     .arrow.right { right: 20px; }
+
     .close-btn {
       position: absolute;
       top: 20px;
@@ -185,6 +228,7 @@
       color: white;
       cursor: pointer;
     }
+
     .bottom-tabs {
       position: fixed;
       bottom: 0;
@@ -197,6 +241,7 @@
       white-space: nowrap;
       z-index: 2;
     }
+
     .bottom-tabs .tab {
       display: inline-block;
       padding: 10px 20px;
@@ -206,10 +251,13 @@
       cursor: pointer;
       white-space: nowrap;
     }
+
     .bottom-tabs .tab.active {
       border-bottom: 2px solid var(--theme-color);
     }
+
     .bottom-tabs::-webkit-scrollbar { display: none; }
+
     .contact-modal {
       display: none;
       position: fixed;
@@ -220,6 +268,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .contact-card {
       width: 100%;
       max-width: 420px;
@@ -229,22 +278,26 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
+
     .contact-card h3 {
       margin-bottom: 8px;
       font-size: 18px;
       color: var(--theme-color);
     }
+
     .contact-card p {
       font-size: 14px;
       color: #333;
       line-height: 1.4;
     }
+
     .modal-buttons {
       display: flex;
       gap: 10px;
       justify-content: center;
       margin-top: 16px;
     }
+
     .contact-ok, .contact-cancel {
       padding: 10px 18px;
       border-radius: 10px;
@@ -252,8 +305,19 @@
       cursor: pointer;
       min-width: 110px;
     }
-    .contact-ok { background: var(--theme-color); color: white; border: none; }
-    .contact-cancel { background: #fff; color: var(--theme-color); border: 2px solid var(--theme-color); }
+
+    .contact-ok {
+      background: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
+    .contact-cancel {
+      background: #fff;
+      color: var(--theme-color);
+      border: 2px solid var(--theme-color);
+    }
+
     .save-confirmation-modal {
       display: none;
       position: fixed;
@@ -264,6 +328,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .save-confirmation-card {
       width: 100%;
       max-width: 420px;
@@ -273,11 +338,17 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
+
     .save-confirmation-card p {
       font-size: 16px;
       color: #333;
       margin-bottom: 20px;
     }
+
+    @media (max-width: 500px) {
+      .contact-btn, .pay-btn { min-width: 120px; padding: 10px 18px; }
+    }
+
     .hamburger {
       position: fixed;
       top: 15px;
@@ -294,12 +365,14 @@
       cursor: pointer;
       z-index: 100002;
     }
+
     .hamburger div {
       width: 25px;
       height: 3px;
       background: white;
       margin: 2px 0;
     }
+
     .pin-modal {
       display: none;
       position: fixed;
@@ -310,6 +383,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .pin-card {
       width: 100%;
       max-width: 420px;
@@ -319,11 +393,13 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
+
     .pin-card h3 {
       margin-bottom: 8px;
       font-size: 18px;
       color: var(--theme-color);
     }
+
     .pin-card input {
       width: 100%;
       padding: 10px;
@@ -333,6 +409,7 @@
       text-align: center;
       font-size: 18px;
     }
+
     .menu-modal {
       display: none;
       position: fixed;
@@ -343,6 +420,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .menu-card {
       width: 100%;
       max-width: 420px;
@@ -352,6 +430,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
+
     .menu-option {
       padding: 12px;
       margin: 10px 0;
@@ -363,6 +442,7 @@
       cursor: pointer;
       text-align: center;
     }
+
     .categories-modal, .categories-manage-modal {
       display: none;
       position: fixed;
@@ -373,6 +453,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .categories-card, .categories-manage-card {
       width: 100%;
       max-width: 420px;
@@ -384,6 +465,7 @@
       overflow-y: auto;
       max-height: 80vh;
     }
+
     .category-item {
       background: white;
       border: 2px solid var(--theme-color);
@@ -397,15 +479,21 @@
       color: var(--theme-color);
       font-weight: 600;
     }
+
     .category-item .category-actions {
       display: flex;
       gap: 10px;
     }
+
     .category-item .category-action {
       cursor: pointer;
       font-size: 16px;
     }
-    .category-item .arrow { font-size: 18px; }
+
+    .category-item .arrow {
+      font-size: 18px;
+    }
+
     .item-modal {
       display: none;
       position: fixed;
@@ -416,6 +504,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .item-card {
       width: 100%;
       max-width: 420px;
@@ -427,9 +516,21 @@
       overflow-y: auto;
       max-height: 80vh;
     }
-    .item-upload { margin-bottom: 20px; }
-    .item-list .item { position: relative; margin: 10px 0; }
-    .item img { width: 100%; border-radius: 12px; }
+
+    .item-upload {
+      margin-bottom: 20px;
+    }
+
+    .item-list .item {
+      position: relative;
+      margin: 10px 0;
+    }
+
+    .item img {
+      width: 100%;
+      border-radius: 12px;
+    }
+
     .item input {
       width: 100%;
       padding: 10px;
@@ -437,6 +538,7 @@
       border: 1px solid var(--theme-color);
       border-radius: 10px;
     }
+
     .item .delete-icon {
       position: absolute;
       top: 10px;
@@ -452,6 +554,7 @@
       cursor: pointer;
       font-size: 16px;
     }
+
     .delete-all-btn {
       padding: 10px 20px;
       font-size: 14px;
@@ -463,6 +566,7 @@
       border: 2px solid var(--theme-color);
       margin: 10px 0;
     }
+
     .save-btn {
       padding: 12px 24px;
       font-size: 14px;
@@ -474,13 +578,19 @@
       border: none;
       margin-top: 20px;
     }
-    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .save-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .no-items {
       text-align: center;
       color: gray;
       font-size: 16px;
       margin: 20px 0;
     }
+
     .cart-buttons {
       position: fixed;
       bottom: 60px;
@@ -495,6 +605,7 @@
       z-index: 3;
       display: none;
     }
+
     .cart-buttons button {
       padding: 12px 24px;
       font-size: 14px;
@@ -504,8 +615,19 @@
       min-width: 160px;
       text-align: center;
     }
-    #viewSelected { background-color: white; border: 2px solid var(--theme-color); color: var(--theme-color); }
-    #buySelected { background-color: var(--theme-color); color: white; border: none; }
+
+    #viewSelected {
+      background-color: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+    }
+
+    #buySelected {
+      background-color: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
     .cart-modal {
       display: none;
       position: fixed;
@@ -514,15 +636,30 @@
       background: white;
       overflow-y: auto;
     }
-    .cart-header { padding: 20px; text-align: center; border-bottom: 1px solid #ddd; }
-    .cart-header h2 { font-size: 20px; color: var(--theme-color); }
-    .cart-header p { font-size: 16px; font-weight: 600; }
+
+    .cart-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .cart-header h2 {
+      font-size: 20px;
+      color: var(--theme-color);
+    }
+
+    .cart-header p {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
     .cart-items {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 15px;
       padding: 20px;
     }
+
     .cart-item {
       border: 1px solid #ddd;
       border-radius: 12px;
@@ -531,9 +668,25 @@
       background: white;
       position: relative;
     }
-    .cart-item img { width: 100%; }
-    .cart-item .price { font-weight: 600; color: var(--theme-color); margin: 10px; text-align: center; }
-    .cart-item .sizes { font-size: 12px; color: #666; margin: -5px 10px 10px; text-align: center; }
+
+    .cart-item img {
+      width: 100%;
+    }
+
+    .cart-item .price {
+      font-weight: 600;
+      color: var(--theme-color);
+      margin: 10px;
+      text-align: center;
+    }
+
+    .cart-item .sizes {
+      font-size: 12px;
+      color: #666;
+      margin: -5px 10px 10px;
+      text-align: center;
+    }
+
     .cart-item .delete-cart {
       position: absolute;
       top: 10px;
@@ -549,7 +702,12 @@
       cursor: pointer;
       font-size: 16px;
     }
-    .cart-actions { text-align: center; margin: 10px 0; }
+
+    .cart-actions {
+      text-align: center;
+      margin: 10px 0;
+    }
+
     .cart-actions .delete-all-btn {
       padding: 10px 20px;
       font-size: 14px;
@@ -560,13 +718,19 @@
       color: var(--theme-color);
       border: 2px solid var(--theme-color);
     }
-    .whatsapp-field { padding: 20px 20px 60px; text-align: center; }
+
+    .whatsapp-field {
+      padding: 20px 20px 60px;
+      text-align: center;
+    }
+
     .whatsapp-field label {
       display: block;
       margin-bottom: 10px;
       font-weight: 600;
       color: var(--theme-color);
     }
+
     .whatsapp-field input {
       width: 80%;
       padding: 10px;
@@ -574,6 +738,7 @@
       border-radius: 10px;
       font-size: 16px;
     }
+
     .floating-buy {
       position: fixed;
       bottom: 20px;
@@ -588,6 +753,7 @@
       cursor: pointer;
       z-index: 100001;
     }
+
     .close-cart {
       position: absolute;
       top: 20px;
@@ -596,6 +762,7 @@
       color: var(--theme-color);
       cursor: pointer;
     }
+
     .quick-buy-modal {
       display: none;
       position: fixed;
@@ -606,6 +773,7 @@
       align-items: center;
       padding: 20px;
     }
+
     .quick-card {
       width: 100%;
       max-width: 420px;
@@ -615,11 +783,13 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
     }
+
     .quick-card h3 {
       margin-bottom: 8px;
       font-size: 18px;
       color: var(--theme-color);
     }
+
     .quick-card input {
       width: 100%;
       padding: 10px;
@@ -629,6 +799,7 @@
       text-align: center;
       font-size: 18px;
     }
+
     .slide-page {
       display: none;
       position: fixed;
@@ -639,23 +810,33 @@
       text-align: center;
       padding: 40px 20px;
     }
+
     .slider {
       position: relative;
       max-width: 80%;
       margin: 0 auto;
     }
+
     .slide-content {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
     .slide-content img {
       max-width: 100%;
       max-height: 50vh;
       border-radius: 12px;
     }
-    .slide-info { margin: 10px 0; }
-    .slide-info p { font-size: 16px; }
+
+    .slide-info {
+      margin: 10px 0;
+    }
+
+    .slide-info p {
+      font-size: 16px;
+    }
+
     .not-avail-btn {
       background: white;
       border: 2px solid var(--theme-color);
@@ -666,6 +847,7 @@
       margin-top: 20px;
       font-weight: 600;
     }
+
     .done-btn, .ok-btn {
       padding: 12px 40px;
       background: var(--theme-color);
@@ -676,19 +858,25 @@
       cursor: pointer;
       margin-top: 40px;
     }
-    .dimmed { opacity: 0.7; filter: grayscale(100%); }
+
+    .dimmed {
+      opacity: 0.7;
+      filter: grayscale(100%);
+    }
   </style>
 </head>
 <body>
   <div class="hamburger" id="hamburgerBtn">
-    <div></div><div></div><div></div>
+    <div></div>
+    <div></div>
+    <div></div>
   </div>
   <div class="close-floating">×</div>
   <div class="top-banner" id="topBanner">
     <div>
       <h2>Welcome to</h2>
-      <h1 id="boutiqueName">Loading...</h1>
-      <p id="boutiqueSlogan">Loading...</p>
+      <h1 id="boutiqueName">Boutique Name</h1>
+      <p id="boutiqueSlogan">Your fashion, your style</p>
     </div>
     <div class="banner-buttons">
       <button class="contact-btn" id="contactBtn">Contact Us</button>
@@ -716,7 +904,7 @@
   <div class="preview-modal" id="previewModal">
     <span class="close-btn" onclick="closeModal()">×</span>
     <span class="arrow left" onclick="prevImage()">‹</span>
-    <img id="modalImage" src="" alt="Preview">
+    <img id="modalImage" src="" alt="Preview" />
     <button class="add-to-cart" id="modalAddToCart" onclick="addToCartFromModal()">Add to Cart</button>
     <span class="arrow right" onclick="nextImage()">›</span>
   </div>
@@ -822,25 +1010,7 @@
     </div>
   </div>
   <script>
-    const CLIENT_ID = '763196907937-n2j16qguss4gbggkmpv2a5ol1mcv22u3.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyA5_R3XwY4Ve5B-XVApdFKdugRgiSrvlGI';
-    const SHEET_ID = '1ayxN99SBYkFP7SByEmNK8MSwYAE9teWIHFtK_dAKiwU';
-    const FOLDER_ID = '1Xi29vSpqbgEJ1sVNmyuyOJfNKjLmzw-7';
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-fRmSlH2V7LDXWXX_D_yr8x-ASpSSO2MQoBYH_n098uUmmIWdwdOWw0Ewi63a-Jnc3w/exec';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
-
-    let tokenClient;
-    let accessToken = null;
-    let boutiqueData = { name: 'Loading...', slogan: 'Loading...', whatsapp: '', themeColor: '#9e1850', pin: '' };
-    let shopData = { categories: [] };
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    let currentIndex = 0;
-    let currentImages = [];
-    let currentCategoryIndex = -1;
-    let currentMode = '';
-    let currentCategory = '';
-    let tempItems = [];
-    let isChanged = false;
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2mUaCeMBmigDcy7mPnIzpjTq4Ck6qrI7vfp9vsWetfsPT_jsjXuO6vsoe_Ty1mhWQ/exec";
 
     const modal = document.getElementById('previewModal');
     const modalImg = document.getElementById('modalImage');
@@ -898,65 +1068,8 @@
     const saveBoutiqueDetailsBtn = document.getElementById('saveBoutiqueDetailsBtn');
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     const manageCategoriesBtn = document.getElementById('manageCategoriesBtn');
+
     const closeFloating = document.querySelector('.close-floating');
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/PickMe-Services/sw.js').catch(err => console.error('Service Worker Error:', err));
-      });
-    }
-
-    async function initGoogle() {
-      await new Promise((resolve, reject) => {
-        gapi.load('client', { callback: resolve, onerror: reject });
-      });
-      await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4', 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
-      });
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (response) => {
-          accessToken = response.access_token;
-          if (currentMode === 'add') uploadImages();
-        }
-      });
-    }
-
-    async function fetchBoutiqueData() {
-      try {
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Boutiques!A2:J?key=${API_KEY}`);
-        const data = await response.json();
-        const boutiqueId = new URLSearchParams(window.location.search).get('id') || 'boutique1';
-        const row = data.values.find(r => r[0] === boutiqueId);
-        if (row) {
-          boutiqueData = {
-            name: row[1] || 'Boutique Name',
-            slogan: row[2] || 'Your fashion, your style',
-            whatsapp: row[3] || '+233534742142',
-            themeColor: row[4] || '#9e1850',
-            backgroundImage: row[5] || 'https://lh3.googleusercontent.com/d/1EIotJOwobvCqvHAhpEs3xwOWS80Lpo_M',
-            pin: row[8] || '130182'
-          };
-          shopData.categories = row[6] ? Object.entries(JSON.parse(row[6])).map(([name, items]) => ({
-            name,
-            items: items.map(item => ({ src: item.src, price: item.price, sizes: item.sizes }))
-          })) : [];
-          document.getElementById('boutiqueName').textContent = boutiqueData.name;
-          document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
-          document.documentElement.style.setProperty('--theme-color', boutiqueData.themeColor);
-          document.getElementById('topBanner').style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage}')`;
-          renderTabs();
-          updateCart();
-        } else {
-          alert('Boutique not found');
-        }
-      } catch (err) {
-        console.error('Error fetching boutique data:', err);
-        alert('Error loading boutique data');
-      }
-    }
 
     closeFloating.addEventListener('click', () => {
       const elementsToClose = [
@@ -983,47 +1096,76 @@
       });
     });
 
-    async function uploadImages() {
-      const files = itemUpload.files;
-      if (tempItems.length + files.length > 100) {
-        alert('Category can hold up to 100 items');
-        return;
+    let currentIndex = 0;
+    let currentImages = [];
+    let currentCategoryIndex = -1;
+    let boutiqueData = JSON.parse(localStorage.getItem('boutiqueData')) || {
+      name: "SHYBOY COLLECTIONS",
+      slogan: "Your fashion, your style",
+      whatsapp: "+233534742142",
+      themeColor: "#9e1850",
+      backgroundImage: "https://lh3.googleusercontent.com/d/1EIotJOwobvCqvHAhpEs3xwOWS80Lpo_M"
+    };
+    let shopData = JSON.parse(localStorage.getItem('shopData')) || {
+      categories: [
+        { name: 'clothes', items: [] },
+        { name: 'shoes', items: [] },
+        { name: 'bags', items: [] },
+        { name: 'accessories', items: [] }
+      ]
+    };
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let currentMode = '';
+    let currentCategory = '';
+    let tempItems = [];
+    let isChanged = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const boutiqueId = urlParams.get('id');
+
+    async function fetchBoutiqueData(id) {
+      try {
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutique&id=${id}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        return data;
+      } catch (err) {
+        console.error("Failed to fetch boutique data:", err);
+        return null;
       }
-      const uploadedUrls = [];
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('metadata', JSON.stringify({
-          name: file.name,
-          mimeType: file.type,
-          parents: [FOLDER_ID]
-        }));
-        try {
-          const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}` },
-            body: formData
-          });
-          const data = await response.json();
-          if (data.id) {
-            const fileUrl = `https://lh3.googleusercontent.com/d/${data.id}`;
-            uploadedUrls.push(fileUrl);
-            tempItems.push({ src: fileUrl, price: '', sizes: '' });
-          }
-        } catch (err) {
-          console.error('Upload error:', err);
-          alert('Error uploading image');
+    }
+
+    async function initializeBoutique() {
+      if (boutiqueId) {
+        const data = await fetchBoutiqueData(boutiqueId);
+        if (data) {
+          boutiqueData = {
+            name: data.name || "SHYBOY COLLECTIONS",
+            slogan: data.slogan || "Your fashion, your style",
+            whatsapp: data.whatsapp || "+233534742142",
+            themeColor: data.themeColor || "#9e1850",
+            backgroundImage: data.backgroundImage || "https://lh3.googleusercontent.com/d/1EIotJOwobvCqvHAhpEs3xwOWS80Lpo_M",
+            pin: data.pin || "130182"
+          };
+          shopData = {
+            categories: data.categories && Object.keys(data.categories).length > 0
+              ? Object.entries(data.categories).map(([name, items]) => ({
+                  name: name.toLowerCase(),
+                  items: items.map(src => ({ src, price: '', sizes: '' }))
+                }))
+              : shopData.categories
+          };
+          localStorage.setItem('boutiqueData', JSON.stringify(boutiqueData));
+          localStorage.setItem('shopData', JSON.stringify(shopData));
         }
       }
-      isChanged = true;
-      renderItemList();
-      checkSaveButton();
-      itemUpload.value = '';
-      if (uploadedUrls.length > 0) {
-        saveConfirmationText.textContent = `${uploadedUrls.length} image${uploadedUrls.length === 1 ? '' : 's'} uploaded successfully.`;
-        saveConfirmationModal.style.display = 'flex';
-      }
+      // Apply boutique data to UI
+      document.getElementById('boutiqueName').textContent = boutiqueData.name;
+      document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
+      topBanner.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage}')`;
+      document.documentElement.style.setProperty('--theme-color', boutiqueData.themeColor);
+      renderTabs();
+      updateCart();
     }
 
     function saveShopData() {
@@ -1044,26 +1186,27 @@
         tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
         bottomTabs.appendChild(tab);
       });
-      document.querySelectorAll('.bottom-tabs .tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelector('.tab.active')?.classList.remove('active');
-          tab.classList.add('active');
+      tabs = document.querySelectorAll('.bottom-tabs .tab');
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelector(".tab.active").classList.remove("active");
+          tab.classList.add("active");
           loadGallery(tab.dataset.category);
         });
       });
-      loadGallery(shopData.categories[0]?.name || '');
+      loadGallery(shopData.categories[0].name);
     }
 
     function loadGallery(category) {
-      gallery.innerHTML = '';
+      gallery.innerHTML = "";
       const cat = shopData.categories.find(c => c.name === category);
       currentImages = cat ? cat.items.map(item => item.src) : [];
-      if (!cat || cat.items.length === 0) {
+      if (cat.items.length === 0) {
         gallery.innerHTML = '<p class="no-items">Items not available today</p>';
       } else {
         cat.items.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.classList.add('gallery-item');
+          const div = document.createElement("div");
+          div.classList.add("gallery-item");
           const imgSrc = item.src.includes('lh3.googleapis.com/') ? item.src + '=s150' : item.src;
           const isInCart = cart.some(c => c.src === item.src);
           div.innerHTML = `
@@ -1108,26 +1251,30 @@
       modalAddToCart.classList.toggle('added', isInCart);
     }
 
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
     let touchStartX = 0;
     let touchEndX = 0;
-    modal.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
-    modal.addEventListener('touchend', e => {
+
+    modal.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    modal.addEventListener('touchend', (e) => {
       touchEndX = e.changedTouches[0].screenX;
       if (touchEndX < touchStartX - 50) nextImage();
       if (touchEndX > touchStartX + 50) prevImage();
     });
 
-    window.addEventListener('scroll', () => {
+    window.addEventListener("scroll", () => {
       if (window.scrollY > 100) {
-        topBanner.style.transform = 'translateY(-150%)';
+        topBanner.style.transform = "translateY(-150%)";
       } else {
-        topBanner.style.transform = 'translateY(0)';
+        topBanner.style.transform = "translateY(0)";
       }
     });
 
-    contactBtn.addEventListener('click', () => {
+    contactBtn.addEventListener("click", () => {
       contactModal.style.display = 'flex';
       contactModal.setAttribute('aria-hidden', 'false');
     });
@@ -1144,7 +1291,7 @@
       contactModal.setAttribute('aria-hidden', 'true');
     });
 
-    contactModal.addEventListener('click', e => {
+    contactModal.addEventListener('click', (e) => {
       if (e.target === contactModal) {
         contactModal.style.display = 'none';
         contactModal.setAttribute('aria-hidden', 'true');
@@ -1156,20 +1303,20 @@
       categoriesModal.style.display = 'flex';
     });
 
-    saveConfirmationModal.addEventListener('click', e => {
+    saveConfirmationModal.addEventListener('click', (e) => {
       if (e.target === saveConfirmationModal) {
         saveConfirmationModal.style.display = 'none';
         categoriesModal.style.display = 'flex';
       }
     });
 
-    hamburgerBtn.addEventListener('click', () => {
+    hamburgerBtn.addEventListener("click", () => {
       pinModal.style.display = 'flex';
       pinInput.value = '';
       pinInput.focus();
     });
 
-    pinModal.addEventListener('click', e => {
+    pinModal.addEventListener('click', (e) => {
       if (e.target === pinModal) pinModal.style.display = 'none';
     });
 
@@ -1183,11 +1330,11 @@
       }
     });
 
-    menuModal.addEventListener('click', e => {
+    menuModal.addEventListener('click', (e) => {
       if (e.target === menuModal) menuModal.style.display = 'none';
     });
 
-    addItemsBtn.addEventListener('click', () => {
+    addItemsBtn.addEventListener("click", () => {
       menuModal.style.display = 'none';
       currentMode = 'add';
       categoriesTitle.textContent = 'Add Items - Select Category';
@@ -1195,7 +1342,7 @@
       categoriesModal.style.display = 'flex';
     });
 
-    editItemsBtn.addEventListener('click', () => {
+    editItemsBtn.addEventListener("click", () => {
       menuModal.style.display = 'none';
       currentMode = 'edit';
       categoriesTitle.textContent = 'Edit Items - Select Category';
@@ -1203,7 +1350,7 @@
       categoriesModal.style.display = 'flex';
     });
 
-    editBoutiqueDetailsBtn.addEventListener('click', () => {
+    editBoutiqueDetailsBtn.addEventListener("click", () => {
       menuModal.style.display = 'none';
       boutiqueNameInput.value = boutiqueData.name;
       boutiqueSloganInput.value = boutiqueData.slogan;
@@ -1214,14 +1361,14 @@
       boutiqueDetailsModal.style.display = 'flex';
     });
 
-    categoriesModal.addEventListener('click', e => {
+    categoriesModal.addEventListener('click', (e) => {
       if (e.target === categoriesModal) {
         categoriesModal.style.display = 'none';
         menuModal.style.display = 'flex';
       }
     });
 
-    categoriesManageModal.addEventListener('click', e => {
+    categoriesManageModal.addEventListener('click', (e) => {
       if (e.target === categoriesManageModal) {
         categoriesManageModal.style.display = 'none';
         boutiqueDetailsModal.style.display = 'flex';
@@ -1316,15 +1463,33 @@
       itemModal.style.display = 'flex';
     }
 
-    itemModal.addEventListener('click', e => {
+    itemModal.addEventListener('click', (e) => {
       if (e.target === itemModal) {
         itemModal.style.display = 'none';
         categoriesModal.style.display = 'flex';
       }
     });
 
-    itemUpload.addEventListener('change', () => {
-      tokenClient.requestAccessToken();
+    itemUpload.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (tempItems.length + files.length > 100) {
+        alert('Category can hold up to 100 items');
+        return;
+      }
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            tempItems.push({ src: ev.target.result, price: '', sizes: '' });
+            isChanged = true;
+            renderItemList();
+            checkSaveButton();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      e.target.value = '';
+      checkSaveButton();
     });
 
     function renderItemList() {
@@ -1350,7 +1515,6 @@
     function checkSaveButton() {
       const allPriced = tempItems.length === 0 || tempItems.every(item => item.price !== '' && !isNaN(parseFloat(item.price)));
       saveItemsBtn.disabled = !(allPriced && (isChanged || tempItems.length === 0));
-      saveItemsBtn.style.backgroundColor = saveItemsBtn.disabled ? '#cccccc' : 'var(--theme-color)';
     }
 
     deleteAllItemsBtn.addEventListener('click', () => {
@@ -1362,33 +1526,18 @@
       }
     });
 
-    saveItemsBtn.addEventListener('click', async () => {
+    saveItemsBtn.addEventListener('click', () => {
       const cat = shopData.categories.find(c => c.name === currentCategory);
       const itemCount = tempItems.length;
       cat.items = currentMode === 'add' ? [...cat.items, ...tempItems] : tempItems;
       saveShopData();
-      const boutiqueId = new URLSearchParams(window.location.search).get('id') || 'boutique1';
-      const categoriesObj = shopData.categories.reduce((obj, cat) => {
-        obj[cat.name] = cat.items;
-        return obj;
-      }, {});
-      try {
-        await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ boutiqueId, categories: categoriesObj })
-        });
-        itemModal.style.display = 'none';
-        saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? ' has' : 's have'} been saved successfully to your page.`;
-        saveConfirmationModal.style.display = 'flex';
-        loadGallery(document.querySelector('.tab.active')?.dataset.category || '');
-      } catch (err) {
-        console.error('Error saving categories:', err);
-        alert('Error saving items to sheet');
-      }
+      itemModal.style.display = 'none';
+      saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? ' has' : 's have'} been saved successfully to your page.`;
+      saveConfirmationModal.style.display = 'flex';
+      loadGallery(document.querySelector('.tab.active').dataset.category);
     });
 
-    boutiqueDetailsModal.addEventListener('click', e => {
+    boutiqueDetailsModal.addEventListener('click', (e) => {
       if (e.target === boutiqueDetailsModal) {
         boutiqueDetailsModal.style.display = 'none';
         menuModal.style.display = 'flex';
@@ -1418,7 +1567,6 @@
     function checkBoutiqueDetailsSaveButton() {
       const isValid = boutiqueNameInput.value.trim() !== '' && boutiqueWhatsAppInput.value.trim() !== '';
       saveBoutiqueDetailsBtn.disabled = !isValid || !isChanged;
-      saveBoutiqueDetailsBtn.style.backgroundColor = saveBoutiqueDetailsBtn.disabled ? '#cccccc' : 'var(--theme-color)';
     }
 
     saveBoutiqueDetailsBtn.addEventListener('click', () => {
@@ -1429,6 +1577,7 @@
       saveBoutiqueData();
       document.getElementById('boutiqueName').textContent = boutiqueData.name;
       document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
+      topBanner.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage}')`;
       document.documentElement.style.setProperty('--theme-color', boutiqueData.themeColor);
       boutiqueDetailsModal.style.display = 'none';
       menuModal.style.display = 'flex';
@@ -1442,7 +1591,7 @@
       } else {
         cartButtons.style.display = 'none';
       }
-      loadGallery(document.querySelector('.tab.active')?.dataset.category || '');
+      loadGallery(document.querySelector('.tab.active').dataset.category);
     }
 
     window.addToCart = function(index, category) {
@@ -1468,13 +1617,13 @@
         }
       }
       updateCart();
-    };
+    }
 
     window.addToCartFromModal = function() {
       if (currentCategoryIndex !== -1) {
         addToCart(currentIndex, shopData.categories[currentCategoryIndex].name);
       }
-    };
+    }
 
     function removeFromCart(idx) {
       cart.splice(idx, 1);
@@ -1578,15 +1727,6 @@
       return window.location.origin + window.location.pathname + `?slide=${id}`;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('slide')) {
-      const id = urlParams.get('slide');
-      const slides = JSON.parse(localStorage.getItem('slides')) || {};
-      if (slides[id]) {
-        showSlidePage(slides[id]);
-      }
-    }
-
     function showSlidePage(data) {
       document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = 'none');
       slidePage.style.display = 'block';
@@ -1614,7 +1754,6 @@
       const okBtn = document.getElementById('okBtn');
       const slideLeft = document.getElementById('slideLeft');
       const slideRight = document.getElementById('slideRight');
-
       let slideIndex = 0;
 
       function showSlide(i) {
@@ -1689,9 +1828,8 @@
       });
     }
 
-    window.addEventListener('load', () => {
-      initGoogle().then(fetchBoutiqueData);
-    });
+    renderTabs();
+    updateCart();
   </script>
 </body>
 </html>
