@@ -54,20 +54,6 @@
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
-    .like-btn {
-      position: absolute; top: 10px; right: 10px;
-      font-size: 24px; cursor: pointer; z-index: 2;
-      color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-      display: flex; flex-direction: column; align-items: center;
-      user-select: none;
-    }
-    .like-count {
-      font-size: 14px; font-weight: bold; color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-      margin-top: 4px;
-    }
-    .liked { color: #ff4d6d; }
-
     .skeleton {
       background: #ddd; border-radius: 15px; height: 250px;
       animation: pulse 1.5s infinite;
@@ -99,77 +85,27 @@
 
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2mUaCeMBmigDcy7mPnIzpjTq4Ck6qrI7vfp9vsWetfsPT_jsjXuO6vsoe_Ty1mhWQ/exec";
-    const CACHE_KEY = "boutiquesCache";
-    const CACHE_TIMESTAMP_KEY = "boutiquesCacheTimestamp";
-    const CACHE_DURATION = 60 * 60 * 1000; // 1 hour for boutique data
-    const POLL_INTERVAL = 10000; // 10 seconds for like updates
-    const userLikesKey = "userLikes";
-    let userLikes = JSON.parse(localStorage.getItem(userLikesKey) || "[]");
-    let currentBoutiques = [];
-    let visitorId = null;
 
-    // Function to get visitor ID using FingerprintJS
-    async function getVisitorId() {
-      if (visitorId) return visitorId;
+    async function fetchBoutiques() {
+      const container = document.getElementById("cardsContainer");
+      container.innerHTML = `
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      `;
       try {
-        const fp = await FingerprintJS.load();
-        const result = await fp.get();
-        visitorId = result.visitorId;
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
+        const data = await res.json();
+        renderBoutiques(data.boutiques || []);
       } catch (err) {
-        console.error("Failed to get visitor ID:", err);
-        visitorId = 'anonymous_' + Math.random().toString(36).slice(2); // Fallback
+        console.error("Failed to fetch boutiques:", err);
+        container.innerHTML = "<p>Failed to load boutiques.</p>";
       }
-      return visitorId;
     }
 
-    // Load header asynchronously
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Failed to load header');
-        let html = await response.text();
-        const pageTitle = "Fashion";
-        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-        document.getElementById('header-placeholder').innerHTML = html;
-        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-          const newScript = document.createElement('script');
-          if (oldScript.src) newScript.src = oldScript.src;
-          else newScript.textContent = oldScript.textContent;
-          document.body.appendChild(newScript);
-        });
-      } catch (err) { console.error('Failed to load header:', err); }
-    })();
-
-    // Save user likes to localStorage
-    function saveUserLikes() {
-      localStorage.setItem(userLikesKey, JSON.stringify(userLikes));
-    }
-
-    // Debounce function for search
-    function debounce(fn, delay) {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), delay);
-      };
-    }
-
-    // Apply search filter
-    function applySearchFilter() {
-      const searchValue = (document.getElementById("searchInput").value || "").toLowerCase();
-      document.querySelectorAll(".cards-container .card").forEach(card => {
-        const name = (card.getAttribute("data-name") || "").toLowerCase();
-        card.style.display = name.includes(searchValue) ? "flex" : "none";
-      });
-    }
-
-    // Render boutiques
     function renderBoutiques(boutiques) {
       const container = document.getElementById("cardsContainer");
-      const fragment = document.createDocumentFragment();
-      boutiques.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-
+      container.innerHTML = "";
       boutiques.forEach(b => {
         if (new Date(b.expiry + "T23:59:59") > new Date()) {
           const card = document.createElement("div");
@@ -177,14 +113,7 @@
           card.setAttribute("data-name", b.name);
           card.style.backgroundImage = `url('${b.backgroundImage}')`;
 
-          const alreadyLiked = userLikes.includes(b.id);
-          const likesCount = b.likes || 0;
-
           card.innerHTML = `
-            <div class="like-btn ${alreadyLiked ? 'liked' : ''}" data-id="${b.id}" role="button" aria-pressed="${alreadyLiked ? 'true' : 'false'}" title="Like / Unlike">
-              &#10084;
-              <div class="like-count">${likesCount}</div>
-            </div>
             <div class="card-content">
               <div>
                 <div class="card-title">${b.name}</div>
@@ -194,166 +123,34 @@
             </div>
           `;
 
-          const likeBtn = card.querySelector(".like-btn");
-          const likeCountEl = card.querySelector(".like-count");
-
-          likeBtn.addEventListener("click", async () => {
-            if (likeBtn.dataset.processing === "1") return;
-            likeBtn.dataset.processing = "1";
-
-            const id = b.id;
-            const wasLiked = userLikes.includes(id);
-            const originalCount = parseInt(likeCountEl.textContent || "0", 10);
-
-            // Update UI immediately (optimistic update)
-            const newCount = wasLiked ? Math.max(0, originalCount - 1) : originalCount + 1;
-            likeCountEl.textContent = newCount;
-            likeBtn.classList.toggle("liked", !wasLiked);
-            likeBtn.setAttribute("aria-pressed", !wasLiked ? 'true' : 'false');
-
-            // Update local userLikes
-            if (wasLiked) userLikes = userLikes.filter(x => x !== id);
-            else userLikes.push(id);
-            saveUserLikes();
-
-            // Update currentBoutiques array
-            currentBoutiques = currentBoutiques.map(item => item.id === id ? { ...item, likes: newCount } : item);
-
-            // Re-render sorted list
-            renderBoutiques(currentBoutiques.slice());
-
-            // Send like/unlike to server with userID
-            try {
-              const userID = await getVisitorId();
-              const response = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "updateLikes", boutiqueId: id, delta: wasLiked ? -1 : 1, userID }),
-                headers: { "Content-Type": "application/json" }
-              });
-              if (!response.ok) throw new Error('Server update failed');
-              // Optionally, refetch data if needed
-              localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
-            } catch (err) {
-              console.error("Failed to update like on server:", err);
-              // Revert optimistic update if failed
-              likeCountEl.textContent = originalCount;
-              likeBtn.classList.toggle("liked", wasLiked);
-              likeBtn.setAttribute("aria-pressed", wasLiked ? 'true' : 'false');
-              if (wasLiked) userLikes.push(id);
-              else userLikes = userLikes.filter(x => x !== id);
-              saveUserLikes();
-              currentBoutiques = currentBoutiques.map(item => item.id === id ? { ...item, likes: originalCount } : item);
-              renderBoutiques(currentBoutiques.slice());
-            } finally {
-              likeBtn.dataset.processing = "0";
-            }
-          });
-
           card.querySelector(".btn-order").addEventListener("click", () => {
             window.location.href = `template.html?id=${b.id}`;
           });
 
-          fragment.appendChild(card);
+          container.appendChild(card);
         }
       });
-
-      container.innerHTML = "";
-      container.appendChild(fragment);
       applySearchFilter();
     }
 
-    // Update likes and user likes from server
-    async function updateLikes() {
-      try {
-        const userID = await getVisitorId();
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques&userID=${userID}`);
-        const data = await res.json();
-
-        if (data.boutiques && data.boutiques.length > 0) {
-          let updated = false;
-          data.boutiques.forEach(sb => {
-            const cb = currentBoutiques.find(c => c.id === sb.id);
-            if (cb && cb.likes !== sb.likes) {
-              cb.likes = sb.likes;
-              updated = true;
-            }
-          });
-          if (data.userLikedIds) {
-            const newUserLikes = data.userLikedIds;
-            if (JSON.stringify(newUserLikes) !== JSON.stringify(userLikes)) {
-              userLikes = newUserLikes;
-              saveUserLikes();
-              updated = true;
-            }
-          }
-          if (updated) {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
-            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-            renderBoutiques(currentBoutiques);
-          }
-        }
-      } catch (err) {
-        console.error("Error updating likes:", err);
-      }
+    // Search filter
+    function debounce(fn, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+      };
     }
 
-    // Fetch boutiques with caching
-    async function fetchBoutiques() {
-      const container = document.getElementById("cardsContainer");
-      const cachedData = localStorage.getItem(CACHE_KEY);
-      const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-      const now = Date.now();
-      let fromCache = false;
-
-      // Load from cache if available and not expired
-      if (cachedData && cachedTimestamp && (now - parseInt(cachedTimestamp, 10) < CACHE_DURATION)) {
-        try {
-          currentBoutiques = JSON.parse(cachedData);
-          renderBoutiques(currentBoutiques);
-          fromCache = true;
-        } catch (e) {
-          console.error("Failed to parse cached data:", e);
-        }
-      }
-
-      if (!fromCache) {
-        container.innerHTML = `
-          <div class="skeleton"></div>
-          <div class="skeleton"></div>
-          <div class="skeleton"></div>
-        `;
-      }
-
-      // Fetch fresh data
-      try {
-        const userID = await getVisitorId();
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques&userID=${userID}`);
-        const data = await res.json();
-
-        if (!data.boutiques || data.boutiques.length === 0) {
-          container.innerHTML = "<p>No boutiques available at this time.</p>";
-          return;
-        }
-
-        currentBoutiques = data.boutiques;
-        userLikes = data.userLikedIds || userLikes; // Fall back to local if not provided
-        saveUserLikes();
-        localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
-        localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
-        renderBoutiques(currentBoutiques);
-      } catch (err) {
-        console.error("Error fetching boutiques:", err);
-        if (!fromCache) {
-          container.innerHTML = "<p>Failed to load boutiques.</p>";
-        }
-      }
+    function applySearchFilter() {
+      const searchValue = (document.getElementById("searchInput").value || "").toLowerCase();
+      document.querySelectorAll(".cards-container .card").forEach(card => {
+        const name = (card.getAttribute("data-name") || "").toLowerCase();
+        card.style.display = name.includes(searchValue) ? "flex" : "none";
+      });
     }
 
-    // Initialize
-    fetchBoutiques().then(() => {
-      setInterval(updateLikes, POLL_INTERVAL);
-      window.addEventListener('focus', updateLikes);
-    });
+    fetchBoutiques();
     document.getElementById("searchInput").addEventListener("input", debounce(applySearchFilter, 300));
   </script>
 </body>
