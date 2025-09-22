@@ -1,0 +1,20 @@
+{
+  "name": "PickMe Services",
+  "short_name": "PickMe",
+  "start_url": "/PickMe-Services/fashion.html",
+  "display": "standalone",
+  "background_color": "#f9f9f9",
+  "theme_color": "#c12872",
+  "icons": [
+    {
+      "src": "/PickMe-Services/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/PickMe-Services/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
