@@ -4,33 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="/PickMe-Services/manifest.json">
-  <div id="header-placeholder"></div>
-  <script>
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Failed to load header');
-        let html = await response.text();
-        const pageTitle = "Fashion";
-        html = html.replace(/<h1[^>]*>.*?</h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-        document.getElementById('header-placeholder').innerHTML = html;
-        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-          const newScript = document.createElement('script');
-          if (oldScript.src) newScript.src = oldScript.src;
-          else newScript.textContent = oldScript.textContent;
-          document.body.appendChild(newScript);
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/PickMe-Services/sw.js').catch(err => console.error('Service Worker Error:', err));
-      });
-    }
-  </script>
   <style>
     body {
       margin: 0;
@@ -75,7 +50,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 70px;
-      padding: 0 20px 50px 20px;
+      padding: 0 20px 80px;
     }
     .card {
       position: relative;
@@ -155,9 +130,16 @@
     .like-btn.liked {
       color: #c12872;
     }
+    .error-message {
+      text-align: center;
+      color: red;
+      font-size: 16px;
+      margin: 20px;
+    }
   </style>
 </head>
 <body>
+  <div id="header-placeholder"></div>
   <div class="page-header">
     <h1>Fashion</h1>
     <p>Discover the latest trends from top boutiques near you</p>
@@ -167,9 +149,37 @@
   </div>
   <div class="cards-container" id="cardsContainer"></div>
   <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
-    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
+    <iframe src="/PickMe-Services/footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
   </div>
   <script>
+    (async () => {
+      try {
+        const response = await fetch('/PickMe-Services/header.html');
+        if (!response.ok) throw new Error(`Failed to load header: ${response.status}`);
+        let html = await response.text();
+        const pageTitle = "Fashion";
+        html = html.replace(/<h1[^>]*>.*?</h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+        document.getElementById('header-placeholder').innerHTML = html;
+        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+          const newScript = document.createElement('script');
+          if (oldScript.src) newScript.src = oldScript.src;
+          else newScript.textContent = oldScript.textContent;
+          document.body.appendChild(newScript);
+        });
+      } catch (err) {
+        console.error('Error loading header:', err);
+        document.getElementById('header-placeholder').innerHTML = '<div class="error-message">Failed to load header</div>';
+      }
+    })();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/PickMe-Services/sw.js')
+          .then(() => console.log('Service Worker registered'))
+          .catch(err => console.error('Service Worker Error:', err));
+      });
+    }
+
     const API_KEY = 'AIzaSyA5_R3XwY4Ve5B-XVApdFKdugRgiSrvlGI';
     const SHEET_ID = '1ayxN99SBYkFP7SByEmNK8MSwYAE9teWIHFtK_dAKiwU';
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-fRmSlH2V7LDXWXX_D_yr8x-ASpSSO2MQoBYH_n098uUmmIWdwdOWw0Ewi63a-Jnc3w/exec';
@@ -179,23 +189,32 @@
     async function fetchBoutiques() {
       try {
         const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Boutiques!A2:J?key=${API_KEY}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
+        if (!data.values || !Array.isArray(data.values)) {
+          throw new Error('No valid data found in the Google Sheet');
+        }
         boutiques = data.values
           .map(row => ({
-            id: row[0],
-            name: row[1],
-            slogan: row[2],
-            whatsapp: row[3],
-            themeColor: row[4],
-            backgroundImage: row[5],
-            expiry: row[7],
+            id: row[0] || '',
+            name: row[1] || 'Unnamed Boutique',
+            slogan: row[2] || 'No slogan provided',
+            whatsapp: row[3] || '',
+            themeColor: row[4] || '#c12872',
+            backgroundImage: row[5] || 'https://via.placeholder.com/300x250',
+            expiry: row[7] || '2099-12-31',
             likes: parseInt(row[9]) || 0
           }))
-          .filter(b => b.id && new Date(b.expiry + 'T23:59:59') > new Date());
+          .filter(b => b.id && b.expiry && new Date(b.expiry + 'T23:59:59') > new Date());
+        if (boutiques.length === 0) {
+          document.getElementById('cardsContainer').innerHTML = '<p class="error-message">No boutiques available at this time.</p>';
+        }
         boutiques.sort((a, b) => b.likes - a.likes);
+        console.log('Fetched boutiques:', boutiques);
         renderCards();
       } catch (err) {
         console.error('Error fetching boutiques:', err);
+        document.getElementById('cardsContainer').innerHTML = '<p class="error-message">Failed to load boutiques. Please try again later.</p>';
       }
     }
 
@@ -208,7 +227,7 @@
         card.setAttribute('data-category', 'boutiques');
         card.setAttribute('data-name', boutique.name);
         card.setAttribute('data-expiry', boutique.expiry);
-        card.setAttribute('data-link', `template.html?id=${boutique.id}`);
+        card.setAttribute('data-link', `/PickMe-Services/template.html?id=${boutique.id}`);
         card.setAttribute('data-theme-color', boutique.themeColor);
         card.style.backgroundImage = `url('${boutique.backgroundImage}')`;
         card.innerHTML = `
@@ -233,7 +252,10 @@
         btn.addEventListener('click', () => {
           const card = btn.closest('.card');
           const link = card.getAttribute('data-link');
-          if (link) window.location.href = link;
+          if (link) {
+            console.log('Navigating to:', link);
+            window.location.href = link;
+          }
         });
       });
       document.querySelectorAll('.like-btn').forEach(btn => {
@@ -246,11 +268,12 @@
           btn.classList.toggle('liked');
           btn.innerHTML = isLiked ? '🤍' : '🩷';
           try {
-            await fetch(WEB_APP_URL, {
+            const response = await fetch(WEB_APP_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ boutiqueId: id, delta })
             });
+            if (!response.ok) throw new Error(`Failed to update likes: ${response.status}`);
             const boutique = boutiques.find(b => b.id === id);
             if (boutique) {
               boutique.likes += delta;
@@ -263,12 +286,13 @@
             localStorage.setItem('likedBoutiques', JSON.stringify(likedBoutiques));
             btn.classList.toggle('liked', !isLiked);
             btn.innerHTML = isLiked ? '🩷' : '🤍';
+            alert('Failed to update likes. Please try again.');
           }
         });
       });
       const searchInput = document.getElementById('searchInput');
       searchInput.addEventListener('input', () => {
-        const searchValue = searchInput.value.toLowerCase();
+        const searchValue = searchInput.value.toLowerCase().trim();
         document.querySelectorAll('.cards-container .card').forEach(card => {
           const name = card.getAttribute('data-name').toLowerCase();
           card.style.display = name.includes(searchValue) ? 'flex' : 'none';
@@ -276,7 +300,10 @@
       });
     }
 
-    window.addEventListener('load', fetchBoutiques);
+    window.addEventListener('load', () => {
+      console.log('Page loaded, fetching boutiques...');
+      fetchBoutiques();
+    });
   </script>
 </body>
 </html>
