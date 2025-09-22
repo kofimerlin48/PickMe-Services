@@ -5,29 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
-  <!-- ========= HEADER CODE STARTS HERE ================== -->
-  <div id="header-placeholder"></div>
-  <script>
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Failed to load header');
-        let html = await response.text();
-        const pageTitle = "Fashion";
-        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-        document.getElementById('header-placeholder').innerHTML = html;
-        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-          const newScript = document.createElement('script');
-          if (oldScript.src) newScript.src = oldScript.src;
-          else newScript.textContent = oldScript.textContent;
-          document.body.appendChild(newScript);
-        });
-      } catch (err) { console.error(err); }
-    })();
-  </script>
-  <!-- ========= HEADER CODE ENDS HERE ================== -->
-
   <style>
     body {
       margin: 0;
@@ -75,7 +52,6 @@
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
-    /* Like Button */
     .like-btn {
       position: absolute; top: 10px; right: 10px;
       font-size: 24px; cursor: pointer; z-index: 2;
@@ -90,7 +66,6 @@
     }
     .liked { color: #ff4d6d; }
 
-    /* Skeleton Loader */
     .skeleton {
       background: #ddd; border-radius: 15px; height: 250px;
       animation: pulse 1.5s infinite;
@@ -103,33 +78,66 @@
   </style>
 </head>
 <body>
+  <div id="header-placeholder"></div>
   <div class="page-header">
     <h1></h1>
     <p>Discover the latest trends from top boutiques near you</p>
   </div>
-
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search boutiques...">
   </div>
-
   <div class="cards-container" id="cardsContainer">
-    <!-- Skeletons show immediately -->
     <div class="skeleton"></div>
     <div class="skeleton"></div>
     <div class="skeleton"></div>
+  </div>
+  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
+    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
   </div>
 
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2mUaCeMBmigDcy7mPnIzpjTq4Ck6qrI7vfp9vsWetfsPT_jsjXuO6vsoe_Ty1mhWQ/exec";
-
+    const CACHE_KEY = "boutiquesCache";
+    const CACHE_TIMESTAMP_KEY = "boutiquesCacheTimestamp";
+    const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in ms
     const userLikesKey = "userLikes";
     let userLikes = JSON.parse(localStorage.getItem(userLikesKey) || "[]");
     let currentBoutiques = [];
 
+    // Load header asynchronously
+    (async () => {
+      try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error('Failed to load header');
+        let html = await response.text();
+        const pageTitle = "Fashion";
+        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+        document.getElementById('header-placeholder').innerHTML = html;
+        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+          const newScript = document.createElement('script');
+          if (oldScript.src) newScript.src = oldScript.src;
+          else newScript.textContent = oldScript.textContent;
+          document.body.appendChild(newScript);
+        });
+      } catch (err) { console.error('Failed to load header:', err); }
+    })();
+
+    // Save user likes to localStorage
     function saveUserLikes() {
       localStorage.setItem(userLikesKey, JSON.stringify(userLikes));
     }
 
+    // Debounce function for search
+    function debounce(fn, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    // Apply search filter
     function applySearchFilter() {
       const searchValue = (document.getElementById("searchInput").value || "").toLowerCase();
       document.querySelectorAll(".cards-container .card").forEach(card => {
@@ -138,47 +146,10 @@
       });
     }
 
-    async function fetchBoutiques() {
-      const container = document.getElementById("cardsContainer");
-      container.innerHTML = `
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-      `; // show skeletons
-
-      try {
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
-        const data = await res.json();
-
-        if (!data.boutiques || data.boutiques.length === 0) {
-          container.innerHTML = "<p>No boutiques available at this time.</p>";
-          return;
-        }
-
-        currentBoutiques = data.boutiques;
-        localStorage.setItem("boutiquesCache", JSON.stringify(currentBoutiques));
-        renderBoutiques(currentBoutiques);
-      } catch (err) {
-        console.error("Error fetching boutiques:", err);
-
-        const cached = localStorage.getItem("boutiquesCache");
-        if (cached) {
-          try {
-            currentBoutiques = JSON.parse(cached);
-            renderBoutiques(currentBoutiques);
-          } catch(e) {
-            container.innerHTML = "<p>Failed to load boutiques.</p>";
-          }
-        } else {
-          container.innerHTML = "<p>Failed to load boutiques.</p>";
-        }
-      }
-    }
-
+    // Render boutiques
     function renderBoutiques(boutiques) {
       const container = document.getElementById("cardsContainer");
-      container.innerHTML = "";
-
+      const fragment = document.createDocumentFragment(); // Use fragment to reduce reflows
       boutiques.sort((a, b) => (b.likes || 0) - (a.likes || 0));
 
       boutiques.forEach(b => {
@@ -227,7 +198,7 @@
             else userLikes.push(id);
             saveUserLikes();
 
-            // Update currentBoutiques array for correct sorting
+            // Update currentBoutiques array
             currentBoutiques = currentBoutiques.map(item => item.id === id ? { ...item, likes: newCount } : item);
 
             // Re-render sorted list
@@ -251,21 +222,70 @@
             window.location.href = `template.html?id=${b.id}`;
           });
 
-          container.appendChild(card);
+          fragment.appendChild(card);
         }
       });
 
+      container.innerHTML = "";
+      container.appendChild(fragment);
       applySearchFilter();
     }
 
-    fetchBoutiques();
-    document.getElementById("searchInput").addEventListener("input", applySearchFilter);
-  </script>
+    // Fetch boutiques with caching
+    async function fetchBoutiques() {
+      const container = document.getElementById("cardsContainer");
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+      const now = Date.now();
 
-  <!-- ========= FOOTER CODE STARTS HERE ================== -->
-  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
-    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
-  </div>
-  <!-- ========= FOOTER CODE ENDS HERE ================== -->
+      // Load from cache if available and not expired
+      if (cachedData && cachedTimestamp && (now - parseInt(cachedTimestamp, 10) < CACHE_DURATION)) {
+        try {
+          currentBoutiques = JSON.parse(cachedData);
+          renderBoutiques(currentBoutiques);
+        } catch (e) {
+          console.error("Failed to parse cached data:", e);
+          container.innerHTML = "<p>Failed to load boutiques.</p>";
+        }
+      } else {
+        container.innerHTML = `
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        `;
+      }
+
+      // Fetch fresh data in the background
+      try {
+        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
+        const data = await res.json();
+
+        if (!data.boutiques || data.boutiques.length === 0) {
+          container.innerHTML = "<p>No boutiques available at this time.</p>";
+          return;
+        }
+
+        // Merge server likes with cached data (to preserve real-time likes)
+        const cachedBoutiques = JSON.parse(cachedData || "[]");
+        currentBoutiques = data.boutiques.map(serverBoutique => {
+          const cachedBoutique = cachedBoutiques.find(cb => cb.id === serverBoutique.id);
+          return { ...serverBoutique, likes: cachedBoutique?.likes || serverBoutique.likes || 0 };
+        });
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify(currentBoutiques));
+        localStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
+        renderBoutiques(currentBoutiques);
+      } catch (err) {
+        console.error("Error fetching boutiques:", err);
+        if (!cachedData) {
+          container.innerHTML = "<p>Failed to load boutiques.</p>";
+        }
+      }
+    }
+
+    // Initialize
+    fetchBoutiques();
+    document.getElementById("searchInput").addEventListener("input", debounce(applySearchFilter, 300));
+  </script>
 </body>
 </html>
