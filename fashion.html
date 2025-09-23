@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
-  <script async src="https://openfpcdn.io/fingerprintjs/v4"></script>
+  <!-- Optional: micro-optimizations for faster connections (no UI impact) -->
+  <link rel="preconnect" href="https://script.google.com" />
+  <link rel="preconnect" href="https://googleusercontent.com" />
+  <link rel="dns-prefetch" href="https://script.google.com" />
+  <link rel="dns-prefetch" href="https://googleusercontent.com" />
 
   <style>
     body {
@@ -86,72 +90,246 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2mUaCeMBmigDcy7mPnIzpjTq4Ck6qrI7vfp9vsWetfsPT_jsjXuO6vsoe_Ty1mhWQ/exec";
 
-    async function fetchBoutiques() {
-      const container = document.getElementById("cardsContainer");
-      container.innerHTML = `
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-      `;
-      try {
-        const res = await fetch(`${WEB_APP_URL}?action=getBoutiques`);
-        const data = await res.json();
-        renderBoutiques(data.boutiques || []);
-      } catch (err) {
-        console.error("Failed to fetch boutiques:", err);
-        container.innerHTML = "<p>Failed to load boutiques.</p>";
-      }
-    }
+    // Caching + live update config
+    const CACHE_KEY = "boutiquesCache:v2";
+    const CACHE_TIME_KEY = "boutiquesCacheTime:v2";
+    const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+    const POLL_INTERVAL_MS = 15000;    // 15s live updates while on page
 
-    function renderBoutiques(boutiques) {
-      const container = document.getElementById("cardsContainer");
-      container.innerHTML = "";
-      boutiques.forEach(b => {
-        if (new Date(b.expiry + "T23:59:59") > new Date()) {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.setAttribute("data-name", b.name);
-          card.style.backgroundImage = `url('${b.backgroundImage}')`;
+    // In-memory state for diffing/patching
+    const cardsContainer = document.getElementById("cardsContainer");
+    const searchInput = document.getElementById("searchInput");
+    const boutiqueMap = new Map(); // id -> boutique object
+    const domMap = new Map();      // id -> {el, hash}
 
-          card.innerHTML = `
-            <div class="card-content">
-              <div>
-                <div class="card-title">${b.name}</div>
-                <div class="card-description">${b.slogan}</div>
-              </div>
-              <button class="btn-order" style="background-color:${b.themeColor}">Shop from Us</button>
-            </div>
-          `;
-
-          card.querySelector(".btn-order").addEventListener("click", () => {
-            window.location.href = `template.html?id=${b.id}`;
-          });
-
-          container.appendChild(card);
-        }
+    // Helper: stable hash to know if a card needs updating
+    function hashBoutique(b) {
+      // Hash only fields that affect the card UI
+      const s = JSON.stringify({
+        id: b.id, name: b.name, slogan: b.slogan,
+        themeColor: b.themeColor, backgroundImage: b.backgroundImage,
+        expiry: b.expiry
       });
-      applySearchFilter();
+      // djb2 hash
+      let h = 5381;
+      for (let i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
+      return (h >>> 0).toString(36);
     }
 
-    // Search filter
-    function debounce(fn, delay) {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), delay);
-      };
+    function isActive(b) {
+      if (!b || !b.expiry) return true; // if no expiry, show
+      const d = new Date(b.expiry + "T23:59:59");
+      return isFinite(d.getTime()) ? (d > new Date()) : true;
     }
 
     function applySearchFilter() {
-      const searchValue = (document.getElementById("searchInput").value || "").toLowerCase();
-      document.querySelectorAll(".cards-container .card").forEach(card => {
-        const name = (card.getAttribute("data-name") || "").toLowerCase();
-        card.style.display = name.includes(searchValue) ? "flex" : "none";
+      const q = (searchInput.value || "").toLowerCase();
+      domMap.forEach(({el}) => {
+        const nm = (el.getAttribute("data-name") || "").toLowerCase();
+        el.style.display = nm.includes(q) ? "flex" : "none";
       });
     }
 
-    fetchBoutiques();
-    document.getElementById("searchInput").addEventListener("input", debounce(applySearchFilter, 300));
+    // Create/Update a single card in place
+    function upsertCard(b) {
+      if (!isActive(b)) {
+        // If expired and exists in DOM, remove
+        const prev = domMap.get(b.id);
+        if (prev) {
+          prev.el.remove();
+          domMap.delete(b.id);
+          boutiqueMap.delete(b.id);
+        }
+        return;
+      }
+
+      const newHash = hashBoutique(b);
+      const prev = domMap.get(b.id);
+
+      if (prev && prev.hash === newHash) {
+        // No visual changes needed
+        boutiqueMap.set(b.id, b);
+        return;
+      }
+
+      // Build or update DOM
+      let card = prev?.el;
+      if (!card) {
+        card = document.createElement("div");
+        card.className = "card";
+        card.setAttribute("data-id", b.id);
+        card.addEventListener("click", (e) => {
+          // Clicks inside button should navigate; card itself does nothing special
+        });
+        cardsContainer.appendChild(card);
+      }
+
+      card.setAttribute("data-name", b.name || "");
+      card.style.backgroundImage = `url('${b.backgroundImage || ""}')`;
+      card.innerHTML = `
+        <div class="card-content">
+          <div>
+            <div class="card-title">${b.name || ""}</div>
+            <div class="card-description">${b.slogan || ""}</div>
+          </div>
+          <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
+        </div>
+      `;
+
+      // Button navigation (unchanged)
+      const btn = card.querySelector(".btn-order");
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = \`template.html?id=\${b.id}\`;
+      };
+
+      // Save mapping
+      domMap.set(b.id, { el: card, hash: newHash });
+      boutiqueMap.set(b.id, b);
+    }
+
+    function removeCardsNotIn(newIdsSet) {
+      // Remove any DOM cards whose id is not in latest data
+      const toDelete = [];
+      domMap.forEach((_v, id) => { if (!newIdsSet.has(id)) toDelete.push(id); });
+      toDelete.forEach(id => {
+        const entry = domMap.get(id);
+        if (entry) entry.el.remove();
+        domMap.delete(id);
+        boutiqueMap.delete(id);
+      });
+    }
+
+    // Full render/patch from a list
+    function patchCards(boutiques) {
+      if (!Array.isArray(boutiques)) return;
+      const idSet = new Set();
+      const frag = document.createDocumentFragment();
+
+      // Build/update in memory, append new ones to a fragment (reflow minimal)
+      boutiques.forEach(b => {
+        if (!b || !b.id) return;
+        idSet.add(b.id);
+
+        const existed = domMap.get(b.id);
+        upsertCard(b);
+
+        // If it's brand new (didn't exist before), move it under a fragment
+        if (!existed) {
+          const { el } = domMap.get(b.id);
+          frag.appendChild(el);
+        }
+      });
+
+      // Append new cards in batch
+      if (frag.childNodes.length) {
+        cardsContainer.appendChild(frag);
+      }
+
+      // Remove cards that disappeared
+      removeCardsNotIn(idSet);
+
+      // Keep current search filter
+      applySearchFilter();
+    }
+
+    // Cache helpers
+    function saveCache(payload) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+      } catch(e) {}
+    }
+
+    function loadCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function cacheIsFresh() {
+      const t = parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10);
+      return (Date.now() - t) < CACHE_TTL;
+    }
+
+    async function fetchFresh() {
+      const res = await fetch(`${WEB_APP_URL}?action=getBoutiques&ts=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("Network error");
+      return res.json();
+    }
+
+    async function initialLoad() {
+      const cached = loadCache();
+      let usedCache = false;
+
+      if (cached && cached.boutiques && cached.boutiques.length) {
+        // Show cached instantly if not too old
+        if (cacheIsFresh()) {
+          cardsContainer.innerHTML = ""; // clear skeletons
+          patchCards(cached.boutiques);
+          usedCache = true;
+        }
+      }
+
+      if (!usedCache) {
+        // Keep skeletons until fresh arrives
+        try {
+          const data = await fetchFresh();
+          cardsContainer.innerHTML = "";
+          patchCards(data.boutiques || []);
+          saveCache(data);
+        } catch (err) {
+          console.error("Fetch failed:", err);
+          if (cached && cached.boutiques) {
+            cardsContainer.innerHTML = "";
+            patchCards(cached.boutiques);
+          } else {
+            cardsContainer.innerHTML = "<p>Failed to load boutiques.</p>";
+          }
+        }
+      } else {
+        // We used cache — now update in background
+        try {
+          const data = await fetchFresh();
+          patchCards(data.boutiques || []);
+          saveCache(data);
+        } catch (err) {
+          console.warn("Background refresh failed:", err);
+        }
+      }
+    }
+
+    async function pollUpdates() {
+      try {
+        const data = await fetchFresh(); // fetch full list; patch only diffs
+        patchCards(data.boutiques || []);
+        saveCache(data);
+      } catch (err) {
+        // Don’t spam errors; quiet fail is fine for polling
+      }
+    }
+
+    // Search (debounced)
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+
+    // Init
+    initialLoad().then(() => {
+      // Live updates while staying on the page
+      setInterval(pollUpdates, POLL_INTERVAL_MS);
+      window.addEventListener("focus", pollUpdates);
+    });
+
+    searchInput.addEventListener("input", debounce(applySearchFilter, 200));
   </script>
 </body>
 </html>
