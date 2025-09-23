@@ -2026,6 +2026,26 @@
         slideIndex = (slideIndex + 1) % data.items.length;
         showSlide(slideIndex);
       });
+      
+      // Add this code right after slideRight.addEventListener in showSlidePage function:
+let slideTouchStartX = 0;
+let slideTouchEndX = 0;
+
+slidePage.addEventListener('touchstart', (e) => {
+  slideTouchStartX = e.changedTouches[0].screenX;
+});
+
+slidePage.addEventListener('touchend', (e) => {
+  slideTouchEndX = e.changedTouches[0].screenX;
+  if (slideTouchEndX < slideTouchStartX - 50) {
+    slideIndex = (slideIndex + 1) % data.items.length;
+    showSlide(slideIndex);
+  }
+  if (slideTouchEndX > slideTouchStartX + 50) {
+    slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
+    showSlide(slideIndex);
+  }
+});
 
       notAvailBtn.addEventListener('click', () => {
         data.items[slideIndex].available = false;
