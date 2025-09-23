@@ -992,6 +992,7 @@
       <h3 id="itemTitle"></h3>
       <div class="item-upload" id="itemUploadSection" style="display: none;">
         <input type="file" id="itemUpload" accept="image/*" multiple>
+        <img id="item-image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; margin-top: 10px;">
       </div>
       <div class="item-list" id="itemList"></div>
       <button class="delete-all-btn" id="deleteAllItemsBtn" style="display: none;">Delete All Items</button>
@@ -1159,54 +1160,114 @@
 
     // Save data to Google Sheet
     async function saveToGoogleSheet() {
-      try {
-        const payload = {
-          id: boutiqueId,
-          name: boutiqueData.name,
-          slogan: boutiqueData.slogan,
-          whatsapp: boutiqueData.whatsapp,
-          themeColor: boutiqueData.themeColor,
-          backgroundImage: boutiqueData.backgroundImage,
-          pin: boutiqueData.pin,
-          categories: shopData.categories.reduce((acc, cat) => ({
-            ...acc,
-            [cat.name]: cat.items
-          }), {})
-        };
-        const response = await fetch(`${WEB_APP_URL}?action=updateBoutique`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error('Failed to save to Google Sheet');
-        console.log('Data saved to Google Sheet');
-        // Update cache
-        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-          data: payload,
-          cacheTimestamp: Date.now()
-        }));
-        // Update cart with latest shop data
-        updateCartWithShopData();
-      } catch (error) {
-        console.error('Error saving to Google Sheet:', error.message);
-        alert('Failed to save changes to the server. Changes are saved locally.');
-      }
+  try {
+    // Validate required data
+    if (!boutiqueId || !boutiqueData || !shopData) {
+      console.error('Missing required data:', { boutiqueId, boutiqueData, shopData });
+      throw new Error('Missing boutique or shop data');
     }
+
+    // Prepare payload with strict validation
+    const payload = {
+      id: boutiqueId.toString().trim(),
+      name: (boutiqueData.name || "Boutique Name").toString().trim(),
+      slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),
+      whatsapp: (boutiqueData.whatsapp || "").toString().trim(),
+      themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),
+      backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),
+      pin: (boutiqueData.pin || "").toString().trim(),
+      categories: shopData.categories.reduce((acc, cat) => {
+        if (!cat.name || !Array.isArray(cat.items)) {
+          console.warn('Invalid category:', cat);
+          return acc;
+        }
+        return {
+          ...acc,
+          [cat.name.toLowerCase().trim()]: cat.items.map(item => ({
+            src: (item.src || "").toString().trim(),
+            price: (item.price || "").toString().trim(),
+            sizes: (item.sizes || "").toString().trim()
+          }))
+        };
+      }, {})
+    };
+
+    console.log('Sending payload to Google Sheet:', JSON.stringify(payload, null, 2));
+
+    const response = await fetch(`${WEB_APP_URL}?action=updateBoutique`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'cors',
+      credentials: 'omit'
+    });
+
+    const responseText = await response.text();
+    console.log('Server response:', responseText);
+
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse server response as JSON:', responseText);
+      throw new Error('Invalid server response format');
+    }
+
+    if (response.ok && responseData.status === 'success') {
+      console.log('Data saved to Google Sheet successfully');
+      // Update cache
+      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+        data: payload,
+        cacheTimestamp: Date.now()
+      }));
+      // Update cart with latest shop data
+      updateCartWithShopData();
+    } else {
+      throw new Error(responseData.error || `Server error: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error saving to Google Sheet:', error.message);
+    alert('Failed to save changes to the server. Changes are saved locally. Please check the console for details.');
+    // Ensure local cache is updated
+    const payload = {
+      id: boutiqueId.toString().trim(),
+      name: (boutiqueData.name || "Boutique Name").toString().trim(),
+      slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),
+      whatsapp: (boutiqueData.whatsapp || "").toString().trim(),
+      themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),
+      backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),
+      pin: (boutiqueData.pin || "").toString().trim(),
+      categories: shopData.categories.reduce((acc, cat) => {
+        if (!cat.name || !Array.isArray(cat.items)) return acc;
+        return {
+          ...acc,
+          [cat.name.toLowerCase().trim()]: cat.items.map(item => ({
+            src: (item.src || "").toString().trim(),
+            price: (item.price || "").toString().trim(),
+            sizes: (item.sizes || "").toString().trim()
+          }))
+        };
+      }, {})
+    };
+    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+      data: payload,
+      cacheTimestamp: Date.now()
+    }));
+  }
+}
 
     // Simulate image upload (replace with actual server-side implementation)
     async function uploadImage(file) {
-      // Simulate converting local image to hosted URL
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          // Simulate server response with a placeholder URL
-          // In production, this should be a real upload to Google Drive
-          resolve(`https://via.placeholder.com/400x400?text=${encodeURIComponent(file.name)}`);
-        };
-        reader.onerror = () => reject(new Error('Failed to read image file'));
-        reader.readAsDataURL(file);
-      });
-    }
+  // Simulate uploading and returning a valid URL (replace with real upload)
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Placeholder URL (use real Google Drive upload in production)
+      resolve(`https://via.placeholder.com/400x400?text=${encodeURIComponent(file.name)}`);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
     // Initialize boutique data with caching
     async function loadBoutiqueData() {
@@ -1217,32 +1278,94 @@
 
       // Check cache
       const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`));
-      const cacheDuration = 24 * 60 * 60 * 1000; // 24 hours
-      if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
-        console.log('Loading from cache');
-        boutiqueData = {
-          name: cached.data.name || "Boutique Name",
-          slogan: cached.data.slogan || "Your fashion, your style",
-          whatsapp: cached.data.whatsapp || "",
-          themeColor: cached.data.themeColor || "#9e1850",
-          backgroundImage: cached.data.backgroundImage || "",
-          pin: cached.data.pin || ""
-        };
-        shopData = {
-          categories: Object.keys(cached.data.categories || {}).map(name => ({
-            name: name.toLowerCase(),
-            items: (cached.data.categories[name] || []).map(item => ({
-              src: item.src || "https://via.placeholder.com/400x400?text=Item",
-              price: (item.price || "").toString().trim(),
-              sizes: (item.sizes || "").toString().trim()
-            }))
+const cacheDuration = 0.1 * 60 * 60 * 1000; // 24 hours
+const isRefresh = urlParams.get('refresh') === 'true';
+if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
+  console.log('Loading from cache');
+  boutiqueData = {
+    name: cached.data.name || "Boutique Name",
+    slogan: cached.data.slogan || "Your fashion, your style",
+    whatsapp: cached.data.whatsapp || "",
+    themeColor: cached.data.themeColor || "#9e1850",
+    backgroundImage: cached.data.backgroundImage || "",
+    pin: cached.data.pin || ""
+  };
+  shopData = {
+    categories: Object.keys(cached.data.categories || {}).map(name => ({
+      name: name.toLowerCase(),
+      items: (cached.data.categories[name] || []).map(item => ({
+        src: item.src || "https://via.placeholder.com/400x400?text=Item",
+        price: (item.price || "").toString().trim(),
+        sizes: (item.sizes || "").toString().trim()
+      }))
+    }))
+  };
+  applyBoutiqueData();
+  renderTabs();
+  updateCart();
+  if (isRefresh) {
+  // Fetch fresh data in the background
+  try {
+    const data = await fetchBoutiqueData();
+    if (data && !data.error) {
+      // Store the currently active tab before any updates
+      const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || "";
+      boutiqueData = {
+        name: data.name || "Boutique Name",
+        slogan: data.slogan || "Your fashion, your style",
+        whatsapp: data.whatsapp || "",
+        themeColor: data.themeColor || "#9e1850",
+        backgroundImage: data.backgroundImage || "",
+        pin: data.pin || ""
+      };
+      shopData = {
+        categories: Object.keys(data.categories || {}).map(name => ({
+          name: name.toLowerCase(),
+          items: (data.categories[name] || []).map(item => ({
+            src: item.src || "https://via.placeholder.com/400x400?text=Item",
+            price: (item.price || "").toString().trim(),
+            sizes: (item.sizes || "").toString().trim()
           }))
-        };
-        applyBoutiqueData();
-        renderTabs();
-        updateCart();
-        return;
-      }
+        }))
+      };
+      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+        data: { ...boutiqueData, categories: data.categories },
+        cacheTimestamp: Date.now()
+      }));
+      applyBoutiqueData();
+      // Update tabs while preserving the active tab
+      bottomTabs.innerHTML = ''; // Clear existing tabs
+      shopData.categories.forEach((cat) => {
+        const tab = document.createElement('div');
+        tab.classList.add('tab');
+        tab.dataset.category = cat.name;
+        tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
+        if (cat.name === activeTab) {
+          tab.classList.add('active');
+        }
+        bottomTabs.appendChild(tab);
+      });
+      const tabs = document.querySelectorAll('.bottom-tabs .tab');
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelector(".tab.active")?.classList.remove("active");
+          tab.classList.add("active");
+          loadGallery(tab.dataset.category);
+        });
+      });
+      // Load gallery for the active tab, or first tab if active tab is gone
+      const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || "";
+      loadGallery(newActiveTab);
+      updateCartWithShopData();
+      updateCart();
+      console.log('Background refresh completed');
+    }
+  } catch (error) {
+    console.error('Background refresh error:', error.message);
+  }
+}
+  return;
+}
 
       try {
         const data = await fetchBoutiqueData();
@@ -1476,16 +1599,21 @@
     });
 
     pinOkBtn.addEventListener('click', () => {
-      const enteredPin = pinInput.value.trim();
-      if (enteredPin === boutiqueData.pin) {
-        pinModal.style.display = 'none';
-        menuModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('menuModal');
-      } else {
-        alert('Incorrect PIN');
-      }
-    });
+  const enteredPin = pinInput.value.trim();
+  if (!boutiqueData) {
+    alert('Boutique data not loaded. Please try again.');
+    return;
+  }
+  if (enteredPin === boutiqueData.pin.toString().trim()) {
+    pinModal.style.display = 'none';
+    menuModal.style.display = 'flex';
+    navigationStack.pop();
+    navigationStack.push('menuModal');
+  } else {
+    alert('Incorrect PIN');
+    pinInput.value = ''; // Clear input for retry
+  }
+});
 
     menuModal.addEventListener('click', (e) => {
       if (e.target === menuModal) {
@@ -1652,28 +1780,39 @@
     });
 
     itemUpload.addEventListener('change', async (e) => {
-      const files = e.target.files;
-      if (tempItems.length + files.length > 100) {
-        alert('Category can hold up to 100 items');
-        return;
+  const files = e.target.files;
+  const itemImagePreview = document.getElementById('item-image-preview');
+  if (tempItems.length + files.length > 100) {
+    alert('Category can hold up to 100 items');
+    return;
+  }
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith('image/')) {
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        itemImagePreview.src = ev.target.result;
+        itemImagePreview.style.display = 'block';
+        console.log('Image preview set:', ev.target.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Simulate upload (replace with real Google Drive upload later)
+      try {
+        const url = await uploadImage(file);
+        tempItems.push({ src: url, price: '', sizes: '' });
+        isChanged = true;
+        renderItemList();
+        checkSaveButton();
+      } catch (error) {
+        console.error('Image upload error:', error.message);
+        alert('Failed to upload image. Please try again.');
       }
-      for (const file of Array.from(files)) {
-        if (file.type.startsWith('image/')) {
-          try {
-            const url = await uploadImage(file);
-            tempItems.push({ src: url, price: '', sizes: '' });
-            isChanged = true;
-            renderItemList();
-            checkSaveButton();
-          } catch (error) {
-            console.error('Image upload error:', error);
-            alert('Failed to upload image. Please try again.');
-          }
-        }
-      }
-      e.target.value = '';
-      checkSaveButton();
-    });
+    }
+  }
+  e.target.value = '';
+  checkSaveButton();
+});
 
     function renderItemList() {
       itemList.innerHTML = '';
@@ -2071,6 +2210,69 @@ okBtn.addEventListener('click', () => {
 
     // Start loading boutique data
     loadBoutiqueData();
+  
+  // Poll for updates every 30 seconds
+setInterval(async () => {
+  try {
+    const data = await fetchBoutiqueData();
+    if (data && !data.error) {
+      // Store the currently active tab before any updates
+      const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || "";
+      boutiqueData = {
+        name: data.name || "Boutique Name",
+        slogan: data.slogan || "Your fashion, your style",
+        whatsapp: data.whatsapp || "",
+        themeColor: data.themeColor || "#9e1850",
+        backgroundImage: data.backgroundImage || "",
+        pin: data.pin || ""
+      };
+      shopData = {
+        categories: Object.keys(data.categories || {}).map(name => ({
+          name: name.toLowerCase(),
+          items: (data.categories[name] || []).map(item => ({
+            src: item.src || "https://via.placeholder.com/400x400?text=Item",
+            price: (item.price || "").toString().trim(),
+            sizes: (item.sizes || "").toString().trim()
+          }))
+        }))
+      };
+      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+        data: { ...boutiqueData, categories: data.categories },
+        cacheTimestamp: Date.now()
+      }));
+      applyBoutiqueData();
+      // Update tabs while preserving the active tab
+      bottomTabs.innerHTML = ''; // Clear existing tabs
+      shopData.categories.forEach((cat) => {
+        const tab = document.createElement('div');
+        tab.classList.add('tab');
+        tab.dataset.category = cat.name;
+        tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
+        if (cat.name === activeTab) {
+          tab.classList.add('active');
+        }
+        bottomTabs.appendChild(tab);
+      });
+      const tabs = document.querySelectorAll('.bottom-tabs .tab');
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelector(".tab.active")?.classList.remove("active");
+          tab.classList.add("active");
+          loadGallery(tab.dataset.category);
+        });
+      });
+      // Load gallery for the active tab, or first tab if active tab is gone
+      const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || "";
+      loadGallery(newActiveTab);
+      updateCartWithShopData();
+      updateCart();
+      console.log('Frontend updated with latest backend data');
+    }
+  } catch (error) {
+    console.error('Polling error:', error.message);
+  }
+}, 3000); // 30 seconds
+  
   </script>
 </body>
 </html>
