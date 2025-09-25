@@ -1278,7 +1278,7 @@
 
       // Check cache
       const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`));
-const cacheDuration = 0.1 * 60 * 60 * 1000; // 24 hours
+const cacheDuration = 24 * 60 * 60 * 1000; // 24 hours
 const isRefresh = urlParams.get('refresh') === 'true';
 if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
   console.log('Loading from cache');
@@ -2271,7 +2271,7 @@ setInterval(async () => {
   } catch (error) {
     console.error('Polling error:', error.message);
   }
-}, 3000); // 30 seconds
+}, 30000); // 30 seconds
   
   </script>
 </body>
