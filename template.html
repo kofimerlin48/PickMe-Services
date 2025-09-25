@@ -1298,7 +1298,7 @@ const payload = {
 
       // Check cache
       const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`));
-const cacheDuration = 0.3 * 60 * 60 * 1000; // 24 hours
+const cacheDuration = 0.1 * 60 * 60 * 1000; // 24 hours
 const isRefresh = urlParams.get('refresh') === 'true';
 if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
   console.log('Loading from cache');
