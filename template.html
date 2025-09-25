@@ -1158,8 +1158,8 @@
       });
     }
 
-    // Save data to Google Sheet
-    async function saveToGoogleSheet() {
+    // Save data to Google Sheet  
+async function saveToGoogleSheet() {
   try {
     // Validate required data
     if (!boutiqueId || !boutiqueData || !shopData) {
@@ -1167,34 +1167,35 @@
       throw new Error('Missing boutique or shop data');
     }
 
-    // Prepare payload with strict validation
-    const payload = {
-      id: boutiqueId.toString().trim(),
-      name: (boutiqueData.name || "Boutique Name").toString().trim(),
-      slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),
-      whatsapp: (boutiqueData.whatsapp || "").toString().trim(),
-      themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),
-      backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),
-      pin: (boutiqueData.pin || "").toString().trim(),
-      categories: shopData.categories.reduce((acc, cat) => {
-        if (!cat.name || !Array.isArray(cat.items)) {
-          console.warn('Invalid category:', cat);
-          return acc;
-        }
-        return {
-          ...acc,
-          [cat.name.toLowerCase().trim()]: cat.items.map(item => ({
-            src: (item.src || "").toString().trim(),
-            price: (item.price || "").toString().trim(),
-            sizes: (item.sizes || "").toString().trim()
-          }))
-        };
-      }, {})
-    };
+    // Prepare payload with strict validation  
+const payload = {  
+  action: 'updateBoutique',   // 🔥 Add this line  
+  id: boutiqueId.toString().trim(),  
+  name: (boutiqueData.name || "Boutique Name").toString().trim(),  
+  slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),  
+  whatsapp: (boutiqueData.whatsapp || "").toString().trim(),  
+  themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),  
+  backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),  
+  pin: (boutiqueData.pin || "").toString().trim(),  
+  categories: shopData.categories.reduce((acc, cat) => {  
+    if (!cat.name || !Array.isArray(cat.items)) {  
+      console.warn('Invalid category:', cat);  
+      return acc;  
+    }  
+    return {  
+      ...acc,  
+      [cat.name.toLowerCase().trim()]: cat.items.map(item => ({  
+        src: (item.src || "").toString().trim(),  
+        price: (item.price || "").toString().trim(),  
+        sizes: (item.sizes || "").toString().trim()  
+      }))  
+    };  
+  }, {})  
+};
 
     console.log('Sending payload to Google Sheet:', JSON.stringify(payload, null, 2));
 
-    const response = await fetch(`${WEB_APP_URL}?action=updateBoutique`, {
+    const response = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1225,6 +1226,7 @@
     } else {
       throw new Error(responseData.error || `Server error: ${response.status}`);
     }
+
   } catch (error) {
     console.error('Error saving to Google Sheet:', error.message);
     alert('Failed to save changes to the server. Changes are saved locally. Please check the console for details.');
@@ -1258,14 +1260,32 @@
 
     // Simulate image upload (replace with actual server-side implementation)
     async function uploadImage(file) {
-  // Simulate uploading and returning a valid URL (replace with real upload)
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      // Placeholder URL (use real Google Drive upload in production)
-      resolve(`https://via.placeholder.com/400x400?text=${encodeURIComponent(file.name)}`);
+    reader.onload = async () => {
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'uploadImage',
+            fileName: file.name,
+            imageData: reader.result // full DataURL
+          })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success' && result.url) {
+          resolve(result.url); // ✅ Drive URL
+        } else {
+          reject(new Error(result.error || 'Upload failed'));
+        }
+      } catch (err) {
+        reject(err);
+      }
     };
-    reader.readAsDataURL(file);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file); // ✅ sends base64 with mime type
   });
 }
 
@@ -1456,27 +1476,39 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
     }
 
     function loadGallery(category) {
-      gallery.innerHTML = "";
-      const cat = shopData?.categories.find(c => c.name === category);
-      currentImages = cat ? cat.items.map(item => item.src) : [];
-      if (!cat || cat.items.length === 0) {
-        gallery.innerHTML = '<p class="no-items">Items not available today</p>';
-      } else {
-        cat.items.forEach((item, index) => {
-          const div = document.createElement("div");
-          div.classList.add("gallery-item");
-          const imgSrc = item.src.includes('lh3.googleapis.com/') ? item.src + '=s150' : item.src;
-          const isInCart = cart.some(c => c.src === item.src);
-          div.innerHTML = `
-            <img src="${imgSrc}" onclick="openModal('${item.src}', ${index}, '${category}')" loading="lazy" alt="Product">
-            <p class="price">GH₵ ${item.price}</p>
-            ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
-            <button class="add-to-cart${isInCart ? ' added' : ''}" onclick="addToCart(${index}, '${category}')">${isInCart ? '✔ Added to Cart' : 'Add to Cart'}</button>
-          `;
-          gallery.appendChild(div);
-        });
-      }
-    }
+  gallery.innerHTML = "";
+  const cat = shopData?.categories.find(c => c.name === category);
+  currentImages = cat ? cat.items.map(item => item.src) : [];
+
+  if (!cat || cat.items.length === 0) {
+    gallery.innerHTML = '<p class="no-items">Items not available today</p>';
+  } else {
+    cat.items.forEach((item, index) => {
+      const div = document.createElement("div");
+      div.classList.add("gallery-item");
+
+      // ✅ Drive links or placeholders handled here
+      const imgSrc = item.src && item.src.trim() !== ""
+        ? item.src
+        : "https://via.placeholder.com/400x400?text=No+Image";
+
+      const isInCart = cart.some(c => c.src === item.src);
+
+      div.innerHTML = `
+        <img src="${imgSrc}" 
+             onclick="openModal('${item.src}', ${index}, '${category}')" 
+             loading="lazy" alt="Product">
+        <p class="price">GH₵ ${item.price}</p>
+        ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
+        <button class="add-to-cart${isInCart ? ' added' : ''}" 
+                onclick="addToCart(${index}, '${category}')">
+          ${isInCart ? '✔ Added to Cart' : 'Add to Cart'}
+        </button>
+      `;
+      gallery.appendChild(div);
+    });
+  }
+}
 
     function openModal(src, index, category) {
       currentIndex = index;
@@ -1779,39 +1811,28 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       }
     });
 
-    itemUpload.addEventListener('change', async (e) => {
+    itemUpload.addEventListener('change', (e) => {
   const files = e.target.files;
-  const itemImagePreview = document.getElementById('item-image-preview');
-  if (tempItems.length + files.length > 100) {
-    alert('Category can hold up to 100 items');
-    return;
-  }
-  for (const file of Array.from(files)) {
-    if (file.type.startsWith('image/')) {
-      // Show preview
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        itemImagePreview.src = ev.target.result;
-        itemImagePreview.style.display = 'block';
-        console.log('Image preview set:', ev.target.result);
-      };
-      reader.readAsDataURL(file);
 
-      // Simulate upload (replace with real Google Drive upload later)
-      try {
-        const url = await uploadImage(file);
-        tempItems.push({ src: url, price: '', sizes: '' });
-        isChanged = true;
-        renderItemList();
-        checkSaveButton();
-      } catch (error) {
-        console.error('Image upload error:', error.message);
-        alert('Failed to upload image. Please try again.');
-      }
-    }
+  for (const file of Array.from(files)) {
+    if (!file.type.startsWith('image/')) continue;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      // Store the local preview and also keep the file object
+      const newItem = { 
+        src: ev.target.result,   // local preview for now
+        file: file,              // keep original file to upload later
+        price: '', 
+        sizes: '' 
+      };
+      tempItems.push(newItem);
+      renderItemList();
+    };
+    reader.readAsDataURL(file);
   }
+
   e.target.value = '';
-  checkSaveButton();
 });
 
     function renderItemList() {
@@ -1847,31 +1868,77 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
         checkSaveButton();
       }
     });
-
+  
     saveItemsBtn.addEventListener('click', async () => {
-      const cat = shopData.categories.find(c => c.name === currentCategory);
-      const itemCount = tempItems.length;
-      const oldItems = JSON.parse(JSON.stringify(cat.items));
-      cat.items = currentMode === 'add' ? [...cat.items, ...tempItems] : tempItems;
-      // Update cart with new/edited items
-      cart = cart.filter(item => {
-        const stillExists = cat.items.some(newItem => newItem.src === item.src);
-        if (!stillExists) return false;
-        const updatedItem = cat.items.find(newItem => newItem.src === item.src);
-        item.price = updatedItem.price;
-        item.sizes = updatedItem.sizes;
-        return true;
-      });
-      carts[boutiqueId] = cart;
-      localStorage.setItem('carts', JSON.stringify(carts));
-      await saveShopData();
-      itemModal.style.display = 'none';
-      saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? ' has' : 's have'} been saved successfully to your page.`;
-      saveConfirmationModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('saveConfirmationModal');
-      loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData.categories[0]?.name || "");
+  // 🔒 Prevent multiple clicks
+  saveItemsBtn.disabled = true;
+  saveItemsBtn.textContent = "Saving... please wait";
+
+  try {
+    const cat = shopData.categories.find(c => c.name === currentCategory);
+    const itemCount = tempItems.length;
+
+    // 1. Upload any local images (data:image/...)
+    for (let i = 0; i < tempItems.length; i++) {
+      const item = tempItems[i];
+      if (item.src.startsWith("data:image")) {
+        const file = await fetch(item.src).then(r => r.blob());
+        const uploadRes = await fetch(WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "uploadImage",
+            fileName: `item_${Date.now()}_${i}.png`,
+            imageData: item.src
+          })
+        }).then(r => r.json());
+
+        if (uploadRes.status === "success" && uploadRes.url) {
+          // Replace preview with permanent Drive link
+          item.src = uploadRes.url;
+        } else {
+          throw new Error("Image upload failed: " + (uploadRes.error || "Unknown error"));
+        }
+      }
+    }
+
+    // 2. Update shopData with final items (with Drive links)
+    cat.items = currentMode === "add" ? [...cat.items, ...tempItems] : tempItems;
+
+    // 3. Keep cart in sync
+    cart = cart.filter(item => {
+      const stillExists = cat.items.some(newItem => newItem.src === item.src);
+      if (!stillExists) return false;
+      const updatedItem = cat.items.find(newItem => newItem.src === item.src);
+      item.price = updatedItem.price;
+      item.sizes = updatedItem.sizes;
+      return true;
     });
+    carts[boutiqueId] = cart;
+    localStorage.setItem("carts", JSON.stringify(carts));
+
+    // 4. Save to Google Sheet (with Drive links)
+    await saveShopData();
+
+    // 5. Show confirmation popup
+    itemModal.style.display = "none";
+    saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? " has" : "s have"} been saved successfully to your page.`;
+    saveConfirmationModal.style.display = "flex";
+    navigationStack.pop();
+    navigationStack.push("saveConfirmationModal");
+
+    // Reload gallery
+    loadGallery(document.querySelector(".tab.active")?.dataset.category || shopData.categories[0]?.name || "");
+
+  } catch (err) {
+    alert("Error saving items: " + err.message);
+    console.error("Save error:", err);
+  } finally {
+    // 🔓 Re-enable button
+    saveItemsBtn.disabled = false;
+    saveItemsBtn.textContent = "Save";
+  }
+});
 
     boutiqueDetailsModal.addEventListener('click', (e) => {
       if (e.target === boutiqueDetailsModal) {
