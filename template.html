@@ -1160,38 +1160,55 @@
 
     // Save data to Google Sheet  
 async function saveToGoogleSheet() {
-  try {
-    // Validate required data
+  return new Promise((resolve, reject) => {
     if (!boutiqueId || !boutiqueData || !shopData) {
-      console.error('Missing required data:', { boutiqueId, boutiqueData, shopData });
-      throw new Error('Missing boutique or shop data');
+      reject(new Error("Missing data"));
+      return;
     }
 
-    // Prepare payload with strict validation  
-const payload = {  
-  action: 'updateBoutique',   // 🔥 Add this line  
-  id: boutiqueId.toString().trim(),  
-  name: (boutiqueData.name || "Boutique Name").toString().trim(),  
-  slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),  
-  whatsapp: (boutiqueData.whatsapp || "").toString().trim(),  
-  themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),  
-  backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),  
-  pin: (boutiqueData.pin || "").toString().trim(),  
-  categories: shopData.categories.reduce((acc, cat) => {  
-    if (!cat.name || !Array.isArray(cat.items)) {  
-      console.warn('Invalid category:', cat);  
-      return acc;  
-    }  
-    return {  
-      ...acc,  
-      [cat.name.toLowerCase().trim()]: cat.items.map(item => ({  
-        src: (item.src || "").toString().trim(),  
-        price: (item.price || "").toString().trim(),  
-        sizes: (item.sizes || "").toString().trim()  
-      }))  
-    };  
-  }, {})  
-};
+    const payload = {
+      action: "updateBoutique",
+      id: boutiqueId,
+      name: boutiqueData.name,
+      slogan: boutiqueData.slogan,
+      whatsapp: boutiqueData.whatsapp,
+      themeColor: boutiqueData.themeColor,
+      backgroundImage: boutiqueData.backgroundImage,
+      pin: boutiqueData.pin,
+      categories: shopData.categories.reduce((acc, cat) => {
+        acc[cat.name] = cat.items.map(it => ({
+          src: it.src,
+          price: it.price,
+          sizes: it.sizes
+        }));
+        return acc;
+      }, {})
+    };
+
+    const cbName = "__SAVE_CB_" + Math.random().toString(36).slice(2);
+    window[cbName] = (res) => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      if (res.status === "success") {
+        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+          data: payload,
+          cacheTimestamp: Date.now()
+        }));
+        resolve(res);
+      } else {
+        reject(new Error(res.error || "Save failed"));
+      }
+    };
+
+    const script = document.createElement("script");
+    script.src = `${WEB_APP_URL}?callback=${cbName}&payload=${encodeURIComponent(JSON.stringify(payload))}&ts=${Date.now()}`;
+    script.onerror = () => {
+      delete window[cbName];
+      reject(new Error("Save request failed"));
+    };
+    document.head.appendChild(script);
+  });
+}
 
     console.log('Sending payload to Google Sheet:', JSON.stringify(payload, null, 2));
 
