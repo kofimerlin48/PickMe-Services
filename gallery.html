@@ -10,6 +10,12 @@
     .item { border: 1px solid #ccc; padding: 10px; width: 200px; }
     .item img { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
     .add-btn { background: #c12872; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
+    #formModal { 
+      display: none; margin-top: 20px; border: 1px solid #ccc; 
+      padding: 20px; width: 250px; background: #f9f9f9; 
+    }
+    input { width: 100%; padding: 6px; margin: 4px 0; }
+    button { margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -17,9 +23,10 @@
   <button class="add-btn" onclick="openForm()">Add Item</button>
 
   <!-- Form Modal -->
-  <div id="formModal" style="display:none; margin-top:20px; border:1px solid #ccc; padding:20px; width:250px;">
+  <div id="formModal">
     <h3>Add Item</h3>
-    <input type="file" id="imageInput"><br><br>
+    <!-- 👇 FIXED: Only images, opens gallery/camera on mobile -->
+    <input type="file" id="imageInput" accept="image/*" capture="environment"><br><br>
     <input type="text" id="priceInput" placeholder="Price"><br><br>
     <input type="text" id="sizeInput" placeholder="Size"><br><br>
     <button onclick="saveItem()">Save</button>
@@ -30,7 +37,7 @@
   <div class="gallery" id="gallery"></div>
 
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxqxx_-70jRM109ql61Aa0L76s8hk6GYkolx9A1tkAqN-HpmxRJ1KWK5xLCPe314dqX/exec"; // replace with Apps Script /exec link
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxqxx_-70jRM109ql61Aa0L76s8hk6GYkolx9A1tkAqN-HpmxRJ1KWK5xLCPe314dqX/exec"; // Replace with your Apps Script /exec link
 
     function openForm(){ document.getElementById('formModal').style.display = 'block'; }
     function closeForm(){ document.getElementById('formModal').style.display = 'none'; }
@@ -45,7 +52,7 @@
         return;
       }
 
-      // Step 1: upload image
+      // Step 1: Upload image
       const fd = new FormData();
       fd.append("action", "uploadImage");
       fd.append("file", fileInput.files[0], fileInput.files[0].name);
@@ -59,7 +66,7 @@
 
       const imageUrl = data.url;
 
-      // Step 2: save item info (image + price + size)
+      // Step 2: Save item info (image + price + size)
       const fd2 = new FormData();
       fd2.append("action", "addItem");
       fd2.append("image", imageUrl);
