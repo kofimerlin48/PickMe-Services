@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gallery Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #c12872; }
+    .gallery { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+    .item { border: 1px solid #ccc; padding: 10px; width: 200px; }
+    .item img { max-width: 100%; height: auto; display: block; margin-bottom: 10px; }
+    .add-btn { background: #c12872; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Gallery</h1>
+  <button class="add-btn" onclick="openForm()">Add Item</button>
+
+  <!-- Form Modal -->
+  <div id="formModal" style="display:none; margin-top:20px; border:1px solid #ccc; padding:20px; width:250px;">
+    <h3>Add Item</h3>
+    <input type="file" id="imageInput"><br><br>
+    <input type="text" id="priceInput" placeholder="Price"><br><br>
+    <input type="text" id="sizeInput" placeholder="Size"><br><br>
+    <button onclick="saveItem()">Save</button>
+    <button onclick="closeForm()">Cancel</button>
+  </div>
+
+  <!-- Gallery -->
+  <div class="gallery" id="gallery"></div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxqxx_-70jRM109ql61Aa0L76s8hk6GYkolx9A1tkAqN-HpmxRJ1KWK5xLCPe314dqX/exec"; // replace with Apps Script /exec link
+
+    function openForm(){ document.getElementById('formModal').style.display = 'block'; }
+    function closeForm(){ document.getElementById('formModal').style.display = 'none'; }
+
+    async function saveItem() {
+      const fileInput = document.getElementById('imageInput');
+      const price = document.getElementById('priceInput').value;
+      const size = document.getElementById('sizeInput').value;
+
+      if (!fileInput.files[0] || !price || !size) {
+        alert("Please select image, enter price and size");
+        return;
+      }
+
+      // Step 1: upload image
+      const fd = new FormData();
+      fd.append("action", "uploadImage");
+      fd.append("file", fileInput.files[0], fileInput.files[0].name);
+
+      const res = await fetch(WEB_APP_URL, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.status !== "success") {
+        alert("Image upload failed: " + data.error);
+        return;
+      }
+
+      const imageUrl = data.url;
+
+      // Step 2: save item info (image + price + size)
+      const fd2 = new FormData();
+      fd2.append("action", "addItem");
+      fd2.append("image", imageUrl);
+      fd2.append("price", price);
+      fd2.append("size", size);
+
+      const res2 = await fetch(WEB_APP_URL, { method: "POST", body: fd2 });
+      const out = await res2.json();
+      if (out.status === "success") {
+        alert("Item saved!");
+        closeForm();
+        loadItems();
+      } else {
+        alert("Save failed: " + out.error);
+      }
+    }
+
+    async function loadItems() {
+      const res = await fetch(WEB_APP_URL + "?action=getItems");
+      const data = await res.json();
+      const gallery = document.getElementById("gallery");
+      gallery.innerHTML = "";
+      (data.items || []).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <img src="${item.image}" alt="">
+          <p>Price: ${item.price}</p>
+          <p>Size: ${item.size}</p>
+        `;
+        gallery.appendChild(div);
+      });
+    }
+
+    // Load items on page start
+    loadItems();
+  </script>
+</body>
+</html>
