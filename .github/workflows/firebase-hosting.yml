@@ -3,11 +3,12 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main   # if your default branch is "master", change this to master
+      - main   # stays as "main" since that's your branch
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -19,6 +20,11 @@ jobs:
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
+
+      - name: Check Firebase Token
+        run: echo "Token length is ${#FIREBASE_TOKEN}"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
       - name: Deploy to Firebase
         run: firebase deploy --only hosting --project pickme-services-fbb35
