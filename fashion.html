@@ -110,77 +110,31 @@
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
   </div>
 
-  <script>
-    // ========= CONFIG =========
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZl5hrhnNaRHxUysOG0a9DBPoed5-M87xet_egP7uZjCW9R7QjWN0jWzXEeoHEuYA/exec";
-    const CACHE_KEY = "boutiquesCache:v5";
-    const CACHE_TIME_KEY = "boutiquesCacheTime:v5";
-    const CACHE_TTL = 60 * 60 * 1000; // 1 hour
-    const POLL_INTERVAL_MS = 15000;
-    const LOAD_TIMEOUT_MS = 10000; // 10s timeout for JSONP
+  <!-- ========= FIREBASE SDK ========= -->
+  <script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 🔹 Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "pickmeservicesonline.firebaseapp.com",
+      projectId: "pickmeservicesonline",
+      storageBucket: "pickmeservicesonline.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const cardsContainer = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
-    const statusEl = document.getElementById("status");
+    const domMap = new Map();
 
-    const domMap = new Map(); // id -> {el, hash}
-
-    const safeJSON = (s) => { try { return JSON.parse(s); } catch { return null; } };
-    const now = () => Date.now();
-    const cacheFresh = () => (now() - (parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10))) < CACHE_TTL;
-
-    function showStatus(msg) {
-      console.warn("Status:", msg);
-      statusEl.textContent = msg;
-      statusEl.classList.add("show");
-    }
-    function hideStatus() {
-      statusEl.textContent = "";
-      statusEl.classList.remove("show");
-    }
-
-    function visibleExpiry(b) {
-      if (!b.expiry) return true;
-      const d = new Date(b.expiry + "T23:59:59");
-      return isFinite(d.getTime()) ? (d > new Date()) : true;
-    }
-
-    function boutiqueHash(b) {
-      const s = JSON.stringify({
-        id: b.id,
-        name: b.name,
-        slogan: b.slogan,
-        themeColor: b.themeColor,
-        backgroundImage: b.backgroundImage,
-        expiry: b.expiry
-      });
-      let h = 5381;
-      for (let i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
-      return (h >>> 0).toString(36);
-    }
-
-    function applySearch() {
-      const q = (searchInput.value || "").toLowerCase();
-      domMap.forEach(({ el }) => {
-        const name = (el.getAttribute("data-name") || "").toLowerCase();
-        el.style.display = name.includes(q) ? "flex" : "none";
-      });
-    }
-
-    // ========= RENDER =========
     function upsertCard(b) {
-      if (!visibleExpiry(b)) {
-        const prev = domMap.get(b.id);
-        if (prev) { prev.el.remove(); domMap.delete(b.id); }
-        return;
-      }
-
-      const newHash = boutiqueHash(b);
-      const prev = domMap.get(b.id);
-
-      if (prev && prev.hash === newHash) return;
-
-      let card = prev?.el;
+      let card = domMap.get(b.id)?.el;
       if (!card) {
         card = document.createElement("div");
         card.className = "card";
@@ -202,137 +156,34 @@
       `;
 
       const btn = card.querySelector(".btn-order");
-      btn.onclick = (e) => {
-        e.stopPropagation();
+      btn.onclick = () => {
         if (!b.id) return;
         window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
       };
 
-      domMap.set(b.id, { el: card, hash: newHash });
+      domMap.set(b.id, { el: card });
     }
 
     function renderBoutiques(list) {
-      console.log("Rendering boutiques:", list?.length || 0);
-      const seen = new Set();
-
-      (list || []).forEach(b => {
-        if (!b || !b.id) return;
-        upsertCard(b);
-        if (visibleExpiry(b)) seen.add(b.id);
-      });
-
-      const removeIds = [];
-      domMap.forEach((_v, id) => { if (!seen.has(id)) removeIds.push(id); });
-      removeIds.forEach(id => { const e = domMap.get(id); if (e) e.el.remove(); domMap.delete(id); });
-
-      const skeletons = cardsContainer.querySelectorAll(".skeleton");
-      if (skeletons.length > 0) {
-        cardsContainer.innerHTML = "";
-        domMap.forEach(({ el }) => cardsContainer.appendChild(el));
-      }
-
-      applySearch();
-
-      if (!domMap.size) {
-        cardsContainer.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666; padding: 40px;'>No boutiques available at this time.</p>";
-      }
+      cardsContainer.innerHTML = "";
+      list.forEach(b => upsertCard(b));
     }
 
-    // ========= JSONP FETCH =========
-    function jsonpGetBoutiques() {
-      return new Promise((resolve, reject) => {
-        const cbName = "__BOUTIQUES_JSONP_CB_" + Math.random().toString(36).slice(2);
-        const script = document.createElement("script");
-        let timeoutId;
-
-        const cleanup = () => {
-          clearTimeout(timeoutId);
-          if (script.parentNode) script.remove();
-          delete window[cbName];
-        };
-
-        window[cbName] = (payload) => {
-          console.log("JSONP callback received:", payload);
-          cleanup();
-          resolve(payload);
-        };
-
-        script.onerror = () => {
-          console.error("JSONP script load error");
-          cleanup();
-          reject(new Error("JSONP script error"));
-        };
-
-        script.src = `${WEB_APP_URL}?action=getBoutiques&callback=${cbName}&ts=${Date.now()}`;
-        document.head.appendChild(script);
-
-        timeoutId = setTimeout(() => {
-          cleanup();
-          reject(new Error("JSONP timeout"));
-        }, LOAD_TIMEOUT_MS);
+    function applySearch() {
+      const q = (searchInput.value || "").toLowerCase();
+      domMap.forEach(({ el }) => {
+        const name = (el.getAttribute("data-name") || "").toLowerCase();
+        el.style.display = name.includes(q) ? "flex" : "none";
       });
     }
+    searchInput.addEventListener("input", () => applySearch());
 
-    function saveCache(payload) {
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-        console.log("Cache saved");
-      } catch (_) {}
-    }
-
-    function loadCache() {
-      const cached = safeJSON(localStorage.getItem(CACHE_KEY) || "");
-      console.log("Loaded cache:", cached?.boutiques?.length || 0);
-      return cached;
-    }
-
-    // ========= LOAD & POLL =========
-    async function initialLoad() {
-      hideStatus();
-
-      const cached = loadCache();
-      if (cached?.boutiques?.length && cacheFresh()) {
-        renderBoutiques(cached.boutiques);
-      } else {
-        cardsContainer.innerHTML = "";
-      }
-
-      try {
-        console.log("Starting JSONP load...");
-        const fresh = await jsonpGetBoutiques();
-        renderBoutiques(fresh.boutiques || []);
-        saveCache(fresh);
-      } catch (err) {
-        console.error("Load failed:", err);
-        if (!domMap.size) {
-          cardsContainer.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666; padding: 40px;'>Failed to load boutiques. Please refresh the page.</p>";
-          showStatus("Could not fetch from server (network issue). Please refresh.");
-        }
-      }
-    }
-
-    async function pollUpdates() {
-      try {
-        const fresh = await jsonpGetBoutiques();
-        renderBoutiques(fresh.boutiques || []);
-        saveCache(fresh);
-      } catch (err) {
-        console.warn("Poll failed (silent):", err);
-      }
-    }
-
-    function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
-
-    initialLoad().then(() => {
-      setInterval(pollUpdates, POLL_INTERVAL_MS);
-      window.addEventListener("focus", pollUpdates);
-    }).catch(err => {
-      console.error("Initial load crashed:", err);
-      showStatus("Unexpected error. Please refresh the page.");
+    // 🔹 Real-time Firestore listener
+    onSnapshot(collection(db, "boutiques"), (snapshot) => {
+      const boutiques = [];
+      snapshot.forEach(doc => boutiques.push({ id: doc.id, ...doc.data() }));
+      renderBoutiques(boutiques);
     });
-
-    searchInput.addEventListener("input", debounce(() => applySearch(), 200));
   </script>
 </body>
 </html>
