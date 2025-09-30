@@ -27,6 +27,6 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
       - name: Deploy to Firebase
-        run: firebase deploy --only hosting --project pickme-services-fbb35
+        run: firebase deploy --only hosting --project pickmeservicesonline
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
