@@ -75,6 +75,7 @@
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
+    /* Skeleton */
     .skeleton {
       background: #ddd; border-radius: 15px; height: 250px;
       animation: pulse 1.5s infinite;
@@ -100,6 +101,7 @@
   </div>
 
   <div class="cards-container" id="cardsContainer">
+    <!-- Skeletons first -->
     <div class="skeleton"></div>
     <div class="skeleton"></div>
     <div class="skeleton"></div>
@@ -110,13 +112,12 @@
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
   </div>
 
-  <!-- ========= FIREBASE SDK ========= -->
+  <!-- ========= FIREBASE SDKs ========= -->
   <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // 🔹 Replace with your Firebase config
+    // ========= CONFIG =========
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -131,42 +132,16 @@
 
     const cardsContainer = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
+    const statusEl = document.getElementById("status");
     const domMap = new Map();
 
-    function upsertCard(b) {
-      let card = domMap.get(b.id)?.el;
-      if (!card) {
-        card = document.createElement("div");
-        card.className = "card";
-        cardsContainer.appendChild(card);
-      }
-
-      card.setAttribute("data-id", b.id || "");
-      card.setAttribute("data-name", b.name || "");
-      card.style.backgroundImage = `url('${b.backgroundImage || ""}')`;
-
-      card.innerHTML = `
-        <div class="card-content">
-          <div>
-            <div class="card-title">${b.name || ""}</div>
-            <div class="card-description">${b.slogan || ""}</div>
-          </div>
-          <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
-        </div>
-      `;
-
-      const btn = card.querySelector(".btn-order");
-      btn.onclick = () => {
-        if (!b.id) return;
-        window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
-      };
-
-      domMap.set(b.id, { el: card });
+    function showStatus(msg) {
+      statusEl.textContent = msg;
+      statusEl.classList.add("show");
     }
-
-    function renderBoutiques(list) {
-      cardsContainer.innerHTML = "";
-      list.forEach(b => upsertCard(b));
+    function hideStatus() {
+      statusEl.textContent = "";
+      statusEl.classList.remove("show");
     }
 
     function applySearch() {
@@ -176,14 +151,58 @@
         el.style.display = name.includes(q) ? "flex" : "none";
       });
     }
-    searchInput.addEventListener("input", () => applySearch());
 
-    // 🔹 Real-time Firestore listener
-    onSnapshot(collection(db, "boutiques"), (snapshot) => {
-      const boutiques = [];
-      snapshot.forEach(doc => boutiques.push({ id: doc.id, ...doc.data() }));
-      renderBoutiques(boutiques);
-    });
+    function upsertCard(b) {
+      let card = document.createElement("div");
+      card.className = "card";
+      card.setAttribute("data-id", b.id || "");
+      card.setAttribute("data-name", b.name || "");
+      card.style.backgroundImage = `url('${b.backgroundimage || ""}')`;
+
+      card.innerHTML = `
+        <div class="card-content">
+          <div>
+            <div class="card-title">${b.name || ""}</div>
+            <div class="card-description">${b.slogan || ""}</div>
+          </div>
+          <button class="btn-order" style="background-color:${b.themecolor || "#c12872"}">Shop from Us</button>
+        </div>
+      `;
+
+      const btn = card.querySelector(".btn-order");
+      btn.onclick = () => {
+        if (!b.id) return;
+        window.location.href = \`template.html?id=\${encodeURIComponent(b.id)}\`;
+      };
+
+      cardsContainer.appendChild(card);
+      domMap.set(b.id, { el: card });
+    }
+
+    async function loadBoutiques() {
+      hideStatus();
+      try {
+        const snapshot = await getDocs(collection(db, "boutiques"));
+        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Clear skeletons first
+        cardsContainer.innerHTML = "";
+
+        if (list.length === 0) {
+          cardsContainer.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666; padding: 40px;'>No boutiques available at this time.</p>";
+          return;
+        }
+
+        list.forEach(b => upsertCard(b));
+        applySearch();
+      } catch (err) {
+        console.error("Error loading boutiques:", err);
+        showStatus("Failed to load boutiques. Please refresh.");
+      }
+    }
+
+    loadBoutiques();
+    searchInput.addEventListener("input", () => applySearch());
   </script>
 </body>
 </html>
