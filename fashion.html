@@ -133,7 +133,7 @@
 
     async function loadBoutiques() {
       try {
-        const snap = await getDocs(collection(db, "boutiques"));
+        const snap = await getDocs(collection(db, "Boutiques"));
         if (snap.empty) {
           container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
           return;
