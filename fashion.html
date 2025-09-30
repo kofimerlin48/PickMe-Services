@@ -75,7 +75,6 @@
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
-    /* Skeleton */
     .skeleton {
       background: #ddd; border-radius: 15px; height: 250px;
       animation: pulse 1.5s infinite;
@@ -101,7 +100,7 @@
   </div>
 
   <div class="cards-container" id="cardsContainer">
-    <!-- Skeletons first -->
+    <!-- Skeleton loaders -->
     <div class="skeleton"></div>
     <div class="skeleton"></div>
     <div class="skeleton"></div>
@@ -112,97 +111,77 @@
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
   </div>
 
-  <!-- ========= FIREBASE SDKs ========= -->
+  <!-- ========= FIREBASE + FIRESTORE ========= -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // ========= CONFIG =========
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
+      apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
       authDomain: "pickmeservicesonline.firebaseapp.com",
       projectId: "pickmeservicesonline",
-      storageBucket: "pickmeservicesonline.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      storageBucket: "pickmeservicesonline.firebasestorage.app",
+      messagingSenderId: "265031616239",
+      appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const cardsContainer = document.getElementById("cardsContainer");
+    const container = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
-    const statusEl = document.getElementById("status");
-    const domMap = new Map();
-
-    function showStatus(msg) {
-      statusEl.textContent = msg;
-      statusEl.classList.add("show");
-    }
-    function hideStatus() {
-      statusEl.textContent = "";
-      statusEl.classList.remove("show");
-    }
-
-    function applySearch() {
-      const q = (searchInput.value || "").toLowerCase();
-      domMap.forEach(({ el }) => {
-        const name = (el.getAttribute("data-name") || "").toLowerCase();
-        el.style.display = name.includes(q) ? "flex" : "none";
-      });
-    }
-
-    function upsertCard(b) {
-      let card = document.createElement("div");
-      card.className = "card";
-      card.setAttribute("data-id", b.id || "");
-      card.setAttribute("data-name", b.name || "");
-      card.style.backgroundImage = `url('${b.backgroundimage || ""}')`;
-
-      card.innerHTML = `
-        <div class="card-content">
-          <div>
-            <div class="card-title">${b.name || ""}</div>
-            <div class="card-description">${b.slogan || ""}</div>
-          </div>
-          <button class="btn-order" style="background-color:${b.themecolor || "#c12872"}">Shop from Us</button>
-        </div>
-      `;
-
-      const btn = card.querySelector(".btn-order");
-      btn.onclick = () => {
-        if (!b.id) return;
-        window.location.href = \`template.html?id=\${encodeURIComponent(b.id)}\`;
-      };
-
-      cardsContainer.appendChild(card);
-      domMap.set(b.id, { el: card });
-    }
 
     async function loadBoutiques() {
-      hideStatus();
       try {
-        const snapshot = await getDocs(collection(db, "boutiques"));
-        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        // Clear skeletons first
-        cardsContainer.innerHTML = "";
-
-        if (list.length === 0) {
-          cardsContainer.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666; padding: 40px;'>No boutiques available at this time.</p>";
+        const snap = await getDocs(collection(db, "boutiques"));
+        if (snap.empty) {
+          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
           return;
         }
 
-        list.forEach(b => upsertCard(b));
-        applySearch();
+        container.innerHTML = ""; // clear skeletons
+        snap.forEach(doc => {
+          const b = doc.data();
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.backgroundImage = `url('${b.backgroundImage || ""}')`;
+          card.setAttribute("data-name", b.name?.toLowerCase() || "");
+
+          card.innerHTML = `
+            <div class="card-content">
+              <div>
+                <div class="card-title">${b.name || ""}</div>
+                <div class="card-description">${b.slogan || ""}</div>
+              </div>
+              <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
+            </div>
+          `;
+
+          const btn = card.querySelector(".btn-order");
+          btn.onclick = () => {
+            if (doc.id) {
+              window.location.href = `template.html?id=${encodeURIComponent(doc.id)}`;
+            }
+          };
+
+          container.appendChild(card);
+        });
       } catch (err) {
         console.error("Error loading boutiques:", err);
-        showStatus("Failed to load boutiques. Please refresh.");
+        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques. Check console.</p>";
       }
     }
 
-    loadBoutiques();
-    searchInput.addEventListener("input", () => applySearch());
+    // Search filter
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      Array.from(container.children).forEach(card => {
+        const name = card.getAttribute("data-name") || "";
+        card.style.display = name.includes(q) ? "flex" : "none";
+      });
+    });
+
+    window.addEventListener("DOMContentLoaded", loadBoutiques);
   </script>
 </body>
 </html>
