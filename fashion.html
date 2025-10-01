@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
   <!-- ========= HEADER CODE STARTS HERE ================== -->
@@ -48,7 +48,7 @@
 
     .cards-container {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px; padding: 0 20px 80px 20px;
+      gap: 70px; padding: 0 20px 50px 20px;
     }
     .card {
       position: relative; border-radius: 15px; overflow: hidden;
@@ -65,7 +65,7 @@
       position: relative; color: white; padding: 15px; width: 100%;
       display: flex; flex-direction: column; justify-content: space-between; z-index: 1;
     }
-    .card-title { font-weight: bold; font-size: 22px; margin-bottom: 8px; }
+    .card-title { font-weight: bold; font-size: 24px; margin-bottom: 10px; }
     .card-description { font-size: 14px; margin-bottom: 10px; flex-grow: 1; }
     .btn-order {
       background-color: #c12872; color: white; border: none; padding: 8px 12px;
@@ -76,22 +76,14 @@
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
-    /* Skeletons */
     .skeleton {
-      border-radius: 15px; height: 250px; position: relative; overflow: hidden;
-      background: #eee;
+      background: #ddd; border-radius: 15px; height: 250px;
+      animation: pulse 1.5s infinite;
     }
-    .skeleton::after {
-      content: "";
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
-      animation: shimmer 1.4s infinite;
-      transform: translateX(-100%);
-      background-size: 200% 100%;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    @keyframes pulse {
+      0% { background-color: #eee; }
+      50% { background-color: #ddd; }
+      100% { background-color: #eee; }
     }
 
     .status { text-align: center; color: #b00; font-size: 14px; margin-top: 6px; display: none; }
@@ -109,7 +101,7 @@
   </div>
 
   <div class="cards-container" id="cardsContainer">
-    <!-- Skeletons visible immediately -->
+    <!-- Skeletons only for first load -->
     <div class="skeleton"></div>
     <div class="skeleton"></div>
     <div class="skeleton"></div>
@@ -120,12 +112,11 @@
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
   </div>
 
-  <!-- ================= FIREBASE (CDN) + APP CONFIG ================= -->
+  <!-- ========= FIREBASE + FIRESTORE ========= -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // Your Firebase config (from your console)
     const firebaseConfig = {
       apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
       authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -136,233 +127,95 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const db = getFirestore(app);
 
-    // =================== CONFIG ===================
-    const COLLECTION_NAME = "Boutiques";  // Capital B (as in your Firestore)
-    const CACHE_KEY = "boutiquesCache:v1";
-    const CACHE_TIME_KEY = "boutiquesCacheTime:v1";
+    const container   = document.getElementById("cardsContainer");
+    const searchInput = document.getElementById("searchInput");
+
+    const CACHE_KEY = "boutiquesCache";
+    const CACHE_TIME_KEY = "boutiquesCacheTime";
     const CACHE_TTL = 60 * 60 * 1000; // 1 hour
-    const SILENT_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
-    const cardsContainer = document.getElementById("cardsContainer");
-    const searchInput    = document.getElementById("searchInput");
-    const statusEl       = document.getElementById("status");
-    const domMap         = new Map(); // id -> {el, hash}
-
-    const safeJSON = (s) => { try { return JSON.parse(s); } catch { return null; } };
-    const now = () => Date.now();
-    const cacheFresh = () => (now() - (parseInt(localStorage.getItem(CACHE_TIME_KEY) || "0", 10))) < CACHE_TTL;
-
-    function showStatus(msg) { statusEl.textContent = msg; statusEl.classList.add("show"); }
-    function hideStatus()    { statusEl.textContent = "";  statusEl.classList.remove("show"); }
-
-    function visibleExpiry(b) {
-      if (!b.expiry) return true;
-      const d = new Date(b.expiry + "T23:59:59");
-      return isFinite(d.getTime()) ? (d > new Date()) : true;
+    function saveCache(data) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
     }
-
-    function boutiqueHash(b) {
-      const s = JSON.stringify({
-        id: b.id,
-        name: b.name,
-        slogan: b.slogan,
-        themeColor: b.themeColor,
-        backgroundImage: b.backgroundImage,
-        expiry: b.expiry
-      });
-      let h = 5381;
-      for (let i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
-      return (h >>> 0).toString(36);
-    }
-
-    function applySearch() {
-      const q = (searchInput.value || "").toLowerCase();
-      domMap.forEach(({ el }) => {
-        const name = (el.getAttribute("data-name") || "").toLowerCase();
-        el.style.display = name.includes(q) ? "flex" : "none";
-      });
-    }
-
-    function upsertCard(b) {
-      if (!visibleExpiry(b)) {
-        const prev = domMap.get(b.id);
-        if (prev) { prev.el.remove(); domMap.delete(b.id); }
-        return;
-      }
-
-      const newHash = boutiqueHash(b);
-      const prev = domMap.get(b.id);
-
-      if (prev && prev.hash === newHash) return;
-
-      let card = prev?.el;
-      if (!card) {
-        card = document.createElement("div");
-        card.className = "card";
-        cardsContainer.appendChild(card);
-      }
-
-      card.setAttribute("data-id", b.id || "");
-      card.setAttribute("data-name", b.name || "");
-      card.style.backgroundImage = `url('${b.backgroundImage || ""}')`;
-
-      const theme = b.themeColor && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(b.themeColor) ? b.themeColor : "#c12872";
-
-      card.innerHTML = `
-        <div class="card-content">
-          <div>
-            <div class="card-title">${b.name || ""}</div>
-            <div class="card-description">${b.slogan || ""}</div>
-          </div>
-          <button class="btn-order" style="background-color:${theme}">Shop from Us</button>
-        </div>
-      `;
-
-      const btn = card.querySelector(".btn-order");
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        if (!b.id) return;
-        // Go to boutique page with ?id=<docId>
-        window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
-      };
-
-      domMap.set(b.id, { el: card, hash: newHash });
+    function loadCache() {
+      const raw = localStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
     }
 
     function renderBoutiques(list) {
-      const seen = new Set();
+      container.innerHTML = "";
+      if (!list || list.length === 0) {
+        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
+        return;
+      }
+      list.forEach((b, idx) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.backgroundImage = `url('${b.backgroundImage || ""}')`;
+        card.setAttribute("data-name", b.name?.toLowerCase() || "");
 
-      (list || []).forEach(b => {
-        if (!b || !b.id) return;
-        upsertCard(b);
-        if (visibleExpiry(b)) seen.add(b.id);
+        card.innerHTML = `
+          <div class="card-content">
+            <div>
+              <div class="card-title">${b.name || ""}</div>
+              <div class="card-description">${b.slogan || ""}</div>
+            </div>
+            <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
+          </div>
+        `;
+
+        const btn = card.querySelector(".btn-order");
+        btn.onclick = () => {
+          window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
+        };
+
+        container.appendChild(card);
       });
-
-      // Remove cards that are no longer present
-      const toRemove = [];
-      domMap.forEach((_v, id) => { if (!seen.has(id)) toRemove.push(id); });
-      toRemove.forEach(id => { const r = domMap.get(id); if (r) r.el.remove(); domMap.delete(id); });
-
-      // Clear skeletons on first real render
-      const skels = cardsContainer.querySelectorAll(".skeleton");
-      if (skels.length > 0) {
-        cardsContainer.innerHTML = "";
-        domMap.forEach(({ el }) => cardsContainer.appendChild(el));
-      }
-
-      // If nothing to show
-      if (!domMap.size) {
-        cardsContainer.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666; padding: 40px;'>No boutiques available at this time.</p>";
-      }
-
-      applySearch();
     }
 
-    function saveCache(payload) {
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      } catch {}
-    }
-
-    function loadCache() {
-      const cached = safeJSON(localStorage.getItem(CACHE_KEY) || "");
-      return cached;
-    }
-
-    // Fetch boutiques from Firestore
     async function fetchBoutiques() {
-      const snap = await getDocs(collection(db, COLLECTION_NAME));
+      const snap = await getDocs(collection(db, "Boutiques"));
       const list = [];
       snap.forEach(doc => {
-        const d = doc.data() || {};
-        list.push({
-          id: doc.id,
-          name: d.name || "",
-          slogan: d.slogan || "",
-          themeColor: d.themeColor || "#c12872",
-          backgroundImage: d.backgroundImage || "",
-          expiry: d.expiry || "",
-          whatsapp: d.whatsapp || ""
-        });
+        list.push({ id: doc.id, ...doc.data() });
       });
-
-      // Sort to keep stable order (avoid UI reordering noise)
-      list.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
+      list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       return list;
     }
 
-    // Shallow-equality via JSON.stringify on normalized list
-    function equalData(a, b) {
-      try {
-        return JSON.stringify(a) === JSON.stringify(b);
-      } catch { return false; }
-    }
-
-    async function initialLoad() {
-      hideStatus();
-
-      // 1) Render cached immediately (if fresh)
+    async function loadBoutiques() {
       const cached = loadCache();
-      if (cached?.length && cacheFresh()) {
-        renderBoutiques(cached);
+      if (cached) {
+        renderBoutiques(cached); // always show cache immediately
       }
 
-      // 2) Fetch fresh (first load)
       try {
         const fresh = await fetchBoutiques();
-        if (!equalData(fresh, cached)) {
+        if (!cached || JSON.stringify(fresh) !== JSON.stringify(cached)) {
           renderBoutiques(fresh);
           saveCache(fresh);
-        } else if (!cached?.length) {
-          // no cache and no fresh? show empty state
-          renderBoutiques([]);
         }
       } catch (err) {
-        console.error("Initial Firestore load failed:", err);
-        if (!cached?.length) {
-          showStatus("Could not fetch from server. Please refresh.");
+        console.error("Failed to fetch boutiques:", err);
+        if (!cached) {
+          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
         }
       }
     }
 
-    // Silent background refreshes
-    function setBackgroundRefresh() {
-      setInterval(async () => {
-        try {
-          const fresh = await fetchBoutiques();
-          const cached = loadCache() || [];
-          if (!equalData(fresh, cached)) {
-            renderBoutiques(fresh);
-            saveCache(fresh);
-          }
-        } catch (err) {
-          console.warn("Silent refresh failed:", err);
-        }
-      }, SILENT_REFRESH_MS);
-
-      // Refresh on tab focus
-      window.addEventListener("focus", async () => {
-        try {
-          const fresh = await fetchBoutiques();
-          const cached = loadCache() || [];
-          if (!equalData(fresh, cached)) {
-            renderBoutiques(fresh);
-            saveCache(fresh);
-          }
-        } catch {}
+    // Search
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      Array.from(container.children).forEach(card => {
+        const name = card.getAttribute("data-name") || "";
+        card.style.display = name.includes(q) ? "flex" : "none";
       });
-    }
-
-    function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
-
-    // Run
-    initialLoad().then(() => {
-      setBackgroundRefresh();
-      searchInput.addEventListener("input", debounce(() => applySearch(), 200));
     });
+
+    window.addEventListener("DOMContentLoaded", loadBoutiques);
   </script>
 </body>
 </html>
