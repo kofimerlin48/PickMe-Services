@@ -5,36 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
-  <!-- =========HEADER CODE STARTS HERE ================== -->
-<div id="header-placeholder"></div>
-<script>
-(async () => {
-  try {
-    const response = await fetch('header.html');
-    if (!response.ok) throw new Error('Failed to load header');
-    let html = await response.text();
+  <!-- ========= HEADER CODE STARTS HERE ================== -->
+  <div id="header-placeholder"></div>
+  <script>
+    (async () => {
+      try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error('Failed to load header');
+        let html = await response.text();
 
-    // Replace the <h1> content with the page-specific title
-    const pageTitle = "Fashion";
-    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+        // Replace the <h1> content with the page-specific title
+        const pageTitle = "Fashion";
+        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
 
-    document.getElementById('header-placeholder').innerHTML = html;
+        document.getElementById('header-placeholder').innerHTML = html;
 
-    // Re-run scripts inside header.html so menus work
-    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-      const newScript = document.createElement('script');
-      if (oldScript.src) newScript.src = oldScript.src;
-      else newScript.textContent = oldScript.textContent;
-      document.body.appendChild(newScript);
-    });
-  } catch (err) {
-    console.error(err);
-  }
-})();
-</script>
-<!-- =========HEADER CODE ENDS HERE ================== -->
-  
+        // Re-run scripts inside header.html so menus work
+        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+          const newScript = document.createElement('script');
+          if (oldScript.src) newScript.src = oldScript.src;
+          else newScript.textContent = oldScript.textContent;
+          document.body.appendChild(newScript);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  </script>
+  <!-- ========= HEADER CODE ENDS HERE ================== -->
+
   <style>
     body {
       margin: 0;
@@ -84,17 +84,14 @@
     .btn-order:active { transform: scale(1.05); outline: none !important; }
 
     .skeleton {
-      background: #ddd; border-radius: 15px; height: 250px;
-      animation: pulse 1.5s infinite;
+      background: #ddd; border-radius: 15px; height: 250px; width: 100%;
+      max-width: 300px; margin: 0 auto; animation: pulse 1.5s infinite;
     }
     @keyframes pulse {
       0% { background-color: #eee; }
       50% { background-color: #ddd; }
       100% { background-color: #eee; }
     }
-
-    .status { text-align: center; color: #b00; font-size: 14px; margin-top: 6px; display: none; }
-    .status.show { display: block; }
   </style>
 </head>
 <body>
@@ -112,7 +109,6 @@
     <div class="skeleton"></div>
     <div class="skeleton"></div>
   </div>
-  <div id="status" class="status"></div>
 
   <div style="position: fixed; bottom: 0; width: 100%; z-index: 9999;">
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
@@ -135,19 +131,37 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const container   = document.getElementById("cardsContainer");
+    const container = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
 
     const CACHE_KEY = "boutiquesCache";
+    const CACHE_TIMESTAMP_KEY = "boutiquesCacheTimestamp";
+    const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+    // Save cache with timestamp
     function saveCache(data) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    }
-    function loadCache() {
-      const raw = localStorage.getItem(CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
     }
 
+    // Load cache and check if it's still valid
+    function loadCache() {
+      const raw = localStorage.getItem(CACHE_KEY);
+      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+      if (raw && timestamp) {
+        const age = Date.now() - parseInt(timestamp, 10);
+        if (age < CACHE_EXPIRY) {
+          return JSON.parse(raw);
+        } else {
+          // Cache expired, clear it
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+        }
+      }
+      return null;
+    }
+
+    // Render boutiques to the container
     function renderBoutiques(list) {
       container.innerHTML = "";
       if (!list || list.length === 0) {
@@ -157,7 +171,8 @@
       list.forEach((b) => {
         const card = document.createElement("div");
         card.className = "card";
-        card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage || ""}')`;
+        // Use cached base64 image if available, fallback to URL
+        card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage || "path/to/fallback.jpg"}')`;
         card.setAttribute("data-name", b.name?.toLowerCase() || "");
 
         card.innerHTML = `
@@ -179,9 +194,11 @@
       });
     }
 
+    // Convert image URL to base64
     async function toBase64(url) {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: "force-cache" }); // Use browser cache for images
+        if (!res.ok) throw new Error("Image fetch failed");
         const blob = await res.blob();
         return await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -190,48 +207,74 @@
           reader.readAsDataURL(blob);
         });
       } catch {
-        return url; // fallback to normal URL
+        return url; // Fallback to original URL if conversion fails
       }
     }
 
+    // Fetch boutiques from Firestore
     async function fetchBoutiques() {
-      const snap = await getDocs(collection(db, "Boutiques"));
-      const list = [];
-      for (const doc of snap.docs) {
-        const data = doc.data();
-        let cachedImage = null;
-        if (data.backgroundImage) {
-          cachedImage = await toBase64(data.backgroundImage);
+      try {
+        const snap = await getDocs(collection(db, "Boutiques"));
+        const list = [];
+        for (const doc of snap.docs) {
+          const data = doc.data();
+          let cachedImage = null;
+          if (data.backgroundImage) {
+            cachedImage = await toBase64(data.backgroundImage);
+          }
+          list.push({ id: doc.id, ...data, cachedImage });
         }
-        list.push({ id: doc.id, ...data, cachedImage });
+        return list;
+      } catch (err) {
+        console.error("Failed to fetch boutiques:", err);
+        throw err;
       }
-      return list;
     }
 
+    // Load boutiques with caching
     async function loadBoutiques() {
+      // Immediately render cached data if available
       const cached = loadCache();
-      if (cached) renderBoutiques(cached);
+      if (cached) {
+        renderBoutiques(cached);
+      } else {
+        // Show skeletons if no cache
+        container.innerHTML = `
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        `;
+      }
 
       try {
         const fresh = await fetchBoutiques();
-        renderBoutiques(fresh);
-        saveCache(fresh);
+        if (fresh.length > 0) {
+          renderBoutiques(fresh); // Update with fresh data
+          saveCache(fresh); // Save to cache
+        } else if (!cached) {
+          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>No boutiques available.</p>";
+        }
       } catch (err) {
-        console.error("Failed to fetch boutiques:", err);
         if (!cached) {
           container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
         }
       }
     }
 
+    // Search functionality with debounce
+    let timeout;
     searchInput.addEventListener("input", () => {
-      const q = searchInput.value.toLowerCase();
-      Array.from(container.children).forEach(card => {
-        const name = card.getAttribute("data-name") || "";
-        card.style.display = name.includes(q) ? "flex" : "none";
-      });
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const q = searchInput.value.toLowerCase();
+        Array.from(container.children).forEach(card => {
+          const name = card.getAttribute("data-name") || "";
+          card.style.display = name.includes(q) ? "flex" : "none";
+        });
+      }, 300);
     });
 
+    // Load boutiques on page load
     window.addEventListener("DOMContentLoaded", loadBoutiques);
   </script>
 </body>
