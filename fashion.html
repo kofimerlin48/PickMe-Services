@@ -61,7 +61,7 @@
       position: relative; border-radius: 15px; overflow: hidden;
       box-shadow: 0 3px 8px rgba(0,0,0,0.1); background-size: cover;
       background-position: center; height: 250px; display: flex;
-      align-items: flex-end; transition: transform 0.2s;
+      align-items: flex-end; transition: transform 0.2s, background-image 0.3s ease-in-out;
     }
     .card:hover { transform: translateY(-5px); }
     .card::before {
@@ -82,16 +82,6 @@
     .btn-order:hover,
     .btn-order:focus,
     .btn-order:active { transform: scale(1.05); outline: none !important; }
-
-    .skeleton {
-      background: #ddd; border-radius: 15px; height: 250px; width: 100%;
-      max-width: 300px; margin: 0 auto; animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { background-color: #eee; }
-      50% { background-color: #ddd; }
-      100% { background-color: #eee; }
-    }
   </style>
 </head>
 <body>
@@ -104,11 +94,7 @@
     <input type="text" id="searchInput" placeholder="Search boutiques...">
   </div>
 
-  <div class="cards-container" id="cardsContainer">
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-  </div>
+  <div class="cards-container" id="cardsContainer"></div>
 
   <div style="position: fixed; bottom: 0; width: 100%; z-index: 9999;">
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
@@ -137,18 +123,21 @@
     const CACHE_KEY = "boutiquesCache";
     const CACHE_TIMESTAMP_KEY = "boutiquesCacheTimestamp";
     const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const MAX_CACHED_ITEMS = 10; // Limit cache to 10 boutiques
 
     // Save cache with timestamp
     function saveCache(data) {
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        const limitedData = data.slice(0, MAX_CACHED_ITEMS);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(limitedData));
         localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+        console.log(`Cached ${limitedData.length} boutiques`);
       } catch (err) {
         console.error('Failed to save cache:', err);
       }
     }
 
-    // Load cache and check if it's still valid
+    // Load cache
     function loadCache() {
       try {
         const raw = localStorage.getItem(CACHE_KEY);
@@ -158,7 +147,6 @@
           if (age < CACHE_EXPIRY) {
             return JSON.parse(raw);
           } else {
-            // Cache expired, clear it
             localStorage.removeItem(CACHE_KEY);
             localStorage.removeItem(CACHE_TIMESTAMP_KEY);
           }
@@ -169,77 +157,162 @@
       return null;
     }
 
-    // Preload image to ensure it's ready for rendering
+    // Preload image
     function preloadImage(src) {
       return new Promise((resolve) => {
         const img = new Image();
         img.src = src;
         img.onload = () => resolve(src);
-        img.onerror = () => resolve(src); // Resolve even on error to avoid blocking
+        img.onerror = () => resolve(src);
       });
     }
 
-    // Render boutiques incrementally to avoid blocking
-    async function renderBoutiques(list) {
-      container.innerHTML = "";
+    // Compress image to 300x300px, JPEG quality 0.7
+    async function compressImage(url) {
+      try {
+        const res = await fetch(url, { cache: "force-cache" });
+        if (!res.ok) throw new Error("Image fetch failed");
+        const blob = await res.blob();
+        const img = new Image();
+        await new Promise((resolve) => {
+          img.src = URL.createObjectURL(blob);
+          img.onload = resolve;
+        });
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const maxSize = 300; // Target size
+        let width = img.width;
+        let height = img.height;
+
+        // Resize proportionally
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.7); // JPEG, 70% quality
+        URL.revokeObjectURL(img.src);
+        return compressed;
+      } catch (err) {
+        console.warn(`Failed to compress image: ${url}`, err);
+        return url;
+      }
+    }
+
+    // Create a single card element
+    function createCard(b) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.id = `card-${b.id}`;
+      const imageSrc = b.cachedImage || b.backgroundImage || "path/to/fallback.jpg";
+      card.style.backgroundImage = `url('${imageSrc}')`;
+      card.setAttribute("data-name", b.name?.toLowerCase() || "");
+
+      card.innerHTML = `
+        <div class="card-content">
+          <div>
+            <div class="card-title">${b.name || ""}</div>
+            <div class="card-description">${b.slogan || ""}</div>
+          </div>
+          <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
+        </div>
+      `;
+
+      const btn = card.querySelector(".btn-order");
+      btn.onclick = () => {
+        window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
+      };
+
+      return card;
+    }
+
+    // Render initial boutiques instantly
+    async function renderInitialBoutiques(list) {
       if (!list || list.length === 0) {
         container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
         return;
       }
 
-      // Preload all images before rendering
+      // Preload images
       const imagePromises = list.map(b => preloadImage(b.cachedImage || b.backgroundImage || "path/to/fallback.jpg"));
       await Promise.all(imagePromises);
 
-      // Render cards one at a time with a slight delay to avoid blocking
-      for (let i = 0; i < list.length; i++) {
-        const b = list[i];
-        const card = document.createElement("div");
-        card.className = "card";
-        const imageSrc = b.cachedImage || b.backgroundImage || "path/to/fallback.jpg";
-        card.style.backgroundImage = `url('${imageSrc}')`;
-        card.setAttribute("data-name", b.name?.toLowerCase() || "");
+      // Sort list by id
+      list.sort((a, b) => a.id.localeCompare(b.id));
 
-        card.innerHTML = `
-          <div class="card-content">
-            <div>
-              <div class="card-title">${b.name || ""}</div>
-              <div class="card-description">${b.slogan || ""}</div>
-            </div>
-            <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
-          </div>
-        `;
-
-        const btn = card.querySelector(".btn-order");
-        btn.onclick = () => {
-          window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
-        };
-
+      container.innerHTML = "";
+      list.forEach(b => {
+        const card = createCard(b);
         container.appendChild(card);
-
-        // Yield to browser to prevent blocking
-        if (i % 5 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 0));
-        }
-      }
+      });
     }
 
-    // Convert image URL to base64
-    async function toBase64(url) {
-      try {
-        const res = await fetch(url, { cache: "force-cache" });
-        if (!res.ok) throw new Error("Image fetch failed");
-        const blob = await res.blob();
-        return await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
+    // Update cards in-place
+    async function updateBoutiquesWithFresh(freshList) {
+      if (!freshList || freshList.length === 0) return;
+
+      // Preload new images
+      const imagePromises = freshList.map(b => preloadImage(b.cachedImage || b.backgroundImage || "path/to/fallback.jpg"));
+      await Promise.all(imagePromises);
+
+      // Sort fresh list
+      freshList.sort((a, b) => a.id.localeCompare(b.id));
+
+      // Create a map of fresh data
+      const freshMap = new Map(freshList.map(b => [b.id, b]));
+
+      // Update or remove existing cards
+      Array.from(container.children).forEach(card => {
+        const id = card.id.replace('card-', '');
+        const freshB = freshMap.get(id);
+        if (freshB) {
+          // Update card properties smoothly
+          const imageSrc = freshB.cachedImage || freshB.backgroundImage || "path/to/fallback.jpg";
+          if (card.style.backgroundImage !== `url("${imageSrc}")`) {
+            card.style.backgroundImage = `url('${imageSrc}')`;
+          }
+          const title = card.querySelector(".card-title");
+          if (title.textContent !== (freshB.name || "")) {
+            title.textContent = freshB.name || "";
+          }
+          const description = card.querySelector(".card-description");
+          if (description.textContent !== (freshB.slogan || "")) {
+            description.textContent = freshB.slogan || "";
+          }
+          const button = card.querySelector(".btn-order");
+          if (button.style.backgroundColor !== (freshB.themeColor || "#c12872")) {
+            button.style.backgroundColor = freshB.themeColor || "#c12872";
+          }
+          card.setAttribute("data-name", freshB.name?.toLowerCase() || "");
+          freshMap.delete(id);
+        } else {
+          // Fade out removed card
+          card.style.opacity = '0';
+          setTimeout(() => card.remove(), 300);
+        }
+      });
+
+      // Add new cards
+      freshMap.forEach(b => {
+        const card = createCard(b);
+        card.style.opacity = '0';
+        container.appendChild(card);
+        requestAnimationFrame(() => {
+          card.style.transition = 'opacity 0.3s ease-in-out';
+          card.style.opacity = '1';
         });
-      } catch (err) {
-        console.warn(`Failed to convert image to base64: ${url}`, err);
-        return url; // Fallback to original URL
-      }
+      });
     }
 
     // Fetch boutiques from Firestore
@@ -251,8 +324,8 @@
           const data = doc.data();
           let cachedImage = null;
           if (data.backgroundImage) {
-            cachedImage = await toBase64(data.backgroundImage);
-            console.log(`Cached image for ${data.name}: ${cachedImage.slice(0, 30)}...`); // Debug log
+            cachedImage = await compressImage(data.backgroundImage);
+            console.log(`Compressed image for ${data.name}: ${cachedImage.slice(0, 30)}...`);
           }
           list.push({ id: doc.id, ...data, cachedImage });
         }
@@ -265,31 +338,31 @@
 
     // Load boutiques with caching
     async function loadBoutiques() {
-      // Immediately render cached data if available
       const cached = loadCache();
-      if (cached) {
-        console.log('Rendering from cache:', cached.length, 'boutiques');
-        await renderBoutiques(cached);
-      } else {
-        // Show skeletons if no cache
-        container.innerHTML = `
-          <div class="skeleton"></div>
-          <div class="skeleton"></div>
-          <div class="skeleton"></div>
-        `;
-      }
+      const isFirstLoad = !cached;
 
+      if (!isFirstLoad) {
+        // Render cached data instantly
+        console.log('Rendering from cache:', cached.length, 'boutiques');
+        await renderInitialBoutiques(cached);
+      } // First load: Show nothing until Firebase data arrives
+
+      // Fetch fresh data
       try {
         const fresh = await fetchBoutiques();
         if (fresh.length > 0) {
-          console.log('Rendering fresh data:', fresh.length, 'boutiques');
-          await renderBoutiques(fresh); // Update with fresh data
-          saveCache(fresh); // Save to cache
-        } else if (!cached) {
-          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>No boutiques available.</p>";
+          console.log('Fetched fresh data:', fresh.length, 'boutiques');
+          if (isFirstLoad) {
+            await renderInitialBoutiques(fresh); // First load: Render fresh
+          } else {
+            await updateBoutiquesWithFresh(fresh); // Subsequent: Update in-place
+          }
+          saveCache(fresh);
+        } else if (isFirstLoad) {
+          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available.</p>";
         }
       } catch (err) {
-        if (!cached) {
+        if (isFirstLoad) {
           container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
         }
       }
