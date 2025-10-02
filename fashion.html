@@ -14,8 +14,9 @@
     if (!response.ok) throw new Error('Failed to load header');
     let html = await response.text();
 
-    const pageTitle = "Fashion"; 
-    html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+    const pageTitle = "Fashion";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
 
     document.getElementById('header-placeholder').innerHTML = html;
 
@@ -105,7 +106,6 @@
   </div>
 
   <div class="cards-container" id="cardsContainer">
-    <!-- Skeletons only for first load -->
     <div class="skeleton"></div>
     <div class="skeleton"></div>
     <div class="skeleton"></div>
@@ -149,53 +149,17 @@
       return raw ? JSON.parse(raw) : null;
     }
 
-    // ---- New helper to cache background images ----
-    async function getCachedImage(url) {
-      if (!url) return "";
-      const key = "img_" + url;
-      const cached = localStorage.getItem(key);
-      if (cached) return cached;
-      try {
-        const resp = await fetch(url);
-        const blob = await resp.blob();
-        return await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            try { localStorage.setItem(key, reader.result); } catch {}
-            resolve(reader.result);
-          };
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        return url;
-      }
-    }
-
-    async function renderBoutiques(list) {
+    function renderBoutiques(list) {
       container.innerHTML = "";
       if (!list || list.length === 0) {
         container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
         return;
       }
-
-      for (const b of list) {
+      list.forEach((b) => {
         const card = document.createElement("div");
         card.className = "card";
+        card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage || ""}')`;
         card.setAttribute("data-name", b.name?.toLowerCase() || "");
-
-        // Background image caching
-        if (b.backgroundImage) {
-          const cached = localStorage.getItem("img_" + b.backgroundImage);
-          if (cached) {
-            card.style.backgroundImage = `url('${cached}')`;
-          } else {
-            card.style.backgroundImage = `url('${b.backgroundImage}')`;
-          }
-          // Refresh cache in background
-          getCachedImage(b.backgroundImage).then(img => {
-            if (img) card.style.backgroundImage = `url('${img}')`;
-          });
-        }
 
         card.innerHTML = `
           <div class="card-content">
@@ -213,15 +177,36 @@
         };
 
         container.appendChild(card);
+      });
+    }
+
+    async function fetchAndCacheImage(url) {
+      if (!url) return "";
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        return url; // fallback to direct URL if conversion fails
       }
     }
 
     async function fetchBoutiques() {
       const snap = await getDocs(collection(db, "Boutiques"));
       const list = [];
-      snap.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() });
-      });
+      for (const doc of snap.docs) {
+        const data = doc.data();
+        let cachedImage = "";
+        if (data.backgroundImage) {
+          cachedImage = await fetchAndCacheImage(data.backgroundImage);
+        }
+        list.push({ id: doc.id, ...data, cachedImage });
+      }
       list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       return list;
     }
@@ -229,7 +214,7 @@
     async function loadBoutiques() {
       const cached = loadCache();
       if (cached) {
-        renderBoutiques(cached); 
+        renderBoutiques(cached);
       }
 
       try {
