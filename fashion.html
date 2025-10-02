@@ -13,22 +13,17 @@
     const response = await fetch('header.html');
     if (!response.ok) throw new Error('Failed to load header');
     let html = await response.text();
-
     const pageTitle = "Fashion";
-    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i, 
       `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-
     document.getElementById('header-placeholder').innerHTML = html;
-
     document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
       const newScript = document.createElement('script');
       if (oldScript.src) newScript.src = oldScript.src;
       else newScript.textContent = oldScript.textContent;
       document.body.appendChild(newScript);
     });
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) { console.error(err); }
 })();
 </script>
 <!-- =========HEADER CODE ENDS HERE ================== -->
@@ -90,9 +85,6 @@
       50% { background-color: #ddd; }
       100% { background-color: #eee; }
     }
-
-    .status { text-align: center; color: #b00; font-size: 14px; margin-top: 6px; display: none; }
-    .status.show { display: block; }
   </style>
 </head>
 <body>
@@ -110,7 +102,6 @@
     <div class="skeleton"></div>
     <div class="skeleton"></div>
   </div>
-  <div id="status" class="status"></div>
 
   <div style="position: fixed; bottom: 0; width: 100%; z-index: 9999;">
     <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
@@ -125,7 +116,7 @@
       apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
       authDomain: "pickmeservicesonline.firebaseapp.com",
       projectId: "pickmeservicesonline",
-      storageBucket: "pickmeservicesonline.firebasestorage.app",
+      storageBucket: "pickmeservicesonline.appspot.com",
       messagingSenderId: "265031616239",
       appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
     };
@@ -133,10 +124,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const container   = document.getElementById("cardsContainer");
+    const container = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
 
-    const CACHE_KEY = "boutiquesCache";
+    const CACHE_KEY = "boutiquesCacheBase64";
     const CACHE_TIME_KEY = "boutiquesCacheTime";
     const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -149,18 +140,24 @@
       return raw ? JSON.parse(raw) : null;
     }
 
+    async function urlToBase64(url) {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
     function renderBoutiques(list) {
       container.innerHTML = "";
-      if (!list || list.length === 0) {
-        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
-        return;
-      }
-      list.forEach((b) => {
+      list.forEach(b => {
         const card = document.createElement("div");
         card.className = "card";
         card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage || ""}')`;
         card.setAttribute("data-name", b.name?.toLowerCase() || "");
-
         card.innerHTML = `
           <div class="card-content">
             <div>
@@ -168,32 +165,12 @@
               <div class="card-description">${b.slogan || ""}</div>
             </div>
             <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
-          </div>
-        `;
-
-        const btn = card.querySelector(".btn-order");
-        btn.onclick = () => {
+          </div>`;
+        card.querySelector(".btn-order").onclick = () => {
           window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
         };
-
         container.appendChild(card);
       });
-    }
-
-    async function fetchAndCacheImage(url) {
-      if (!url) return "";
-      try {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        return await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        return url; // fallback to direct URL if conversion fails
-      }
     }
 
     async function fetchBoutiques() {
@@ -203,7 +180,7 @@
         const data = doc.data();
         let cachedImage = "";
         if (data.backgroundImage) {
-          cachedImage = await fetchAndCacheImage(data.backgroundImage);
+          try { cachedImage = await urlToBase64(data.backgroundImage); } catch {}
         }
         list.push({ id: doc.id, ...data, cachedImage });
       }
@@ -213,21 +190,14 @@
 
     async function loadBoutiques() {
       const cached = loadCache();
-      if (cached) {
-        renderBoutiques(cached);
-      }
-
+      if (cached) renderBoutiques(cached);
       try {
         const fresh = await fetchBoutiques();
-        if (!cached || JSON.stringify(fresh) !== JSON.stringify(cached)) {
-          renderBoutiques(fresh);
-          saveCache(fresh);
-        }
+        renderBoutiques(fresh);
+        saveCache(fresh);
       } catch (err) {
-        console.error("Failed to fetch boutiques:", err);
-        if (!cached) {
-          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
-        }
+        console.error("Fetch failed:", err);
+        if (!cached) container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
       }
     }
 
