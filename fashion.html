@@ -29,7 +29,7 @@
           document.body.appendChild(newScript);
         });
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load header:', err);
       }
     })();
   </script>
@@ -140,39 +140,64 @@
 
     // Save cache with timestamp
     function saveCache(data) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+      } catch (err) {
+        console.error('Failed to save cache:', err);
+      }
     }
 
     // Load cache and check if it's still valid
     function loadCache() {
-      const raw = localStorage.getItem(CACHE_KEY);
-      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-      if (raw && timestamp) {
-        const age = Date.now() - parseInt(timestamp, 10);
-        if (age < CACHE_EXPIRY) {
-          return JSON.parse(raw);
-        } else {
-          // Cache expired, clear it
-          localStorage.removeItem(CACHE_KEY);
-          localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+        if (raw && timestamp) {
+          const age = Date.now() - parseInt(timestamp, 10);
+          if (age < CACHE_EXPIRY) {
+            return JSON.parse(raw);
+          } else {
+            // Cache expired, clear it
+            localStorage.removeItem(CACHE_KEY);
+            localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+          }
         }
+      } catch (err) {
+        console.error('Failed to load cache:', err);
       }
       return null;
     }
 
-    // Render boutiques to the container
-    function renderBoutiques(list) {
+    // Preload image to ensure it's ready for rendering
+    function preloadImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => resolve(src);
+        img.onerror = () => resolve(src); // Resolve even on error to avoid blocking
+      });
+    }
+
+    // Render boutiques incrementally to avoid blocking
+    async function renderBoutiques(list) {
       container.innerHTML = "";
       if (!list || list.length === 0) {
         container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
         return;
       }
-      list.forEach((b) => {
+
+      // Preload all images before rendering
+      const imagePromises = list.map(b => preloadImage(b.cachedImage || b.backgroundImage || "path/to/fallback.jpg"));
+      await Promise.all(imagePromises);
+
+      // Render cards one at a time with a slight delay to avoid blocking
+      for (let i = 0; i < list.length; i++) {
+        const b = list[i];
         const card = document.createElement("div");
         card.className = "card";
-        // Use cached base64 image if available, fallback to URL
-        card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage || "path/to/fallback.jpg"}')`;
+        const imageSrc = b.cachedImage || b.backgroundImage || "path/to/fallback.jpg";
+        card.style.backgroundImage = `url('${imageSrc}')`;
         card.setAttribute("data-name", b.name?.toLowerCase() || "");
 
         card.innerHTML = `
@@ -191,13 +216,18 @@
         };
 
         container.appendChild(card);
-      });
+
+        // Yield to browser to prevent blocking
+        if (i % 5 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
     }
 
     // Convert image URL to base64
     async function toBase64(url) {
       try {
-        const res = await fetch(url, { cache: "force-cache" }); // Use browser cache for images
+        const res = await fetch(url, { cache: "force-cache" });
         if (!res.ok) throw new Error("Image fetch failed");
         const blob = await res.blob();
         return await new Promise((resolve, reject) => {
@@ -206,8 +236,9 @@
           reader.onerror = reject;
           reader.readAsDataURL(blob);
         });
-      } catch {
-        return url; // Fallback to original URL if conversion fails
+      } catch (err) {
+        console.warn(`Failed to convert image to base64: ${url}`, err);
+        return url; // Fallback to original URL
       }
     }
 
@@ -221,6 +252,7 @@
           let cachedImage = null;
           if (data.backgroundImage) {
             cachedImage = await toBase64(data.backgroundImage);
+            console.log(`Cached image for ${data.name}: ${cachedImage.slice(0, 30)}...`); // Debug log
           }
           list.push({ id: doc.id, ...data, cachedImage });
         }
@@ -236,7 +268,8 @@
       // Immediately render cached data if available
       const cached = loadCache();
       if (cached) {
-        renderBoutiques(cached);
+        console.log('Rendering from cache:', cached.length, 'boutiques');
+        await renderBoutiques(cached);
       } else {
         // Show skeletons if no cache
         container.innerHTML = `
@@ -249,7 +282,8 @@
       try {
         const fresh = await fetchBoutiques();
         if (fresh.length > 0) {
-          renderBoutiques(fresh); // Update with fresh data
+          console.log('Rendering fresh data:', fresh.length, 'boutiques');
+          await renderBoutiques(fresh); // Update with fresh data
           saveCache(fresh); // Save to cache
         } else if (!cached) {
           container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>No boutiques available.</p>";
