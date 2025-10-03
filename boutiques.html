@@ -82,21 +82,18 @@
     const container = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
 
-    const CACHE_KEY = "boutiquesCacheV3";
-    const CACHE_TIME_KEY = "boutiquesCacheTimeV3";
-    const CACHE_TTL = 24*60*60*1000;
+    const CACHE_KEY = "boutiquesCacheBase64";
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-    function saveCache(list) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(list));
-      localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+    function saveCache(data) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data }));
     }
     function loadCache() {
       const raw = localStorage.getItem(CACHE_KEY);
-      const t = parseInt(localStorage.getItem(CACHE_TIME_KEY)||"0",10);
-      if(raw && Date.now()-t < CACHE_TTL) {
-        try { return JSON.parse(raw); } catch { return null; }
-      }
-      return null;
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.time > CACHE_TTL) return null;
+      return parsed.data;
     }
 
     async function toDataURL(url) {
@@ -108,7 +105,9 @@
           fr.onloadend = () => resolve(fr.result);
           fr.readAsDataURL(blob);
         });
-      } catch { return url; }
+      } catch {
+        return url;
+      }
     }
 
     function createCard(b) {
@@ -135,35 +134,42 @@
       list.forEach(b => container.appendChild(createCard(b)));
     }
 
-    async function fetchBoutiques() {
-      const snap = await getDocs(collection(db,"Boutiques"));
+    async function fetchAndUpdate() {
+      const snap = await getDocs(collection(db, "Boutiques"));
       const list = [];
-      for(const doc of snap.docs) {
+      for (const doc of snap.docs) {
         const d = doc.data();
-        let cachedImage = null;
-        if(d.backgroundImage) cachedImage = await toDataURL(d.backgroundImage);
-        list.push({ id:doc.id, ...d, cachedImage });
+        let cachedImage = d.backgroundImage;
+        // Convert to base64 in background
+        if (d.backgroundImage) {
+          toDataURL(d.backgroundImage).then(base64 => {
+            d.cachedImage = base64;
+            // Save updated cache silently
+            const current = loadCache() || [];
+            const updated = current.map(x => x.id === doc.id ? { ...x, cachedImage: base64 } : x);
+            saveCache(updated);
+          });
+        }
+        list.push({ id: doc.id, ...d, cachedImage });
       }
-      return list;
+      saveCache(list);
+      renderBoutiques(list);
     }
 
     async function loadBoutiques() {
       const cached = loadCache();
-      if(cached) { renderBoutiques(cached); }
-      try {
-        const fresh = await fetchBoutiques();
-        renderBoutiques(fresh);
-        saveCache(fresh);
-      } catch(e) {
-        if(!cached) container.innerHTML="<p style='color:#b00;text-align:center;'>Failed to load boutiques.</p>";
+      if (cached) {
+        renderBoutiques(cached); // show instantly
       }
+      // always fetch fresh in background
+      fetchAndUpdate().catch(err => console.error("Fetch failed:", err));
     }
 
-    searchInput.addEventListener("input",()=>{
-      const q=searchInput.value.toLowerCase();
-      Array.from(container.children).forEach(card=>{
-        const n=card.getAttribute("data-name")||"";
-        card.style.display = n.includes(q)?"flex":"none";
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      Array.from(container.children).forEach(card => {
+        const n = card.getAttribute("data-name") || "";
+        card.style.display = n.includes(q) ? "flex" : "none";
       });
     });
 
