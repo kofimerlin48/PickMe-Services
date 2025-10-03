@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,878 +7,874 @@
   <style>
     :root {
       --theme-color: #9e1850; /* Default, will be overridden by JS */
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    body {
-      background-color: #ffffff;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    .top-banner {
-      width: 100%;
-      height: 280px;
-      position: relative;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5));
-      background-size: cover;
-      background-position: center;
-      color: white;
-      text-align: center;
-      padding: 40px 20px 60px;
-      transition: transform 0.8s ease;
-      z-index: 1;
-      will-change: transform;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .top-banner h2 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
-    .top-banner h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-    .top-banner p { font-size: 14px; font-weight: 400; opacity: 0.9; }
-
-    .banner-buttons {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-    }
-
-    .contact-btn, .pay-btn {
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      min-width: 140px;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .contact-btn {
-      background-color: var(--theme-color);
-      color: white;
-      border: none;
-    }
-
-    .pay-btn {
-      background-color: white;
-      border: 2px solid var(--theme-color);
-      color: var(--theme-color);
-    }
-
-    .close-floating {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      width: 40px;
-      height: 40px;
-      background: var(--theme-color);
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      z-index: 100001;
-    }
-
-    .gallery-title {
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-      margin: 20px 0 10px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-      padding: 0 20px 120px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .gallery-item {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      background: white;
-      transition: transform 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .gallery-item:hover {
-      transform: scale(1.03);
-    }
-
-    .gallery-item img {
-      width: 100%;
-      height: auto;
-      cursor: pointer;
-      display: block;
-    }
-
-    .gallery-item .price {
-      font-weight: 600;
-      color: var(--theme-color);
-      margin: 8px 10px;
-      text-align: center;
-    }
-
-    .gallery-item .sizes {
-      font-size: 12px;
-      color: #666;
-      margin: 0 10px 8px;
-      text-align: center;
-    }
-
-    .gallery-item .add-to-cart {
-      background: var(--theme-color);
-      color: white;
-      border: none;
-      padding: 8px;
-      width: 100%;
-      cursor: pointer;
-      font-weight: 600;
-      border-top: 1px solid #ddd;
-      margin: 0;
-    }
-
-    .gallery-item .add-to-cart.added {
-      background: #333333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .preview-modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.85);
-      justify-content: center;
-      align-items: center;
-      touch-action: manipulation;
-      flex-direction: column;
-    }
-
-    .preview-modal img {
-      max-width: 90%;
-      max-height: 70vh;
-      border-radius: 10px;
-    }
-
-    .preview-modal .add-to-cart {
-      background: var(--theme-color);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-
-    .preview-modal .add-to-cart.added {
-      background: #333333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 40px;
-      color: white;
-      cursor: pointer;
-      user-select: none;
-      padding: 10px;
-    }
-    .arrow.left { left: 20px; }
-    .arrow.right { right: 20px; }
-
-    .close-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 22px;
-      color: white;
-      cursor: pointer;
-    }
-
-    .bottom-tabs {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
-      padding: 10px 0;
-      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-      overflow-x: auto;
-      white-space: nowrap;
-      z-index: 2;
-    }
-
-    .bottom-tabs .tab {
-      display: inline-block;
-      padding: 10px 20px;
-      font-size: 14px;
-      color: var(--theme-color);
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .bottom-tabs .tab.active {
-      border-bottom: 2px solid var(--theme-color);
-    }
-
-    .bottom-tabs::-webkit-scrollbar { display: none; }
-
-    .contact-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .contact-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .contact-card h3 {
-      margin-bottom: 8px;
-      font-size: 18px;
-      color: var(--theme-color);
-    }
-
-    .contact-card p {
-      font-size: 14px;
-      color: #333;
-      line-height: 1.4;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 16px;
-    }
-
-    .contact-ok, .contact-cancel {
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 110px;
-    }
-
-    .contact-ok {
-      background: var(--theme-color);
-      color: white;
-      border: none;
-    }
-
-    .contact-cancel {
-      background: #fff;
-      color: var(--theme-color);
-      border: 2px solid var(--theme-color);
-    }
-
-    .save-confirmation-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100001;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .save-confirmation-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .save-confirmation-card p {
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 500px) {
-      .contact-btn, .pay-btn { min-width: 120px; padding: 10px 18px; }
-    }
-
-    .hamburger {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      width: 40px;
-      height: 40px;
-      background: var(--theme-color);
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 100002;
-    }
-
-    .hamburger div {
-      width: 25px;
-      height: 3px;
-      background: white;
-      margin: 2px 0;
-    }
-
-    .pin-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .pin-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .pin-card h3 {
-      margin-bottom: 8px;
-      font-size: 18px;
-      color: var(--theme-color);
-    }
-
-    .pin-card input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid var(--theme-color);
-      border-radius: 10px;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    .menu-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .menu-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .menu-option {
-      padding: 12px;
-      margin: 10px 0;
-      background: white;
-      border: 2px solid var(--theme-color);
-      color: var(--theme-color);
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .categories-modal, .categories-manage-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .categories-card, .categories-manage-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-      overflow-y: auto;
-      max-height: 80vh;
-    }
-
-    .category-item {
-      background: white;
-      border: 2px solid var(--theme-color);
-      border-radius: 10px;
-      padding: 15px;
-      margin: 10px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      color: var(--theme-color);
-      font-weight: 600;
-    }
-
-    .category-item .category-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .category-item .category-action {
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .category-item .arrow {
-      font-size: 18px;
-    }
-
-    .item-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .item-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-      overflow-y: auto;
-      max-height: 80vh;
-    }
-
-    .item-upload {
-      margin-bottom: 20px;
-    }
-
-    .item-list .item {
-      position: relative;
-      margin: 10px 0;
-    }
-
-    .item img {
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    .item input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid var(--theme-color);
-      border-radius: 10px;
-    }
-
-    .item .delete-icon {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: var(--theme-color);
-      color: white;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .delete-all-btn {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      background-color: white;
-      color: var(--theme-color);
-      border: 2px solid var(--theme-color);
-      margin: 10px 0;
-    }
-
-    .save-btn {
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      background-color: var(--theme-color);
-      color: white;
-      border: none;
-      margin-top: 20px;
-    }
-
-    .save-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .no-items {
-      text-align: center;
-      color: gray;
-      font-size: 16px;
-      margin: 20px 0;
-    }
-
-    .cart-buttons {
-      position: fixed;
-      bottom: 60px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      padding: 10px;
-      background: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-      z-index: 3;
-      display: none;
-    }
-
-    .cart-buttons button {
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      min-width: 160px;
-      text-align: center;
-    }
-
-    #viewSelected {
-      background-color: white;
-      border: 2px solid var(--theme-color);
-      color: var(--theme-color);
-    }
-
-    #buySelected {
-      background-color: var(--theme-color);
-      color: white;
-      border: none;
-    }
-
-    .cart-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: white;
-      overflow-y: auto;
-    }
-
-    .cart-header {
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .cart-header h2 {
-      font-size: 20px;
-      color: var(--theme-color);
-    }
-
-    .cart-header p {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .cart-items {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-      padding: 20px;
-    }
-
-    .cart-item {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      background: white;
-      position: relative;
-    }
-
-    .cart-item img {
-      width: 100%;
-    }
-
-    .cart-item .price {
-      font-weight: 600;
-      color: var(--theme-color);
-      margin: 10px;
-      text-align: center;
-    }
-
-    .cart-item .sizes {
-      font-size: 12px;
-      color: #666;
-      margin: -5px 10px 10px;
-      text-align: center;
-    }
-
-    .cart-item .delete-cart {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: var(--theme-color);
-      color: white;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .cart-actions {
-      text-align: center;
-      margin: 10px 0;
-    }
-
-    .cart-actions .delete-all-btn {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 25px;
-      cursor: pointer;
-      background-color: white;
-      color: var(--theme-color);
-      border: 2px solid var(--theme-color);
-    }
-
-    .whatsapp-field {
-      padding: 20px 20px 60px;
-      text-align: center;
-    }
-
-    .whatsapp-field label {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 600;
-      color: var(--theme-color);
-    }
-
-    .whatsapp-field input {
-      width: 80%;
-      padding: 10px;
-      border: 1px solid var(--theme-color);
-      border-radius: 10px;
-      font-size: 16px;
-    }
-
-    .floating-buy {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 40px;
-      background: var(--theme-color);
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-      z-index: 100001;
-    }
-
-    .close-cart {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 22px;
-      color: var(--theme-color);
-      cursor: pointer;
-    }
-
-    .quick-buy-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: rgba(0,0,0,0.45);
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .quick-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .quick-card h3 {
-      margin-bottom: 8px;
-      font-size: 18px;
-      color: var(--theme-color);
-    }
-
-    .quick-card input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      border: 1px solid var(--theme-color);
-      border-radius: 10px;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    .slide-page {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: white;
-      z-index: 99999;
-      overflow-y: auto;
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .slider {
-      position: relative;
-      max-width: 80%;
-      margin: 0 auto;
-    }
-
-    .slide-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .slide-content img {
-      max-width: 100%;
-      max-height: 50vh;
-      border-radius: 12px;
-    }
-
-    .slide-info {
-      margin: 10px 0;
-    }
-
-    .slide-info p {
-      font-size: 16px;
-    }
-
-    .not-avail-btn {
-      background: white;
-      border: 2px solid var(--theme-color);
-      color: var(--theme-color);
-      padding: 10px 20px;
-      border-radius: 25px;
-      cursor: pointer;
-      margin-top: 20px;
-      font-weight: 600;
-    }
-
-    .done-btn, .ok-btn {
-      padding: 12px 40px;
-      background: var(--theme-color);
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 40px;
-    }
-
-    .dimmed {
-      opacity: 0.7;
-      filter: grayscale(100%);
-    }
-
-    .error-message {
-      text-align: center;
-      color: #b00;
-      padding: 20px;
-      font-size: 16px;
-    }
-  </style>
-</head>
+    }* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  background-color: #ffffff;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.top-banner {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5));
+  background-size: cover;
+  background-position: center;
+  color: white;
+  text-align: center;
+  padding: 40px 20px 60px;
+  transition: transform 0.8s ease;
+  z-index: 1;
+  will-change: transform;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.top-banner h2 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
+.top-banner h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.top-banner p { font-size: 14px; font-weight: 400; opacity: 0.9; }
+
+.banner-buttons {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.contact-btn, .pay-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  min-width: 140px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.contact-btn {
+  background-color: var(--theme-color);
+  color: white;
+  border: none;
+}
+
+.pay-btn {
+  background-color: white;
+  border: 2px solid var(--theme-color);
+  color: var(--theme-color);
+}
+
+.close-floating {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: var(--theme-color);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 100001;
+}
+
+.gallery-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 0 20px 120px;
+  position: relative;
+  z-index: 2;
+}
+
+.gallery-item {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: white;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.gallery-item:hover {
+  transform: scale(1.03);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  display: block;
+}
+
+.gallery-item .price {
+  font-weight: 600;
+  color: var(--theme-color);
+  margin: 8px 10px;
+  text-align: center;
+}
+
+.gallery-item .sizes {
+  font-size: 12px;
+  color: #666;
+  margin: 0 10px 8px;
+  text-align: center;
+}
+
+.gallery-item .add-to-cart {
+  background: var(--theme-color);
+  color: white;
+  border: none;
+  padding: 8px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 600;
+  border-top: 1px solid #ddd;
+  margin: 0;
+}
+
+.gallery-item .add-to-cart.added {
+  background: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.preview-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  justify-content: center;
+  align-items: center;
+  touch-action: manipulation;
+  flex-direction: column;
+}
+
+.preview-modal img {
+  max-width: 90%;
+  max-height: 70vh;
+  border-radius: 10px;
+}
+
+.preview-modal .add-to-cart {
+  background: var(--theme-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 15px;
+}
+
+.preview-modal .add-to-cart.added {
+  background: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px;
+}
+.arrow.left { left: 20px; }
+.arrow.right { right: 20px; }
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 22px;
+  color: white;
+  cursor: pointer;
+}
+
+.bottom-tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 10px 0;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.bottom-tabs .tab {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--theme-color);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bottom-tabs .tab.active {
+  border-bottom: 2px solid var(--theme-color);
+}
+
+.bottom-tabs::-webkit-scrollbar { display: none; }
+
+.contact-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.contact-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.contact-card h3 {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: var(--theme-color);
+}
+
+.contact-card p {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.contact-ok, .contact-cancel {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.contact-ok {
+  background: var(--theme-color);
+  color: white;
+  border: none;
+}
+
+.contact-cancel {
+  background: #fff;
+  color: var(--theme-color);
+  border: 2px solid var(--theme-color);
+}
+
+.save-confirmation-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.save-confirmation-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.save-confirmation-card p {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 500px) {
+  .contact-btn, .pay-btn { min-width: 120px; padding: 10px 18px; }
+}
+
+.hamburger {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 40px;
+  height: 40px;
+  background: var(--theme-color);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 100002;
+}
+
+.hamburger div {
+  width: 25px;
+  height: 3px;
+  background: white;
+  margin: 2px 0;
+}
+
+.pin-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.pin-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.pin-card h3 {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: var(--theme-color);
+}
+
+.pin-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 16px;
+  border: 1px solid var(--theme-color);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.menu-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.menu-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.menu-option {
+  padding: 12px;
+  margin: 10px 0;
+  background: white;
+  border: 2px solid var(--theme-color);
+  color: var(--theme-color);
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.categories-modal, .categories-manage-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.categories-card, .categories-manage-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.category-item {
+  background: white;
+  border: 2px solid var(--theme-color);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  color: var(--theme-color);
+  font-weight: 600;
+}
+
+.category-item .category-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.category-item .category-action {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.category-item .arrow {
+  font-size: 18px;
+}
+
+.item-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.item-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.item-upload {
+  margin-bottom: 20px;
+}
+
+.item-list .item {
+  position: relative;
+  margin: 10px 0;
+}
+
+.item img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.item input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid var(--theme-color);
+  border-radius: 10px;
+}
+
+.item .delete-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--theme-color);
+  color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.delete-all-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  background-color: white;
+  color: var(--theme-color);
+  border: 2px solid var(--theme-color);
+  margin: 10px 0;
+}
+
+.save-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  background-color: var(--theme-color);
+  color: white;
+  border: none;
+  margin-top: 20px;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-items {
+  text-align: center;
+  color: gray;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+.cart-buttons {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+  background: white;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+  z-index: 3;
+  display: none;
+}
+
+.cart-buttons button {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  min-width: 160px;
+  text-align: center;
+}
+
+#viewSelected {
+  background-color: white;
+  border: 2px solid var(--theme-color);
+  color: var(--theme-color);
+}
+
+#buySelected {
+  background-color: var(--theme-color);
+  color: white;
+  border: none;
+}
+
+.cart-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: white;
+  overflow-y: auto;
+}
+
+.cart-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.cart-header h2 {
+  font-size: 20px;
+  color: var(--theme-color);
+}
+
+.cart-header p {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cart-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.cart-item {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: white;
+  position: relative;
+}
+
+.cart-item img {
+  width: 100%;
+}
+
+.cart-item .price {
+  font-weight: 600;
+  color: var(--theme-color);
+  margin: 10px;
+  text-align: center;
+}
+
+.cart-item .sizes {
+  font-size: 12px;
+  color: #666;
+  margin: -5px 10px 10px;
+  text-align: center;
+}
+
+.cart-item .delete-cart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--theme-color);
+  color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cart-actions {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.cart-actions .delete-all-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  background-color: white;
+  color: var(--theme-color);
+  border: 2px solid var(--theme-color);
+}
+
+.whatsapp-field {
+  padding: 20px 20px 60px;
+  text-align: center;
+}
+
+.whatsapp-field label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--theme-color);
+}
+
+.whatsapp-field input {
+  width: 80%;
+  padding: 10px;
+  border: 1px solid var(--theme-color);
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.floating-buy {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 40px;
+  background: var(--theme-color);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 100001;
+}
+
+.close-cart {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 22px;
+  color: var(--theme-color);
+  cursor: pointer;
+}
+
+.quick-buy-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.quick-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.quick-card h3 {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: var(--theme-color);
+}
+
+.quick-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 16px;
+  border: 1px solid var(--theme-color);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.slide-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 99999;
+  overflow-y: auto;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.slider {
+  position: relative;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.slide-content img {
+  max-width: 100%;
+  max-height: 50vh;
+  border-radius: 12px;
+}
+
+.slide-info {
+  margin: 10px 0;
+}
+
+.slide-info p {
+  font-size: 16px;
+}
+
+.not-avail-btn {
+  background: white;
+  border: 2px solid var(--theme-color);
+  color: var(--theme-color);
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-weight: 600;
+}
+
+.done-btn, .ok-btn {
+  padding: 12px 40px;
+  background: var(--theme-color);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 40px;
+}
+
+.dimmed {
+  opacity: 0.7;
+  filter: grayscale(100%);
+}
+
+.error-message {
+  text-align: center;
+  color: #b00;
+  padding: 20px;
+  font-size: 16px;
+}
+
+  </style>  <!-- Firebase compat SDKs (non-module so we don't disturb your existing script scope) -->  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script></head>
 <body>
   <div class="hamburger" id="hamburgerBtn">
     <div></div>
     <div></div>
     <div></div>
-  </div>
-
-  <div class="close-floating">×</div>
+  </div>  <div class="close-floating">×</div>
   <div class="top-banner" id="topBanner">
     <div>
       <h2>Welcome to</h2>
@@ -916,14 +911,10 @@
     <button class="add-to-cart" id="modalAddToCart" onclick="addToCartFromModal()">Add to Cart</button>
     <span class="arrow right" onclick="nextImage()">›</span>
   </div>
-  <div class="bottom-tabs" id="bottomTabs"></div>
-
-  <div class="cart-buttons" id="cartButtons">
+  <div class="bottom-tabs" id="bottomTabs"></div>  <div class="cart-buttons" id="cartButtons">
     <button id="viewSelected">Selected Items</button>
     <button id="buySelected">Buy Selected Items</button>
-  </div>
-
-  <div class="cart-modal" id="cartModal">
+  </div>  <div class="cart-modal" id="cartModal">
     <span class="close-cart" id="closeCart">×</span>
     <div class="cart-header">
       <h2>Selected Items</h2>
@@ -938,9 +929,7 @@
       <input type="tel" id="whatsappInput" placeholder="+233...">
     </div>
     <button class="floating-buy" id="buyNowBtn">Buy Now</button>
-  </div>
-
-  <div class="quick-buy-modal" id="quickBuyModal">
+  </div>  <div class="quick-buy-modal" id="quickBuyModal">
     <div class="quick-card">
       <h3>Enter WhatsApp Number</h3>
       <input type="tel" id="quickWhatsapp" placeholder="+233...">
@@ -949,19 +938,13 @@
         <button class="contact-cancel" id="quickBuyCancel">Cancel</button>
       </div>
     </div>
-  </div>
-
-  <div class="slide-page" id="slidePage"></div>
-
-  <div class="pin-modal" id="pinModal">
+  </div>  <div class="slide-page" id="slidePage"></div>  <div class="pin-modal" id="pinModal">
     <div class="pin-card">
       <h3>Enter PIN</h3>
       <input type="password" id="pinInput" maxlength="6" placeholder="6-digit PIN">
       <button class="contact-ok" id="pinOkBtn">OK</button>
     </div>
-  </div>
-
-  <div class="menu-modal" id="menuModal">
+  </div>  <div class="menu-modal" id="menuModal">
     <div class="menu-card">
       <h3>Options</h3>
       <div class="menu-option" id="addItemsBtn">Add Items</div>
@@ -969,25 +952,19 @@
       <div class="menu-option" id="editBoutiqueDetailsBtn">Edit Boutique Details</div>
       <button class="contact-cancel" onclick="menuModal.style.display = 'none';">Cancel</button>
     </div>
-  </div>
-
-  <div class="categories-modal" id="categoriesModal">
+  </div>  <div class="categories-modal" id="categoriesModal">
     <div class="categories-card">
       <h3 id="categoriesTitle"></h3>
       <div id="categoriesList"></div>
       <button class="contact-cancel" onclick="categoriesModal.style.display = 'none'; menuModal.style.display = 'flex';">Cancel</button>
     </div>
-  </div>
-
-  <div class="categories-manage-modal" id="categoriesManageModal">
+  </div>  <div class="categories-manage-modal" id="categoriesManageModal">
     <div class="categories-manage-card">
       <h3>Manage Categories</h3>
       <div id="categoriesManageList"></div>
       <button class="contact-cancel" onclick="categoriesManageModal.style.display = 'none'; boutiqueDetailsModal.style.display = 'flex';">Cancel</button>
     </div>
-  </div>
-
-  <div class="item-modal" id="itemModal">
+  </div>  <div class="item-modal" id="itemModal">
     <div class="item-card">
       <h3 id="itemTitle"></h3>
       <div class="item-upload" id="itemUploadSection" style="display: none;">
@@ -999,9 +976,7 @@
       <button class="save-btn" id="saveItemsBtn">Save</button>
       <button class="contact-cancel" onclick="itemModal.style.display = 'none'; categoriesModal.style.display = 'flex';">Cancel</button>
     </div>
-  </div>
-
-  <div class="item-modal" id="boutiqueDetailsModal">
+  </div>  <div class="item-modal" id="boutiqueDetailsModal">
     <div class="item-card">
       <h3>Edit Boutique Details</h3>
       <div class="item-list">
@@ -1027,9 +1002,7 @@
       <button class="save-btn" id="saveBoutiqueDetailsBtn" disabled>Save</button>
       <button class="contact-cancel" onclick="boutiqueDetailsModal.style.display = 'none'; menuModal.style.display = 'flex';">Cancel</button>
     </div>
-  </div>
-
-  <script>
+  </div>  <script>
     const modal = document.getElementById('previewModal');
     const modalImg = document.getElementById('modalImage');
     const modalAddToCart = document.getElementById('modalAddToCart');
@@ -1088,7 +1061,7 @@
     const manageCategoriesBtn = document.getElementById('manageCategoriesBtn');
 
     const closeFloating = document.querySelector('.close-floating');
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxlcg9DVb3R4KC_byjWLuhQvgXOitEdnc1onK11yhZIOln-M00ZlSWwryZHvPFsNhIZ/exec";
+    const WEB_APP_URL = ""; // deprecated; no longer used
     const urlParams = new URLSearchParams(window.location.search);
     const boutiqueId = urlParams.get('id');
 
@@ -1104,6 +1077,19 @@
     let tempItems = [];
     let isChanged = false;
     let navigationStack = ['fashion.html'];
+
+    // === Firebase init (compat) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7GXJKraVNfXSHG7RDoUDccD98u5JF7F8",
+      authDomain: "pickmeservicesonline.firebaseapp.com",
+      projectId: "pickmeservicesonline",
+      storageBucket: "pickmeservicesonline.firebasestorage.app",
+      messagingSenderId: "265031616239",
+      appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
     // Navigation handling for close button
     closeFloating.addEventListener('click', () => {
@@ -1137,296 +1123,207 @@
       }
     });
 
-    // Fetch boutique data using JSONP
-    function fetchBoutiqueData() {
-      return new Promise((resolve, reject) => {
-        const cbName = "__BOUTIQUE_JSONP_CB_" + Math.random().toString(36).slice(2);
-        const script = document.createElement("script");
-        const cleanup = () => { if (script.parentNode) script.remove(); delete window[cbName]; };
-        window[cbName] = (payload) => {
-          console.log("JSONP callback received:", payload);
-          cleanup();
-          resolve(payload);
-        };
-        script.onerror = () => {
-          console.error("JSONP script load error");
-          cleanup();
-          reject(new Error("Failed to load boutique data"));
-        };
-        script.src = `${WEB_APP_URL}?action=getBoutique&id=${encodeURIComponent(boutiqueId)}&callback=${cbName}&ts=${Date.now()}`;
-        document.head.appendChild(script);
-      });
+    // ===== Firestore: fetch boutique data =====
+    async function fetchBoutiqueData() {
+      const ref = db.collection('Boutiques').doc(boutiqueId);
+      const snap = await ref.get();
+      if (!snap.exists) throw new Error('Boutique not found');
+      const data = snap.data();
+      const mapped = {
+        name: data.name || 'Boutique Name',
+        slogan: data.slogan || 'Your fashion, your style',
+        whatsapp: data.whatsapp || '',
+        themeColor: data.themeColor || '#9e1850',
+        backgroundImage: data.backgroundImage || '',
+        pin: String(data.pin ?? ''),
+        categories: data.categories || {}
+      };
+      return mapped;
     }
 
-    // Save data to Google Sheet  
-async function saveToGoogleSheet() {
-  try {
-    // Validate required data
-    if (!boutiqueId || !boutiqueData || !shopData) {
-      console.error('Missing required data:', { boutiqueId, boutiqueData, shopData });
-      throw new Error('Missing boutique or shop data');
-    }
-
-    // Prepare payload with strict validation  
-const payload = {  
-  action: 'updateBoutique',   // 🔥 Add this line  
-  id: boutiqueId.toString().trim(),  
-  name: (boutiqueData.name || "Boutique Name").toString().trim(),  
-  slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),  
-  whatsapp: (boutiqueData.whatsapp || "").toString().trim(),  
-  themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),  
-  backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),  
-  pin: (boutiqueData.pin || "").toString().trim(),  
-  categories: shopData.categories.reduce((acc, cat) => {  
-    if (!cat.name || !Array.isArray(cat.items)) {  
-      console.warn('Invalid category:', cat);  
-      return acc;  
-    }  
-    return {  
-      ...acc,  
-      [cat.name.toLowerCase().trim()]: cat.items.map(item => ({  
-        src: (item.src || "").toString().trim(),  
-        price: (item.price || "").toString().trim(),  
-        sizes: (item.sizes || "").toString().trim()  
-      }))  
-    };  
-  }, {})  
-};
-
-    console.log('Sending payload to Google Sheet:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'cors',
-      credentials: 'omit'
-    });
-
-    const responseText = await response.text();
-    console.log('Server response:', responseText);
-
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse server response as JSON:', responseText);
-      throw new Error('Invalid server response format');
-    }
-
-    if (response.ok && responseData.status === 'success') {
-      console.log('Data saved to Google Sheet successfully');
-      // Update cache
-      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-        data: payload,
-        cacheTimestamp: Date.now()
-      }));
-      // Update cart with latest shop data
-      updateCartWithShopData();
-    } else {
-      throw new Error(responseData.error || `Server error: ${response.status}`);
-    }
-
-  } catch (error) {
-    console.error('Error saving to Google Sheet:', error.message);
-    alert('Failed to save changes to the server. Changes are saved locally. Please check the console for details.');
-    // Ensure local cache is updated
-    const payload = {
-      id: boutiqueId.toString().trim(),
-      name: (boutiqueData.name || "Boutique Name").toString().trim(),
-      slogan: (boutiqueData.slogan || "Your fashion, your style").toString().trim(),
-      whatsapp: (boutiqueData.whatsapp || "").toString().trim(),
-      themeColor: (boutiqueData.themeColor || "#9e1850").toString().trim(),
-      backgroundImage: (boutiqueData.backgroundImage || "").toString().trim(),
-      pin: (boutiqueData.pin || "").toString().trim(),
-      categories: shopData.categories.reduce((acc, cat) => {
-        if (!cat.name || !Array.isArray(cat.items)) return acc;
-        return {
-          ...acc,
-          [cat.name.toLowerCase().trim()]: cat.items.map(item => ({
-            src: (item.src || "").toString().trim(),
-            price: (item.price || "").toString().trim(),
-            sizes: (item.sizes || "").toString().trim()
-          }))
-        };
-      }, {})
-    };
-    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-      data: payload,
-      cacheTimestamp: Date.now()
-    }));
-  }
-}
-
-    // Simulate image upload (replace with actual server-side implementation)
-    async function uploadImage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
+    // Save to Firestore (replaces Apps Script)
+    async function saveToGoogleSheet() {
       try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'uploadImage',
-            fileName: file.name,
-            imageData: reader.result // full DataURL
-          })
-        });
-
-        const result = await response.json();
-        if (result.status === 'success' && result.url) {
-          resolve(result.url); // ✅ Drive URL
-        } else {
-          reject(new Error(result.error || 'Upload failed'));
-        }
-      } catch (err) {
-        reject(err);
+        if (!boutiqueId) throw new Error('No boutiqueId');
+        const payload = {
+          name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
+          slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
+          whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
+          themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
+          backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
+          pin: (boutiqueData?.pin || '').toString().trim(),
+          categories: (shopData?.categories || []).reduce((acc, cat) => {
+            if (!cat?.name) return acc;
+            acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
+              src: (item.src || '').toString().trim(),
+              price: (item.price || '').toString().trim(),
+              sizes: (item.sizes || '').toString().trim()
+            }));
+            return acc;
+          }, {})
+        };
+        await db.collection('Boutiques').doc(boutiqueId).set(payload, { merge: false });
+        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
+        updateCartWithShopData();
+      } catch (error) {
+        console.error('Error saving:', error);
+        alert('Failed to save changes online. Changes kept locally.');
+        const payload = {
+          id: String(boutiqueId),
+          name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
+          slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
+          whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
+          themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
+          backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
+          pin: (boutiqueData?.pin || '').toString().trim(),
+          categories: (shopData?.categories || []).reduce((acc, cat) => {
+            if (!cat?.name) return acc;
+            acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
+              src: (item.src || '').toString().trim(),
+              price: (item.price || '').toString().trim(),
+              sizes: (item.sizes || '').toString().trim()
+            }));
+            return acc;
+          }, {})
+        };
+        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
       }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file); // ✅ sends base64 with mime type
-  });
-}
+    }
 
-    // Initialize boutique data with caching
+    // Helper aliases (UI already calls these names)
+    function saveShopData() { return saveToGoogleSheet(); }
+    function saveBoutiqueData() { return saveToGoogleSheet(); }
+
+    // Upload image to Firebase Storage (replaces Apps Script upload)
+    async function uploadImage(fileOrDataURL) {
+      let blob; let ext = 'jpg';
+      if (fileOrDataURL instanceof File) {
+        blob = fileOrDataURL;
+        const n = fileOrDataURL.name || '';
+        const dot = n.lastIndexOf('.');
+        ext = dot > -1 ? n.slice(dot + 1) : 'jpg';
+      } else if (typeof fileOrDataURL === 'string' && fileOrDataURL.startsWith('data:')) {
+        const res = await fetch(fileOrDataURL);
+        blob = await res.blob();
+        const mime = blob.type || 'image/jpeg';
+        ext = (mime.split('/')[1] || 'jpg').split(';')[0];
+      } else {
+        throw new Error('Unsupported upload input');
+      }
+      const path = `Boutiques/${boutiqueId}/items/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const ref = storage.ref().child(path);
+      await ref.put(blob);
+      const url = await ref.getDownloadURL();
+      return url;
+    }
+
+    // Fetch boutique with cache-first
     async function loadBoutiqueData() {
       if (!boutiqueId) {
         gallery.innerHTML = '<p class="error-message">No boutique ID provided. <a href="fashion.html">Return to main page</a>.</p>';
         return;
       }
-
-      // Check cache
-      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`));
-const cacheDuration = 24 * 60 * 60 * 1000; // 24 hours
-const isRefresh = urlParams.get('refresh') === 'true';
-if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
-  console.log('Loading from cache');
-  boutiqueData = {
-    name: cached.data.name || "Boutique Name",
-    slogan: cached.data.slogan || "Your fashion, your style",
-    whatsapp: cached.data.whatsapp || "",
-    themeColor: cached.data.themeColor || "#9e1850",
-    backgroundImage: cached.data.backgroundImage || "",
-    pin: cached.data.pin || ""
-  };
-  shopData = {
-    categories: Object.keys(cached.data.categories || {}).map(name => ({
-      name: name.toLowerCase(),
-      items: (cached.data.categories[name] || []).map(item => ({
-        src: item.src || "https://via.placeholder.com/400x400?text=Item",
-        price: (item.price || "").toString().trim(),
-        sizes: (item.sizes || "").toString().trim()
-      }))
-    }))
-  };
-  applyBoutiqueData();
-  renderTabs();
-  updateCart();
-  if (isRefresh) {
-  // Fetch fresh data in the background
-  try {
-    const data = await fetchBoutiqueData();
-    if (data && !data.error) {
-      // Store the currently active tab before any updates
-      const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || "";
-      boutiqueData = {
-        name: data.name || "Boutique Name",
-        slogan: data.slogan || "Your fashion, your style",
-        whatsapp: data.whatsapp || "",
-        themeColor: data.themeColor || "#9e1850",
-        backgroundImage: data.backgroundImage || "",
-        pin: data.pin || ""
-      };
-      shopData = {
-        categories: Object.keys(data.categories || {}).map(name => ({
-          name: name.toLowerCase(),
-          items: (data.categories[name] || []).map(item => ({
-            src: item.src || "https://via.placeholder.com/400x400?text=Item",
-            price: (item.price || "").toString().trim(),
-            sizes: (item.sizes || "").toString().trim()
+      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+      const cacheDuration = 24 * 60 * 60 * 1000;
+      const isRefresh = urlParams.get('refresh') === 'true';
+      if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
+        boutiqueData = {
+          name: cached.data.name || 'Boutique Name',
+          slogan: cached.data.slogan || 'Your fashion, your style',
+          whatsapp: cached.data.whatsapp || '',
+          themeColor: cached.data.themeColor || '#9e1850',
+          backgroundImage: cached.data.backgroundImage || '',
+          pin: String(cached.data.pin ?? '')
+        };
+        shopData = {
+          categories: Object.keys(cached.data.categories || {}).map(name => ({
+            name: name.toLowerCase(),
+            items: (cached.data.categories[name] || []).map(item => ({
+              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+              price: String(item.price ?? '').trim(),
+              sizes: String(item.sizes ?? '').trim()
+            }))
           }))
-        }))
-      };
-      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-        data: { ...boutiqueData, categories: data.categories },
-        cacheTimestamp: Date.now()
-      }));
-      applyBoutiqueData();
-      // Update tabs while preserving the active tab
-      bottomTabs.innerHTML = ''; // Clear existing tabs
-      shopData.categories.forEach((cat) => {
-        const tab = document.createElement('div');
-        tab.classList.add('tab');
-        tab.dataset.category = cat.name;
-        tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
-        if (cat.name === activeTab) {
-          tab.classList.add('active');
+        };
+        applyBoutiqueData();
+        renderTabs();
+        updateCart();
+        if (isRefresh) {
+          try {
+            const data = await fetchBoutiqueData();
+            const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
+            boutiqueData = {
+              name: data.name,
+              slogan: data.slogan,
+              whatsapp: data.whatsapp,
+              themeColor: data.themeColor,
+              backgroundImage: data.backgroundImage,
+              pin: String(data.pin ?? '')
+            };
+            shopData = {
+              categories: Object.keys(data.categories || {}).map(name => ({
+                name: name.toLowerCase(),
+                items: (data.categories[name] || []).map(item => ({
+                  src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+                  price: String(item.price ?? '').trim(),
+                  sizes: String(item.sizes ?? '').trim()
+                }))
+              }))
+            };
+            localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: { ...boutiqueData, categories: data.categories }, cacheTimestamp: Date.now() }));
+            applyBoutiqueData();
+            bottomTabs.innerHTML = '';
+            shopData.categories.forEach(cat => {
+              const tab = document.createElement('div');
+              tab.classList.add('tab');
+              tab.dataset.category = cat.name;
+              tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
+              if (cat.name === activeTab) tab.classList.add('active');
+              tab.addEventListener('click', () => {
+                document.querySelector('.tab.active')?.classList.remove('active');
+                tab.classList.add('active');
+                loadGallery(tab.dataset.category);
+              });
+              bottomTabs.appendChild(tab);
+            });
+            const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || '';
+            loadGallery(newActiveTab);
+            updateCartWithShopData();
+            updateCart();
+          } catch (err) { console.error('Background refresh error:', err.message); }
         }
-        bottomTabs.appendChild(tab);
-      });
-      const tabs = document.querySelectorAll('.bottom-tabs .tab');
-      tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          document.querySelector(".tab.active")?.classList.remove("active");
-          tab.classList.add("active");
-          loadGallery(tab.dataset.category);
-        });
-      });
-      // Load gallery for the active tab, or first tab if active tab is gone
-      const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || "";
-      loadGallery(newActiveTab);
-      updateCartWithShopData();
-      updateCart();
-      console.log('Background refresh completed');
-    }
-  } catch (error) {
-    console.error('Background refresh error:', error.message);
-  }
-}
-  return;
-}
+        return;
+      }
 
       try {
         const data = await fetchBoutiqueData();
-        if (!data || data.error) throw new Error(data?.error || "Invalid boutique data");
-
-        // Set boutiqueData
         boutiqueData = {
-          name: data.name || "Boutique Name",
-          slogan: data.slogan || "Your fashion, your style",
-          whatsapp: data.whatsapp || "",
-          themeColor: data.themeColor || "#9e1850",
-          backgroundImage: data.backgroundImage || "",
-          pin: data.pin || ""
+          name: data.name || 'Boutique Name',
+          slogan: data.slogan || 'Your fashion, your style',
+          whatsapp: data.whatsapp || '',
+          themeColor: data.themeColor || '#9e1850',
+          backgroundImage: data.backgroundImage || '',
+          pin: String(data.pin ?? '')
         };
-
-        // Initialize shopData
         shopData = {
           categories: Object.keys(data.categories || {}).map(name => ({
             name: name.toLowerCase(),
             items: (data.categories[name] || []).map(item => ({
-              src: item.src || "https://via.placeholder.com/400x400?text=Item",
-              price: (item.price || "").toString().trim(),
-              sizes: (item.sizes || "").toString().trim()
+              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+              price: String(item.price ?? '').trim(),
+              sizes: String(item.sizes ?? '').trim()
             }))
           }))
         };
-
-        // Cache data
         localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-          data: { ...boutiqueData, categories: shopData.categories.reduce((acc, cat) => ({
-            ...acc,
-            [cat.name]: cat.items
-          }), {}) },
+          data: { ...boutiqueData, categories: data.categories },
           cacheTimestamp: Date.now()
         }));
-
         applyBoutiqueData();
         renderTabs();
         updateCart();
       } catch (error) {
-        console.error("Error loading boutique data:", error.message);
+        console.error('Error loading boutique data:', error.message);
         gallery.innerHTML = '<p class="error-message">Failed to load boutique details. Please try again or <a href="fashion.html">return to main page</a>.</p>';
       }
     }
@@ -1436,19 +1333,12 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       document.getElementById('boutiqueName').textContent = boutiqueData.name;
       document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
       topBanner.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage || 'https://via.placeholder.com/400x400?text=Banner'}')`;
-      topBanner.style.backgroundSize = "cover";
-      topBanner.style.backgroundPosition = "center";
+      topBanner.style.backgroundSize = 'cover';
+      topBanner.style.backgroundPosition = 'center';
     }
 
-    function saveShopData() {
-      localStorage.setItem(`shopData_${boutiqueId}`, JSON.stringify(shopData));
-      saveToGoogleSheet();
-    }
-
-    function saveBoutiqueData() {
-      localStorage.setItem(`boutiqueData_${boutiqueId}`, JSON.stringify(boutiqueData));
-      saveToGoogleSheet();
-    }
+    function saveShopData() { return saveToGoogleSheet(); }
+    function saveBoutiqueData() { return saveToGoogleSheet(); }
 
     function renderTabs() {
       bottomTabs.innerHTML = '';
@@ -1466,49 +1356,40 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       });
       tabs = document.querySelectorAll('.bottom-tabs .tab');
       tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          document.querySelector(".tab.active")?.classList.remove("active");
-          tab.classList.add("active");
+        tab.addEventListener('click', () => {
+          document.querySelector('.tab.active')?.classList.remove('active');
+          tab.classList.add('active');
           loadGallery(tab.dataset.category);
         });
       });
-      loadGallery(shopData.categories[0]?.name || "");
+      loadGallery(shopData.categories[0]?.name || '');
     }
 
     function loadGallery(category) {
-  gallery.innerHTML = "";
-  const cat = shopData?.categories.find(c => c.name === category);
-  currentImages = cat ? cat.items.map(item => item.src) : [];
+      gallery.innerHTML = '';
+      const cat = shopData?.categories.find(c => c.name === category);
+      currentImages = cat ? cat.items.map(item => item.src) : [];
 
-  if (!cat || cat.items.length === 0) {
-    gallery.innerHTML = '<p class="no-items">Items not available today</p>';
-  } else {
-    cat.items.forEach((item, index) => {
-      const div = document.createElement("div");
-      div.classList.add("gallery-item");
+      if (!cat || cat.items.length === 0) {
+        gallery.innerHTML = '<p class="no-items">Items not available today</p>';
+      } else {
+        cat.items.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.classList.add('gallery-item');
 
-      // ✅ Drive links or placeholders handled here
-      const imgSrc = item.src && item.src.trim() !== ""
-        ? item.src
-        : "https://via.placeholder.com/400x400?text=No+Image";
+          const imgSrc = item.src && item.src.trim() !== '' ? item.src : 'https://via.placeholder.com/400x400?text=No+Image';
+          const isInCart = cart.some(c => c.src === item.src);
 
-      const isInCart = cart.some(c => c.src === item.src);
-
-      div.innerHTML = `
-        <img src="${imgSrc}" 
-             onclick="openModal('${item.src}', ${index}, '${category}')" 
-             loading="lazy" alt="Product">
-        <p class="price">GH₵ ${item.price}</p>
-        ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
-        <button class="add-to-cart${isInCart ? ' added' : ''}" 
-                onclick="addToCart(${index}, '${category}')">
-          ${isInCart ? '✔ Added to Cart' : 'Add to Cart'}
-        </button>
-      `;
-      gallery.appendChild(div);
-    });
-  }
-}
+          div.innerHTML = `
+            <img src="${imgSrc}" onclick="openModal('${item.src}', ${index}, '${category}')" loading="lazy" alt="Product">
+            <p class="price">GH₵ ${item.price}</p>
+            ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
+            <button class="add-to-cart${isInCart ? ' added' : ''}" onclick="addToCart(${index}, '${category}')">${isInCart ? '✔ Added to Cart' : 'Add to Cart'}</button>
+          `;
+          gallery.appendChild(div);
+        });
+      }
+    }
 
     function openModal(src, index, category) {
       currentIndex = index;
@@ -1546,33 +1427,23 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       modalAddToCart.classList.toggle('added', isInCart);
     }
 
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-    // Swipe functionality for preview modal
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    modal.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
+    // Swipe for modal
+    let touchStartX = 0; let touchEndX = 0;
+    modal.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
     modal.addEventListener('touchend', (e) => {
       touchEndX = e.changedTouches[0].screenX;
       if (touchEndX < touchStartX - 50) nextImage();
       if (touchEndX > touchStartX + 50) prevImage();
     });
 
-    window.addEventListener("scroll", () => {
-      if (window.scrollY > 100) {
-        topBanner.style.transform = "translateY(-150%)";
-      } else {
-        topBanner.style.transform = "translateY(0)";
-      }
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) { topBanner.style.transform = 'translateY(-150%)'; }
+      else { topBanner.style.transform = 'translateY(0)'; }
     });
 
-    contactBtn.addEventListener("click", () => {
+    contactBtn.addEventListener('click', () => {
       contactModal.style.display = 'flex';
       contactModal.setAttribute('aria-hidden', 'false');
       navigationStack.push('contactModal');
@@ -1616,45 +1487,32 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       }
     });
 
-    hamburgerBtn.addEventListener("click", () => {
+    hamburgerBtn.addEventListener('click', () => {
       pinModal.style.display = 'flex';
       pinInput.value = '';
       pinInput.focus();
       navigationStack.push('pinModal');
     });
 
-    pinModal.addEventListener('click', (e) => {
-      if (e.target === pinModal) {
-        pinModal.style.display = 'none';
-        navigationStack.pop();
-      }
-    });
+    pinModal.addEventListener('click', (e) => { if (e.target === pinModal) { pinModal.style.display = 'none'; navigationStack.pop(); } });
 
     pinOkBtn.addEventListener('click', () => {
-  const enteredPin = pinInput.value.trim();
-  if (!boutiqueData) {
-    alert('Boutique data not loaded. Please try again.');
-    return;
-  }
-  if (enteredPin === boutiqueData.pin.toString().trim()) {
-    pinModal.style.display = 'none';
-    menuModal.style.display = 'flex';
-    navigationStack.pop();
-    navigationStack.push('menuModal');
-  } else {
-    alert('Incorrect PIN');
-    pinInput.value = ''; // Clear input for retry
-  }
-});
-
-    menuModal.addEventListener('click', (e) => {
-      if (e.target === menuModal) {
-        menuModal.style.display = 'none';
+      const enteredPin = pinInput.value.trim();
+      if (!boutiqueData) { alert('Boutique data not loaded. Please try again.'); return; }
+      if (enteredPin === String(boutiqueData.pin).trim()) {
+        pinModal.style.display = 'none';
+        menuModal.style.display = 'flex';
         navigationStack.pop();
+        navigationStack.push('menuModal');
+      } else {
+        alert('Incorrect PIN');
+        pinInput.value = '';
       }
     });
 
-    addItemsBtn.addEventListener("click", () => {
+    menuModal.addEventListener('click', (e) => { if (e.target === menuModal) { menuModal.style.display = 'none'; navigationStack.pop(); } });
+
+    addItemsBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
       currentMode = 'add';
       categoriesTitle.textContent = 'Add Items - Select Category';
@@ -1664,7 +1522,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       navigationStack.push('categoriesModal');
     });
 
-    editItemsBtn.addEventListener("click", () => {
+    editItemsBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
       currentMode = 'edit';
       categoriesTitle.textContent = 'Edit Items - Select Category';
@@ -1674,7 +1532,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       navigationStack.push('categoriesModal');
     });
 
-    editBoutiqueDetailsBtn.addEventListener("click", () => {
+    editBoutiqueDetailsBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
       boutiqueNameInput.value = boutiqueData.name;
       boutiqueSloganInput.value = boutiqueData.slogan;
@@ -1756,7 +1614,6 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       if (confirm(`Are you sure you want to delete the "${shopData.categories[index].name}" category?`)) {
         const deletedItems = shopData.categories[index].items;
         shopData.categories.splice(index, 1);
-        // Remove deleted items from cart
         cart = cart.filter(item => !deletedItems.some(deleted => deleted.src === item.src));
         carts[boutiqueId] = cart;
         localStorage.setItem('carts', JSON.stringify(carts));
@@ -1768,18 +1625,13 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
     };
 
     addCategoryBtn.addEventListener('click', async () => {
-      if (shopData.categories.length >= 6) {
-        alert('Maximum 6 categories allowed');
-        return;
-      }
+      if (shopData.categories.length >= 6) { alert('Maximum 6 categories allowed'); return; }
       const newName = prompt('Enter new category name:');
       if (newName && !shopData.categories.find(c => c.name === newName.toLowerCase())) {
         shopData.categories.push({ name: newName.toLowerCase(), items: [] });
         await saveShopData();
         renderTabs();
-      } else if (newName) {
-        alert('Category already exists');
-      }
+      } else if (newName) { alert('Category already exists'); }
     });
 
     manageCategoriesBtn.addEventListener('click', () => {
@@ -1812,28 +1664,19 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
     });
 
     itemUpload.addEventListener('change', (e) => {
-  const files = e.target.files;
-
-  for (const file of Array.from(files)) {
-    if (!file.type.startsWith('image/')) continue;
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      // Store the local preview and also keep the file object
-      const newItem = { 
-        src: ev.target.result,   // local preview for now
-        file: file,              // keep original file to upload later
-        price: '', 
-        sizes: '' 
-      };
-      tempItems.push(newItem);
-      renderItemList();
-    };
-    reader.readAsDataURL(file);
-  }
-
-  e.target.value = '';
-});
+      const files = e.target.files;
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const newItem = { src: ev.target.result, file: file, price: '', sizes: '' };
+          tempItems.push(newItem);
+          renderItemList();
+        };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+    });
 
     function renderItemList() {
       itemList.innerHTML = '';
@@ -1870,75 +1713,44 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
     });
   
     saveItemsBtn.addEventListener('click', async () => {
-  // 🔒 Prevent multiple clicks
-  saveItemsBtn.disabled = true;
-  saveItemsBtn.textContent = "Saving... please wait";
-
-  try {
-    const cat = shopData.categories.find(c => c.name === currentCategory);
-    const itemCount = tempItems.length;
-
-    // 1. Upload any local images (data:image/...)
-    for (let i = 0; i < tempItems.length; i++) {
-      const item = tempItems[i];
-      if (item.src.startsWith("data:image")) {
-        const file = await fetch(item.src).then(r => r.blob());
-        const uploadRes = await fetch(WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "uploadImage",
-            fileName: `item_${Date.now()}_${i}.png`,
-            imageData: item.src
-          })
-        }).then(r => r.json());
-
-        if (uploadRes.status === "success" && uploadRes.url) {
-          // Replace preview with permanent Drive link
-          item.src = uploadRes.url;
-        } else {
-          throw new Error("Image upload failed: " + (uploadRes.error || "Unknown error"));
+      saveItemsBtn.disabled = true;
+      saveItemsBtn.textContent = 'Saving... please wait';
+      try {
+        const cat = shopData.categories.find(c => c.name === currentCategory);
+        const itemCount = tempItems.length;
+        for (let i = 0; i < tempItems.length; i++) {
+          const item = tempItems[i];
+          if (typeof item.src === 'string' && item.src.startsWith('data:image')) {
+            const url = await uploadImage(item.src);
+            item.src = url;
+          }
         }
+        cat.items = currentMode === 'add' ? [...cat.items, ...tempItems] : tempItems;
+        cart = cart.filter(item => {
+          const stillExists = cat.items.some(newItem => newItem.src === item.src);
+          if (!stillExists) return false;
+          const updatedItem = cat.items.find(newItem => newItem.src === item.src);
+          item.price = updatedItem.price;
+          item.sizes = updatedItem.sizes;
+          return true;
+        });
+        carts[boutiqueId] = cart;
+        localStorage.setItem('carts', JSON.stringify(carts));
+        await saveShopData();
+        itemModal.style.display = 'none';
+        saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? ' has' : 's have'} been saved successfully to your page.`;
+        saveConfirmationModal.style.display = 'flex';
+        navigationStack.pop();
+        navigationStack.push('saveConfirmationModal');
+        loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData.categories[0]?.name || '');
+      } catch (err) {
+        alert('Error saving items: ' + err.message);
+        console.error('Save error:', err);
+      } finally {
+        saveItemsBtn.disabled = false;
+        saveItemsBtn.textContent = 'Save';
       }
-    }
-
-    // 2. Update shopData with final items (with Drive links)
-    cat.items = currentMode === "add" ? [...cat.items, ...tempItems] : tempItems;
-
-    // 3. Keep cart in sync
-    cart = cart.filter(item => {
-      const stillExists = cat.items.some(newItem => newItem.src === item.src);
-      if (!stillExists) return false;
-      const updatedItem = cat.items.find(newItem => newItem.src === item.src);
-      item.price = updatedItem.price;
-      item.sizes = updatedItem.sizes;
-      return true;
     });
-    carts[boutiqueId] = cart;
-    localStorage.setItem("carts", JSON.stringify(carts));
-
-    // 4. Save to Google Sheet (with Drive links)
-    await saveShopData();
-
-    // 5. Show confirmation popup
-    itemModal.style.display = "none";
-    saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? " has" : "s have"} been saved successfully to your page.`;
-    saveConfirmationModal.style.display = "flex";
-    navigationStack.pop();
-    navigationStack.push("saveConfirmationModal");
-
-    // Reload gallery
-    loadGallery(document.querySelector(".tab.active")?.dataset.category || shopData.categories[0]?.name || "");
-
-  } catch (err) {
-    alert("Error saving items: " + err.message);
-    console.error("Save error:", err);
-  } finally {
-    // 🔓 Re-enable button
-    saveItemsBtn.disabled = false;
-    saveItemsBtn.textContent = "Save";
-  }
-});
 
     boutiqueDetailsModal.addEventListener('click', (e) => {
       if (e.target === boutiqueDetailsModal) {
@@ -1949,25 +1761,10 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       }
     });
 
-    boutiqueNameInput.addEventListener('input', () => {
-      isChanged = true;
-      checkBoutiqueDetailsSaveButton();
-    });
-
-    boutiqueSloganInput.addEventListener('input', () => {
-      isChanged = true;
-      checkBoutiqueDetailsSaveButton();
-    });
-
-    boutiqueWhatsAppInput.addEventListener('input', () => {
-      isChanged = true;
-      checkBoutiqueDetailsSaveButton();
-    });
-
-    boutiqueThemeColorInput.addEventListener('input', () => {
-      isChanged = true;
-      checkBoutiqueDetailsSaveButton();
-    });
+    boutiqueNameInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueSloganInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueWhatsAppInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueThemeColorInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
 
     function checkBoutiqueDetailsSaveButton() {
       const isValid = boutiqueNameInput.value.trim() !== '' && boutiqueWhatsAppInput.value.trim() !== '';
@@ -2012,7 +1809,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
       } else {
         cartButtons.style.display = 'none';
       }
-      loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || "");
+      loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '');
     }
 
     window.addToCart = function(index, category) {
@@ -2069,7 +1866,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
           cartItemsEl.appendChild(div);
         });
       }
-      const total = cart.reduce((sum, it) => sum + parseFloat(it.price), 0);
+      const total = cart.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
       cartTotal.textContent = total;
     }
 
@@ -2134,14 +1931,14 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
     function proceedToBuy(items, whatsapp) {
       if (items.length === 0) return;
       const link = generateSlideLink(items, whatsapp);
-      const total = items.reduce((s, i) => s + parseFloat(i.price), 0);
+      const total = items.reduce((s, i) => s + parseFloat(i.price || 0), 0);
       const message = `Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if available so I can proceed with payment. ITEMS LINK: ${link}`;
       window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
     }
 
     function generateSlideLink(items, whatsapp) {
       const id = Date.now() + Math.random().toString(36).slice(2);
-      const total = items.reduce((sum, it) => sum + parseFloat(it.price), 0);
+      const total = items.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
       const data = {
         items: items.map(it => ({ ...it, available: true })),
         total,
@@ -2149,7 +1946,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
         isForUser: false,
         boutiqueId
       };
-      let slides = JSON.parse(localStorage.getItem('slides')) || {};
+      let slides = JSON.parse(localStorage.getItem('slides') || '{}');
       slides[id] = data;
       localStorage.setItem('slides', JSON.stringify(slides));
       return window.location.origin + window.location.pathname + `?slide=${id}`;
@@ -2157,7 +1954,7 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
 
     if (urlParams.has('slide')) {
       const id = urlParams.get('slide');
-      const slides = JSON.parse(localStorage.getItem('slides')) || {};
+      const slides = JSON.parse(localStorage.getItem('slides') || '{}');
       if (slides[id] && slides[id].boutiqueId === boutiqueId) {
         showSlidePage(slides[id]);
         navigationStack.push('slidePage');
@@ -2203,143 +2000,98 @@ if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cach
           notAvailBtn.style.display = 'none';
           doneBtn.style.display = 'none';
           okBtn.style.display = 'block';
-          if (!item.available) {
-            slideImg.classList.add('dimmed');
-          } else {
-            slideImg.classList.remove('dimmed');
-          }
+          if (!item.available) { slideImg.classList.add('dimmed'); } else { slideImg.classList.remove('dimmed'); }
         } else {
           okBtn.style.display = 'none';
           doneBtn.style.display = 'block';
-          if (!item.available) {
-            slideImg.classList.add('dimmed');
-            notAvailBtn.style.display = 'none';
-          } else {
-            slideImg.classList.remove('dimmed');
-            notAvailBtn.style.display = 'block';
-          }
+          if (!item.available) { slideImg.classList.add('dimmed'); notAvailBtn.style.display = 'none'; }
+          else { slideImg.classList.remove('dimmed'); notAvailBtn.style.display = 'block'; }
         }
       }
 
       showSlide(slideIndex);
 
-      slideLeft.addEventListener('click', () => {
-        slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
-        showSlide(slideIndex);
-      });
+      slideLeft.addEventListener('click', () => { slideIndex = (slideIndex - 1 + data.items.length) % data.items.length; showSlide(slideIndex); });
+      slideRight.addEventListener('click', () => { slideIndex = (slideIndex + 1) % data.items.length; showSlide(slideIndex); });
 
-      slideRight.addEventListener('click', () => {
-        slideIndex = (slideIndex + 1) % data.items.length;
-        showSlide(slideIndex);
-      });
+      notAvailBtn.addEventListener('click', () => { data.items[slideIndex].available = false; showSlide(slideIndex); });
 
-      notAvailBtn.addEventListener('click', () => {
-        data.items[slideIndex].available = false;
-        showSlide(slideIndex);
-      });
-
-      // Replace the doneBtn event listener with:
-doneBtn.addEventListener('click', () => {
-  const available = data.items.filter(it => it.available);
-  const unavail = data.items.length - available.length;
-  const newTotal = available.reduce((sum, it) => sum + parseFloat(it.price), 0);
-  let text = `Hello cherished customer, this is to inform you that all your selected items are available and so you can proceed with payment on our page on PickMe Services. Total Amount: GH₵ ${newTotal}`;
-  let link = '';
-  if (unavail > 0) {
-    const newId = Date.now() + Math.random().toString(36).slice(2);
-    const newData = {
-      items: [...available, ...data.items.filter(it => !it.available)],
-      total: newTotal,
-      userWhatsapp: data.userWhatsapp,
-      isForUser: true,
-      boutiqueId: boutiqueId
-    };
-    let slides = JSON.parse(localStorage.getItem('slides')) || {};
-    slides[newId] = newData;
-    localStorage.setItem('slides', JSON.stringify(slides));
-    link = window.location.origin + window.location.pathname + `?slide=${newId}`;
-    text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick on this link to view the available ones and proceed with payment on our page on PickMe Services. Total Amount Now: GH₵ ${newTotal}. LINK: ${link}`;
-  }
-  slidePage.style.display = 'none';
-  document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
-  navigationStack.pop();
-  window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
-});
-
-      // Replace the okBtn event listener with:
-okBtn.addEventListener('click', () => {
-  slidePage.style.display = 'none';
-  document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
-  navigationStack.pop();
-  window.location.href = window.location.origin + window.location.pathname;
-});
-    }
-
-    // Start loading boutique data
-    loadBoutiqueData();
-  
-  // Poll for updates every 30 seconds
-setInterval(async () => {
-  try {
-    const data = await fetchBoutiqueData();
-    if (data && !data.error) {
-      // Store the currently active tab before any updates
-      const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || "";
-      boutiqueData = {
-        name: data.name || "Boutique Name",
-        slogan: data.slogan || "Your fashion, your style",
-        whatsapp: data.whatsapp || "",
-        themeColor: data.themeColor || "#9e1850",
-        backgroundImage: data.backgroundImage || "",
-        pin: data.pin || ""
-      };
-      shopData = {
-        categories: Object.keys(data.categories || {}).map(name => ({
-          name: name.toLowerCase(),
-          items: (data.categories[name] || []).map(item => ({
-            src: item.src || "https://via.placeholder.com/400x400?text=Item",
-            price: (item.price || "").toString().trim(),
-            sizes: (item.sizes || "").toString().trim()
-          }))
-        }))
-      };
-      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-        data: { ...boutiqueData, categories: data.categories },
-        cacheTimestamp: Date.now()
-      }));
-      applyBoutiqueData();
-      // Update tabs while preserving the active tab
-      bottomTabs.innerHTML = ''; // Clear existing tabs
-      shopData.categories.forEach((cat) => {
-        const tab = document.createElement('div');
-        tab.classList.add('tab');
-        tab.dataset.category = cat.name;
-        tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
-        if (cat.name === activeTab) {
-          tab.classList.add('active');
+      doneBtn.addEventListener('click', () => {
+        const available = data.items.filter(it => it.available);
+        const unavail = data.items.length - available.length;
+        const newTotal = available.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
+        let text = `Hello cherished customer, this is to inform you that all your selected items are available and so you can proceed with payment on our page on PickMe Services. Total Amount: GH₵ ${newTotal}`;
+        let link = '';
+        if (unavail > 0) {
+          const newId = Date.now() + Math.random().toString(36).slice(2);
+          const newData = { items: [...available, ...data.items.filter(it => !it.available)], total: newTotal, userWhatsapp: data.userWhatsapp, isForUser: true, boutiqueId: boutiqueId };
+          let slides = JSON.parse(localStorage.getItem('slides') || '{}');
+          slides[newId] = newData;
+          localStorage.setItem('slides', JSON.stringify(slides));
+          link = window.location.origin + window.location.pathname + `?slide=${newId}`;
+          text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick on this link to view the available ones and proceed with payment on our page on PickMe Services. Total Amount Now: GH₵ ${newTotal}. LINK: ${link}`;
         }
-        bottomTabs.appendChild(tab);
+        slidePage.style.display = 'none';
+        document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
+        navigationStack.pop();
+        window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
       });
-      const tabs = document.querySelectorAll('.bottom-tabs .tab');
-      tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          document.querySelector(".tab.active")?.classList.remove("active");
-          tab.classList.add("active");
-          loadGallery(tab.dataset.category);
-        });
+
+      okBtn.addEventListener('click', () => {
+        slidePage.style.display = 'none';
+        document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
+        navigationStack.pop();
+        window.location.href = window.location.origin + window.location.pathname;
       });
-      // Load gallery for the active tab, or first tab if active tab is gone
-      const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || "";
-      loadGallery(newActiveTab);
-      updateCartWithShopData();
-      updateCart();
-      console.log('Frontend updated with latest backend data');
     }
-  } catch (error) {
-    console.error('Polling error:', error.message);
-  }
-}, 30000); // 30 seconds
-  
-  </script>
-</body>
+
+    // Start loading boutique data (cache-first)
+    loadBoutiqueData();
+
+    // Optional: keep your polling (now reads Firestore)
+    setInterval(async () => {
+      try {
+        const data = await fetchBoutiqueData();
+        const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
+        boutiqueData = {
+          name: data.name || 'Boutique Name',
+          slogan: data.slogan || 'Your fashion, your style',
+          whatsapp: data.whatsapp || '',
+          themeColor: data.themeColor || '#9e1850',
+          backgroundImage: data.backgroundImage || '',
+          pin: String(data.pin ?? '')
+        };
+        shopData = {
+          categories: Object.keys(data.categories || {}).map(name => ({
+            name: name.toLowerCase(),
+            items: (data.categories[name] || []).map(item => ({
+              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+              price: String(item.price ?? '').trim(),
+              sizes: String(item.sizes ?? '').trim()
+            }))
+          }))
+        };
+        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: { ...boutiqueData, categories: data.categories }, cacheTimestamp: Date.now() }));
+        applyBoutiqueData();
+        bottomTabs.innerHTML = '';
+        shopData.categories.forEach(cat => {
+          const tab = document.createElement('div');
+          tab.classList.add('tab');
+          tab.dataset.category = cat.name;
+          tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
+          if (cat.name === activeTab) tab.classList.add('active');
+          tab.addEventListener('click', () => {
+            document.querySelector('.tab.active')?.classList.remove('active');
+            tab.classList.add('active');
+            loadGallery(tab.dataset.category);
+          });
+          bottomTabs.appendChild(tab);
+        });
+        const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || '';
+        loadGallery(newActiveTab);
+        updateCartWithShopData();
+        updateCart();
+      } catch (error) { console.error('Polling error:', error.message); }
+    }, 30000);
+  </script></body>
 </html>
