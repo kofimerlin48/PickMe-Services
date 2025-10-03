@@ -13,13 +13,10 @@
         const response = await fetch('header.html');
         if (!response.ok) throw new Error('Failed to load header');
         let html = await response.text();
-
         const pageTitle = "Fashion";
         html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
           `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-
         document.getElementById('header-placeholder').innerHTML = html;
-
         document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
           const newScript = document.createElement('script');
           if (oldScript.src) newScript.src = oldScript.src;
@@ -118,27 +115,37 @@
     const container = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
 
-    const CACHE_KEY = "boutiquesCacheBase64";
+    const CACHE_KEY = "boutiquesCache";
 
+    // Convert URL → Base64
+    async function urlToBase64(url) {
+      try {
+        const res = await fetch(url, { cache: "force-cache" });
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.error("Image fetch failed:", err);
+        return null;
+      }
+    }
+
+    // Save cache
     function saveCache(data) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
     }
 
+    // Load cache
     function loadCache() {
       const raw = localStorage.getItem(CACHE_KEY);
       return raw ? JSON.parse(raw) : null;
     }
 
-    function urlToBase64(url) {
-      return fetch(url)
-        .then(res => res.blob())
-        .then(blob => new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        }));
-    }
-
+    // Create boutique card
     function createCard(b) {
       const card = document.createElement("div");
       card.className = "card";
@@ -155,47 +162,60 @@
         </div>
       `;
 
-      card.querySelector(".btn-order").onclick = () => {
+      const btn = card.querySelector(".btn-order");
+      btn.onclick = () => {
         window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
       };
 
       return card;
     }
 
+    // Render boutiques
     function renderBoutiques(list) {
       container.innerHTML = "";
       if (!list || list.length === 0) {
-        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available at this time.</p>";
+        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:40px;'>No boutiques available.</p>";
         return;
       }
-      list.forEach(b => container.appendChild(createCard(b)));
+      list.forEach(b => {
+        const card = createCard(b);
+        container.appendChild(card);
+      });
     }
 
+    // Fetch from Firestore
     async function fetchBoutiques() {
       const snap = await getDocs(collection(db, "Boutiques"));
       const list = [];
       for (const doc of snap.docs) {
         const data = doc.data();
         let base64Image = null;
-        if (data.backgroundImage) {
-          try {
-            base64Image = await urlToBase64(data.backgroundImage);
-          } catch {
-            base64Image = null;
-          }
+
+        // Load previous cache
+        const cached = loadCache();
+        const found = cached?.find(x => x.id === doc.id);
+
+        if (found && found.base64Image) {
+          base64Image = found.base64Image; // Reuse cached base64
+        } else if (data.backgroundImage) {
+          base64Image = await urlToBase64(data.backgroundImage); // Convert new
         }
+
         list.push({ id: doc.id, ...data, base64Image });
       }
       return list;
     }
 
+    // Load boutiques with cache
     async function loadBoutiques() {
       const cached = loadCache();
-      if (cached) renderBoutiques(cached);
+      if (cached) {
+        renderBoutiques(cached); // Instant render
+      }
 
       try {
         const fresh = await fetchBoutiques();
-        if (fresh && fresh.length > 0) {
+        if (fresh.length > 0) {
           renderBoutiques(fresh);
           saveCache(fresh);
         }
@@ -207,6 +227,7 @@
       }
     }
 
+    // Search
     searchInput.addEventListener("input", () => {
       const q = searchInput.value.toLowerCase();
       Array.from(container.children).forEach(card => {
