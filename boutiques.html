@@ -5,33 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fashion Boutiques - PickMe Services</title>
 
-  <!-- ========= HEADER CODE STARTS HERE ================== -->
+  <!-- =========HEADER CODE STARTS HERE ================== -->
   <div id="header-placeholder"></div>
   <script>
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Failed to load header');
-        let html = await response.text();
+  (async () => {
+    try {
+      const response = await fetch('header.html');
+      if (!response.ok) throw new Error('Failed to load header');
+      let html = await response.text();
 
-        const pageTitle = "Fashion";
-        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+      // Replace the <h1> content with the page-specific title
+      const pageTitle = "Fashion";
+      html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
 
-        document.getElementById('header-placeholder').innerHTML = html;
+      document.getElementById('header-placeholder').innerHTML = html;
 
-        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-          const newScript = document.createElement('script');
-          if (oldScript.src) newScript.src = oldScript.src;
-          else newScript.textContent = oldScript.textContent;
-          document.body.appendChild(newScript);
-        });
-      } catch (err) {
-        console.error('Failed to load header:', err);
-      }
-    })();
+      // Re-run scripts inside header.html so menus work
+      document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        if (oldScript.src) newScript.src = oldScript.src;
+        else newScript.textContent = oldScript.textContent;
+        document.body.appendChild(newScript);
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  })();
   </script>
-  <!-- ========= HEADER CODE ENDS HERE ================== -->
+  <!-- =========HEADER CODE ENDS HERE ================== -->
 
   <style>
     body {
@@ -59,7 +60,7 @@
       position: relative; border-radius: 15px; overflow: hidden;
       box-shadow: 0 3px 8px rgba(0,0,0,0.1); background-size: cover;
       background-position: center; height: 250px; display: flex;
-      align-items: flex-end; transition: transform 0.2s, background-image 0.3s ease-in-out;
+      align-items: flex-end; transition: transform 0.2s, background-image 0.2s ease-in-out;
     }
     .card:hover { transform: translateY(-5px); }
     .card::before {
@@ -104,7 +105,7 @@
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "YOUR_NEW_API_KEY",
+      apiKey: "AIzaSyD7GXJKraVNfXSHG7RDoUDccD98u5JF7F8",
       authDomain: "pickmeservicesonline.firebaseapp.com",
       projectId: "pickmeservicesonline",
       storageBucket: "pickmeservicesonline.firebasestorage.app",
@@ -115,34 +116,76 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const container = document.getElementById("cardsContainer");
+    const container   = document.getElementById("cardsContainer");
     const searchInput = document.getElementById("searchInput");
 
-    const CACHE_KEY = "boutiquesCache";
+    /* ---------- Minimal, targeted caching just for images ---------- */
 
-    // Convert image URL → Base64
-    async function fetchImageAsBase64(url) {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    }
+    const CACHE_KEY = "boutiquesCache:v2";          // data + embedded base64 images
+    const CACHE_TTL_MS = 24 * 60 * 60 * 1000;       // 24h
+    const CACHE_TIME_KEY = "boutiquesCacheTime:v2";
 
     function saveCache(data) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+      } catch (e) {
+        // If it overflows, just drop images and keep minimal data
+        try {
+          const lite = data.map(b => ({ id:b.id, name:b.name, slogan:b.slogan, themeColor:b.themeColor, backgroundImage:b.backgroundImage }));
+          localStorage.setItem(CACHE_KEY, JSON.stringify(lite));
+          localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+        } catch {}
+      }
     }
     function loadCache() {
       const raw = localStorage.getItem(CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      const t   = localStorage.getItem(CACHE_TIME_KEY);
+      if (!raw || !t) return null;
+      const fresh = (Date.now() - parseInt(t,10)) < CACHE_TTL_MS;
+      if (!fresh) return null;
+      try { return JSON.parse(raw); } catch { return null; }
     }
 
+    // URL -> dataURL
+    async function toDataURL(url) {
+      try {
+        const res = await fetch(url, { cache: "force-cache" });
+        if (!res.ok) throw new Error("img fetch failed");
+        const blob = await res.blob();
+        return await new Promise((resolve) => {
+          const fr = new FileReader();
+          fr.onloadend = () => resolve(fr.result);
+          fr.readAsDataURL(blob);
+        });
+      } catch {
+        // Fallback to original URL if conversion fails
+        return url;
+      }
+    }
+
+    // Wait until an image can be painted
+    function decodeImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          if (img.decode) {
+            img.decode().then(() => resolve()).catch(() => resolve());
+          } else {
+            resolve();
+          }
+        };
+        img.onerror = () => resolve(); // don’t block on error
+        img.src = src;
+      });
+    }
+
+    // Build card element (no changes to your HTML structure)
     function createCard(b) {
       const card = document.createElement("div");
       card.className = "card";
-      card.style.backgroundImage = `url('${b.cachedImage || b.backgroundImage}')`;
+      const imageSrc = b.cachedImage || b.backgroundImage || "";
+      if (imageSrc) card.style.backgroundImage = `url('${imageSrc}')`;
       card.setAttribute("data-name", b.name?.toLowerCase() || "");
 
       card.innerHTML = `
@@ -157,48 +200,77 @@
 
       const btn = card.querySelector(".btn-order");
       btn.onclick = () => {
-        window.location.href = `template.html?id=${encodeURIComponent(b.id)}`;
+        window.location.href = \`template.html?id=\${encodeURIComponent(b.id)}\`;
       };
 
       return card;
     }
 
-    function renderBoutiques(list) {
+    // Render list, but only append a card AFTER its image is decoded.
+    async function renderBoutiquesInstant(list) {
+      container.style.visibility = "hidden"; // prevent seeing text-first
       container.innerHTML = "";
-      list.forEach(b => container.appendChild(createCard(b)));
+      const frag = document.createDocumentFragment();
+
+      // Pre-decode all images (from cached base64 if present)
+      await Promise.all(list.map(async (b) => {
+        const src = b.cachedImage || b.backgroundImage || "";
+        if (src) await decodeImage(src);
+      }));
+
+      // Now append all at once
+      list.forEach(b => frag.appendChild(createCard(b)));
+      container.appendChild(frag);
+      container.style.visibility = "visible";
     }
 
     async function fetchBoutiques() {
       const snap = await getDocs(collection(db, "Boutiques"));
       const list = [];
       for (const doc of snap.docs) {
-        const data = doc.data();
+        const d = doc.data();
         let cachedImage = null;
-        if (data.backgroundImage) {
-          cachedImage = await fetchImageAsBase64(data.backgroundImage);
+
+        if (d.backgroundImage) {
+          // Convert to base64 ONCE so next load is instant
+          cachedImage = await toDataURL(d.backgroundImage);
         }
-        list.push({ id: doc.id, ...data, cachedImage });
+        list.push({
+          id: doc.id,
+          name: d.name || "",
+          slogan: d.slogan || "",
+          themeColor: d.themeColor || "#c12872",
+          backgroundImage: d.backgroundImage || "",
+          cachedImage
+        });
       }
+      // Stable order
+      list.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
       return list;
     }
 
     async function loadBoutiques() {
+      // 1) Try cache (instant)
       const cached = loadCache();
-      if (cached) {
-        renderBoutiques(cached); // show instantly
+      if (cached && cached.length) {
+        await renderBoutiquesInstant(cached);
       }
+
+      // 2) Get fresh, update quietly
       try {
         const fresh = await fetchBoutiques();
-        if (fresh.length > 0) {
-          renderBoutiques(fresh);
+        if (!cached || JSON.stringify(fresh.map(x => ({...x, cachedImage: !!x.cachedImage}))) !== JSON.stringify(cached?.map(x => ({...x, cachedImage: !!x.cachedImage})))) {
+          await renderBoutiquesInstant(fresh);
           saveCache(fresh);
         }
-      } catch (err) {
-        console.error("Failed to fetch boutiques:", err);
+      } catch (e) {
+        if (!cached) {
+          container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#b00; padding:40px;'>Failed to load boutiques.</p>";
+        }
       }
     }
 
-    // Search
+    // Search (unchanged)
     searchInput.addEventListener("input", () => {
       const q = searchInput.value.toLowerCase();
       Array.from(container.children).forEach(card => {
