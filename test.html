@@ -1142,53 +1142,36 @@ body {
     }
 
     // Save to Firestore (replaces Apps Script)
-    async function saveToGoogleSheet() {
-      try {
-        if (!boutiqueId) throw new Error('No boutiqueId');
-        const payload = {
-          name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
-          slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
-          whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
-          themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
-          backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
-          pin: (boutiqueData?.pin || '').toString().trim(),
-          categories: (shopData?.categories || []).reduce((acc, cat) => {
-            if (!cat?.name) return acc;
-            acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
-              src: (item.src || '').toString().trim(),
-              price: (item.price || '').toString().trim(),
-              sizes: (item.sizes || '').toString().trim()
-            }));
-            return acc;
-          }, {})
-        };
-        await db.collection('Boutiques').doc(boutiqueId).set(payload, { merge: false });
-        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
-        updateCartWithShopData();
-      } catch (error) {
-        console.error('Error saving:', error);
-        alert('Failed to save changes online. Changes kept locally.');
-        const payload = {
-          id: String(boutiqueId),
-          name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
-          slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
-          whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
-          themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
-          backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
-          pin: (boutiqueData?.pin || '').toString().trim(),
-          categories: (shopData?.categories || []).reduce((acc, cat) => {
-            if (!cat?.name) return acc;
-            acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
-              src: (item.src || '').toString().trim(),
-              price: (item.price || '').toString().trim(),
-              sizes: (item.sizes || '').toString().trim()
-            }));
-            return acc;
-          }, {})
-        };
-        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
-      }
-    }
+async function saveToGoogleSheet() {
+  try {
+    if (!boutiqueId) throw new Error('No boutiqueId');
+    const payload = {
+      name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
+      slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
+      whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
+      themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
+      backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
+      pin: (boutiqueData?.pin || '').toString().trim(),
+      categories: (shopData?.categories || []).reduce((acc, cat) => {
+        if (!cat?.name) return acc;
+        acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
+          src: (item.src || '').toString().trim(),
+          price: (item.price || '').toString().trim(),
+          sizes: (item.sizes || '').toString().trim()
+        }));
+        return acc;
+      }, {})
+    };
+    await db.collection('Boutiques').doc(boutiqueId).set(payload, { merge: false });
+    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
+    updateCartWithShopData();
+    return true; // <— tell caller we saved successfully
+  } catch (error) {
+    console.error('Error saving:', error);
+    // IMPORTANT: we do NOT write a fallback cache here; we want the caller to know it failed
+    return false; // <— tell caller we failed to save
+  }
+}
 
     // Helper aliases (UI already calls these names)
     function saveShopData() { return saveToGoogleSheet(); }
@@ -1644,16 +1627,30 @@ body {
     });
 
     function openItemModal() {
-      const cat = shopData.categories.find(c => c.name === currentCategory);
-      tempItems = currentMode === 'add' ? [] : JSON.parse(JSON.stringify(cat.items));
-      isChanged = currentMode === 'edit';
-      itemTitle.textContent = `${currentMode === 'add' ? 'Add' : 'Edit'} Items for ${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}`;
-      itemUploadSection.style.display = currentMode === 'add' ? 'block' : 'none';
-      deleteAllItemsBtn.style.display = currentMode === 'edit' && tempItems.length > 0 ? 'block' : 'none';
-      renderItemList();
-      checkSaveButton();
-      itemModal.style.display = 'flex';
-    }
+  const cat = shopData.categories.find(c => c.name === currentCategory);
+
+  // Keep a copy of the original src so we can detect replacements later
+  tempItems = currentMode === 'add'
+    ? []
+    : (cat.items || []).map(function(it) {
+        return {
+          src: it.src,
+          price: it.price,
+          sizes: it.sizes,
+          _originalSrc: it.src, // remember what the image used to be
+          _newFile: null        // placeholder for a replacement file in edit mode
+        };
+      });
+
+  isChanged = currentMode === 'edit';
+  itemTitle.textContent = (currentMode === 'add' ? 'Add' : 'Edit') +
+    ' Items for ' + (currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1));
+  itemUploadSection.style.display = currentMode === 'add' ? 'block' : 'none';
+  deleteAllItemsBtn.style.display = (currentMode === 'edit' && tempItems.length > 0) ? 'block' : 'none';
+  renderItemList();
+  checkSaveButton();
+  itemModal.style.display = 'flex';
+}
 
     itemModal.addEventListener('click', (e) => {
       if (e.target === itemModal) {
@@ -1680,24 +1677,64 @@ body {
     });
 
     function renderItemList() {
-      itemList.innerHTML = '';
-      if (tempItems.length === 0) {
-        itemList.innerHTML = '<p class="no-items">No items added</p>';
-      }
-      tempItems.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <img src="${item.src}" alt="Item">
-          <input type="number" value="${item.price}" placeholder="Price" onchange="tempItems[${idx}].price = this.value; isChanged = true; checkSaveButton();">
-          <input type="text" ${item.sizes ? `value="${item.sizes}"` : ''} placeholder="Sizes (e.g. S,M,L)" onchange="tempItems[${idx}].sizes = this.value; isChanged = true; checkSaveButton();">
-          <div class="delete-icon" onclick="tempItems.splice(${idx}, 1); isChanged = true; renderItemList(); checkSaveButton();">🗑</div>
-        `;
-        itemList.appendChild(div);
-      });
-      deleteAllItemsBtn.style.display = currentMode === 'edit' && tempItems.length > 0 ? 'block' : 'none';
+  itemList.innerHTML = '';
+  if (tempItems.length === 0) {
+    itemList.innerHTML = '<p class="no-items">No items added</p>';
+  }
+
+  tempItems.forEach((item, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'item';
+
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = 'Item';
+    wrap.appendChild(img);
+
+    // In EDIT mode, allow replacing the image (ADD mode uses the top file input)
+    
+
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number';
+    priceInput.placeholder = 'Price';
+    priceInput.value = item.price || '';
+    priceInput.onchange = function() {
+      tempItems[idx].price = this.value;
+      isChanged = true;
       checkSaveButton();
-    }
+    };
+    wrap.appendChild(priceInput);
+
+    const sizeInput = document.createElement('input');
+    sizeInput.type = 'text';
+    sizeInput.placeholder = 'Sizes (e.g. S,M,L)';
+    if (item.sizes) sizeInput.value = item.sizes;
+    sizeInput.onchange = function() {
+      tempItems[idx].sizes = this.value;
+      isChanged = true;
+      checkSaveButton();
+    };
+    wrap.appendChild(sizeInput);
+
+    const del = document.createElement('div');
+    del.className = 'delete-icon';
+    del.textContent = '🗑';
+    del.addEventListener('click', () => {
+      tempItems.splice(idx, 1);
+      isChanged = true;
+      renderItemList();
+      checkSaveButton();
+    });
+    wrap.appendChild(del);
+
+    itemList.appendChild(wrap);
+  });
+
+  deleteAllItemsBtn.style.display =
+    currentMode === 'edit' && tempItems.length > 0 ? 'block' : 'none';
+
+  checkSaveButton();
+}
 
     function checkSaveButton() {
       const allPriced = tempItems.length === 0 || tempItems.every(item => item.price !== '' && !isNaN(parseFloat(item.price)));
@@ -1716,54 +1753,95 @@ body {
     saveItemsBtn.addEventListener('click', async () => {
   saveItemsBtn.disabled = true;
   saveItemsBtn.textContent = 'Saving... please wait';
+
   try {
     const cat = shopData.categories.find(c => c.name === currentCategory);
-    const itemCount = tempItems.length;
+    const prevItems = (cat.items || []).slice();
+    const newItems = [];
 
-    // Upload ALL new images (multiple files supported)
+    // process items one by one
     for (let i = 0; i < tempItems.length; i++) {
       const item = tempItems[i];
-      if (typeof item.src === 'string' && item.src.startsWith('data:image')) {
-        try {
-          const url = await uploadImage(item.src);
-          tempItems[i].src = url; // update with actual Firebase URL
-        } catch (err) {
-          console.error('Upload failed for item', i, err);
+
+      // validate
+      if (!item.price || isNaN(parseFloat(item.price))) {
+        alert('Invalid price for item #' + (i+1));
+        continue;
+      }
+
+      let uploadedUrl = null;
+      try {
+        // upload if needed
+        if (typeof item.src === 'string' && item.src.startsWith('data:image')) {
+          uploadedUrl = await uploadImage(item.src);
+        } else if (item._newFile) {
+          uploadedUrl = await uploadImage(item._newFile);
+        } else {
+          uploadedUrl = item.src;
+        }
+
+        // update Firestore with this item
+        const cleanItem = {
+          src: uploadedUrl,
+          price: String(item.price).trim(),
+          sizes: String(item.sizes || "").trim()
+        };
+
+        // clone current category
+        const updatedItems = currentMode === 'add'
+          ? [...prevItems, ...newItems, cleanItem]
+          : [...tempItems.slice(0, i), cleanItem, ...tempItems.slice(i+1)];
+
+        const payload = {
+          ...boutiqueData,
+          categories: {
+            ...boutiqueData.categories,
+            [currentCategory]: updatedItems
+          }
+        };
+
+        await db.collection("Boutiques").doc(boutiqueId).set(payload, { merge: true });
+
+        // success → push into confirmed newItems
+        newItems.push(cleanItem);
+
+      } catch (err) {
+        console.error("Failed saving item", i, err);
+        // rollback this upload if Firestore failed
+        if (uploadedUrl && uploadedUrl.startsWith("http")) {
+          try {
+            await firebase.storage().refFromURL(uploadedUrl).delete();
+            console.log("Rolled back orphan upload:", uploadedUrl);
+          } catch (e) {
+            console.warn("Could not delete orphan:", uploadedUrl, e);
+          }
         }
       }
     }
 
-    // Merge items depending on mode (add or edit)
-    cat.items = currentMode === 'add' ? [...cat.items, ...tempItems] : tempItems;
+    // update local data
+    cat.items = currentMode === 'add'
+      ? [...prevItems, ...newItems]
+      : newItems;
 
-    // Sync with cart items
-    cart = cart.filter(item => {
-      const stillExists = cat.items.some(newItem => newItem.src === item.src);
-      if (!stillExists) return false;
-      const updatedItem = cat.items.find(newItem => newItem.src === item.src);
-      item.price = updatedItem.price;
-      item.sizes = updatedItem.sizes;
-      return true;
-    });
+    // update cache
+    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
+      data: boutiqueData,
+      cacheTimestamp: Date.now()
+    }));
 
-    carts[boutiqueId] = cart;
-    localStorage.setItem('carts', JSON.stringify(carts));
-
-    // Save to Firestore
-    await saveShopData();
-
-    // Success modal
+    // success UI
     itemModal.style.display = 'none';
-    saveConfirmationText.textContent = `${itemCount} item${itemCount === 1 ? ' has' : 's have'} been saved successfully to your page.`;
+    saveConfirmationText.textContent =
+      newItems.length + " item(s) saved successfully.";
     saveConfirmationModal.style.display = 'flex';
     navigationStack.pop();
     navigationStack.push('saveConfirmationModal');
+    loadGallery(currentCategory);
 
-    // Refresh gallery
-    loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData.categories[0]?.name || '');
   } catch (err) {
-    alert('Error saving items: ' + err.message);
-    console.error('Save error:', err);
+    alert("Saving failed: " + err.message);
+    console.error(err);
   } finally {
     saveItemsBtn.disabled = false;
     saveItemsBtn.textContent = 'Save';
