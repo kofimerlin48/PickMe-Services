@@ -7,874 +7,825 @@
   <style>
     :root {
       --theme-color: #9e1850; /* Default, will be overridden by JS */
-    }* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Montserrat', sans-serif;
-}
-
-body {
-  background-color: #ffffff;
-  overflow-x: hidden;
-  position: relative;
-}
-
-.top-banner {
-  width: 100%;
-  height: 280px;
-  position: relative;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5));
-  background-size: cover;
-  background-position: center;
-  color: white;
-  text-align: center;
-  padding: 40px 20px 60px;
-  transition: transform 0.8s ease;
-  z-index: 1;
-  will-change: transform;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.top-banner h2 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
-.top-banner h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-.top-banner p { font-size: 14px; font-weight: 400; opacity: 0.9; }
-
-.banner-buttons {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
-
-.contact-btn, .pay-btn {
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  min-width: 140px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.contact-btn {
-  background-color: var(--theme-color);
-  color: white;
-  border: none;
-}
-
-.pay-btn {
-  background-color: white;
-  border: 2px solid var(--theme-color);
-  color: var(--theme-color);
-}
-
-.close-floating {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  width: 40px;
-  height: 40px;
-  background: var(--theme-color);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  cursor: pointer;
-  z-index: 100001;
-}
-
-.gallery-title {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 20px 0 10px;
-  position: relative;
-  z-index: 2;
-}
-
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
-  padding: 0 20px 120px;
-  position: relative;
-  z-index: 2;
-}
-
-.gallery-item {
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  background: white;
-  transition: transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.gallery-item:hover {
-  transform: scale(1.03);
-}
-
-.gallery-item img {
-  width: 100%;
-  height: auto;
-  cursor: pointer;
-  display: block;
-}
-
-.gallery-item .price {
-  font-weight: 600;
-  color: var(--theme-color);
-  margin: 8px 10px;
-  text-align: center;
-}
-
-.gallery-item .sizes {
-  font-size: 12px;
-  color: #666;
-  margin: 0 10px 8px;
-  text-align: center;
-}
-
-.gallery-item .add-to-cart {
-  background: var(--theme-color);
-  color: white;
-  border: none;
-  padding: 8px;
-  width: 100%;
-  cursor: pointer;
-  font-weight: 600;
-  border-top: 1px solid #ddd;
-  margin: 0;
-}
-
-.gallery-item .add-to-cart.added {
-  background: #333333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.preview-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.85);
-  justify-content: center;
-  align-items: center;
-  touch-action: manipulation;
-  flex-direction: column;
-}
-
-.preview-modal img {
-  max-width: 90%;
-  max-height: 70vh;
-  border-radius: 10px;
-}
-
-.preview-modal .add-to-cart {
-  background: var(--theme-color);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  margin-top: 15px;
-}
-
-.preview-modal .add-to-cart.added {
-  background: #333333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 40px;
-  color: white;
-  cursor: pointer;
-  user-select: none;
-  padding: 10px;
-}
-.arrow.left { left: 20px; }
-.arrow.right { right: 20px; }
-
-.close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  font-size: 22px;
-  color: white;
-  cursor: pointer;
-}
-
-.bottom-tabs {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  padding: 10px 0;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-  white-space: nowrap;
-  z-index: 2;
-}
-
-.bottom-tabs .tab {
-  display: inline-block;
-  padding: 10px 20px;
-  font-size: 14px;
-  color: var(--theme-color);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.bottom-tabs .tab.active {
-  border-bottom: 2px solid var(--theme-color);
-}
-
-.bottom-tabs::-webkit-scrollbar { display: none; }
-
-.contact-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.contact-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.contact-card h3 {
-  margin-bottom: 8px;
-  font-size: 18px;
-  color: var(--theme-color);
-}
-
-.contact-card p {
-  font-size: 14px;
-  color: #333;
-  line-height: 1.4;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 16px;
-}
-
-.contact-ok, .contact-cancel {
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: 110px;
-}
-
-.contact-ok {
-  background: var(--theme-color);
-  color: white;
-  border: none;
-}
-
-.contact-cancel {
-  background: #fff;
-  color: var(--theme-color);
-  border: 2px solid var(--theme-color);
-}
-
-.save-confirmation-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100001;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.save-confirmation-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.save-confirmation-card p {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 500px) {
-  .contact-btn, .pay-btn { min-width: 120px; padding: 10px 18px; }
-}
-
-.hamburger {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  width: 40px;
-  height: 40px;
-  background: var(--theme-color);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 100002;
-}
-
-.hamburger div {
-  width: 25px;
-  height: 3px;
-  background: white;
-  margin: 2px 0;
-}
-
-.pin-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.pin-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.pin-card h3 {
-  margin-bottom: 8px;
-  font-size: 18px;
-  color: var(--theme-color);
-}
-
-.pin-card input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 16px;
-  border: 1px solid var(--theme-color);
-  border-radius: 10px;
-  text-align: center;
-  font-size: 18px;
-}
-
-.menu-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.menu-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.menu-option {
-  padding: 12px;
-  margin: 10px 0;
-  background: white;
-  border: 2px solid var(--theme-color);
-  color: var(--theme-color);
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.categories-modal, .categories-manage-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.categories-card, .categories-manage-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-  overflow-y: auto;
-  max-height: 80vh;
-}
-
-.category-item {
-  background: white;
-  border: 2px solid var(--theme-color);
-  border-radius: 10px;
-  padding: 15px;
-  margin: 10px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  color: var(--theme-color);
-  font-weight: 600;
-}
-
-.category-item .category-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.category-item .category-action {
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.category-item .arrow {
-  font-size: 18px;
-}
-
-.item-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.item-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-  overflow-y: auto;
-  max-height: 80vh;
-}
-
-.item-upload {
-  margin-bottom: 20px;
-}
-
-.item-list .item {
-  position: relative;
-  margin: 10px 0;
-}
-
-.item img {
-  width: 100%;
-  border-radius: 12px;
-}
-
-.item input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid var(--theme-color);
-  border-radius: 10px;
-}
-
-.item .delete-icon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--theme-color);
-  color: white;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.delete-all-btn {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  background-color: white;
-  color: var(--theme-color);
-  border: 2px solid var(--theme-color);
-  margin: 10px 0;
-}
-
-.save-btn {
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  background-color: var(--theme-color);
-  color: white;
-  border: none;
-  margin-top: 20px;
-}
-
-.save-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.no-items {
-  text-align: center;
-  color: gray;
-  font-size: 16px;
-  margin: 20px 0;
-}
-
-.cart-buttons {
-  position: fixed;
-  bottom: 60px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px;
-  background: white;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-  z-index: 3;
-  display: none;
-}
-
-.cart-buttons button {
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  min-width: 160px;
-  text-align: center;
-}
-
-#viewSelected {
-  background-color: white;
-  border: 2px solid var(--theme-color);
-  color: var(--theme-color);
-}
-
-#buySelected {
-  background-color: var(--theme-color);
-  color: white;
-  border: none;
-}
-
-.cart-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: white;
-  overflow-y: auto;
-}
-
-.cart-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-}
-
-.cart-header h2 {
-  font-size: 20px;
-  color: var(--theme-color);
-}
-
-.cart-header p {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.cart-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
-  padding: 20px;
-}
-
-.cart-item {
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  background: white;
-  position: relative;
-}
-
-.cart-item img {
-  width: 100%;
-}
-
-.cart-item .price {
-  font-weight: 600;
-  color: var(--theme-color);
-  margin: 10px;
-  text-align: center;
-}
-
-.cart-item .sizes {
-  font-size: 12px;
-  color: #666;
-  margin: -5px 10px 10px;
-  text-align: center;
-}
-
-.cart-item .delete-cart {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--theme-color);
-  color: white;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.cart-actions {
-  text-align: center;
-  margin: 10px 0;
-}
-
-.cart-actions .delete-all-btn {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 25px;
-  cursor: pointer;
-  background-color: white;
-  color: var(--theme-color);
-  border: 2px solid var(--theme-color);
-}
-
-.whatsapp-field {
-  padding: 20px 20px 60px;
-  text-align: center;
-}
-
-.whatsapp-field label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: var(--theme-color);
-}
-
-.whatsapp-field input {
-  width: 80%;
-  padding: 10px;
-  border: 1px solid var(--theme-color);
-  border-radius: 10px;
-  font-size: 16px;
-}
-
-.floating-buy {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 40px;
-  background: var(--theme-color);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  z-index: 100001;
-}
-
-.close-cart {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  font-size: 22px;
-  color: var(--theme-color);
-  cursor: pointer;
-}
-
-.quick-buy-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.quick-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.quick-card h3 {
-  margin-bottom: 8px;
-  font-size: 18px;
-  color: var(--theme-color);
-}
-
-.quick-card input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 16px;
-  border: 1px solid var(--theme-color);
-  border-radius: 10px;
-  text-align: center;
-  font-size: 18px;
-}
-
-.slide-page {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: white;
-  z-index: 99999;
-  overflow-y: auto;
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.slider {
-  position: relative;
-  max-width: 80%;
-  margin: 0 auto;
-}
-
-.slide-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.slide-content img {
-  max-width: 100%;
-  max-height: 50vh;
-  border-radius: 12px;
-}
-
-.slide-info {
-  margin: 10px 0;
-}
-
-.slide-info p {
-  font-size: 16px;
-}
-
-.not-avail-btn {
-  background: white;
-  border: 2px solid var(--theme-color);
-  color: var(--theme-color);
-  padding: 10px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  margin-top: 20px;
-  font-weight: 600;
-}
-
-.done-btn, .ok-btn {
-  padding: 12px 40px;
-  background: var(--theme-color);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 40px;
-}
-
-.dimmed {
-  opacity: 0.7;
-  filter: grayscale(100%);
-}
-
-.error-message {
-  text-align: center;
-  color: #b00;
-  padding: 20px;
-  font-size: 16px;
-}
-
-  </style>  <!-- Firebase compat SDKs (non-module so we don't disturb your existing script scope) -->  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script></head>
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .top-banner {
+      width: 100%;
+      height: 280px;
+      position: relative;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5));
+      background-size: cover;
+      background-position: center;
+      color: white;
+      text-align: center;
+      padding: 40px 20px 60px;
+      transition: transform 0.8s ease;
+      z-index: 1;
+      will-change: transform;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .top-banner h2 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
+    .top-banner h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .top-banner p { font-size: 14px; font-weight: 400; opacity: 0.9; }
+
+    .banner-buttons {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    .contact-btn, .pay-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      min-width: 140px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .contact-btn {
+      background-color: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
+    .pay-btn {
+      background-color: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+    }
+
+    .close-floating {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      background: var(--theme-color);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 100001;
+    }
+
+    .gallery-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 20px 0 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 0 20px 120px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .gallery-item {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background: white;
+      transition: transform 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .gallery-item:hover { transform: scale(1.03); }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      cursor: pointer;
+      display: block;
+    }
+
+    .gallery-item .price {
+      font-weight: 600;
+      color: var(--theme-color);
+      margin: 8px 10px;
+      text-align: center;
+    }
+
+    .gallery-item .sizes {
+      font-size: 12px;
+      color: #666;
+      margin: 0 10px 8px;
+      text-align: center;
+    }
+
+    .gallery-item .add-to-cart {
+      background: var(--theme-color);
+      color: white;
+      border: none;
+      padding: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: 600;
+      border-top: 1px solid #ddd;
+      margin: 0;
+    }
+
+    .gallery-item .add-to-cart.added {
+      background: #333333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .preview-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      touch-action: manipulation;
+      flex-direction: column;
+    }
+
+    .preview-modal img {
+      max-width: 90%;
+      max-height: 70vh;
+      border-radius: 10px;
+    }
+
+    .preview-modal .add-to-cart {
+      background: var(--theme-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    .preview-modal .add-to-cart.added {
+      background: #333333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 40px;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      padding: 10px;
+    }
+    .arrow.left { left: 20px; }
+    .arrow.right { right: 20px; }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 22px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .bottom-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px 0;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    .bottom-tabs .tab {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: var(--theme-color);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .bottom-tabs .tab.active {
+      border-bottom: 2px solid var(--theme-color);
+    }
+
+    .bottom-tabs::-webkit-scrollbar { display: none; }
+
+    .contact-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .contact-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .contact-card h3 {
+      margin-bottom: 8px;
+      font-size: 18px;
+      color: var(--theme-color);
+    }
+
+    .contact-card p {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .contact-ok, .contact-cancel {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 110px;
+    }
+
+    .contact-ok {
+      background: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
+    .contact-cancel {
+      background: #fff;
+      color: var(--theme-color);
+      border: 2px solid var(--theme-color);
+    }
+
+    .save-confirmation-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100001;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .save-confirmation-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .save-confirmation-card p {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 500px) {
+      .contact-btn, .pay-btn { min-width: 120px; padding: 10px 18px; }
+    }
+
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 40px;
+      height: 40px;
+      background: var(--theme-color);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 100002;
+    }
+
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background: white;
+      margin: 2px 0;
+    }
+
+    .pin-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .pin-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .pin-card h3 {
+      margin-bottom: 8px;
+      font-size: 18px;
+      color: var(--theme-color);
+    }
+
+    .pin-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid var(--theme-color);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .menu-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .menu-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .menu-option {
+      padding: 12px;
+      margin: 10px 0;
+      background: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .categories-modal, .categories-manage-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .categories-card, .categories-manage-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+
+    .category-item {
+      background: white;
+      border: 2px solid var(--theme-color);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      color: var(--theme-color);
+      font-weight: 600;
+    }
+
+    .category-item .category-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .category-item .category-action {
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .category-item .arrow {
+      font-size: 18px;
+    }
+
+    .item-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .item-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+
+    .item-upload { margin-bottom: 20px; }
+
+    .item-list .item { position: relative; margin: 10px 0; }
+
+    .item img { width: 100%; border-radius: 12px; }
+
+    .item input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid var(--theme-color);
+      border-radius: 10px;
+    }
+
+    .item .delete-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--theme-color);
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .delete-all-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      background-color: white;
+      color: var(--theme-color);
+      border: 2px solid var(--theme-color);
+      margin: 10px 0;
+    }
+
+    .save-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      background-color: var(--theme-color);
+      color: white;
+      border: none;
+      margin-top: 20px;
+    }
+
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .no-items {
+      text-align: center;
+      color: gray;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+
+    .cart-buttons {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 10px;
+      background: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      z-index: 3;
+      display: none;
+    }
+
+    .cart-buttons button {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    #viewSelected {
+      background-color: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+    }
+
+    #buySelected {
+      background-color: var(--theme-color);
+      color: white;
+      border: none;
+    }
+
+    .cart-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: white;
+      overflow-y: auto;
+    }
+
+    .cart-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .cart-header h2 { font-size: 20px; color: var(--theme-color); }
+
+    .cart-header p { font-size: 16px; font-weight: 600; }
+
+    .cart-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .cart-item {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background: white;
+      position: relative;
+    }
+
+    .cart-item img { width: 100%; }
+
+    .cart-item .price {
+      font-weight: 600;
+      color: var(--theme-color);
+      margin: 10px;
+      text-align: center;
+    }
+
+    .cart-item .sizes {
+      font-size: 12px;
+      color: #666;
+      margin: -5px 10px 10px;
+      text-align: center;
+    }
+
+    .cart-item .delete-cart {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--theme-color);
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .cart-actions { text-align: center; margin: 10px 0; }
+
+    .cart-actions .delete-all-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      background-color: white;
+      color: var(--theme-color);
+      border: 2px solid var(--theme-color);
+    }
+
+    .whatsapp-field { padding: 20px 20px 60px; text-align: center; }
+
+    .whatsapp-field label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: var(--theme-color);
+    }
+
+    .whatsapp-field input {
+      width: 80%;
+      padding: 10px;
+      border: 1px solid var(--theme-color);
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    .floating-buy {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 40px;
+      background: var(--theme-color);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 100001;
+    }
+
+    .close-cart {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 22px;
+      color: var(--theme-color);
+      cursor: pointer;
+    }
+
+    .quick-buy-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.45);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quick-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .quick-card h3 { margin-bottom: 8px; font-size: 18px; color: var(--theme-color); }
+
+    .quick-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid var(--theme-color);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .slide-page {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: white;
+      z-index: 99999;
+      overflow-y: auto;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .slider { position: relative; max-width: 80%; margin: 0 auto; }
+
+    .slide-content { display: flex; flex-direction: column; align-items: center; }
+
+    .slide-content img { max-width: 100%; max-height: 50vh; border-radius: 12px; }
+
+    .slide-info { margin: 10px 0; }
+
+    .slide-info p { font-size: 16px; }
+
+    .not-avail-btn {
+      background: white;
+      border: 2px solid var(--theme-color);
+      color: var(--theme-color);
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    .done-btn, .ok-btn {
+      padding: 12px 40px;
+      background: var(--theme-color);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 40px;
+    }
+
+    .dimmed { opacity: 0.7; filter: grayscale(100%); }
+
+    .error-message { text-align: center; color: #b00; padding: 20px; font-size: 16px; }
+  </style>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+</head>
 <body>
   <div class="hamburger" id="hamburgerBtn">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>  <div class="close-floating">×</div>
+    <div></div><div></div><div></div>
+  </div>
+  <div class="close-floating">×</div>
+
   <div class="top-banner" id="topBanner">
     <div>
       <h2>Welcome to</h2>
@@ -883,9 +834,11 @@ body {
     </div>
     <div class="banner-buttons">
       <button class="contact-btn" id="contactBtn">Contact Us</button>
-      <button class="pay-btn">Pay Us</button>
+      <button class="pay-btn" id="payBtn">Pay Us</button>
     </div>
   </div>
+
+  <!-- Shared warning modal -->
   <div class="contact-modal" id="contactModal" aria-hidden="true">
     <div class="contact-card" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
       <h3 id="contactTitle">Warning</h3>
@@ -896,25 +849,35 @@ body {
       </div>
     </div>
   </div>
+
   <div class="save-confirmation-modal" id="saveConfirmationModal">
     <div class="save-confirmation-card">
       <p id="saveConfirmationText"></p>
       <button class="contact-ok" id="saveConfirmationOkBtn">OK</button>
     </div>
   </div>
+
   <div class="gallery-title">Samples of products sold</div>
   <div class="gallery" id="gallery"></div>
+
+  <!-- Preview modal -->
   <div class="preview-modal" id="previewModal">
-    <span class="close-btn" onclick="closeModal()">×</span>
-    <span class="arrow left" onclick="prevImage()">‹</span>
+    <span class="close-btn" id="modalCloseBtn">×</span>
+    <span class="arrow left" id="modalPrev">‹</span>
     <img id="modalImage" src="" alt="Preview" />
-    <button class="add-to-cart" id="modalAddToCart" onclick="addToCartFromModal()">Add to Cart</button>
-    <span class="arrow right" onclick="nextImage()">›</span>
+    <button class="add-to-cart" id="modalAddToCart">Add to Cart</button>
+    <span class="arrow right" id="modalNext">›</span>
   </div>
-  <div class="bottom-tabs" id="bottomTabs"></div>  <div class="cart-buttons" id="cartButtons">
+
+  <div class="bottom-tabs" id="bottomTabs"></div>
+
+  <div class="cart-buttons" id="cartButtons">
     <button id="viewSelected">Selected Items</button>
     <button id="buySelected">Buy Selected Items</button>
-  </div>  <div class="cart-modal" id="cartModal">
+  </div>
+
+  <!-- Cart -->
+  <div class="cart-modal" id="cartModal">
     <span class="close-cart" id="closeCart">×</span>
     <div class="cart-header">
       <h2>Selected Items</h2>
@@ -929,7 +892,10 @@ body {
       <input type="tel" id="whatsappInput" placeholder="+233...">
     </div>
     <button class="floating-buy" id="buyNowBtn">Buy Now</button>
-  </div>  <div class="quick-buy-modal" id="quickBuyModal">
+  </div>
+
+  <!-- Quick buy -->
+  <div class="quick-buy-modal" id="quickBuyModal">
     <div class="quick-card">
       <h3>Enter WhatsApp Number</h3>
       <input type="tel" id="quickWhatsapp" placeholder="+233...">
@@ -938,33 +904,47 @@ body {
         <button class="contact-cancel" id="quickBuyCancel">Cancel</button>
       </div>
     </div>
-  </div>  <div class="slide-page" id="slidePage"></div>  <div class="pin-modal" id="pinModal">
+  </div>
+
+  <!-- Slide page -->
+  <div class="slide-page" id="slidePage"></div>
+
+  <!-- Admin -->
+  <div class="pin-modal" id="pinModal">
     <div class="pin-card">
       <h3>Enter PIN</h3>
       <input type="password" id="pinInput" maxlength="6" placeholder="6-digit PIN">
       <button class="contact-ok" id="pinOkBtn">OK</button>
     </div>
-  </div>  <div class="menu-modal" id="menuModal">
+  </div>
+
+  <div class="menu-modal" id="menuModal">
     <div class="menu-card">
       <h3>Options</h3>
       <div class="menu-option" id="addItemsBtn">Add Items</div>
       <div class="menu-option" id="editItemsBtn">Edit Items</div>
       <div class="menu-option" id="editBoutiqueDetailsBtn">Edit Boutique Details</div>
-      <button class="contact-cancel" onclick="menuModal.style.display = 'none';">Cancel</button>
+      <button class="contact-cancel" id="menuCancelBtn">Cancel</button>
     </div>
-  </div>  <div class="categories-modal" id="categoriesModal">
+  </div>
+
+  <div class="categories-modal" id="categoriesModal">
     <div class="categories-card">
       <h3 id="categoriesTitle"></h3>
       <div id="categoriesList"></div>
-      <button class="contact-cancel" onclick="categoriesModal.style.display = 'none'; menuModal.style.display = 'flex';">Cancel</button>
+      <button class="contact-cancel" id="categoriesCancelBtn">Cancel</button>
     </div>
-  </div>  <div class="categories-manage-modal" id="categoriesManageModal">
+  </div>
+
+  <div class="categories-manage-modal" id="categoriesManageModal">
     <div class="categories-manage-card">
       <h3>Manage Categories</h3>
       <div id="categoriesManageList"></div>
-      <button class="contact-cancel" onclick="categoriesManageModal.style.display = 'none'; boutiqueDetailsModal.style.display = 'flex';">Cancel</button>
+      <button class="contact-cancel" id="categoriesManageCancelBtn">Cancel</button>
     </div>
-  </div>  <div class="item-modal" id="itemModal">
+  </div>
+
+  <div class="item-modal" id="itemModal">
     <div class="item-card">
       <h3 id="itemTitle"></h3>
       <div class="item-upload" id="itemUploadSection" style="display: none;">
@@ -974,9 +954,11 @@ body {
       <div class="item-list" id="itemList"></div>
       <button class="delete-all-btn" id="deleteAllItemsBtn" style="display: none;">Delete All Items</button>
       <button class="save-btn" id="saveItemsBtn">Save</button>
-      <button class="contact-cancel" onclick="itemModal.style.display = 'none'; categoriesModal.style.display = 'flex';">Cancel</button>
+      <button class="contact-cancel" id="itemModalCancelBtn">Cancel</button>
     </div>
-  </div>  <div class="item-modal" id="boutiqueDetailsModal">
+  </div>
+
+  <div class="item-modal" id="boutiqueDetailsModal">
     <div class="item-card">
       <h3>Edit Boutique Details</h3>
       <div class="item-list">
@@ -1000,22 +982,34 @@ body {
       <button class="delete-all-btn" id="addCategoryBtn">Add Category</button>
       <button class="delete-all-btn" id="manageCategoriesBtn">Manage Categories</button>
       <button class="save-btn" id="saveBoutiqueDetailsBtn" disabled>Save</button>
-      <button class="contact-cancel" onclick="boutiqueDetailsModal.style.display = 'none'; menuModal.style.display = 'flex';">Cancel</button>
+      <button class="contact-cancel" id="boutiqueDetailsCancelBtn">Cancel</button>
     </div>
-  </div>  <script>
+  </div>
+
+  <script>
+    /********************
+     * DOM references
+     ********************/
     const modal = document.getElementById('previewModal');
     const modalImg = document.getElementById('modalImage');
     const modalAddToCart = document.getElementById('modalAddToCart');
+    const modalPrev = document.getElementById('modalPrev');
+    const modalNext = document.getElementById('modalNext');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
     const gallery = document.getElementById('gallery');
     const bottomTabs = document.getElementById('bottomTabs');
     const topBanner = document.getElementById('topBanner');
     const contactBtn = document.getElementById('contactBtn');
+    const payBtn = document.getElementById('payBtn');
     const contactModal = document.getElementById('contactModal');
     const contactOkBtn = document.getElementById('contactOkBtn');
     const contactCancelBtn = document.getElementById('contactCancelBtn');
+
     const saveConfirmationModal = document.getElementById('saveConfirmationModal');
     const saveConfirmationText = document.getElementById('saveConfirmationText');
     const saveConfirmationOkBtn = document.getElementById('saveConfirmationOkBtn');
+
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const pinModal = document.getElementById('pinModal');
     const pinInput = document.getElementById('pinInput');
@@ -1024,11 +1018,16 @@ body {
     const addItemsBtn = document.getElementById('addItemsBtn');
     const editItemsBtn = document.getElementById('editItemsBtn');
     const editBoutiqueDetailsBtn = document.getElementById('editBoutiqueDetailsBtn');
+    const menuCancelBtn = document.getElementById('menuCancelBtn');
+
     const categoriesModal = document.getElementById('categoriesModal');
     const categoriesManageModal = document.getElementById('categoriesManageModal');
     const categoriesTitle = document.getElementById('categoriesTitle');
     const categoriesList = document.getElementById('categoriesList');
     const categoriesManageList = document.getElementById('categoriesManageList');
+    const categoriesCancelBtn = document.getElementById('categoriesCancelBtn');
+    const categoriesManageCancelBtn = document.getElementById('categoriesManageCancelBtn');
+
     const itemModal = document.getElementById('itemModal');
     const itemTitle = document.getElementById('itemTitle');
     const itemUploadSection = document.getElementById('itemUploadSection');
@@ -1036,6 +1035,8 @@ body {
     const itemList = document.getElementById('itemList');
     const saveItemsBtn = document.getElementById('saveItemsBtn');
     const deleteAllItemsBtn = document.getElementById('deleteAllItemsBtn');
+    const itemModalCancelBtn = document.getElementById('itemModalCancelBtn');
+
     const cartButtons = document.getElementById('cartButtons');
     const viewSelected = document.getElementById('viewSelected');
     const buySelected = document.getElementById('buySelected');
@@ -1046,11 +1047,14 @@ body {
     const cartTotal = document.getElementById('cartTotal');
     const whatsappInput = document.getElementById('whatsappInput');
     const buyNowBtn = document.getElementById('buyNowBtn');
+
     const quickBuyModal = document.getElementById('quickBuyModal');
     const quickWhatsapp = document.getElementById('quickWhatsapp');
     const quickBuyOk = document.getElementById('quickBuyOk');
     const quickBuyCancel = document.getElementById('quickBuyCancel');
+
     const slidePage = document.getElementById('slidePage');
+
     const boutiqueDetailsModal = document.getElementById('boutiqueDetailsModal');
     const boutiqueNameInput = document.getElementById('boutiqueNameInput');
     const boutiqueSloganInput = document.getElementById('boutiqueSloganInput');
@@ -1059,26 +1063,17 @@ body {
     const saveBoutiqueDetailsBtn = document.getElementById('saveBoutiqueDetailsBtn');
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     const manageCategoriesBtn = document.getElementById('manageCategoriesBtn');
+    const boutiqueDetailsCancelBtn = document.getElementById('boutiqueDetailsCancelBtn');
 
     const closeFloating = document.querySelector('.close-floating');
-    const WEB_APP_URL = ""; // deprecated; no longer used
+
+    /********************
+     * Config & globals
+     ********************/
     const urlParams = new URLSearchParams(window.location.search);
     const boutiqueId = urlParams.get('id');
 
-    let currentIndex = 0;
-    let currentImages = [];
-    let currentCategoryIndex = -1;
-    let boutiqueData = null;
-    let shopData = null;
-    let carts = JSON.parse(localStorage.getItem('carts')) || {};
-    let cart = carts[boutiqueId] || [];
-    let currentMode = '';
-    let currentCategory = '';
-    let tempItems = [];
-    let isChanged = false;
-    let navigationStack = ['fashion.html'];
-
-    // === Firebase init (compat) ===
+    // Firebase init (compat)
     const firebaseConfig = {
       apiKey: "AIzaSyD7GXJKraVNfXSHG7RDoUDccD98u5JF7F8",
       authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -1091,39 +1086,74 @@ body {
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // Navigation handling for close button
-    closeFloating.addEventListener('click', () => {
-      const elementsToClose = [
-        contactModal, previewModal, saveConfirmationModal, pinModal, menuModal,
-        categoriesModal, categoriesManageModal, itemModal, cartModal, quickBuyModal,
-        slidePage, boutiqueDetailsModal
-      ];
-      const isModalOpen = elementsToClose.some(el => el.style.display !== 'none');
-      elementsToClose.forEach(element => {
-        if (element.style.display !== 'none') {
-          element.style.display = 'none';
-          if (element === contactModal) {
-            element.setAttribute('aria-hidden', 'true');
-          }
-        }
-      });
-      if (isModalOpen && navigationStack.length > 1) {
-        navigationStack.pop();
-        const previous = navigationStack[navigationStack.length - 1];
-        if (previous === 'home') {
-          renderTabs();
-          loadGallery(shopData?.categories[0]?.name || '');
-        } else if (['contactModal', 'previewModal', 'saveConfirmationModal', 'pinModal', 'menuModal', 'categoriesModal', 'categoriesManageModal', 'itemModal', 'cartModal', 'quickBuyModal', 'slidePage', 'boutiqueDetailsModal'].includes(previous)) {
-          document.getElementById(previous).style.display = 'flex';
-        } else {
-          window.history.back();
-        }
-      } else {
-        window.location.href = 'fashion.html';
-      }
-    });
+    let currentIndex = 0;
+    let currentImages = [];
+    let currentCategoryIndex = -1;
+    let boutiqueData = null; // name/slogan/whatsapp/themeColor/backgroundImage/pin
+    let shopData = null;     // { categories: [ {name, items: [ {src, price, sizes} ]} ], categoriesOrder: [] }
+    let carts = JSON.parse(localStorage.getItem('carts')) || {};
+    let cart = carts[boutiqueId] || [];
+    let currentMode = '';
+    let currentCategory = '';
+    let tempItems = [];
+    let isChanged = false;
 
-    // ===== Firestore: fetch boutique data =====
+    // Navigation stack — base is 'home'
+    let navigationStack = ['home'];
+
+    /********************
+     * Helpers
+     ********************/
+    function normalizeCategories(data) {
+      // Data from Firestore: categories object, possibly categoriesOrder []
+      const categoriesObj = data.categories || {};
+      const keys = Object.keys(categoriesObj);
+      let order = Array.isArray(data.categoriesOrder) ? data.categoriesOrder.slice() : null;
+
+      if (!order) {
+        // Try to use cached order if present
+        const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+        if (cached?.data?.categoriesOrder && Array.isArray(cached.data.categoriesOrder)) {
+          order = cached.data.categoriesOrder.slice();
+        } else {
+          // fallback: keep current order of keys as first-time inferred order
+          order = keys.slice();
+        }
+      }
+
+      // Ensure order only contains valid keys and includes any new keys at the end
+      const validSet = new Set(keys);
+      order = order.filter(k => validSet.has(k));
+      keys.forEach(k => { if (!order.includes(k)) order.push(k); });
+
+      const categories = order.map(name => ({
+        name: name.toLowerCase(),
+        items: (categoriesObj[name] || []).map(item => ({
+          src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+          price: String(item.price ?? '').trim(),
+          sizes: String(item.sizes ?? '').trim()
+        }))
+      }));
+
+      return { categories, categoriesOrder: order };
+    }
+
+    function applyBoutiqueData() {
+      document.documentElement.style.setProperty('--theme-color', boutiqueData.themeColor);
+      document.getElementById('boutiqueName').textContent = boutiqueData.name;
+      document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
+      topBanner.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage || 'https://via.placeholder.com/1200x400?text=Banner'}')`;
+      topBanner.style.backgroundSize = 'cover';
+      topBanner.style.backgroundPosition = 'center';
+    }
+
+    function cacheWrite(dataObj) {
+      localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: dataObj, cacheTimestamp: Date.now() }));
+    }
+
+    /********************
+     * Load Boutique
+     ********************/
     async function fetchBoutiqueData() {
       const ref = db.collection('Boutiques').doc(boutiqueId);
       const snap = await ref.get();
@@ -1136,48 +1166,101 @@ body {
         themeColor: data.themeColor || '#9e1850',
         backgroundImage: data.backgroundImage || '',
         pin: String(data.pin ?? ''),
-        categories: data.categories || {}
+        categories: data.categories || {},
+        categoriesOrder: Array.isArray(data.categoriesOrder) ? data.categoriesOrder : null
       };
       return mapped;
     }
 
-    // Save to Firestore (replaces Apps Script)
-async function saveToGoogleSheet() {
-  try {
-    if (!boutiqueId) throw new Error('No boutiqueId');
-    const payload = {
-      name: (boutiqueData?.name || 'Boutique Name').toString().trim(),
-      slogan: (boutiqueData?.slogan || 'Your fashion, your style').toString().trim(),
-      whatsapp: (boutiqueData?.whatsapp || '').toString().trim(),
-      themeColor: (boutiqueData?.themeColor || '#9e1850').toString().trim(),
-      backgroundImage: (boutiqueData?.backgroundImage || '').toString().trim(),
-      pin: (boutiqueData?.pin || '').toString().trim(),
-      categories: (shopData?.categories || []).reduce((acc, cat) => {
-        if (!cat?.name) return acc;
-        acc[cat.name.toLowerCase().trim()] = (cat.items || []).map(item => ({
-          src: (item.src || '').toString().trim(),
-          price: (item.price || '').toString().trim(),
-          sizes: (item.sizes || '').toString().trim()
-        }));
-        return acc;
-      }, {})
-    };
-    await db.collection('Boutiques').doc(boutiqueId).set(payload, { merge: false });
-    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: payload, cacheTimestamp: Date.now() }));
-    updateCartWithShopData();
-    return true; // <— tell caller we saved successfully
-  } catch (error) {
-    console.error('Error saving:', error);
-    // IMPORTANT: we do NOT write a fallback cache here; we want the caller to know it failed
-    return false; // <— tell caller we failed to save
-  }
-}
+    async function loadBoutiqueData() {
+      if (!boutiqueId) {
+        gallery.innerHTML = '<p class="error-message">No boutique ID provided. <a href="fashion.html">Return to main page</a>.</p>';
+        return;
+      }
 
-    // Helper aliases (UI already calls these names)
-    function saveShopData() { return saveToGoogleSheet(); }
-    function saveBoutiqueData() { return saveToGoogleSheet(); }
+      // cache-first
+      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+      const cacheDuration = 24 * 60 * 60 * 1000;
+      const isRefresh = urlParams.get('refresh') === 'true';
 
-    // Upload image to Firebase Storage (replaces Apps Script upload)
+      if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
+        const d = cached.data;
+        boutiqueData = {
+          name: d.name || 'Boutique Name',
+          slogan: d.slogan || 'Your fashion, your style',
+          whatsapp: d.whatsapp || '',
+          themeColor: d.themeColor || '#9e1850',
+          backgroundImage: d.backgroundImage || '',
+          pin: String(d.pin ?? '')
+        };
+        const norm = normalizeCategories(d);
+        shopData = { categories: norm.categories, categoriesOrder: norm.categoriesOrder };
+        applyBoutiqueData();
+        renderTabs();
+        updateCart();
+        if (isRefresh) backgroundRefresh();
+        // If slide is in URL (owner/user link), handle after UI ready
+        handleSlideFromURL();
+        return;
+      }
+
+      try {
+        const data = await fetchBoutiqueData();
+        boutiqueData = {
+          name: data.name,
+          slogan: data.slogan,
+          whatsapp: data.whatsapp,
+          themeColor: data.themeColor,
+          backgroundImage: data.backgroundImage,
+          pin: String(data.pin ?? '')
+        };
+        const norm = normalizeCategories(data);
+        shopData = { categories: norm.categories, categoriesOrder: norm.categoriesOrder };
+        cacheWrite({ ...boutiqueData, categories: data.categories, categoriesOrder: norm.categoriesOrder });
+        applyBoutiqueData();
+        renderTabs();
+        updateCart();
+        handleSlideFromURL();
+      } catch (e) {
+        console.error(e);
+        gallery.innerHTML = '<p class="error-message">Failed to load boutique details. Please try again or <a href="fashion.html">return to main page</a>.</p>';
+      }
+    }
+
+    async function backgroundRefresh() {
+      try {
+        const data = await fetchBoutiqueData();
+        const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
+        boutiqueData = {
+          name: data.name || 'Boutique Name',
+          slogan: data.slogan || 'Your fashion, your style',
+          whatsapp: data.whatsapp || '',
+          themeColor: data.themeColor || '#9e1850',
+          backgroundImage: data.backgroundImage || '',
+          pin: String(data.pin ?? '')
+        };
+        const norm = normalizeCategories(data);
+        shopData = { categories: norm.categories, categoriesOrder: norm.categoriesOrder };
+        cacheWrite({ ...boutiqueData, categories: data.categories, categoriesOrder: norm.categoriesOrder });
+        applyBoutiqueData();
+        buildTabs(activeTab);
+        loadGallery(activeTab && shopData.categories.find(c => c.name === activeTab) ? activeTab : shopData.categories[0]?.name || '');
+        updateCartWithShopData();
+        updateCart();
+      } catch (e) {
+        console.error('Background refresh error:', e.message);
+      }
+    }
+
+    /********************
+     * Save (Firestore)
+     ********************/
+    async function saveToFirestoreFull(payload) {
+      // merge:true so we don’t blow away other fields; we also persist categoriesOrder for stable ordering
+      await db.collection('Boutiques').doc(boutiqueId).set(payload, { merge: true });
+      cacheWrite(payload);
+    }
+
     async function uploadImage(fileOrDataURL) {
       let blob; let ext = 'jpg';
       if (fileOrDataURL instanceof File) {
@@ -1200,152 +1283,47 @@ async function saveToGoogleSheet() {
       return url;
     }
 
-    // Fetch boutique with cache-first
-    async function loadBoutiqueData() {
-      if (!boutiqueId) {
-        gallery.innerHTML = '<p class="error-message">No boutique ID provided. <a href="fashion.html">Return to main page</a>.</p>';
-        return;
-      }
-      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
-      const cacheDuration = 24 * 60 * 60 * 1000;
-      const isRefresh = urlParams.get('refresh') === 'true';
-      if (cached && cached.cacheTimestamp && Date.now() - cached.cacheTimestamp < cacheDuration) {
-        boutiqueData = {
-          name: cached.data.name || 'Boutique Name',
-          slogan: cached.data.slogan || 'Your fashion, your style',
-          whatsapp: cached.data.whatsapp || '',
-          themeColor: cached.data.themeColor || '#9e1850',
-          backgroundImage: cached.data.backgroundImage || '',
-          pin: String(cached.data.pin ?? '')
-        };
-        shopData = {
-          categories: Object.keys(cached.data.categories || {}).map(name => ({
-            name: name.toLowerCase(),
-            items: (cached.data.categories[name] || []).map(item => ({
-              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
-              price: String(item.price ?? '').trim(),
-              sizes: String(item.sizes ?? '').trim()
-            }))
-          }))
-        };
-        applyBoutiqueData();
-        renderTabs();
-        updateCart();
-        if (isRefresh) {
-          try {
-            const data = await fetchBoutiqueData();
-            const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
-            boutiqueData = {
-              name: data.name,
-              slogan: data.slogan,
-              whatsapp: data.whatsapp,
-              themeColor: data.themeColor,
-              backgroundImage: data.backgroundImage,
-              pin: String(data.pin ?? '')
-            };
-            shopData = {
-              categories: Object.keys(data.categories || {}).map(name => ({
-                name: name.toLowerCase(),
-                items: (data.categories[name] || []).map(item => ({
-                  src: item.src || 'https://via.placeholder.com/400x400?text=Item',
-                  price: String(item.price ?? '').trim(),
-                  sizes: String(item.sizes ?? '').trim()
-                }))
-              }))
-            };
-            localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: { ...boutiqueData, categories: data.categories }, cacheTimestamp: Date.now() }));
-            applyBoutiqueData();
-            bottomTabs.innerHTML = '';
-            shopData.categories.forEach(cat => {
-              const tab = document.createElement('div');
-              tab.classList.add('tab');
-              tab.dataset.category = cat.name;
-              tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
-              if (cat.name === activeTab) tab.classList.add('active');
-              tab.addEventListener('click', () => {
-                document.querySelector('.tab.active')?.classList.remove('active');
-                tab.classList.add('active');
-                loadGallery(tab.dataset.category);
-              });
-              bottomTabs.appendChild(tab);
-            });
-            const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || '';
-            loadGallery(newActiveTab);
-            updateCartWithShopData();
-            updateCart();
-          } catch (err) { console.error('Background refresh error:', err.message); }
-        }
-        return;
-      }
-
+    async function tryDeleteFromStorageByURL(url) {
       try {
-        const data = await fetchBoutiqueData();
-        boutiqueData = {
-          name: data.name || 'Boutique Name',
-          slogan: data.slogan || 'Your fashion, your style',
-          whatsapp: data.whatsapp || '',
-          themeColor: data.themeColor || '#9e1850',
-          backgroundImage: data.backgroundImage || '',
-          pin: String(data.pin ?? '')
-        };
-        shopData = {
-          categories: Object.keys(data.categories || {}).map(name => ({
-            name: name.toLowerCase(),
-            items: (data.categories[name] || []).map(item => ({
-              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
-              price: String(item.price ?? '').trim(),
-              sizes: String(item.sizes ?? '').trim()
-            }))
-          }))
-        };
-        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-          data: { ...boutiqueData, categories: data.categories },
-          cacheTimestamp: Date.now()
-        }));
-        applyBoutiqueData();
-        renderTabs();
-        updateCart();
-      } catch (error) {
-        console.error('Error loading boutique data:', error.message);
-        gallery.innerHTML = '<p class="error-message">Failed to load boutique details. Please try again or <a href="fashion.html">return to main page</a>.</p>';
+        const ref = firebase.storage().refFromURL(url);
+        await ref.delete();
+      } catch (e) {
+        // If URL isn’t in our bucket or already deleted, ignore
+        console.warn('Storage delete skipped:', e?.message || e);
       }
     }
 
-    function applyBoutiqueData() {
-      document.documentElement.style.setProperty('--theme-color', boutiqueData.themeColor);
-      document.getElementById('boutiqueName').textContent = boutiqueData.name;
-      document.getElementById('boutiqueSlogan').textContent = boutiqueData.slogan;
-      topBanner.style.background = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), url('${boutiqueData.backgroundImage || 'https://via.placeholder.com/400x400?text=Banner'}')`;
-      topBanner.style.backgroundSize = 'cover';
-      topBanner.style.backgroundPosition = 'center';
-    }
-
-    function saveShopData() { return saveToGoogleSheet(); }
-    function saveBoutiqueData() { return saveToGoogleSheet(); }
-
+    /********************
+     * Tabs & gallery
+     ********************/
     function renderTabs() {
       bottomTabs.innerHTML = '';
       if (!shopData || !shopData.categories.length) {
         gallery.innerHTML = '<p class="no-items">No categories available.</p>';
         return;
       }
-      shopData.categories.forEach((cat, index) => {
+      buildTabs(shopData.categories[0]?.name || '');
+      loadGallery(shopData.categories[0]?.name || '');
+    }
+
+    function buildTabs(activeName) {
+      bottomTabs.innerHTML = '';
+      shopData.categories.forEach((cat) => {
         const tab = document.createElement('div');
         tab.classList.add('tab');
-        if (index === 0) tab.classList.add('active');
         tab.dataset.category = cat.name;
         tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
-        bottomTabs.appendChild(tab);
-      });
-      tabs = document.querySelectorAll('.bottom-tabs .tab');
-      tabs.forEach(tab => {
+        if (cat.name === activeName) tab.classList.add('active');
         tab.addEventListener('click', () => {
           document.querySelector('.tab.active')?.classList.remove('active');
           tab.classList.add('active');
           loadGallery(tab.dataset.category);
         });
+        bottomTabs.appendChild(tab);
       });
-      loadGallery(shopData.categories[0]?.name || '');
+      if (!document.querySelector('.tab.active') && shopData.categories[0]) {
+        bottomTabs.querySelector(`.tab[data-category="${shopData.categories[0].name}"]`)?.classList.add('active');
+      }
     }
 
     function loadGallery(category) {
@@ -1363,35 +1341,51 @@ async function saveToGoogleSheet() {
           const imgSrc = item.src && item.src.trim() !== '' ? item.src : 'https://via.placeholder.com/400x400?text=No+Image';
           const isInCart = cart.some(c => c.src === item.src);
 
+          const btnText = isInCart ? '✔ Added to Cart' : 'Add to Cart';
+          const btnClass = isInCart ? 'add-to-cart added' : 'add-to-cart';
           div.innerHTML = `
-            <img src="${imgSrc}" onclick="openModal('${item.src}', ${index}, '${category}')" loading="lazy" alt="Product">
+            <img src="${imgSrc}" data-index="${index}" data-category="${category}" loading="lazy" alt="Product">
             <p class="price">GH₵ ${item.price}</p>
             ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
-            <button class="add-to-cart${isInCart ? ' added' : ''}" onclick="addToCart(${index}, '${category}')">${isInCart ? '✔ Added to Cart' : 'Add to Cart'}</button>
+            <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>
           `;
           gallery.appendChild(div);
         });
+
+        // Delegate events to avoid recreating listeners
+        gallery.onclick = (e) => {
+          const img = e.target.closest('img[data-index]');
+          const btn = e.target.closest('button.add-to-cart');
+          if (img) {
+            const index = parseInt(img.dataset.index, 10);
+            openModal(cat.items[index].src, index, category);
+          } else if (btn) {
+            const index = parseInt(btn.dataset.index, 10);
+            addToCart(index, category, btn);
+          }
+        };
       }
     }
 
+    /********************
+     * Modal preview
+     ********************/
     function openModal(src, index, category) {
       currentIndex = index;
       currentCategoryIndex = shopData.categories.findIndex(c => c.name === category);
       modal.style.display = 'flex';
-      navigationStack.push('previewModal');
+      pushNav('previewModal');
       modalImg.src = src;
       const item = shopData.categories[currentCategoryIndex].items[index];
       const isInCart = cart.some(c => c.src === item.src);
       modalAddToCart.textContent = isInCart ? '✔ Added to Cart' : 'Add to Cart';
       modalAddToCart.classList.toggle('added', isInCart);
     }
-
     function closeModal() {
       modal.style.display = 'none';
       currentCategoryIndex = -1;
-      navigationStack.pop();
+      popNav('previewModal');
     }
-
     function nextImage() {
       currentIndex = (currentIndex + 1) % currentImages.length;
       modalImg.src = currentImages[currentIndex];
@@ -1400,7 +1394,6 @@ async function saveToGoogleSheet() {
       modalAddToCart.textContent = isInCart ? '✔ Added to Cart' : 'Add to Cart';
       modalAddToCart.classList.toggle('added', isInCart);
     }
-
     function prevImage() {
       currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
       modalImg.src = currentImages[currentIndex];
@@ -1409,10 +1402,12 @@ async function saveToGoogleSheet() {
       modalAddToCart.textContent = isInCart ? '✔ Added to Cart' : 'Add to Cart';
       modalAddToCart.classList.toggle('added', isInCart);
     }
-
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalNext.addEventListener('click', nextImage);
+    modalPrev.addEventListener('click', prevImage);
 
-    // Swipe for modal
+    // swipe
     let touchStartX = 0; let touchEndX = 0;
     modal.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
     modal.addEventListener('touchend', (e) => {
@@ -1422,62 +1417,62 @@ async function saveToGoogleSheet() {
     });
 
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 100) { topBanner.style.transform = 'translateY(-150%)'; }
-      else { topBanner.style.transform = 'translateY(0)'; }
+      if (window.scrollY > 100) topBanner.style.transform = 'translateY(-150%)';
+      else topBanner.style.transform = 'translateY(0)';
     });
 
-    contactBtn.addEventListener('click', () => {
+    /********************
+     * Warning modal reuse
+     ********************/
+    function showWarningThen(onOk) {
       contactModal.style.display = 'flex';
       contactModal.setAttribute('aria-hidden', 'false');
-      navigationStack.push('contactModal');
-    });
+      pushNav('contactModal');
 
-    contactOkBtn.addEventListener('click', () => {
+      const handleOk = () => {
+        hideWarning();
+        onOk && onOk();
+      };
+      const handleCancel = () => hideWarning();
+
+      contactOkBtn.onclick = handleOk;
+      contactCancelBtn.onclick = handleCancel;
+      contactModal.onclick = (e) => { if (e.target === contactModal) handleCancel(); };
+    }
+    function hideWarning() {
       contactModal.style.display = 'none';
       contactModal.setAttribute('aria-hidden', 'true');
-      navigationStack.pop();
-      const message = `Hi ${boutiqueData.name}, I saw your shop on PickMe Services and I want to see your current available items in *TYPE WHAT YOU WANT TO SEE*`;
-      window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
+      popNav('contactModal');
+    }
+
+    // Contact Us
+    contactBtn.addEventListener('click', () => {
+      showWarningThen(() => {
+        const message = `Hi ${boutiqueData.name}, I saw your shop on PickMe Services and I want to see your current available items in *TYPE WHAT YOU WANT TO SEE*`;
+        window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
+      });
     });
 
-    contactCancelBtn.addEventListener('click', () => {
-      contactModal.style.display = 'none';
-      contactModal.setAttribute('aria-hidden', 'true');
-      navigationStack.pop();
+    // Pay button also shows the warning (reusing the same content)
+    payBtn.addEventListener('click', () => {
+      showWarningThen(() => {
+        // After warning, simply take user to WhatsApp with a generic message about payment guidance
+        const message = `Hi ${boutiqueData.name}, please guide me to make a secure payment via PickMe Services.`;
+        window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
+      });
     });
 
-    contactModal.addEventListener('click', (e) => {
-      if (e.target === contactModal) {
-        contactModal.style.display = 'none';
-        contactModal.setAttribute('aria-hidden', 'true');
-        navigationStack.pop();
-      }
-    });
-
-    saveConfirmationOkBtn.addEventListener('click', () => {
-      saveConfirmationModal.style.display = 'none';
-      categoriesModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('categoriesModal');
-    });
-
-    saveConfirmationModal.addEventListener('click', (e) => {
-      if (e.target === saveConfirmationModal) {
-        saveConfirmationModal.style.display = 'none';
-        categoriesModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('categoriesModal');
-      }
-    });
-
+    /********************
+     * Admin auth + menus
+     ********************/
     hamburgerBtn.addEventListener('click', () => {
       pinModal.style.display = 'flex';
       pinInput.value = '';
       pinInput.focus();
-      navigationStack.push('pinModal');
+      pushNav('pinModal');
     });
 
-    pinModal.addEventListener('click', (e) => { if (e.target === pinModal) { pinModal.style.display = 'none'; navigationStack.pop(); } });
+    pinModal.addEventListener('click', (e) => { if (e.target === pinModal) { pinModal.style.display = 'none'; popNav('pinModal'); } });
 
     pinOkBtn.addEventListener('click', () => {
       const enteredPin = pinInput.value.trim();
@@ -1485,34 +1480,35 @@ async function saveToGoogleSheet() {
       if (enteredPin === String(boutiqueData.pin).trim()) {
         pinModal.style.display = 'none';
         menuModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('menuModal');
+        pushNav('menuModal'); // pop of pinModal is optional since we’re moving forward
       } else {
         alert('Incorrect PIN');
         pinInput.value = '';
       }
     });
 
-    menuModal.addEventListener('click', (e) => { if (e.target === menuModal) { menuModal.style.display = 'none'; navigationStack.pop(); } });
+    menuCancelBtn.addEventListener('click', () => {
+      menuModal.style.display = 'none';
+      popNav('menuModal');
+    });
+    menuModal.addEventListener('click', (e) => { if (e.target === menuModal) { menuModal.style.display = 'none'; popNav('menuModal'); } });
 
     addItemsBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
       currentMode = 'add';
       categoriesTitle.textContent = 'Add Items - Select Category';
-      renderCategories(false);
+      renderCategories();
       categoriesModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('categoriesModal');
+      pushNav('categoriesModal');
     });
 
     editItemsBtn.addEventListener('click', () => {
       menuModal.style.display = 'none';
       currentMode = 'edit';
       categoriesTitle.textContent = 'Edit Items - Select Category';
-      renderCategories(false);
+      renderCategories();
       categoriesModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('categoriesModal');
+      pushNav('categoriesModal');
     });
 
     editBoutiqueDetailsBtn.addEventListener('click', () => {
@@ -1524,47 +1520,44 @@ async function saveToGoogleSheet() {
       isChanged = false;
       checkBoutiqueDetailsSaveButton();
       boutiqueDetailsModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('boutiqueDetailsModal');
+      pushNav('boutiqueDetailsModal');
     });
 
-    categoriesModal.addEventListener('click', (e) => {
-      if (e.target === categoriesModal) {
-        categoriesModal.style.display = 'none';
-        menuModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('menuModal');
-      }
-    });
-
-    categoriesManageModal.addEventListener('click', (e) => {
-      if (e.target === categoriesManageModal) {
-        categoriesManageModal.style.display = 'none';
-        boutiqueDetailsModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('boutiqueDetailsModal');
-      }
-    });
-
-    function renderCategories(showAddNew) {
-  categoriesList.innerHTML = '';
-  shopData.categories.forEach((cat) => {
-    const card = document.createElement('div');
-    card.classList.add('category-item');
-    card.innerHTML = `
-      <span class="category-name">${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}</span>
-      <span class="arrow">>>></span>
-    `;
-    // Now the entire card is clickable, not just the text
-    card.addEventListener('click', () => {
-      currentCategory = cat.name;
+    categoriesCancelBtn.addEventListener('click', () => {
       categoriesModal.style.display = 'none';
-      openItemModal();
-      navigationStack.push('itemModal');
+      // Return to menu
+      menuModal.style.display = 'flex';
+      popNav('categoriesModal');
+      pushNav('menuModal');
     });
-    categoriesList.appendChild(card);
-  });
-}
+    categoriesModal.addEventListener('click', (e) => { if (e.target === categoriesModal) categoriesCancelBtn.click(); });
+
+    categoriesManageCancelBtn.addEventListener('click', () => {
+      categoriesManageModal.style.display = 'none';
+      boutiqueDetailsModal.style.display = 'flex';
+      popNav('categoriesManageModal');
+      pushNav('boutiqueDetailsModal');
+    });
+    categoriesManageModal.addEventListener('click', (e) => { if (e.target === categoriesManageModal) categoriesManageCancelBtn.click(); });
+
+    function renderCategories() {
+      categoriesList.innerHTML = '';
+      shopData.categories.forEach((cat) => {
+        const card = document.createElement('div');
+        card.classList.add('category-item');
+        card.innerHTML = `
+          <span class="category-name">${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}</span>
+          <span class="arrow">>>></span>
+        `;
+        card.addEventListener('click', () => {
+          currentCategory = cat.name;
+          categoriesModal.style.display = 'none';
+          openItemModal();
+          pushNav('itemModal');
+        });
+        categoriesList.appendChild(card);
+      });
+    }
 
     function renderManageCategories() {
       categoriesManageList.innerHTML = '';
@@ -1574,91 +1567,156 @@ async function saveToGoogleSheet() {
         card.innerHTML = `
           <span class="category-name">${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}</span>
           <div class="category-actions">
-            <span class="category-action edit-category" onclick="editCategory(${index})">✎</span>
-            <span class="category-action delete-category" onclick="deleteCategory(${index})">🗑</span>
+            <span class="category-action" data-edit="${index}">✎</span>
+            <span class="category-action" data-del="${index}">🗑</span>
           </div>
         `;
         categoriesManageList.appendChild(card);
       });
+
+      categoriesManageList.onclick = async (e) => {
+        const editEl = e.target.closest('[data-edit]');
+        const delEl = e.target.closest('[data-del]');
+        if (editEl) {
+          const index = parseInt(editEl.dataset.edit, 10);
+          const newName = prompt('Enter new category name:', shopData.categories[index].name);
+          if (!newName) return;
+          const newKey = newName.toLowerCase().trim();
+          if (shopData.categories.find(c => c.name === newKey && c.name !== shopData.categories[index].name)) {
+            alert('Category name already exists');
+            return;
+          }
+          // rename in array and in categoriesOrder
+          const old = shopData.categories[index].name;
+          shopData.categories[index].name = newKey;
+          const orderIdx = shopData.categoriesOrder.indexOf(old);
+          if (orderIdx >= 0) shopData.categoriesOrder[orderIdx] = newKey;
+
+          // rename in Firestore categories object
+          const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+          const live = cached?.data?.categories || {};
+          const renamed = {};
+          Object.keys(live).forEach(k => {
+            if (k.toLowerCase() === old) renamed[newKey] = live[k];
+            else renamed[k] = live[k];
+          });
+
+          const payload = {
+            ...boutiqueData,
+            categories: renamed,
+            categoriesOrder: shopData.categoriesOrder
+          };
+          await saveToFirestoreFull(payload);
+          buildTabs(newKey);
+          renderManageCategories();
+        } else if (delEl) {
+          const index = parseInt(delEl.dataset.del, 10);
+          if (!confirm(`Are you sure you want to delete the "${shopData.categories[index].name}" category?`)) return;
+
+          const deletedCat = shopData.categories[index];
+          // update arrays
+          shopData.categories.splice(index, 1);
+          shopData.categoriesOrder = shopData.categoriesOrder.filter(n => n !== deletedCat.name);
+
+          // remove items from cart that belong to this category
+          cart = cart.filter(item => item.category !== deletedCat.name);
+          carts[boutiqueId] = cart;
+          localStorage.setItem('carts', JSON.stringify(carts));
+
+          // reflect in Firestore categories object
+          const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+          const live = cached?.data?.categories || {};
+          const pruned = {};
+          Object.keys(live).forEach(k => {
+            if (k.toLowerCase() !== deletedCat.name) pruned[k] = live[k];
+          });
+
+          // delete images from storage for removed category
+          const toDelete = (live[deletedCat.name] || []).map(it => it.src).filter(Boolean);
+          await Promise.all(toDelete.map(tryDeleteFromStorageByURL));
+
+          const payload = {
+            ...boutiqueData,
+            categories: pruned,
+            categoriesOrder: shopData.categoriesOrder
+          };
+          await saveToFirestoreFull(payload);
+
+          buildTabs(shopData.categories[0]?.name || '');
+          loadGallery(shopData.categories[0]?.name || '');
+          updateCart();
+          renderManageCategories();
+        }
+      };
     }
-
-    window.editCategory = async function(index) {
-      const newName = prompt('Enter new category name:', shopData.categories[index].name);
-      if (newName && !shopData.categories.find(c => c.name === newName.toLowerCase() && c.name !== shopData.categories[index].name)) {
-        shopData.categories[index].name = newName.toLowerCase();
-        await saveShopData();
-        renderTabs();
-        renderManageCategories();
-      } else if (newName) {
-        alert('Category name already exists');
-      }
-    };
-
-    window.deleteCategory = async function(index) {
-      if (confirm(`Are you sure you want to delete the "${shopData.categories[index].name}" category?`)) {
-        const deletedItems = shopData.categories[index].items;
-        shopData.categories.splice(index, 1);
-        cart = cart.filter(item => !deletedItems.some(deleted => deleted.src === item.src));
-        carts[boutiqueId] = cart;
-        localStorage.setItem('carts', JSON.stringify(carts));
-        await saveShopData();
-        renderTabs();
-        renderManageCategories();
-        updateCart();
-      }
-    };
 
     addCategoryBtn.addEventListener('click', async () => {
       if (shopData.categories.length >= 6) { alert('Maximum 6 categories allowed'); return; }
       const newName = prompt('Enter new category name:');
-      if (newName && !shopData.categories.find(c => c.name === newName.toLowerCase())) {
-        shopData.categories.push({ name: newName.toLowerCase(), items: [] });
-        await saveShopData();
-        renderTabs();
-      } else if (newName) { alert('Category already exists'); }
+      if (!newName) return;
+      const key = newName.toLowerCase().trim();
+      if (shopData.categories.find(c => c.name === key)) { alert('Category already exists'); return; }
+
+      // update local arrays
+      shopData.categories.push({ name: key, items: [] });
+      if (!Array.isArray(shopData.categoriesOrder)) shopData.categoriesOrder = [];
+      shopData.categoriesOrder.push(key);
+
+      // update Firestore categories object
+      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+      const live = cached?.data?.categories || {};
+      const payload = {
+        ...boutiqueData,
+        categories: { ...live, [key]: [] },
+        categoriesOrder: shopData.categoriesOrder
+      };
+      await saveToFirestoreFull(payload);
+      buildTabs(key);
+      loadGallery(key);
     });
 
     manageCategoriesBtn.addEventListener('click', () => {
       boutiqueDetailsModal.style.display = 'none';
       renderManageCategories();
       categoriesManageModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('categoriesManageModal');
+      pushNav('categoriesManageModal');
     });
 
+    /********************
+     * Item modal (Add/Edit)
+     ********************/
     function openItemModal() {
-  const cat = shopData.categories.find(c => c.name === currentCategory);
+      const cat = shopData.categories.find(c => c.name === currentCategory);
 
-  // Keep a copy of the original src so we can detect replacements later
-  tempItems = currentMode === 'add'
-    ? []
-    : (cat.items || []).map(function(it) {
-        return {
-          src: it.src,
-          price: it.price,
-          sizes: it.sizes,
-          _originalSrc: it.src, // remember what the image used to be
-          _newFile: null        // placeholder for a replacement file in edit mode
-        };
-      });
+      tempItems = currentMode === 'add'
+        ? []
+        : (cat.items || []).map(function(it) {
+            return {
+              src: it.src,
+              price: it.price,
+              sizes: it.sizes,
+              _originalSrc: it.src
+            };
+          });
 
-  isChanged = currentMode === 'edit';
-  itemTitle.textContent = (currentMode === 'add' ? 'Add' : 'Edit') +
-    ' Items for ' + (currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1));
-  itemUploadSection.style.display = currentMode === 'add' ? 'block' : 'none';
-  deleteAllItemsBtn.style.display = (currentMode === 'edit' && tempItems.length > 0) ? 'block' : 'none';
-  renderItemList();
-  checkSaveButton();
-  itemModal.style.display = 'flex';
-}
+      isChanged = currentMode === 'edit';
+      itemTitle.textContent = (currentMode === 'add' ? 'Add' : 'Edit') + ' Items for ' + (currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1));
+      itemUploadSection.style.display = currentMode === 'add' ? 'block' : 'none';
+      deleteAllItemsBtn.style.display = (currentMode === 'edit' && tempItems.length > 0) ? 'block' : 'none';
+      renderItemList();
+      checkSaveButton();
+      itemModal.style.display = 'flex';
+    }
+
+    itemModalCancelBtn.addEventListener('click', () => {
+      itemModal.style.display = 'none';
+      categoriesModal.style.display = 'flex';
+      popNav('itemModal');
+      pushNav('categoriesModal');
+    });
 
     itemModal.addEventListener('click', (e) => {
-      if (e.target === itemModal) {
-        itemModal.style.display = 'none';
-        categoriesModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('categoriesModal');
-      }
+      if (e.target === itemModal) itemModalCancelBtn.click();
     });
 
     itemUpload.addEventListener('change', (e) => {
@@ -1670,6 +1728,7 @@ async function saveToGoogleSheet() {
           const newItem = { src: ev.target.result, file: file, price: '', sizes: '' };
           tempItems.push(newItem);
           renderItemList();
+          checkSaveButton();
         };
         reader.readAsDataURL(file);
       }
@@ -1677,64 +1736,60 @@ async function saveToGoogleSheet() {
     });
 
     function renderItemList() {
-  itemList.innerHTML = '';
-  if (tempItems.length === 0) {
-    itemList.innerHTML = '<p class="no-items">No items added</p>';
-  }
+      itemList.innerHTML = '';
+      if (tempItems.length === 0) {
+        itemList.innerHTML = '<p class="no-items">No items added</p>';
+      }
 
-  tempItems.forEach((item, idx) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'item';
+      tempItems.forEach((item, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'item';
 
-    const img = document.createElement('img');
-    img.src = item.src;
-    img.alt = 'Item';
-    wrap.appendChild(img);
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = 'Item';
+        wrap.appendChild(img);
 
-    // In EDIT mode, allow replacing the image (ADD mode uses the top file input)
-    
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.placeholder = 'Price';
+        priceInput.value = item.price || '';
+        priceInput.onchange = function() {
+          tempItems[idx].price = this.value;
+          isChanged = true;
+          checkSaveButton();
+        };
+        wrap.appendChild(priceInput);
 
-    const priceInput = document.createElement('input');
-    priceInput.type = 'number';
-    priceInput.placeholder = 'Price';
-    priceInput.value = item.price || '';
-    priceInput.onchange = function() {
-      tempItems[idx].price = this.value;
-      isChanged = true;
+        const sizeInput = document.createElement('input');
+        sizeInput.type = 'text';
+        sizeInput.placeholder = 'Sizes (e.g. S,M,L)';
+        if (item.sizes) sizeInput.value = item.sizes;
+        sizeInput.onchange = function() {
+          tempItems[idx].sizes = this.value;
+          isChanged = true;
+          checkSaveButton();
+        };
+        wrap.appendChild(sizeInput);
+
+        const del = document.createElement('div');
+        del.className = 'delete-icon';
+        del.textContent = '🗑';
+        del.addEventListener('click', () => {
+          // Track deletion: if existing item (has _originalSrc) we remove it; deletion from storage happens on Save
+          tempItems.splice(idx, 1);
+          isChanged = true;
+          renderItemList();
+          checkSaveButton();
+        });
+        wrap.appendChild(del);
+
+        itemList.appendChild(wrap);
+      });
+
+      deleteAllItemsBtn.style.display = (currentMode === 'edit' && tempItems.length > 0) ? 'block' : 'none';
       checkSaveButton();
-    };
-    wrap.appendChild(priceInput);
-
-    const sizeInput = document.createElement('input');
-    sizeInput.type = 'text';
-    sizeInput.placeholder = 'Sizes (e.g. S,M,L)';
-    if (item.sizes) sizeInput.value = item.sizes;
-    sizeInput.onchange = function() {
-      tempItems[idx].sizes = this.value;
-      isChanged = true;
-      checkSaveButton();
-    };
-    wrap.appendChild(sizeInput);
-
-    const del = document.createElement('div');
-    del.className = 'delete-icon';
-    del.textContent = '🗑';
-    del.addEventListener('click', () => {
-      tempItems.splice(idx, 1);
-      isChanged = true;
-      renderItemList();
-      checkSaveButton();
-    });
-    wrap.appendChild(del);
-
-    itemList.appendChild(wrap);
-  });
-
-  deleteAllItemsBtn.style.display =
-    currentMode === 'edit' && tempItems.length > 0 ? 'block' : 'none';
-
-  checkSaveButton();
-}
+    }
 
     function checkSaveButton() {
       const allPriced = tempItems.length === 0 || tempItems.every(item => item.price !== '' && !isNaN(parseFloat(item.price)));
@@ -1749,137 +1804,136 @@ async function saveToGoogleSheet() {
         checkSaveButton();
       }
     });
-  
+
+    // SAVE (Add/Edit) with correct deletion of Storage + Firestore
     saveItemsBtn.addEventListener('click', async () => {
-  saveItemsBtn.disabled = true;
-  saveItemsBtn.textContent = 'Saving... please wait';
+      saveItemsBtn.disabled = true;
+      saveItemsBtn.textContent = 'Saving... please wait';
 
-  try {
-    const cat = shopData.categories.find(c => c.name === currentCategory);
-    const prevItems = (cat.items || []).slice();
-    const newItems = [];
-
-    // process items one by one
-    for (let i = 0; i < tempItems.length; i++) {
-      const item = tempItems[i];
-
-      // validate
-      if (!item.price || isNaN(parseFloat(item.price))) {
-        alert('Invalid price for item #' + (i+1));
-        continue;
-      }
-
-      let uploadedUrl = null;
       try {
-        // upload if needed
-        if (typeof item.src === 'string' && item.src.startsWith('data:image')) {
-          uploadedUrl = await uploadImage(item.src);
-        } else if (item._newFile) {
-          uploadedUrl = await uploadImage(item._newFile);
-        } else {
-          uploadedUrl = item.src;
+        const catIdx = shopData.categories.findIndex(c => c.name === currentCategory);
+        if (catIdx < 0) throw new Error('Category not found');
+        const prevItems = (shopData.categories[catIdx].items || []).slice();
+
+        // Upload any new images and build finalItems
+        const finalItems = [];
+        for (let i = 0; i < tempItems.length; i++) {
+          const item = tempItems[i];
+          if (!item.price || isNaN(parseFloat(item.price))) {
+            alert('Invalid price for item #' + (i+1));
+            continue;
+          }
+          let srcOut = item.src;
+          // New items have data URLs — upload them
+          if (typeof item.src === 'string' && item.src.startsWith('data:image')) {
+            srcOut = await uploadImage(item.src);
+          }
+          finalItems.push({
+            src: srcOut,
+            price: String(item.price).trim(),
+            sizes: String(item.sizes || '').trim()
+          });
         }
 
-        // update Firestore with this item
-        const cleanItem = {
-          src: uploadedUrl,
-          price: String(item.price).trim(),
-          sizes: String(item.sizes || "").trim()
-        };
+        // Determine deletions = items that existed previously but are no longer in tempItems (by src equality)
+        const tempSrcSet = new Set(tempItems.map(it => it._originalSrc || (it.src.startsWith('http') ? it.src : '')));
+        const toDeleteSrcs = prevItems
+          .map(it => it.src)
+          .filter(src => src && !tempSrcSet.has(src));
 
-        // clone current category
-        const updatedItems = currentMode === 'add'
-          ? [...prevItems, ...newItems, cleanItem]
-          : [...tempItems.slice(0, i), cleanItem, ...tempItems.slice(i+1)];
+        // Delete removed images from Storage
+        await Promise.all(toDeleteSrcs.map(tryDeleteFromStorageByURL));
 
+        // Update Firestore categories object
+        const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+        const live = cached?.data?.categories || {};
+        const updated = { ...live, [currentCategory]: finalItems };
+
+        // Persist categoriesOrder unchanged (first-added order)
         const payload = {
           ...boutiqueData,
-          categories: {
-            ...boutiqueData.categories,
-            [currentCategory]: updatedItems
-          }
+          categories: updated,
+          categoriesOrder: shopData.categoriesOrder
         };
+        await saveToFirestoreFull(payload);
 
-        await db.collection("Boutiques").doc(boutiqueId).set(payload, { merge: true });
+        // Update local structures
+        shopData.categories[catIdx].items = finalItems;
 
-        // success → push into confirmed newItems
-        newItems.push(cleanItem);
+        // Success UI
+        itemModal.style.display = 'none';
+        saveConfirmationText.textContent = `${finalItems.length} item(s) saved successfully.`;
+        saveConfirmationModal.style.display = 'flex';
+        popNav('itemModal');
+        pushNav('saveConfirmationModal');
 
+        loadGallery(currentCategory);
+        updateCartWithShopData();
+        updateCart();
       } catch (err) {
-        console.error("Failed saving item", i, err);
-        // rollback this upload if Firestore failed
-        if (uploadedUrl && uploadedUrl.startsWith("http")) {
-          try {
-            await firebase.storage().refFromURL(uploadedUrl).delete();
-            console.log("Rolled back orphan upload:", uploadedUrl);
-          } catch (e) {
-            console.warn("Could not delete orphan:", uploadedUrl, e);
-          }
-        }
-      }
-    }
-
-    // update local data
-    cat.items = currentMode === 'add'
-      ? [...prevItems, ...newItems]
-      : newItems;
-
-    // update cache
-    localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({
-      data: boutiqueData,
-      cacheTimestamp: Date.now()
-    }));
-
-    // success UI
-    itemModal.style.display = 'none';
-    saveConfirmationText.textContent =
-      newItems.length + " item(s) saved successfully.";
-    saveConfirmationModal.style.display = 'flex';
-    navigationStack.pop();
-    navigationStack.push('saveConfirmationModal');
-    loadGallery(currentCategory);
-
-  } catch (err) {
-    alert("Saving failed: " + err.message);
-    console.error(err);
-  } finally {
-    saveItemsBtn.disabled = false;
-    saveItemsBtn.textContent = 'Save';
-  }
-});
-
-    boutiqueDetailsModal.addEventListener('click', (e) => {
-      if (e.target === boutiqueDetailsModal) {
-        boutiqueDetailsModal.style.display = 'none';
-        menuModal.style.display = 'flex';
-        navigationStack.pop();
-        navigationStack.push('menuModal');
+        alert("Saving failed: " + (err?.message || err));
+        console.error(err);
+      } finally {
+        saveItemsBtn.disabled = false;
+        saveItemsBtn.textContent = 'Save';
       }
     });
 
-    boutiqueNameInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
-    boutiqueSloganInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
-    boutiqueWhatsAppInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
-    boutiqueThemeColorInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    saveConfirmationOkBtn.addEventListener('click', () => {
+      saveConfirmationModal.style.display = 'none';
+      categoriesModal.style.display = 'flex';
+      popNav('saveConfirmationModal');
+      pushNav('categoriesModal');
+    });
+    saveConfirmationModal.addEventListener('click', (e) => {
+      if (e.target === saveConfirmationModal) saveConfirmationOkBtn.click();
+    });
 
+    /********************
+     * Boutique details save
+     ********************/
     function checkBoutiqueDetailsSaveButton() {
       const isValid = boutiqueNameInput.value.trim() !== '' && boutiqueWhatsAppInput.value.trim() !== '';
       saveBoutiqueDetailsBtn.disabled = !isValid || !isChanged;
     }
+    boutiqueNameInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueSloganInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueWhatsAppInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
+    boutiqueThemeColorInput.addEventListener('input', () => { isChanged = true; checkBoutiqueDetailsSaveButton(); });
 
     saveBoutiqueDetailsBtn.addEventListener('click', async () => {
       boutiqueData.name = boutiqueNameInput.value.trim();
       boutiqueData.slogan = boutiqueSloganInput.value.trim();
       boutiqueData.whatsapp = boutiqueWhatsAppInput.value.trim();
       boutiqueData.themeColor = boutiqueThemeColorInput.value;
-      await saveBoutiqueData();
+
+      const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+      const liveCats = cached?.data?.categories || {};
+      const payload = {
+        ...boutiqueData,
+        categories: liveCats,
+        categoriesOrder: shopData.categoriesOrder
+      };
+      await saveToFirestoreFull(payload);
       applyBoutiqueData();
+
       boutiqueDetailsModal.style.display = 'none';
       menuModal.style.display = 'flex';
-      navigationStack.pop();
-      navigationStack.push('menuModal');
+      popNav('boutiqueDetailsModal');
+      pushNav('menuModal');
     });
 
+    boutiqueDetailsCancelBtn.addEventListener('click', () => {
+      boutiqueDetailsModal.style.display = 'none';
+      menuModal.style.display = 'flex';
+      popNav('boutiqueDetailsModal');
+      pushNav('menuModal');
+    });
+    boutiqueDetailsModal.addEventListener('click', (e) => { if (e.target === boutiqueDetailsModal) boutiqueDetailsCancelBtn.click(); });
+
+    /********************
+     * Cart
+     ********************/
     function updateCartWithShopData() {
       if (!shopData || !shopData.categories) return;
       cart = cart.filter(item => {
@@ -1905,44 +1959,9 @@ async function saveToGoogleSheet() {
       } else {
         cartButtons.style.display = 'none';
       }
-      loadGallery(document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '');
-    }
-
-    window.addToCart = function(index, category) {
-      const cat = shopData.categories.find(c => c.name === category);
-      const item = cat.items[index];
-      const isInCart = cart.some(c => c.src === item.src);
-      const button = event.target;
-      if (isInCart) {
-        cart = cart.filter(c => c.src !== item.src);
-        button.textContent = 'Add to Cart';
-        button.classList.remove('added');
-        if (modal.style.display === 'flex' && currentCategoryIndex !== -1 && index === currentIndex) {
-          modalAddToCart.textContent = 'Add to Cart';
-          modalAddToCart.classList.remove('added');
-        }
-      } else {
-        cart.push({ ...item, category });
-        button.textContent = '✔ Added to Cart';
-        button.classList.add('added');
-        if (modal.style.display === 'flex' && currentCategoryIndex !== -1 && index === currentIndex) {
-          modalAddToCart.textContent = '✔ Added to Cart';
-          modalAddToCart.classList.add('added');
-        }
-      }
-      updateCart();
-    }
-
-    window.addToCartFromModal = function() {
-      if (currentCategoryIndex !== -1) {
-        addToCart(currentIndex, shopData.categories[currentCategoryIndex].name);
-      }
-    }
-
-    function removeFromCart(idx) {
-      cart.splice(idx, 1);
-      updateCart();
-      renderCartItems();
+      // refresh current tab buttons text
+      const activeCategory = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
+      loadGallery(activeCategory);
     }
 
     function renderCartItems() {
@@ -1957,14 +1976,36 @@ async function saveToGoogleSheet() {
             <img src="${item.src}">
             <p class="price">GH₵ ${item.price}</p>
             ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
-            <div class="delete-cart" onclick="removeFromCart(${idx})">🗑</div>
+            <div class="delete-cart" data-index="${idx}">🗑</div>
           `;
           cartItemsEl.appendChild(div);
         });
+
+        cartItemsEl.onclick = (e) => {
+          const del = e.target.closest('.delete-cart');
+          if (del) {
+            const idx = parseInt(del.dataset.index, 10);
+            cart.splice(idx, 1);
+            updateCart();
+            renderCartItems();
+          }
+        };
       }
       const total = cart.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
       cartTotal.textContent = total;
     }
+
+    viewSelected.addEventListener('click', () => {
+      cartModal.style.display = 'block';
+      renderCartItems();
+      whatsappInput.value = '';
+      pushNav('cartModal');
+    });
+
+    closeCart.addEventListener('click', () => {
+      cartModal.style.display = 'none';
+      popNav('cartModal');
+    });
 
     deleteAllCartBtn.addEventListener('click', () => {
       if (confirm('Are you sure you want to delete all items in the cart?')) {
@@ -1972,36 +2013,66 @@ async function saveToGoogleSheet() {
         updateCart();
         renderCartItems();
         cartModal.style.display = 'none';
-        navigationStack.pop();
+        popNav('cartModal');
       }
     });
 
-    viewSelected.addEventListener('click', () => {
-      cartModal.style.display = 'block';
-      renderCartItems();
-      whatsappInput.value = '';
-      navigationStack.push('cartModal');
+    // Add to cart (supports btn passed to avoid requery)
+    function addToCart(index, category, buttonEl) {
+      const cat = shopData.categories.find(c => c.name === category);
+      const item = cat.items[index];
+      const existsIdx = cart.findIndex(c => c.src === item.src);
+      const inModal = (modal.style.display === 'flex' && currentCategoryIndex !== -1 && index === currentIndex);
+
+      if (existsIdx >= 0) {
+        cart.splice(existsIdx, 1);
+        if (buttonEl) {
+          buttonEl.textContent = 'Add to Cart';
+          buttonEl.classList.remove('added');
+        }
+        if (inModal) {
+          modalAddToCart.textContent = 'Add to Cart';
+          modalAddToCart.classList.remove('added');
+        }
+      } else {
+        cart.push({ ...item, category });
+        if (buttonEl) {
+          buttonEl.textContent = '✔ Added to Cart';
+          buttonEl.classList.add('added');
+        }
+        if (inModal) {
+          modalAddToCart.textContent = '✔ Added to Cart';
+          modalAddToCart.classList.add('added');
+        }
+      }
+      updateCart();
+    }
+
+    modalAddToCart.addEventListener('click', () => {
+      if (currentCategoryIndex !== -1) {
+        const category = shopData.categories[currentCategoryIndex].name;
+        const btn = null;
+        addToCart(currentIndex, category, btn);
+      }
     });
 
-    closeCart.addEventListener('click', () => {
-      cartModal.style.display = 'none';
-      navigationStack.pop();
-    });
-
+    // Buy flows now reuse the warning modal BEFORE proceeding
     buySelected.addEventListener('click', () => {
       if (cart.length === 0) return;
-      quickBuyModal.style.display = 'flex';
-      quickWhatsapp.value = '';
-      quickWhatsapp.focus();
-      navigationStack.push('quickBuyModal');
+      showWarningThen(() => {
+        quickBuyModal.style.display = 'flex';
+        quickWhatsapp.value = '';
+        quickWhatsapp.focus();
+        pushNav('quickBuyModal');
+      });
     });
 
     quickBuyCancel.addEventListener('click', () => {
       quickBuyModal.style.display = 'none';
-      navigationStack.pop();
+      popNav('quickBuyModal');
     });
 
-    quickBuyOk.addEventListener('click', () => {
+    quickBuyOk.addEventListener('click', async () => {
       const whatsapp = quickWhatsapp.value.trim();
       if (!whatsapp) {
         quickWhatsapp.style.border = '2px solid red';
@@ -2009,8 +2080,8 @@ async function saveToGoogleSheet() {
         return;
       }
       quickBuyModal.style.display = 'none';
-      navigationStack.pop();
-      proceedToBuy(cart, whatsapp);
+      popNav('quickBuyModal');
+      await proceedToBuy(cart, whatsapp);
     });
 
     buyNowBtn.addEventListener('click', () => {
@@ -2021,43 +2092,81 @@ async function saveToGoogleSheet() {
         setTimeout(() => whatsappInput.style.border = '1px solid var(--theme-color)', 3000);
         return;
       }
-      proceedToBuy(cart, whatsapp);
+      // show warning then continue
+      showWarningThen(async () => {
+        await proceedToBuy(cart, whatsapp);
+      });
     });
 
-    function proceedToBuy(items, whatsapp) {
-      if (items.length === 0) return;
-      const link = generateSlideLink(items, whatsapp);
-      const total = items.reduce((s, i) => s + parseFloat(i.price || 0), 0);
-      const message = `Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if available so I can proceed with payment. ITEMS LINK: ${link}`;
-      window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
+    /********************
+     * Slide links via Firestore (cross-device)
+     ********************/
+    async function createSlideDoc(payload) {
+      const id = Date.now() + Math.random().toString(36).slice(2);
+      await db.collection('Slides').doc(id).set({
+        ...payload,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return id;
     }
 
-    function generateSlideLink(items, whatsapp) {
-      const id = Date.now() + Math.random().toString(36).slice(2);
-      const total = items.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
-      const data = {
+    async function proceedToBuy(items, whatsapp) {
+      if (items.length === 0) return;
+      const total = items.reduce((s, i) => s + parseFloat(i.price || 0), 0);
+      // Create a Firestore slide doc for the owner to review
+      const slidePayload = {
         items: items.map(it => ({ ...it, available: true })),
         total,
         userWhatsapp: whatsapp,
         isForUser: false,
         boutiqueId
       };
-      let slides = JSON.parse(localStorage.getItem('slides') || '{}');
-      slides[id] = data;
-      localStorage.setItem('slides', JSON.stringify(slides));
-      return window.location.origin + window.location.pathname + `?slide=${id}`;
+      const slideId = await createSlideDoc(slidePayload);
+      const link = buildSlideLink(slideId);
+
+      const message = `Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if available so I can proceed with payment. ITEMS LINK: ${link}`;
+      window.location.href = `https://wa.me/${boutiqueData.whatsapp}?text=${encodeURIComponent(message)}`;
     }
 
-    if (urlParams.has('slide')) {
-      const id = urlParams.get('slide');
-      const slides = JSON.parse(localStorage.getItem('slides') || '{}');
-      if (slides[id] && slides[id].boutiqueId === boutiqueId) {
-        showSlidePage(slides[id]);
-        navigationStack.push('slidePage');
+    function buildSlideLink(id) {
+      const base = window.location.origin + window.location.pathname;
+      const url = new URL(base);
+      url.searchParams.set('id', boutiqueId);
+      url.searchParams.set('slideFirestore', id);
+      return url.toString();
+    }
+
+    async function handleSlideFromURL() {
+      // Old localStorage-based (for backward-compat) — keep working if ?slide is present and exists locally
+      if (urlParams.has('slide')) {
+        const id = urlParams.get('slide');
+        const slides = JSON.parse(localStorage.getItem('slides') || '{}');
+        const data = slides[id];
+        if (data && data.boutiqueId === boutiqueId) {
+          showSlidePage(data, null); // local
+          pushNav('slidePage');
+          return;
+        }
+      }
+      // New Firestore-based link
+      if (urlParams.has('slideFirestore')) {
+        try {
+          const id = urlParams.get('slideFirestore');
+          const snap = await db.collection('Slides').doc(id).get();
+          if (snap.exists) {
+            const data = snap.data();
+            if (data.boutiqueId === boutiqueId) {
+              showSlidePage(data, id); // remote
+              pushNav('slidePage');
+            }
+          }
+        } catch (e) {
+          console.error('Slide fetch error:', e?.message || e);
+        }
       }
     }
 
-    function showSlidePage(data) {
+    function showSlidePage(data, slideDocId) {
       document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = 'none');
       slidePage.style.display = 'block';
       slidePage.innerHTML = `
@@ -2076,6 +2185,7 @@ async function saveToGoogleSheet() {
         <button id="doneBtn" class="done-btn">Done</button>
         <button id="okBtn" class="ok-btn">OK</button>
       `;
+
       const slideImg = document.getElementById('slideImg');
       const slidePrice = document.getElementById('slidePrice');
       const slideSizes = document.getElementById('slideSizes');
@@ -2096,7 +2206,8 @@ async function saveToGoogleSheet() {
           notAvailBtn.style.display = 'none';
           doneBtn.style.display = 'none';
           okBtn.style.display = 'block';
-          if (!item.available) { slideImg.classList.add('dimmed'); } else { slideImg.classList.remove('dimmed'); }
+          if (!item.available) slideImg.classList.add('dimmed');
+          else slideImg.classList.remove('dimmed');
         } else {
           okBtn.style.display = 'none';
           doneBtn.style.display = 'block';
@@ -2104,7 +2215,6 @@ async function saveToGoogleSheet() {
           else { slideImg.classList.remove('dimmed'); notAvailBtn.style.display = 'block'; }
         }
       }
-
       showSlide(slideIndex);
 
       slideLeft.addEventListener('click', () => { slideIndex = (slideIndex - 1 + data.items.length) % data.items.length; showSlide(slideIndex); });
@@ -2112,82 +2222,119 @@ async function saveToGoogleSheet() {
 
       notAvailBtn.addEventListener('click', () => { data.items[slideIndex].available = false; showSlide(slideIndex); });
 
-      doneBtn.addEventListener('click', () => {
+      doneBtn.addEventListener('click', async () => {
         const available = data.items.filter(it => it.available);
         const unavail = data.items.length - available.length;
         const newTotal = available.reduce((sum, it) => sum + parseFloat(it.price || 0), 0);
-        let text = `Hello cherished customer, this is to inform you that all your selected items are available and so you can proceed with payment on our page on PickMe Services. Total Amount: GH₵ ${newTotal}`;
-        let link = '';
+
+        let text;
         if (unavail > 0) {
-          const newId = Date.now() + Math.random().toString(36).slice(2);
-          const newData = { items: [...available, ...data.items.filter(it => !it.available)], total: newTotal, userWhatsapp: data.userWhatsapp, isForUser: true, boutiqueId: boutiqueId };
-          let slides = JSON.parse(localStorage.getItem('slides') || '{}');
-          slides[newId] = newData;
-          localStorage.setItem('slides', JSON.stringify(slides));
-          link = window.location.origin + window.location.pathname + `?slide=${newId}`;
+          // Create a user-facing slide doc and send link back to the user
+          const newPayload = {
+            items: available.concat(data.items.filter(it => !it.available)),
+            total: newTotal,
+            userWhatsapp: data.userWhatsapp,
+            isForUser: true,
+            boutiqueId
+          };
+          const newId = await createSlideDoc(newPayload);
+          const link = buildSlideLink(newId);
           text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick on this link to view the available ones and proceed with payment on our page on PickMe Services. Total Amount Now: GH₵ ${newTotal}. LINK: ${link}`;
+        } else {
+          text = `Hello cherished customer, this is to inform you that all your selected items are available and so you can proceed with payment on our page on PickMe Services. Total Amount: GH₵ ${newTotal}`;
         }
+
+        // restore UI and navigate to WhatsApp
         slidePage.style.display = 'none';
         document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
-        navigationStack.pop();
+        popNav('slidePage');
         window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
       });
 
       okBtn.addEventListener('click', () => {
         slidePage.style.display = 'none';
         document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
-        navigationStack.pop();
-        window.location.href = window.location.origin + window.location.pathname;
+        popNav('slidePage');
+        // back to boutique main view (same page without slide params)
+        const url = new URL(window.location.href);
+        url.searchParams.delete('slide');
+        url.searchParams.delete('slideFirestore');
+        window.location.href = url.toString();
       });
     }
 
+    /********************
+     * Close (step-by-step)
+     ********************/
+    function pushNav(id) {
+      if (navigationStack[navigationStack.length - 1] !== id) navigationStack.push(id);
+    }
+    function popNav(expected) {
+      if (navigationStack.length <= 1) return;
+      const last = navigationStack[navigationStack.length - 1];
+      if (!expected || expected === last) navigationStack.pop();
+    }
+
+    closeFloating.addEventListener('click', () => {
+      const openLayers = [
+        'contactModal','previewModal','saveConfirmationModal','pinModal','menuModal',
+        'categoriesModal','categoriesManageModal','itemModal','cartModal','quickBuyModal',
+        'slidePage','boutiqueDetailsModal'
+      ];
+      // If any of these is open, close the top-most one by stack
+      for (let i = navigationStack.length - 1; i >= 0; i--) {
+        const id = navigationStack[i];
+        if (openLayers.includes(id)) {
+          // Hide it and step back
+          if (id === 'slidePage') {
+            slidePage.style.display = 'none';
+            document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = '');
+          } else {
+            const el = document.getElementById(id);
+            if (el) el.style.display = (id === 'previewModal') ? 'none' : 'none';
+          }
+          navigationStack.splice(i, 1);
+          // Show previous if it was a modal/page
+          const prev = navigationStack[navigationStack.length - 1];
+          if (openLayers.includes(prev)) {
+            const elPrev = document.getElementById(prev);
+            if (elPrev) {
+              // slidePage is special
+              if (prev === 'slidePage') {
+                document.querySelectorAll('body > *:not(#slidePage)').forEach(el => el.style.display = 'none');
+                slidePage.style.display = 'block';
+              } else {
+                elPrev.style.display = 'flex';
+              }
+            }
+          }
+          return;
+        }
+      }
+
+      // Nothing modal open; if at base, go to fashion; else step to base
+      if (navigationStack.length <= 1) {
+        window.location.href = 'fashion.html';
+      } else {
+        navigationStack.pop();
+      }
+    });
+
+    /********************
+     * Buy & WhatsApp helpers
+     ********************/
+    function cartTotalAmount(items) {
+      return items.reduce((s, i) => s + parseFloat(i.price || 0), 0);
+    }
+
+    /********************
+     * Init & Poll
+     ********************/
     // Start loading boutique data (cache-first)
     loadBoutiqueData();
 
-    // Optional: keep your polling (now reads Firestore)
-    setInterval(async () => {
-      try {
-        const data = await fetchBoutiqueData();
-        const activeTab = document.querySelector('.tab.active')?.dataset.category || shopData?.categories[0]?.name || '';
-        boutiqueData = {
-          name: data.name || 'Boutique Name',
-          slogan: data.slogan || 'Your fashion, your style',
-          whatsapp: data.whatsapp || '',
-          themeColor: data.themeColor || '#9e1850',
-          backgroundImage: data.backgroundImage || '',
-          pin: String(data.pin ?? '')
-        };
-        shopData = {
-          categories: Object.keys(data.categories || {}).map(name => ({
-            name: name.toLowerCase(),
-            items: (data.categories[name] || []).map(item => ({
-              src: item.src || 'https://via.placeholder.com/400x400?text=Item',
-              price: String(item.price ?? '').trim(),
-              sizes: String(item.sizes ?? '').trim()
-            }))
-          }))
-        };
-        localStorage.setItem(`boutiqueCache_${boutiqueId}`, JSON.stringify({ data: { ...boutiqueData, categories: data.categories }, cacheTimestamp: Date.now() }));
-        applyBoutiqueData();
-        bottomTabs.innerHTML = '';
-        shopData.categories.forEach(cat => {
-          const tab = document.createElement('div');
-          tab.classList.add('tab');
-          tab.dataset.category = cat.name;
-          tab.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
-          if (cat.name === activeTab) tab.classList.add('active');
-          tab.addEventListener('click', () => {
-            document.querySelector('.tab.active')?.classList.remove('active');
-            tab.classList.add('active');
-            loadGallery(tab.dataset.category);
-          });
-          bottomTabs.appendChild(tab);
-        });
-        const newActiveTab = shopData.categories.find(cat => cat.name === activeTab) ? activeTab : shopData.categories[0]?.name || '';
-        loadGallery(newActiveTab);
-        updateCartWithShopData();
-        updateCart();
-      } catch (error) { console.error('Polling error:', error.message); }
-    }, 30000);
-  </script></body>
+    // Poll Firestore for updates every 30s
+    setInterval(backgroundRefresh, 30000);
+  </script>
+</body>
 </html>
