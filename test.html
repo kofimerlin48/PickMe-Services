@@ -71,6 +71,20 @@
 }
 .arrow.left { left: 20px; }
 .arrow.right { right: 20px; }
+  /* Label showing Available / Not Available for user side */
+.availability-label {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 18px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0.9;
+}
     .close-btn{position:absolute;top:20px;right:20px;font-size:22px;color:#fff;cursor:pointer;}
 
     .bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 0;box-shadow:0 -2px 5px rgba(0,0,0,.1);overflow-x:auto;white-space:nowrap;z-index:2;}
@@ -114,7 +128,16 @@
     .delete-all-btn{padding:10px 20px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:#fff;color:var(--theme-color);border:2px solid var(--theme-color);margin:10px 0;}
     .save-btn{padding:12px 24px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:var(--theme-color);color:#fff;border:none;margin-top:20px;}
     .save-btn:disabled{opacity:.5;cursor:not-allowed;}
-    .no-items{text-align:center;color:gray;font-size:16px;margin:20px 0;}
+    .no-items {
+  width: 205%;
+  text-align: center;
+  color: gray;
+  font-size: 16px;
+  margin: 50px 0;
+  font-weight: 500;
+  display: block;
+  white-space: nowrap;
+}
 
     /* Ensure inner list scrolls (Issue #3) */
     .item-card{max-height:80vh;overflow:hidden;}
@@ -684,7 +707,7 @@ function loadGallery(category) {
 
   const cat = shopData?.categories.find(c => c.name === category);
   if (!cat || !Array.isArray(cat.items) || cat.items.length === 0) {
-    gallery.innerHTML = '<p class="no-items">Items not available today</p>';
+    gallery.innerHTML = '<p class="no-items">Oops, there are no items not available today</p>';
     return;
   }
 
@@ -1407,7 +1430,7 @@ function preloadOtherCategories(activeCategory) {
       const slidePayload={items:items.map(it=>({...it,available:true})),total,userWhatsapp:waDigits,isForUser:false,boutiqueId};
       const slideId=await createSlideDoc(slidePayload);
       const link=buildSlideLink(slideId);
-      const msg=`Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if available so I can proceed with payment. ITEMS LINK: ${link}`;
+      const msg=`Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if they are available so I can proceed with payment. ITEMS LINK: ${link}`;
       // Send to vendor whatsapp
       const owner= formatGhanaNumber(boutiqueData.whatsapp,true);
       window.location.href=`https://wa.me/${owner}?text=${encodeURIComponent(msg)}`;
@@ -1427,48 +1450,129 @@ function preloadOtherCategories(activeCategory) {
       initSlider(data);
     }
 
-    // Not Available toggle (Issue #8)
-    function initSlider(data){
-      let slideIndex=0;
-      function showSlide(i){
-        const item=data.items[i];
-        slideImg.src=item.src;slidePrice.textContent=`GH₵ ${item.price}`;slideSizes.textContent=item.sizes?`Sizes: ${item.sizes}`:'';
-        if(data.isForUser){
-          notAvailBtn.style.display='none';doneBtn.style.display='none';okBtn.style.display='inline-block';
-          if(!item.available) slideImg.classList.add('dimmed'); else slideImg.classList.remove('dimmed');
-        }else{
-          okBtn.style.display='none';doneBtn.style.display='inline-block';
-          // Toggle label
-          notAvailBtn.style.display='inline-block';
-          notAvailBtn.textContent=item.available?'Not Available':'Available';
-          if(!item.available) slideImg.classList.add('dimmed'); else slideImg.classList.remove('dimmed');
-        }
-      }
-      slideLoading.style.display='none';slidePage.style.display='block';slideShell.style.display='block';
-      showSlide(slideIndex);
-      slideLeft.onclick=()=>{slideIndex=(slideIndex-1+data.items.length)%data.items.length;showSlide(slideIndex);};
-      slideRight.onclick=()=>{slideIndex=(slideIndex+1)%data.items.length;showSlide(slideIndex);};
-      notAvailBtn.onclick=()=>{data.items[slideIndex].available=!data.items[slideIndex].available;showSlide(slideIndex);};
+    // === FIXED initSlider with active arrows, titles, and user labels ===
+function initSlider(data) {
+  let slideIndex = 0;
 
-      doneBtn.onclick=async()=>{
-        const available=data.items.filter(it=>it.available);
-        const unavail=data.items.length-available.length;
-        const newTotal=available.reduce((s,it)=>s+parseFloat(it.price||0),0);
-        let text;
-        if(unavail>0){
-          const newPayload={items:available.concat(data.items.filter(it=>!it.available)),total:newTotal,userWhatsapp:data.userWhatsapp,isForUser:true,boutiqueId};
-          const newId=await createSlideDoc(newPayload);const link=buildSlideLink(newId);
-          text=`Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick on this link to view the available ones and proceed with payment on our page on PickMe Services. Total Amount Now: GH₵ ${newTotal}. LINK: ${link}`;
-        }else{
-          text=`Hello cherished customer, this is to inform you that all your selected items are available and so you can proceed with payment on our page on PickMe Services. Total Amount: GH₵ ${newTotal}`;
-        }
-        window.location.href=`https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
-      };
-      okBtn.onclick=()=>{
-        const u=new URL(location.href);u.searchParams.delete('slide');u.searchParams.delete('slideFirestore');
-        document.documentElement.classList.remove('loading-slide');location.href=u.toString();
-      };
+  // Determine and insert page title
+  const headerTitle = document.createElement('h2');
+  headerTitle.style.color = 'var(--theme-color)';
+  headerTitle.style.fontWeight = '700';
+  headerTitle.style.marginBottom = '20px';
+  headerTitle.style.textAlign = 'center';
+
+  if (data.isForUser) {
+    headerTitle.textContent = 'Selected Items Availability';
+  } else {
+    headerTitle.textContent = "Customer's Selected Items";
+  }
+
+  const existingTitle = slidePage.querySelector('h2');
+  if (existingTitle) existingTitle.remove();
+  slidePage.insertBefore(headerTitle, slideShell);
+
+  // Core display
+  function showSlide(i) {
+    const item = data.items[i];
+    slideImg.src = item.src;
+    slidePrice.textContent = `GH₵ ${item.price}`;
+    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+
+    // Reset state
+    slideImg.classList.remove('dimmed');
+    document.querySelectorAll('.availability-label').forEach(el => el.remove());
+
+    // === User/customer view ===
+    if (data.isForUser) {
+      notAvailBtn.style.display = 'none';
+      doneBtn.style.display = 'none';
+      okBtn.style.display = 'inline-block';
+
+      const label = document.createElement('div');
+      label.className = 'availability-label';
+      label.textContent = item.available ? 'Available' : 'Not Available';
+      label.style.position = 'absolute';
+      label.style.bottom = '20px';
+      label.style.left = '50%';
+      label.style.transform = 'translateX(-50%)';
+      label.style.padding = '6px 18px';
+      label.style.borderRadius = '20px';
+      label.style.color = '#fff';
+      label.style.fontWeight = '600';
+      label.style.fontSize = '15px';
+      label.style.background = item.available ? 'green' : '#b00';
+      label.style.opacity = '0.9';
+      slideShell.appendChild(label);
+
+      if (!item.available) slideImg.classList.add('dimmed');
     }
+
+    // === Owner view ===
+    else {
+      okBtn.style.display = 'none';
+      doneBtn.style.display = 'inline-block';
+      notAvailBtn.style.display = 'inline-block';
+      notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
+      if (!item.available) slideImg.classList.add('dimmed');
+    }
+  }
+
+  // Initialization
+  slideLoading.style.display = 'none';
+  slidePage.style.display = 'block';
+  slideShell.style.display = 'block';
+  showSlide(slideIndex);
+
+  // Navigation (arrows always active)
+  slideLeft.onclick = () => {
+    slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
+    showSlide(slideIndex);
+  };
+  slideRight.onclick = () => {
+    slideIndex = (slideIndex + 1) % data.items.length;
+    showSlide(slideIndex);
+  };
+
+  // Owner toggle
+  notAvailBtn.onclick = () => {
+    data.items[slideIndex].available = !data.items[slideIndex].available;
+    showSlide(slideIndex);
+  };
+
+  // Owner “Done”
+  doneBtn.onclick = async () => {
+    const available = data.items.filter(it => it.available);
+    const unavail = data.items.length - available.length;
+    const newTotal = available.reduce((s, it) => s + parseFloat(it.price || 0), 0);
+    let text;
+
+    if (unavail > 0) {
+      const newPayload = {
+        items: available.concat(data.items.filter(it => !it.available)),
+        total: newTotal,
+        userWhatsapp: data.userWhatsapp,
+        isForUser: true,
+        boutiqueId
+      };
+      const newId = await createSlideDoc(newPayload);
+      const link = buildSlideLink(newId);
+      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
+    } else {
+      text = `Hello cherished customer, all your selected items are available. You can proceed with payment on our page. Total Amount: GH₵ ${newTotal}`;
+    }
+
+    window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
+  };
+
+  // User “OK”
+  okBtn.onclick = () => {
+    const u = new URL(location.href);
+    u.searchParams.delete('slide');
+    u.searchParams.delete('slideFirestore');
+    document.documentElement.classList.remove('loading-slide');
+    location.href = u.toString();
+  };
+}
 
     /********** Main page affordances **********/
     closeFloating.addEventListener('click',()=>{location.href='fashion.html';});
