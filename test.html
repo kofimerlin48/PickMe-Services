@@ -469,6 +469,125 @@
     let currentCategory='';
     let tempItems=[];
     let isChanged=false;
+    /********** Image Cache (IndexedDB) — ONLY for gallery images **********/
+const IMAGE_DB_NAME = 'BoutiqueImageCache';
+const IMAGE_STORE = 'images';
+
+/* Open (or create) the image cache DB */
+function openImageDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IMAGE_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IMAGE_STORE)) {
+        db.createObjectStore(IMAGE_STORE, { keyPath: 'url' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/* Read a blob from cache by URL */
+async function idbGet(url) {
+  const db = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IMAGE_STORE, 'readonly');
+    const store = tx.objectStore(IMAGE_STORE);
+    const getReq = store.get(url);
+    getReq.onsuccess = () => resolve(getReq.result ? getReq.result.blob : null);
+    getReq.onerror = () => reject(getReq.error);
+  });
+}
+
+/* Write a blob to cache by URL */
+async function idbSet(url, blob) {
+  const db = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IMAGE_STORE, 'readwrite');
+    const store = tx.objectStore(IMAGE_STORE);
+    const putReq = store.put({ url, blob });
+    putReq.onsuccess = () => resolve();
+    putReq.onerror = () => reject(putReq.error);
+  });
+}
+
+/* Return an object URL if cached, else null */
+async function getBlobUrlFromCache(url) {
+  try {
+    const blob = await idbGet(url);
+    if (!blob) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/* Ensure URL is cached; returns an object URL when finished */
+async function ensureCached(url) {
+  try {
+    // Already cached?
+    const cached = await idbGet(url);
+    if (cached) return URL.createObjectURL(cached);
+
+    // Fetch and store
+    const res = await fetch(url, { mode: 'cors', cache: 'no-cache' });
+    if (!res.ok) throw new Error('fetch failed');
+    const blob = await res.blob();
+    await idbSet(url, blob);
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/* Attach <img> to cached version if available; otherwise show network now and cache in background */
+async function attachImageWithCache(imgEl, url) {
+  try {
+    const cachedUrl = await getBlobUrlFromCache(url);
+    if (cachedUrl) {
+      imgEl.src = cachedUrl;
+      imgEl.dataset.blobUrl = cachedUrl; // (optional) to revoke later if you ever want
+    } else {
+      // First time: show the real URL so user sees image; then cache quietly
+      imgEl.src = url;
+      ensureCached(url).catch(()=>{});
+    }
+  } catch {
+    imgEl.src = url;
+  }
+}
+
+/* Background: prefetch all current shop images & evict removed ones */
+async function refreshImageCacheWithLive(currentShopData) {
+  try {
+    const wanted = new Set();
+    (currentShopData?.categories || []).forEach(cat => {
+      (cat.items || []).forEach(it => {
+        if (it.src) wanted.add(it.src);
+      });
+    });
+
+    // Prefetch (fire-and-forget)
+    wanted.forEach(u => { ensureCached(u); });
+
+    // Evict anything no longer in live data
+    const db = await openImageDB();
+    const tx = db.transaction(IMAGE_STORE, 'readonly');
+    const store = tx.objectStore(IMAGE_STORE);
+    const keysReq = store.getAllKeys();
+    const keys = await new Promise((res, rej) => {
+      keysReq.onsuccess = () => res(keysReq.result || []);
+      keysReq.onerror = () => rej(keysReq.error);
+    });
+
+    const delTx = db.transaction(IMAGE_STORE, 'readwrite');
+    const delStore = delTx.objectStore(IMAGE_STORE);
+    keys.forEach(k => { if (!wanted.has(k)) delStore.delete(k); });
+  } catch (e) {
+    // Silent — caching is a progressive enhancement
+  }
+}
 
     /********** Utilities **********/
     function updateMainButtonsVisibility(){
@@ -540,34 +659,86 @@
       buildTabs(first);loadGallery(first);
     }
 
-    function loadGallery(category){
-      gallery.innerHTML='';
-      const cat=shopData?.categories.find(c=>c.name===category);
-      currentImages=cat?cat.items.map(item=>item.src):[];
-      if(!cat||cat.items.length===0){
-        gallery.innerHTML='<p class="no-items">Items not available today</p>';
-      }else{
-        cat.items.forEach((item,index)=>{
-          const div=document.createElement('div');div.className='gallery-item';
-          const imgSrc=item.src&&item.src.trim()!==''?item.src:'https://via.placeholder.com/400x400?text=No+Image';
-          const isInCart=cart.some(c=>c.src===item.src);
-          const btnText=isInCart?'✔ Added to Cart':'Add to Cart';
-          const btnClass=isInCart?'add-to-cart added':'add-to-cart';
-          div.innerHTML=`
-            <img src="${imgSrc}" data-index="${index}" data-category="${category}" loading="lazy" alt="Product">
-            <p class="price">GH₵ ${item.price}</p>
-            ${item.sizes?`<p class="sizes">Sizes: ${item.sizes}</p>`:''}
-            <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>`;
-          gallery.appendChild(div);
+    // === FINAL FIX: Smooth gallery cache with silent background update ===
+function loadGallery(category) {
+  const cacheKey = `galleryCache_${boutiqueId}_${category}`;
+  gallery.innerHTML = '';
+
+  // --- 1️⃣ Render from cache instantly ---
+  const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+  if (cached && Array.isArray(cached.items) && cached.items.length > 0) {
+    renderGalleryItems(cached.items);
+  } else {
+    gallery.innerHTML = '<p class="no-items">Items not available today</p>';
+  }
+
+  // --- 2️⃣ Fetch latest in background & update cache silently ---
+  (async () => {
+    try {
+      const cat = shopData?.categories.find(c => c.name === category);
+      if (!cat) return;
+
+      const freshItems = cat.items.map(it => ({
+        src: it.src || 'https://via.placeholder.com/400x400?text=No+Image',
+        price: String(it.price || '').trim(),
+        sizes: String(it.sizes || '').trim(),
+      }));
+
+      // If nothing to show
+      if (freshItems.length === 0) return;
+
+      // Compare old vs new silently
+      const oldJSON = JSON.stringify(cached?.items || []);
+      const newJSON = JSON.stringify(freshItems);
+      if (oldJSON !== newJSON) {
+        // Update DOM smoothly without flash
+        const temp = document.createElement('div');
+        renderGalleryItems(freshItems, temp);
+        requestAnimationFrame(() => {
+          gallery.innerHTML = temp.innerHTML;
         });
-        gallery.onclick=(e)=>{
-          const img=e.target.closest('img[data-index]');
-          const btn=e.target.closest('button.add-to-cart');
-          if(img){const idx=parseInt(img.dataset.index,10);openModal(cat.items[idx].src,idx,category);history.pushState({type:'modal'},'');}
-          else if(btn){const idx=parseInt(btn.dataset.index,10);addToCart(idx,category,btn);}
-        };
+        // Save new cache
+        localStorage.setItem(cacheKey, JSON.stringify({ items: freshItems, ts: Date.now() }));
       }
+    } catch (err) {
+      console.warn('Gallery background update failed:', err);
     }
+  })();
+
+  // --- helper for consistent DOM build ---
+  function renderGalleryItems(items, container = gallery) {
+    container.innerHTML = '';
+    currentImages = items.map(it => it.src);
+    items.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+      const isInCart = cart.some(c => c.src === item.src && c.category === category);
+      const btnText = isInCart ? '✔ Added to Cart' : 'Add to Cart';
+      const btnClass = isInCart ? 'add-to-cart added' : 'add-to-cart';
+      div.innerHTML = `
+        <img src="${item.src}" data-index="${index}" data-category="${category}" alt="Product" loading="lazy">
+        <p class="price">GH₵ ${item.price}</p>
+        ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
+        <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>
+      `;
+      container.appendChild(div);
+    });
+
+    // attach click handlers
+    container.onclick = (e) => {
+      const img = e.target.closest('img[data-index]');
+      const btn = e.target.closest('button.add-to-cart');
+      if (img) {
+        const idx = parseInt(img.dataset.index, 10);
+        openModal(items[idx].src, idx, category);
+        history.pushState({ type: 'modal' }, '');
+      } else if (btn) {
+        const idx = parseInt(btn.dataset.index, 10);
+        addToCart(idx, category, btn);
+      }
+    };
+  }
+}
 
     /********** Firestore IO **********/
     async function fetchBoutiqueData(){
@@ -776,75 +947,121 @@
       });
     }
 
-    function renderManageCategories(){
-      categoriesManageList.innerHTML='';
-      const cats=alphabetical(shopData.categories.map(c=>c.name));
-      cats.forEach(name=>{
-        const card=document.createElement('div');card.className='category-item';
-        card.innerHTML=`
-          <span class="category-name">${name.charAt(0).toUpperCase()+name.slice(1)}</span>
-          <div class="category-actions">
-            <span class="category-action" data-edit="${name}">✎</span>
-            <span class="category-action" data-del="${name}">🗑</span>
-          </div>`;
-        categoriesManageList.appendChild(card);
+    function renderManageCategories() {
+  categoriesManageList.innerHTML = '';
+  shopData.categories.forEach((cat, index) => {
+    const card = document.createElement('div');
+    card.classList.add('category-item');
+    card.innerHTML = `
+      <span class="category-name">${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}</span>
+      <div class="category-actions">
+        <span class="category-action" data-edit="${index}">✎</span>
+        <span class="category-action" data-del="${index}">🗑</span>
+      </div>
+    `;
+    categoriesManageList.appendChild(card);
+  });
+
+  // === Edit & Delete handler ===
+  categoriesManageList.onclick = async (e) => {
+  const editEl = e.target.closest('[data-edit]');
+  const delEl = e.target.closest('[data-del]');
+
+  // ===== EDIT CATEGORY =====
+  if (editEl) {
+    const index = parseInt(editEl.dataset.edit, 10);
+    const oldName = shopData.categories[index].name;
+    const newName = prompt('Enter new category name:', oldName);
+    if (!newName || newName.trim() === '') return;
+
+    const newKey = newName.toLowerCase().trim();
+    if (newKey === oldName) return; // no change
+    if (shopData.categories.some(c => c.name === newKey)) {
+      alert('That category already exists.');
+      return;
+    }
+
+    try {
+      const ref = db.collection('Boutiques').doc(boutiqueId);
+      const snap = await ref.get();
+      const data = snap.data() || {};
+      const cats = { ...(data.categories || {}) };
+      const order = Array.isArray(data.categoriesOrder)
+        ? [...data.categoriesOrder]
+        : Object.keys(cats);
+
+      if (!cats[oldName]) {
+        alert('Category not found in database.');
+        return;
+      }
+
+      // move the items to new key, delete old key
+      cats[newKey] = cats[oldName];
+      delete cats[oldName];
+
+      // rename inside order array
+      const idx = order.indexOf(oldName);
+      if (idx !== -1) order[idx] = newKey;
+
+      // write changes permanently to Firestore
+      await ref.update({
+        categories: cats,
+        categoriesOrder: order,
       });
 
-      categoriesManageList.onclick=async(e)=>{
-        const editEl=e.target.closest('[data-edit]');const delEl=e.target.closest('[data-del]');
-        if(editEl){
-          const oldName=editEl.dataset.edit;
-          const newName=prompt('Enter new category name:',oldName);
-          if(!newName) return;
-          const newKey=newName.toLowerCase().trim();
-          if(shopData.categories.find(c=>c.name===newKey)){alert('Category name already exists');return;}
+      // update locally
+      shopData.categories[index].name = newKey;
+      shopData.categoriesOrder = order;
+      buildTabs(newKey);
+      renderManageCategories();
 
-          // Rename key, keep alphabetical logic (Issue #2) and permanence
-          await db.runTransaction(async(t)=>{
-            const ref=db.collection('Boutiques').doc(boutiqueId);
-            const snap=await t.get(ref);const data=snap.data()||{};
-            const cats=data.categories||{};const moved={};
-            Object.keys(cats).forEach(k=>{
-              if(k.toLowerCase()===oldName)moved[newKey]=cats[k]; else moved[k]=cats[k];
-            });
-            t.set(ref,{categories:moved},{merge:true});
-          });
-
-          // Update local: rebuild from live for safety
-          const live=await fetchBoutiqueData();const norm=normalizeCategories(live);
-          shopData={categories:norm.categories};
-          buildTabs(newKey);loadGallery(newKey);renderManageCategories();updateMainButtonsVisibility();cacheWrite({...boutiqueData,categories:live.categories});
-        }else if(delEl){
-          const delName=delEl.dataset.del;
-          if(!confirm(`Delete category "${delName}" and all its items?`)) return;
-
-          const catObj=shopData.categories.find(c=>c.name===delName);
-          const imgsToDelete=(catObj?.items||[]).map(i=>i.src).filter(Boolean);
-
-          // Remove category in Firestore permanently (Issue #6)
-          await db.runTransaction(async(t)=>{
-            const ref=db.collection('Boutiques').doc(boutiqueId);
-            const snap=await t.get(ref);const data=snap.data()||{};
-            const cats=data.categories||{};const newCats={};
-            Object.keys(cats).forEach(k=>{if(k.toLowerCase()!==delName)newCats[k]=cats[k];});
-            t.set(ref,{categories:newCats},{merge:true});
-          });
-
-          // Delete images from storage after commit
-          await Promise.all(imgsToDelete.map(deleteFromStorageByURL));
-
-          // Refresh local strictly from live to avoid "coming back" (Issue #6)
-          const live=await fetchBoutiqueData();const norm=normalizeCategories(live);
-          shopData={categories:norm.categories};cacheWrite({...boutiqueData,categories:live.categories});
-
-          // Update UI and cart
-          cart=cart.filter(item=>item.category!==delName);carts[boutiqueId]=cart;localStorage.setItem('carts',JSON.stringify(carts));
-          const first=alphabetical(shopData.categories.map(c=>c.name))[0]||null;
-          buildTabs(first||''); if(first) loadGallery(first); else {gallery.innerHTML='<p class="no-items">No categories available.</p>';}
-          updateCart();renderManageCategories();updateMainButtonsVisibility();
-        }
-      };
+      alert('Category renamed successfully.');
+    } catch (err) {
+      console.error('Rename failed:', err);
+      alert('Rename failed: ' + (err.message || err));
     }
+  }
+
+  // ===== DELETE CATEGORY =====
+  if (delEl) {
+    const index = parseInt(delEl.dataset.del, 10);
+    const delName = shopData.categories[index].name;
+    if (!confirm(`Delete category "${delName}" and all its items?`)) return;
+
+    try {
+      const ref = db.collection('Boutiques').doc(boutiqueId);
+      const snap = await ref.get();
+      const data = snap.data() || {};
+      const cats = { ...(data.categories || {}) };
+      const order = Array.isArray(data.categoriesOrder)
+        ? [...data.categoriesOrder]
+        : Object.keys(cats);
+
+      // delete category and its items
+      delete cats[delName];
+      const newOrder = order.filter(n => n !== delName);
+
+      // write back to Firestore
+      await ref.update({
+        categories: cats,
+        categoriesOrder: newOrder,
+      });
+
+      // update locally
+      shopData.categories.splice(index, 1);
+      shopData.categoriesOrder = newOrder;
+      buildTabs(shopData.categories[0]?.name || '');
+      loadGallery(shopData.categories[0]?.name || '');
+      renderManageCategories();
+
+      alert('Category deleted successfully.');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Delete failed: ' + (err.message || err));
+    }
+  }
+};
+}
 
     addCategoryBtn.addEventListener('click',async()=>{
       if(shopData.categories.length>=6){alert('Maximum 6 categories allowed');return;}
