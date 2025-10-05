@@ -659,84 +659,71 @@ async function refreshImageCacheWithLive(currentShopData) {
       buildTabs(first);loadGallery(first);
     }
 
-    // === FINAL FIX: Smooth gallery cache with silent background update ===
+    // === NEW GALLERY: instant load and background preload ===
 function loadGallery(category) {
-  const cacheKey = `galleryCache_${boutiqueId}_${category}`;
   gallery.innerHTML = '';
 
-  // --- 1️⃣ Render from cache instantly ---
-  const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-  if (cached && Array.isArray(cached.items) && cached.items.length > 0) {
-    renderGalleryItems(cached.items);
-  } else {
+  const cat = shopData?.categories.find(c => c.name === category);
+  if (!cat || !Array.isArray(cat.items) || cat.items.length === 0) {
     gallery.innerHTML = '<p class="no-items">Items not available today</p>';
+    return;
   }
 
-  // --- 2️⃣ Fetch latest in background & update cache silently ---
-  (async () => {
-    try {
-      const cat = shopData?.categories.find(c => c.name === category);
-      if (!cat) return;
+  renderGalleryItems(cat.items, category);
 
-      const freshItems = cat.items.map(it => ({
-        src: it.src || 'https://via.placeholder.com/400x400?text=No+Image',
-        price: String(it.price || '').trim(),
-        sizes: String(it.sizes || '').trim(),
-      }));
+  // Preload all other categories silently
+  preloadOtherCategories(category);
+}
 
-      // If nothing to show
-      if (freshItems.length === 0) return;
+/* Renders the gallery for a given category */
+function renderGalleryItems(items, category) {
+  gallery.innerHTML = '';
+  currentImages = items.map(it => it.src);
 
-      // Compare old vs new silently
-      const oldJSON = JSON.stringify(cached?.items || []);
-      const newJSON = JSON.stringify(freshItems);
-      if (oldJSON !== newJSON) {
-        // Update DOM smoothly without flash
-        const temp = document.createElement('div');
-        renderGalleryItems(freshItems, temp);
-        requestAnimationFrame(() => {
-          gallery.innerHTML = temp.innerHTML;
-        });
-        // Save new cache
-        localStorage.setItem(cacheKey, JSON.stringify({ items: freshItems, ts: Date.now() }));
-      }
-    } catch (err) {
-      console.warn('Gallery background update failed:', err);
+  items.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    const isInCart = cart.some(c => c.src === item.src && c.category === category);
+    const btnText = isInCart ? '✔ Added to Cart' : 'Add to Cart';
+    const btnClass = isInCart ? 'add-to-cart added' : 'add-to-cart';
+    const imgSrc = item.src || 'https://via.placeholder.com/400x400?text=No+Image';
+
+    div.innerHTML = `
+      <img src="${imgSrc}" data-index="${index}" data-category="${category}" alt="Product" loading="lazy">
+      <p class="price">GH₵ ${item.price}</p>
+      ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
+      <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>
+    `;
+    gallery.appendChild(div);
+  });
+
+  // Handle clicks
+  gallery.onclick = (e) => {
+    const img = e.target.closest('img[data-index]');
+    const btn = e.target.closest('button.add-to-cart');
+    if (img) {
+      const idx = parseInt(img.dataset.index, 10);
+      openModal(items[idx].src, idx, category);
+      history.pushState({ type: 'modal' }, '');
+    } else if (btn) {
+      const idx = parseInt(btn.dataset.index, 10);
+      addToCart(idx, category, btn);
     }
-  })();
+  };
+}
 
-  // --- helper for consistent DOM build ---
-  function renderGalleryItems(items, container = gallery) {
-    container.innerHTML = '';
-    currentImages = items.map(it => it.src);
-    items.forEach((item, index) => {
-      const div = document.createElement('div');
-      div.className = 'gallery-item';
-      const isInCart = cart.some(c => c.src === item.src && c.category === category);
-      const btnText = isInCart ? '✔ Added to Cart' : 'Add to Cart';
-      const btnClass = isInCart ? 'add-to-cart added' : 'add-to-cart';
-      div.innerHTML = `
-        <img src="${item.src}" data-index="${index}" data-category="${category}" alt="Product" loading="lazy">
-        <p class="price">GH₵ ${item.price}</p>
-        ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
-        <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>
-      `;
-      container.appendChild(div);
+/* Preload other categories in background (smooth experience) */
+function preloadOtherCategories(activeCategory) {
+  try {
+    const otherCats = shopData?.categories.filter(c => c.name !== activeCategory) || [];
+    otherCats.forEach(cat => {
+      (cat.items || []).forEach(item => {
+        const img = new Image();
+        img.src = item.src || '';
+      });
     });
-
-    // attach click handlers
-    container.onclick = (e) => {
-      const img = e.target.closest('img[data-index]');
-      const btn = e.target.closest('button.add-to-cart');
-      if (img) {
-        const idx = parseInt(img.dataset.index, 10);
-        openModal(items[idx].src, idx, category);
-        history.pushState({ type: 'modal' }, '');
-      } else if (btn) {
-        const idx = parseInt(btn.dataset.index, 10);
-        addToCart(idx, category, btn);
-      }
-    };
+  } catch (e) {
+    console.warn('Background preload error:', e);
   }
 }
 
