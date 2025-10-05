@@ -71,19 +71,19 @@
 }
 .arrow.left { left: 20px; }
 .arrow.right { right: 20px; }
-  /* Label showing Available / Not Available for user side */
+/* Availability tag at top-left of image inside slider */
 .availability-label {
   position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 18px;
+  top: 20px;
+  left: 20px;
+  padding: 6px 14px;
   border-radius: 20px;
   color: #fff;
   font-weight: 600;
-  font-size: 15px;
-  background: rgba(0, 0, 0, 0.7);
-  opacity: 0.9;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  opacity: 0.95;
+  z-index: 10;
 }
     .close-btn{position:absolute;top:20px;right:20px;font-size:22px;color:#fff;cursor:pointer;}
 
@@ -1450,11 +1450,11 @@ function preloadOtherCategories(activeCategory) {
       initSlider(data);
     }
 
-    // === FIXED initSlider with active arrows, titles, and user labels ===
+    // === FIXED initSlider with working arrows and top-left labels ===
 function initSlider(data) {
   let slideIndex = 0;
 
-  // Determine and insert page title
+  // ===== Add page title =====
   const headerTitle = document.createElement('h2');
   headerTitle.style.color = 'var(--theme-color)';
   headerTitle.style.fontWeight = '700';
@@ -1471,18 +1471,22 @@ function initSlider(data) {
   if (existingTitle) existingTitle.remove();
   slidePage.insertBefore(headerTitle, slideShell);
 
-  // Core display
+  // ===== Core slide display =====
   function showSlide(i) {
-    const item = data.items[i];
+    // protect index always valid
+    if (!data.items || data.items.length === 0) return;
+    slideIndex = (i + data.items.length) % data.items.length;
+
+    const item = data.items[slideIndex];
     slideImg.src = item.src;
     slidePrice.textContent = `GH₵ ${item.price}`;
     slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
 
-    // Reset state
+    // clear previous label
     slideImg.classList.remove('dimmed');
     document.querySelectorAll('.availability-label').forEach(el => el.remove());
 
-    // === User/customer view ===
+    // === For user side ===
     if (data.isForUser) {
       notAvailBtn.style.display = 'none';
       doneBtn.style.display = 'none';
@@ -1491,23 +1495,12 @@ function initSlider(data) {
       const label = document.createElement('div');
       label.className = 'availability-label';
       label.textContent = item.available ? 'Available' : 'Not Available';
-      label.style.position = 'absolute';
-      label.style.bottom = '20px';
-      label.style.left = '50%';
-      label.style.transform = 'translateX(-50%)';
-      label.style.padding = '6px 18px';
-      label.style.borderRadius = '20px';
-      label.style.color = '#fff';
-      label.style.fontWeight = '600';
-      label.style.fontSize = '15px';
       label.style.background = item.available ? 'green' : '#b00';
-      label.style.opacity = '0.9';
       slideShell.appendChild(label);
 
       if (!item.available) slideImg.classList.add('dimmed');
     }
-
-    // === Owner view ===
+    // === For owner side ===
     else {
       okBtn.style.display = 'none';
       doneBtn.style.display = 'inline-block';
@@ -1517,13 +1510,13 @@ function initSlider(data) {
     }
   }
 
-  // Initialization
+  // ===== Initialize slider =====
   slideLoading.style.display = 'none';
   slidePage.style.display = 'block';
   slideShell.style.display = 'block';
   showSlide(slideIndex);
 
-  // Navigation (arrows always active)
+  // ===== Navigation arrows (always active) =====
   slideLeft.onclick = () => {
     slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
     showSlide(slideIndex);
@@ -1533,13 +1526,13 @@ function initSlider(data) {
     showSlide(slideIndex);
   };
 
-  // Owner toggle
+  // ===== Owner “Not Available” toggle =====
   notAvailBtn.onclick = () => {
     data.items[slideIndex].available = !data.items[slideIndex].available;
     showSlide(slideIndex);
   };
 
-  // Owner “Done”
+  // ===== Owner “Done” =====
   doneBtn.onclick = async () => {
     const available = data.items.filter(it => it.available);
     const unavail = data.items.length - available.length;
@@ -1564,7 +1557,7 @@ function initSlider(data) {
     window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
   };
 
-  // User “OK”
+  // ===== User “OK” =====
   okBtn.onclick = () => {
     const u = new URL(location.href);
     u.searchParams.delete('slide');
