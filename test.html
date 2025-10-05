@@ -50,8 +50,27 @@
     .preview-modal img{max-width:90%;max-height:70vh;border-radius:10px;}
     .preview-modal .add-to-cart{background:var(--theme-color);color:#fff;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:600;margin-top:15px;}
     .preview-modal .add-to-cart.added{background:#333;display:flex;align-items:center;justify-content:center;gap:5px;}
-    .arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:40px;color:#fff;cursor:pointer;user-select:none;padding:10px;}
-    .arrow.left{left:20px;} .arrow.right{right:20px;}
+    .arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.7); /* translucent black background */
+  border-radius: 50%;              /* make it perfectly round */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background 0.2s ease;
+}
+.arrow.left { left: 20px; }
+.arrow.right { right: 20px; }
     .close-btn{position:absolute;top:20px;right:20px;font-size:22px;color:#fff;cursor:pointer;}
 
     .bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 0;box-shadow:0 -2px 5px rgba(0,0,0,.1);overflow-x:auto;white-space:nowrap;z-index:2;}
@@ -172,7 +191,7 @@
       </div>
     </div>
 
-    <div class="gallery-title">Samples of products sold</div>
+    <div class="gallery-title">Available Items</div>
     <div class="gallery" id="gallery"></div>
 
     <div class="preview-modal" id="previewModal">
