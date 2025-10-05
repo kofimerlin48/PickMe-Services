@@ -1037,24 +1037,37 @@ function loadGallery(category) {
         ? [...data.categoriesOrder]
         : Object.keys(cats);
 
-      // delete category and its items
+      // Collect Storage URLs for items in this category BEFORE removing it
+      const itemsInCategory = Array.isArray(cats[delName]) ? cats[delName] : [];
+      const urlsToDelete = itemsInCategory
+        .map(it => it && it.src)
+        .filter(Boolean);
+
+      // 1) Delete all Storage files for this category (skip any non-storage URLs silently)
+      await Promise.allSettled(urlsToDelete.map(u => deleteFromStorageByURL(u)));
+
+      // 2) Remove the category (and its items) from Firestore
       delete cats[delName];
       const newOrder = order.filter(n => n !== delName);
-
-      // write back to Firestore
       await ref.update({
         categories: cats,
         categoriesOrder: newOrder,
       });
 
-      // update locally
+      // 3) Local in-memory update
       shopData.categories.splice(index, 1);
       shopData.categoriesOrder = newOrder;
-      buildTabs(shopData.categories[0]?.name || '');
-      loadGallery(shopData.categories[0]?.name || '');
+
+      // 4) Clear any local gallery cache for this category (prevents stale UI)
+      try { localStorage.removeItem(`galleryCache_${boutiqueId}_${delName}`); } catch (e) {}
+
+      // 5) Rebuild UI as before
+      const nextCat = shopData.categories[0]?.name || '';
+      buildTabs(nextCat);
+      loadGallery(nextCat);
       renderManageCategories();
 
-      alert('Category deleted successfully.');
+      alert('Category and its images deleted successfully.');
     } catch (err) {
       console.error('Delete failed:', err);
       alert('Delete failed: ' + (err.message || err));
