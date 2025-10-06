@@ -180,15 +180,20 @@ textarea:focus {
     .delete-all-btn{padding:10px 20px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:#fff;color:var(--theme-color);border:2px solid var(--theme-color);margin:10px 0;}
     .save-btn{padding:12px 24px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:var(--theme-color);color:#fff;border:none;margin-top:20px;}
     .save-btn:disabled{opacity:.5;cursor:not-allowed;}
-    .no-items {
-  width: 205%;
-  text-align: center;
-  color: gray;
+    /* === FIX: Only inside the Add/Edit Items modal === */
+.item-modal .item-list { 
+  overflow-x: hidden;           /* stop sideways scroll in the modal list */
+}
+
+.item-modal .no-items{
+  width: 100% !important;       /* fit container */
+  margin: 12px auto 0 !important; 
+  white-space: normal !important; /* allow wrapping */
+  text-align: center !important;
+  display: block !important;
   font-size: 16px;
-  margin: 50px 0;
+  color: gray;
   font-weight: 500;
-  display: block;
-  white-space: nowrap;
 }
 
     /* Ensure inner list scrolls (Issue #3) */
@@ -231,7 +236,7 @@ textarea:focus {
     .not-avail-btn{background:#fff;border:2px solid var(--theme-color);color:var(--theme-color);padding:10px 20px;border-radius:25px;cursor:pointer;margin-top:20px;font-weight:600;}
     .done-btn,.ok-btn{padding:12px 40px;background:var(--theme-color);color:#fff;border:none;border-radius:25px;font-weight:600;cursor:pointer;margin-top:40px;}
     .dimmed{opacity:.7;filter:grayscale(100%);}
-
+    
     .error-message{text-align:center;color:#b00;padding:20px;font-size:16px;}
   </style>
 
@@ -1218,19 +1223,28 @@ cartItemsEl.addEventListener('click', e => {
     categoriesManageCancelBtn.addEventListener('click',closeManageCategories);
     categoriesManageModal.addEventListener('click',(e)=>{if(e.target===categoriesManageModal)closeManageCategories();});
 
-    function renderCategories(){
-      categoriesList.innerHTML='';
-      const cats=alphabetical(shopData.categories.map(c=>c.name));
-      cats.forEach(name=>{
-        const card=document.createElement('div');card.className='category-item';
-        card.innerHTML=`<span class="category-name">${name.charAt(0).toUpperCase()+name.slice(1)}</span><span class="arrow">>>></span>`;
-        card.addEventListener('click',()=>{
-          currentCategory=name;categoriesModal.style.display='none';
-          openItemModal();updateMainButtonsVisibility();history.pushState({type:'itemModal'},'');
-        });
-        categoriesList.appendChild(card);
-      });
-    }
+    function renderCategories() {
+  categoriesList.innerHTML = '';
+  const cats = alphabetical(shopData.categories.map(c => c.name));
+
+  cats.forEach(name => {
+    const card = document.createElement('div');
+    card.className = 'category-item';
+    card.innerHTML = `
+      <span class="category-name">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+    `;
+
+    card.addEventListener('click', () => {
+      currentCategory = name;
+      categoriesModal.style.display = 'none';
+      openItemModal();
+      updateMainButtonsVisibility();
+      history.pushState({ type: 'itemModal' }, '');
+    });
+
+    categoriesList.appendChild(card);
+  });
+}
 
     function renderManageCategories() {
   categoriesManageList.innerHTML = '';
