@@ -1,193 +1,1834 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fashion Boutiques - PickMe Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Boutique UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--theme-color:#9e1850;}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',sans-serif;}
+    /* Remove blue flash and focus outlines */
+* {
+  -webkit-tap-highlight-color: transparent; /* Removes blue flash on mobile */
+  outline: none;                            /* Removes default focus ring */
+}
 
-  <!-- ========= HEADER CODE STARTS HERE ================== -->
-  <div id="header-placeholder"></div>
+button, a, input, textarea {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  border: none;
+}
+
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+    body{background:#fff;overflow-x:hidden;position:relative;}
+
+    /* Slide-link: render slider only, no main-page flash (Issue #4 already OK) */
+    html.loading-slide #appRoot{display:none!important;}
+    html.loading-slide #slidePage{display:block!important;}
+
+    .top-banner{
+      width:100%;height:280px;position:relative;
+      background:linear-gradient(to bottom,rgba(0,0,0,.7),rgba(0,0,0,.5));
+      background-size:cover;background-position:center;color:#fff;text-align:center;
+      padding:40px 20px 60px;transition:transform .8s ease;z-index:1;will-change:transform;
+      display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .top-banner h2{font-size:18px;font-weight:500;margin-bottom:5px;}
+    .top-banner h1{font-size:28px;font-weight:700;margin-bottom:8px;}
+    .top-banner p{font-size:14px;font-weight:400;opacity:.9;}
+    .banner-buttons{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;}
+    .contact-btn,.pay-btn{padding:12px 24px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;min-width:140px;text-align:center;white-space:nowrap;}
+    .contact-btn{background:var(--theme-color);color:#fff;border:none;}
+    .pay-btn{background:#fff;border:2px solid var(--theme-color);color:var(--theme-color);}
+
+    .hamburger,.close-floating{
+      position:fixed;top:15px;width:40px;height:40px;background:var(--theme-color);color:#fff;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:100002;
+    }
+    .hamburger{left:15px;flex-direction:column;gap:3px;}
+    .hamburger div{width:25px;height:3px;background:#fff;}
+    .close-floating{right:15px;font-size:20px;}
+
+    .gallery-title{text-align:center;font-size:18px;font-weight:600;margin:20px 0 10px;position:relative;z-index:2;}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;padding:0 20px 120px;position:relative;z-index:2;}
+    .gallery-item{border:1px solid #ddd;border-radius:12px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.1);background:#fff;transition:transform .2s ease;display:flex;flex-direction:column;justify-content:space-between;}
+    .gallery-item:hover{transform:scale(1.03);}
+    .gallery-item img{width:100%;height:auto;cursor:pointer;display:block;}
+    .gallery-item .price{font-weight:600;color:var(--theme-color);margin:8px 10px;text-align:center;}
+    .gallery-item .sizes{font-size:12px;color:#666;margin:0 10px 8px;text-align:center;}
+    .gallery-item .add-to-cart{background:var(--theme-color);color:#fff;border:none;padding:8px;width:100%;cursor:pointer;font-weight:600;border-top:1px solid #ddd;margin:0;}
+    .gallery-item .add-to-cart.added{background:#333;display:flex;align-items:center;justify-content:center;gap:5px;}
+
+    .preview-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .85);
+  justify-content: center;
+  align-items: center;
+  touch-action: manipulation;
+  flex-direction: column;
+  z-index: 100004; /* 👈 raised above cart (cart is 100000) */
+}
+    .preview-modal img{max-width:90%;max-height:70vh;border-radius:10px;}
+    .preview-modal .add-to-cart{background:var(--theme-color);color:#fff;border:none;padding:10px 20px;border-radius:25px;cursor:pointer;font-weight:600;margin-top:15px;}
+    .preview-modal .add-to-cart.added{background:#333;display:flex;align-items:center;justify-content:center;gap:5px;}
+    .arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.7); /* translucent black background */
+  border-radius: 50%;              /* make it perfectly round */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  line-height: 0;
+  height: 48px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background 0.2s ease;
+}
+.arrow.left { left: 20px; }
+.arrow.right { right: 20px; }
+/* Availability tag at top-left of image inside slider */
+.availability-label {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  opacity: 0.95;
+  z-index: 10;
+}
+    .close-btn{position:absolute;top:20px;right:20px;font-size:22px;color:#fff;cursor:pointer;}
+
+    .bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 0;box-shadow:0 -2px 5px rgba(0,0,0,.1);overflow-x:auto;white-space:nowrap;z-index:2;}
+    .bottom-tabs .tab{display:inline-block;padding:10px 20px;font-size:14px;color:var(--theme-color);font-weight:600;cursor:pointer;white-space:nowrap;}
+    .bottom-tabs .tab.active{border-bottom:2px solid var(--theme-color);}
+    .bottom-tabs::-webkit-scrollbar{display:none;}
+
+    /* All modals */
+    .contact-modal,.save-confirmation-modal,.pin-modal,.menu-modal,.categories-modal,.categories-manage-modal,.item-modal,.quick-buy-modal,.cart-modal{
+      display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.45);justify-content:center;align-items:center;padding:20px;
+    }
+    /* Ensure the warning modal is ALWAYS on top of cart (Issue #5) */
+    .contact-modal{z-index:100003;}
+
+    .contact-card,.save-confirmation-card,.pin-card,.menu-card,.categories-card,.categories-manage-card,.item-card,.quick-card{
+      width:100%;max-width:420px;background:#fff;border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;position:relative;
+    }
+    /* Close X on every card */
+    .modal-x{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--theme-color);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;}
+
+    .contact-card h3{margin-bottom:8px;font-size:18px;color:var(--theme-color);}
+    .contact-card p{font-size:14px;color:#333;line-height:1.4;}
+    .modal-buttons{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+    .contact-ok,.contact-cancel{padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer;min-width:110px;}
+    .contact-ok{background:var(--theme-color);color:#fff;border:none;}
+    .contact-cancel{background:#fff;color:var(--theme-color);border:2px solid var(--theme-color);}
+
+    .save-confirmation-card p{font-size:16px;color:#333;margin-bottom:20px;}
+    @media(max-width:500px){.contact-btn,.pay-btn{min-width:120px;padding:10px 18px;}}
+
+    .menu-option{padding:12px;margin:10px 0;background:#fff;border:2px solid var(--theme-color);color:var(--theme-color);font-weight:600;border-radius:25px;cursor:pointer;text-align:center;}
+
+    .category-item{background:#fff;border:2px solid var(--theme-color);border-radius:10px;padding:15px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--theme-color);font-weight:600;}
+    .category-item .category-actions{display:flex;gap:10px;}
+
+    .item-upload{margin-bottom:20px;}
+    .item-list .item{position:relative;margin:10px 0;}
+    .item img{width:100%;border-radius:12px;}
+    .item input{width:100%;padding:10px;margin-top:5px;border:1px solid var(--theme-color);border-radius:10px;}
+    .item .delete-icon{position:absolute;top:10px;right:10px;background:var(--theme-color);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+    .delete-all-btn{padding:10px 20px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:#fff;color:var(--theme-color);border:2px solid var(--theme-color);margin:10px 0;}
+    .save-btn{padding:12px 24px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;background:var(--theme-color);color:#fff;border:none;margin-top:20px;}
+    .save-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .no-items {
+  width: 205%;
+  text-align: center;
+  color: gray;
+  font-size: 16px;
+  margin: 50px 0;
+  font-weight: 500;
+  display: block;
+  white-space: nowrap;
+}
+
+    /* Ensure inner list scrolls (Issue #3) */
+    .item-card{max-height:80vh;overflow:hidden;}
+    .item-list{max-height:58vh;overflow-y:auto;padding-right:4px;}
+
+    .cart-buttons{position:fixed;bottom:60px;left:0;right:0;display:none;justify-content:center;gap:20px;padding:10px;background:#fff;box-shadow:0 -2px 5px rgba(0,0,0,.1);z-index:3;}
+    .cart-buttons button{padding:12px 24px;font-size:14px;font-weight:600;border-radius:25px;cursor:pointer;min-width:160px;text-align:center;}
+    #viewSelected{background:#fff;border:2px solid var(--theme-color);color:var(--theme-color);}
+    #buySelected{background:var(--theme-color);color:#fff;border:none;}
+
+    .cart-modal{background:#fff;overflow-y:auto;}
+    .cart-header{padding:20px;text-align:center;border-bottom:1px solid #ddd;}
+    .cart-header h2{font-size:20px;color:var(--theme-color);}
+    .cart-header p{font-size:16px;font-weight:600;}
+    .cart-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;padding:20px;min-height:150px;}
+    .cart-item{border:1px solid #ddd;border-radius:12px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.1);background:#fff;position:relative;}
+    .cart-item img{width:100%;}
+    .cart-item .price{font-weight:600;color:var(--theme-color);margin:10px;text-align:center;}
+    .cart-item .sizes{font-size:12px;color:#666;margin:-5px 10px 10px;text-align:center;}
+    .cart-item .delete-cart{position:absolute;top:10px;right:10px;background:var(--theme-color);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+    .cart-actions{text-align:center;margin:10px 0;}
+
+    .whatsapp-field{padding:20px 20px 60px;text-align:center;}
+    .whatsapp-field label{display:block;margin-bottom:10px;font-weight:600;color:var(--theme-color);}
+    /* Make all number inputs same generous size (Issues #9 & #10) */
+    .whatsapp-field input,
+    .quick-card input,
+    .pin-card input{width:80%;padding:12px;border:1px solid var(--theme-color);border-radius:10px;font-size:16px;}
+
+    .floating-buy{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 40px;background:var(--theme-color);color:#fff;border:none;border-radius:25px;font-weight:600;cursor:pointer;z-index:100001;}
+    .close-cart{position:absolute;top:20px;right:20px;font-size:22px;color:var(--theme-color);cursor:pointer;}
+
+    .slide-page{display:none;position:fixed;inset:0;background:#fff;z-index:99999;overflow-y:auto;text-align:center;padding:40px 20px;}
+    .slider{position:relative;max-width:80%;margin:0 auto;}
+    .slide-content{display:flex;flex-direction:column;align-items:center;}
+    .slide-content img{max-width:100%;max-height:50vh;border-radius:12px;}
+    .slide-info{margin:10px 0;}
+    .slide-info p{font-size:16px;}
+    .not-avail-btn{background:#fff;border:2px solid var(--theme-color);color:var(--theme-color);padding:10px 20px;border-radius:25px;cursor:pointer;margin-top:20px;font-weight:600;}
+    .done-btn,.ok-btn{padding:12px 40px;background:var(--theme-color);color:#fff;border:none;border-radius:25px;font-weight:600;cursor:pointer;margin-top:40px;}
+    .dimmed{opacity:.7;filter:grayscale(100%);}
+
+    .error-message{text-align:center;color:#b00;padding:20px;font-size:16px;}
+  </style>
+
+  <!-- Prevent main flashing when opening slide links -->
   <script>
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Failed to load header');
-        let html = await response.text();
-        const pageTitle = "Fashion";
-        html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
-        document.getElementById('header-placeholder').innerHTML = html;
-        document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
-          const newScript = document.createElement('script');
-          if (oldScript.src) newScript.src = oldScript.src;
-          else newScript.textContent = oldScript.textContent;
-          document.body.appendChild(newScript);
-        });
-      } catch (err) {
-        console.error('Failed to load header:', err);
-      }
+    (function(){
+      var p=new URLSearchParams(location.search);
+      if(p.has('slide')||p.has('slideFirestore')){document.documentElement.classList.add('loading-slide');}
     })();
   </script>
-  <!-- ========= HEADER CODE ENDS HERE ================== -->
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Montserrat', Arial, sans-serif;
-      background-color: #f9f9f9;
-      padding-top: 100px;
-    }
-    .page-header { text-align: center; margin-bottom: 20px; }
-    .page-header h1 { color: #c12872; margin: 0; font-size: 28px; }
-    .page-header p { color: #000; margin-top: 5px; font-size: 16px; font-weight: bold; }
-    .search-bar { display: flex; justify-content: center; margin-bottom: 20px; }
-    .search-bar input {
-      width: 80%; max-width: 400px; padding: 10px 15px; border-radius: 8px;
-      border: 1px solid #ccc; font-size: 16px;
-    }
-    .cards-container {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 70px; padding: 0 20px 50px 20px;
-    }
-    .card {
-      position: relative; border-radius: 15px; overflow: hidden;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1); background-size: cover;
-      background-position: center; height: 250px; display: flex;
-      align-items: flex-end; transition: transform 0.2s;
-    }
-    .card:hover { transform: translateY(-5px); }
-    .card::before {
-      content: ""; position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
-    }
-    .card-content {
-      position: relative; color: white; padding: 15px; width: 100%;
-      display: flex; flex-direction: column; justify-content: space-between; z-index: 1;
-    }
-    .card-title { font-weight: bold; font-size: 24px; margin-bottom: 10px; }
-    .card-description { font-size: 14px; margin-bottom: 10px; flex-grow: 1; }
-    .btn-order {
-      background-color: #c12872; color: white; border: none; padding: 8px 12px;
-      border-radius: 8px; cursor: pointer; font-size: 14px;
-      align-self: flex-end; transition: transform 0.2s;
-    }
-    .btn-order:hover { transform: scale(1.05); }
-  </style>
+  <!-- Firebase compat (kept unchanged as requested) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 </head>
 <body>
-  <div class="page-header">
-    <h1></h1>
-    <p>Discover the latest trends from top boutiques near you</p>
+  <!-- MAIN ROOT -->
+  <div id="appRoot">
+    <div class="hamburger" id="hamburgerBtn" title="Admin"><div></div><div></div><div></div></div>
+    <div class="close-floating" id="closeFloating" title="Close">×</div>
+
+    <div class="top-banner" id="topBanner">
+      <div>
+        <h2>Welcome to</h2>
+        <h1 id="boutiqueName">Boutique Name</h1>
+        <p id="boutiqueSlogan">Your fashion, your style</p>
+      </div>
+      <div class="banner-buttons">
+        <button class="contact-btn" id="contactBtn">Contact Us</button>
+        <button class="pay-btn" id="payBtn">Pay Us</button>
+      </div>
+    </div>
+
+    <div class="gallery-title">Available Items</div>
+    <div class="gallery" id="gallery"></div>
+
+    <div class="preview-modal" id="previewModal">
+      <span class="close-btn" id="modalCloseBtn">×</span>
+      <span class="arrow left" id="modalPrev">‹</span>
+      <img id="modalImage" alt="Preview"/>
+      <button class="add-to-cart" id="modalAddToCart">Add to Cart</button>
+      <span class="arrow right" id="modalNext">›</span>
+    </div>
+
+    <div class="bottom-tabs" id="bottomTabs"></div>
+
+    <div class="cart-buttons" id="cartButtons">
+      <button id="viewSelected">Selected Items</button>
+      <button id="buySelected">Buy Selected Items</button>
+    </div>
   </div>
 
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search boutiques...">
+  <!-- Shared Warning (Contact/Pay/Buy flows) -->
+  <div class="contact-modal" id="contactModal" aria-hidden="true">
+    <div class="contact-card" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+      <div class="modal-x" id="contactX">×</div>
+      <h3 id="contactTitle">Warning</h3>
+      <p>Do not make any direct payments to this Vendor. All payments should pass through this platform!</p>
+      <div class="modal-buttons">
+        <button class="contact-ok" id="contactOkBtn">OK</button>
+        <button class="contact-cancel" id="contactCancelBtn">Cancel</button>
+      </div>
+    </div>
   </div>
 
-  <div class="cards-container" id="cardsContainer"></div>
-
-  <div style="position: fixed; bottom: 0; width: 100%; z-index: 9999;">
-    <iframe src="footer.html" style="width: 100%; height: 60px; border: none; overflow: hidden;" scrolling="no"></iframe>
+  <!-- Save confirmation -->
+  <div class="save-confirmation-modal" id="saveConfirmationModal">
+    <div class="save-confirmation-card">
+      <div class="modal-x" id="saveConfirmationX">×</div>
+      <p id="saveConfirmationText"></p>
+      <button class="contact-ok" id="saveConfirmationOkBtn">OK</button>
+    </div>
   </div>
 
-  <!-- ========= FIREBASE + FIRESTORE ========= -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  <!-- Cart -->
+  <div class="cart-modal" id="cartModal">
+    <div class="cart-header">
+      <span class="close-cart" id="closeCart">×</span>
+      <h2>Selected Items</h2>
+      <p>Total: GH₵ <span id="cartTotal">0</span></p>
+    </div>
+    <div class="cart-actions"><button class="delete-all-btn" id="deleteAllCartBtn">Delete All Items</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="whatsapp-field">
+      <label for="whatsappInput">WhatsApp Number (required)</label>
+      <input type="tel" id="whatsappInput" placeholder="+233XXXXXXXXX">
+    </div>
+    <button class="floating-buy" id="buyNowBtn">Buy Now</button>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD7GXJKraVNfXSHG7RDoUDccD98u5JF7F8",
-      authDomain: "pickmeservicesonline.firebaseapp.com",
-      projectId: "pickmeservicesonline",
-      storageBucket: "pickmeservicesonline.firebasestorage.app",
-      messagingSenderId: "265031616239",
-      appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+  <!-- Quick buy -->
+  <div class="quick-buy-modal" id="quickBuyModal">
+    <div class="quick-card">
+      <div class="modal-x" id="quickBuyX">×</div>
+      <h3>Enter WhatsApp Number</h3>
+      <input type="tel" id="quickWhatsapp" placeholder="+233XXXXXXXXX">
+      <div class="modal-buttons">
+        <button class="contact-ok" id="quickBuyOk">Proceed</button>
+        <button class="contact-cancel" id="quickBuyCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide page -->
+  <div class="slide-page" id="slidePage">
+    <div class="slider" id="slideShell" style="display:none">
+      <span class="arrow left" id="slideLeft">‹</span>
+      <div class="slide-content">
+        <img id="slideImg" alt="Selected item">
+        <div class="slide-info"><p id="slidePrice"></p><p id="slideSizes"></p></div>
+        <button id="notAvailBtn" class="not-avail-btn">Not Available</button>
+      </div>
+      <span class="arrow right" id="slideRight">›</span>
+    </div>
+    <div id="slideLoading" style="color:#666">Loading selection…</div>
+    <button id="doneBtn" class="done-btn" style="display:none">Done</button>
+    <button id="okBtn" class="ok-btn" style="display:none">OK</button>
+  </div>
+
+  <!-- Admin: PIN (Issue #1 layout: input on top, button beneath; Issue #10 size matched via CSS) -->
+  <div class="pin-modal" id="pinModal">
+    <div class="pin-card">
+      <div class="modal-x" id="pinX">×</div>
+      <h3>Enter PIN</h3>
+      <input type="password" id="pinInput" maxlength="6" placeholder="6-digit PIN">
+      <button class="contact-ok" id="pinOkBtn">OK</button>
+    </div>
+  </div>
+
+  <div class="menu-modal" id="menuModal">
+    <div class="menu-card">
+      <div class="modal-x" id="menuX">×</div>
+      <h3>Options</h3>
+      <div class="menu-option" id="addItemsBtn">Add Items</div>
+      <div class="menu-option" id="editItemsBtn">Edit Items</div>
+      <div class="menu-option" id="editBoutiqueDetailsBtn">Edit Boutique Details</div>
+      <button class="contact-cancel" id="menuCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="categories-modal" id="categoriesModal">
+    <div class="categories-card">
+      <div class="modal-x" id="categoriesX">×</div>
+      <h3 id="categoriesTitle"></h3>
+      <div id="categoriesList"></div>
+      <button class="contact-cancel" id="categoriesCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="categories-manage-modal" id="categoriesManageModal">
+    <div class="categories-manage-card">
+      <div class="modal-x" id="categoriesManageX">×</div>
+      <h3>Manage Categories</h3>
+      <div id="categoriesManageList"></div>
+      <button class="contact-cancel" id="categoriesManageCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="item-modal" id="itemModal">
+    <div class="item-card">
+      <div class="modal-x" id="itemX">×</div>
+      <h3 id="itemTitle"></h3>
+      <div class="item-upload" id="itemUploadSection" style="display:none;">
+        <input type="file" id="itemUpload" accept="image/*" multiple>
+      </div>
+      <div class="item-list" id="itemList"></div>
+      <button class="delete-all-btn" id="deleteAllItemsBtn" style="display:none;">Delete All Items</button>
+      <button class="save-btn" id="saveItemsBtn">Save</button>
+      <button class="contact-cancel" id="itemModalCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="item-modal" id="boutiqueDetailsModal">
+    <div class="item-card">
+      <div class="modal-x" id="boutiqueDetailsX">×</div>
+      <h3>Edit Boutique Details</h3>
+      <div class="item-list">
+        <div class="item">
+          <label for="boutiqueNameInput">Boutique Name</label>
+          <input type="text" id="boutiqueNameInput" placeholder="Boutique Name">
+        </div>
+        <div class="item">
+          <label for="boutiqueSloganInput">Slogan</label>
+          <input type="text" id="boutiqueSloganInput" placeholder="Slogan">
+        </div>
+        <div class="item">
+          <label for="boutiqueWhatsAppInput">WhatsApp Number</label>
+          <input type="tel" id="boutiqueWhatsAppInput" placeholder="+233XXXXXXXXX">
+        </div>
+        <div class="item">
+          <label for="boutiqueThemeColorInput">Theme Color</label>
+          <input type="color" id="boutiqueThemeColorInput">
+        </div>
+      </div>
+      <button class="delete-all-btn" id="addCategoryBtn">Add Category</button>
+      <button class="delete-all-btn" id="manageCategoriesBtn">Manage Categories</button>
+      <button class="save-btn" id="saveBoutiqueDetailsBtn" disabled>Save</button>
+      <button class="contact-cancel" id="boutiqueDetailsCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    /********** DOM **********/
+    const urlParams=new URLSearchParams(location.search);
+    const boutiqueId=urlParams.get('id');
+
+    const appRoot=document.getElementById('appRoot');
+
+    const modal=document.getElementById('previewModal');
+    const modalImg=document.getElementById('modalImage');
+    const modalAddToCart=document.getElementById('modalAddToCart');
+    const modalPrev=document.getElementById('modalPrev');
+    const modalNext=document.getElementById('modalNext');
+    const modalCloseBtn=document.getElementById('modalCloseBtn');
+
+    const gallery=document.getElementById('gallery');
+    const bottomTabs=document.getElementById('bottomTabs');
+    const topBanner=document.getElementById('topBanner');
+
+    const contactBtn=document.getElementById('contactBtn');
+    const payBtn=document.getElementById('payBtn');
+    const contactModal=document.getElementById('contactModal');
+    const contactOkBtn=document.getElementById('contactOkBtn');
+    const contactCancelBtn=document.getElementById('contactCancelBtn');
+    const contactX=document.getElementById('contactX');
+
+    const saveConfirmationModal=document.getElementById('saveConfirmationModal');
+    const saveConfirmationText=document.getElementById('saveConfirmationText');
+    const saveConfirmationOkBtn=document.getElementById('saveConfirmationOkBtn');
+    const saveConfirmationX=document.getElementById('saveConfirmationX');
+
+    const hamburgerBtn=document.getElementById('hamburgerBtn');
+    const closeFloating=document.getElementById('closeFloating');
+
+    const pinModal=document.getElementById('pinModal');
+    const pinInput=document.getElementById('pinInput');
+    const pinOkBtn=document.getElementById('pinOkBtn');
+    const pinX=document.getElementById('pinX');
+
+    const menuModal=document.getElementById('menuModal');
+    const addItemsBtn=document.getElementById('addItemsBtn');
+    const editItemsBtn=document.getElementById('editItemsBtn');
+    const editBoutiqueDetailsBtn=document.getElementById('editBoutiqueDetailsBtn');
+    const menuCancelBtn=document.getElementById('menuCancelBtn');
+    const menuX=document.getElementById('menuX');
+
+    const categoriesModal=document.getElementById('categoriesModal');
+    const categoriesTitle=document.getElementById('categoriesTitle');
+    const categoriesList=document.getElementById('categoriesList');
+    const categoriesCancelBtn=document.getElementById('categoriesCancelBtn');
+    const categoriesX=document.getElementById('categoriesX');
+
+    const categoriesManageModal=document.getElementById('categoriesManageModal');
+    const categoriesManageList=document.getElementById('categoriesManageList');
+    const categoriesManageCancelBtn=document.getElementById('categoriesManageCancelBtn');
+    const categoriesManageX=document.getElementById('categoriesManageX');
+
+    const itemModal=document.getElementById('itemModal');
+    const itemTitle=document.getElementById('itemTitle');
+    const itemUploadSection=document.getElementById('itemUploadSection');
+    const itemUpload=document.getElementById('itemUpload');
+    const itemList=document.getElementById('itemList');
+    const saveItemsBtn=document.getElementById('saveItemsBtn');
+    const deleteAllItemsBtn=document.getElementById('deleteAllItemsBtn');
+    const itemModalCancelBtn=document.getElementById('itemModalCancelBtn');
+    const itemX=document.getElementById('itemX');
+
+    const boutiqueDetailsModal=document.getElementById('boutiqueDetailsModal');
+    const boutiqueNameInput=document.getElementById('boutiqueNameInput');
+    const boutiqueSloganInput=document.getElementById('boutiqueSloganInput');
+    const boutiqueWhatsAppInput=document.getElementById('boutiqueWhatsAppInput');
+    const boutiqueThemeColorInput=document.getElementById('boutiqueThemeColorInput');
+    const saveBoutiqueDetailsBtn=document.getElementById('saveBoutiqueDetailsBtn');
+    const addCategoryBtn=document.getElementById('addCategoryBtn');
+    const manageCategoriesBtn=document.getElementById('manageCategoriesBtn');
+    const boutiqueDetailsCancelBtn=document.getElementById('boutiqueDetailsCancelBtn');
+    const boutiqueDetailsX=document.getElementById('boutiqueDetailsX');
+
+    const cartButtons=document.getElementById('cartButtons');
+    const viewSelected=document.getElementById('viewSelected');
+    const buySelected=document.getElementById('buySelected');
+    const cartModal=document.getElementById('cartModal');
+    const closeCart=document.getElementById('closeCart');
+    const deleteAllCartBtn=document.getElementById('deleteAllCartBtn');
+    const cartItemsEl=document.getElementById('cartItems');
+    const cartTotal=document.getElementById('cartTotal');
+    const whatsappInput=document.getElementById('whatsappInput');
+    const buyNowBtn=document.getElementById('buyNowBtn');
+
+    const quickBuyModal=document.getElementById('quickBuyModal');
+    const quickWhatsapp=document.getElementById('quickWhatsapp');
+    const quickBuyOk=document.getElementById('quickBuyOk');
+    const quickBuyCancel=document.getElementById('quickBuyCancel');
+    const quickBuyX=document.getElementById('quickBuyX');
+
+    const slidePage=document.getElementById('slidePage');
+    const slideShell=document.getElementById('slideShell');
+    const slideImg=document.getElementById('slideImg');
+    const slidePrice=document.getElementById('slidePrice');
+    const slideSizes=document.getElementById('slideSizes');
+    const notAvailBtn=document.getElementById('notAvailBtn');
+    const doneBtn=document.getElementById('doneBtn');
+    const okBtn=document.getElementById('okBtn');
+    const slideLeft=document.getElementById('slideLeft');
+    const slideRight=document.getElementById('slideRight');
+    const slideLoading=document.getElementById('slideLoading');
+
+    /********** Firebase (unchanged) **********/
+    const firebaseConfig={
+      apiKey:"AIzaSyD7GXJKraVNfXSHG7RDoUDccD98u5JF7F8",
+      authDomain:"pickmeservicesonline.firebaseapp.com",
+      projectId:"pickmeservicesonline",
+      storageBucket:"pickmeservicesonline.firebasestorage.app",
+      messagingSenderId:"265031616239",
+      appId:"1:265031616239:web:e2ef418704af5595aa7d1a"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db=firebase.firestore();
+    const storage=firebase.storage();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    /********** State **********/
+    let currentIndex=0,currentImages=[],currentCategoryIndex=-1;
+    let boutiqueData=null; // name, slogan, whatsapp, themeColor, backgroundImage, pin
+    let shopData=null;     // { categories:[{name,items}], ]
+    let carts=JSON.parse(localStorage.getItem('carts')||'{}');
+    let cart=carts[boutiqueId]||[];
+    let currentMode=''; // 'add'|'edit'
+    let currentCategory='';
+    let tempItems=[];
+    let isChanged=false;
+    /********** Image Cache (IndexedDB) — ONLY for gallery images **********/
+const IMAGE_DB_NAME = 'BoutiqueImageCache';
+const IMAGE_STORE = 'images';
 
-    const container = document.getElementById("cardsContainer");
-    const searchInput = document.getElementById("searchInput");
-
-    const CACHE_HTML_KEY = "boutiquesCardsHTML";
-    const CACHE_EXPIRY_KEY = "boutiquesCacheTime";
-    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-
-    // Load from cache instantly
-    function loadFromCache() {
-      const html = localStorage.getItem(CACHE_HTML_KEY);
-      const timestamp = localStorage.getItem(CACHE_EXPIRY_KEY);
-      if (html && timestamp && Date.now() - parseInt(timestamp, 10) < CACHE_TTL) {
-        container.innerHTML = html;
-        attachCardEvents();
-        return true;
+/* Open (or create) the image cache DB */
+function openImageDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IMAGE_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IMAGE_STORE)) {
+        db.createObjectStore(IMAGE_STORE, { keyPath: 'url' });
       }
-      return false;
-    }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
 
-    // Save cache
-    function saveToCache(html) {
-      localStorage.setItem(CACHE_HTML_KEY, html);
-      localStorage.setItem(CACHE_EXPIRY_KEY, Date.now().toString());
-    }
+/* Read a blob from cache by URL */
+async function idbGet(url) {
+  const db = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IMAGE_STORE, 'readonly');
+    const store = tx.objectStore(IMAGE_STORE);
+    const getReq = store.get(url);
+    getReq.onsuccess = () => resolve(getReq.result ? getReq.result.blob : null);
+    getReq.onerror = () => reject(getReq.error);
+  });
+}
 
-    // Attach click handlers to order buttons
-    function attachCardEvents() {
-      document.querySelectorAll(".btn-order").forEach(btn => {
-        btn.onclick = () => {
-          const card = btn.closest(".card");
-          const id = card.dataset.id;
-          window.location.href = `template.html?id=${encodeURIComponent(id)}`;
-        };
-      });
-    }
+/* Write a blob to cache by URL */
+async function idbSet(url, blob) {
+  const db = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IMAGE_STORE, 'readwrite');
+    const store = tx.objectStore(IMAGE_STORE);
+    const putReq = store.put({ url, blob });
+    putReq.onsuccess = () => resolve();
+    putReq.onerror = () => reject(putReq.error);
+  });
+}
 
-    // Fetch boutiques and rebuild HTML
-    async function fetchBoutiques() {
-      const snap = await getDocs(collection(db, "Boutiques"));
-      let html = "";
-      snap.forEach(doc => {
-        const b = { id: doc.id, ...doc.data() };
-        html += `
-          <div class="card" data-id="${b.id}" style="background-image:url('${b.backgroundImage || ""}')"
-               data-name="${b.name?.toLowerCase() || ""}">
-            <div class="card-content">
-              <div>
-                <div class="card-title">${b.name || ""}</div>
-                <div class="card-description">${b.slogan || ""}</div>
-              </div>
-              <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">Shop from Us</button>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-      attachCardEvents();
-      saveToCache(html);
-    }
+/* Return an object URL if cached, else null */
+async function getBlobUrlFromCache(url) {
+  try {
+    const blob = await idbGet(url);
+    if (!blob) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
 
-    // Search filter
-    searchInput.addEventListener("input", () => {
-      const q = searchInput.value.toLowerCase();
-      Array.from(container.children).forEach(card => {
-        const name = card.getAttribute("data-name") || "";
-        card.style.display = name.includes(q) ? "flex" : "none";
+/* Ensure URL is cached; returns an object URL when finished */
+async function ensureCached(url) {
+  try {
+    // Already cached?
+    const cached = await idbGet(url);
+    if (cached) return URL.createObjectURL(cached);
+
+    // Fetch and store
+    const res = await fetch(url, { mode: 'cors', cache: 'no-cache' });
+    if (!res.ok) throw new Error('fetch failed');
+    const blob = await res.blob();
+    await idbSet(url, blob);
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/* Attach <img> to cached version if available; otherwise show network now and cache in background */
+async function attachImageWithCache(imgEl, url) {
+  try {
+    const cachedUrl = await getBlobUrlFromCache(url);
+    if (cachedUrl) {
+      imgEl.src = cachedUrl;
+      imgEl.dataset.blobUrl = cachedUrl; // (optional) to revoke later if you ever want
+    } else {
+      // First time: show the real URL so user sees image; then cache quietly
+      imgEl.src = url;
+      ensureCached(url).catch(()=>{});
+    }
+  } catch {
+    imgEl.src = url;
+  }
+}
+
+/* Background: prefetch all current shop images & evict removed ones */
+async function refreshImageCacheWithLive(currentShopData) {
+  try {
+    const wanted = new Set();
+    (currentShopData?.categories || []).forEach(cat => {
+      (cat.items || []).forEach(it => {
+        if (it.src) wanted.add(it.src);
       });
     });
 
-    // On load: first show cached instantly, then fetch fresh
-    window.addEventListener("DOMContentLoaded", async () => {
-      const hadCache = loadFromCache();
-      try {
-        await fetchBoutiques();
-      } catch (err) {
-        console.error("Failed to fetch boutiques:", err);
-        if (!hadCache) {
-          container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#b00;padding:40px;'>Failed to load boutiques.</p>";
+    // Prefetch (fire-and-forget)
+    wanted.forEach(u => { ensureCached(u); });
+
+    // Evict anything no longer in live data
+    const db = await openImageDB();
+    const tx = db.transaction(IMAGE_STORE, 'readonly');
+    const store = tx.objectStore(IMAGE_STORE);
+    const keysReq = store.getAllKeys();
+    const keys = await new Promise((res, rej) => {
+      keysReq.onsuccess = () => res(keysReq.result || []);
+      keysReq.onerror = () => rej(keysReq.error);
+    });
+
+    const delTx = db.transaction(IMAGE_STORE, 'readwrite');
+    const delStore = delTx.objectStore(IMAGE_STORE);
+    keys.forEach(k => { if (!wanted.has(k)) delStore.delete(k); });
+  } catch (e) {
+    // Silent — caching is a progressive enhancement
+  }
+}
+
+    /********** Utilities **********/
+    function updateMainButtonsVisibility(){
+      const anyOpen=[
+        contactModal,saveConfirmationModal,pinModal,menuModal,categoriesModal,categoriesManageModal,itemModal,quickBuyModal,cartModal,modal,slidePage,boutiqueDetailsModal
+      ].some(el=>el&&(el.style.display==='flex'||el.style.display==='block'));
+      const onSlide=document.documentElement.classList.contains('loading-slide')||slidePage.style.display==='block';
+      const show=!anyOpen&&!onSlide;
+      hamburgerBtn.style.display=show?'flex':'none';
+      closeFloating.style.display=show?'flex':'none';
+    }
+    function cacheWrite(dataObj){
+      localStorage.setItem(`boutiqueCache_${boutiqueId}`,JSON.stringify({data:dataObj,cacheTimestamp:Date.now()}));
+    }
+    // Always alphabetical order (Issue #2)
+    function alphabetical(names){return names.slice().sort((a,b)=>a.localeCompare(b));}
+
+    function normalizeCategories(data){
+      const categoriesObj=data.categories||{};
+      const keys=alphabetical(Object.keys(categoriesObj));
+      const categories=keys.map(name=>({
+        name:name.toLowerCase(),
+        items:(categoriesObj[name]||[]).map(item=>({
+          src:item.src||'https://via.placeholder.com/400x400?text=Item',
+          price:String(item.price??'').trim(),
+          sizes:String(item.sizes??'').trim()
+        }))
+      }));
+      return {categories};
+    }
+
+    function applyBoutiqueData(){
+      document.documentElement.style.setProperty('--theme-color',boutiqueData.themeColor);
+      document.getElementById('boutiqueName').textContent=boutiqueData.name;
+      document.getElementById('boutiqueSlogan').textContent=boutiqueData.slogan;
+      topBanner.style.background=`linear-gradient(to bottom, rgba(0,0,0,.7), rgba(0,0,0,.5)), url('${boutiqueData.backgroundImage||'https://via.placeholder.com/1200x400?text=Banner'}')`;
+      topBanner.style.backgroundSize='cover';topBanner.style.backgroundPosition='center';
+    }
+
+    function buildTabs(activeName){
+      bottomTabs.innerHTML='';
+      const cats=alphabetical(shopData.categories.map(c=>c.name));
+      cats.forEach(name=>{
+        const tab=document.createElement('div');
+        tab.className='tab';
+        tab.dataset.category=name;
+        tab.textContent=name.charAt(0).toUpperCase()+name.slice(1);
+        if(name===activeName) tab.classList.add('active');
+        tab.addEventListener('click',()=>{
+          document.querySelector('.tab.active')?.classList.remove('active');
+          tab.classList.add('active');
+          loadGallery(name);
+          history.pushState({type:'tab',category:name},'');
+        });
+        bottomTabs.appendChild(tab);
+      });
+      if(!document.querySelector('.tab.active')&&cats[0]){
+        bottomTabs.querySelector(`.tab[data-category="${cats[0]}"]`)?.classList.add('active');
+      }
+    }
+
+    function renderTabs(){
+      if(!shopData||!shopData.categories.length){
+        gallery.innerHTML='<p class="no-items">No categories available.</p>';
+        bottomTabs.innerHTML='';
+        return;
+      }
+      const first=alphabetical(shopData.categories.map(c=>c.name))[0];
+      buildTabs(first);loadGallery(first);
+    }
+
+    // === NEW GALLERY: instant load and background preload ===
+function loadGallery(category) {
+  gallery.innerHTML = '';
+
+  const cat = shopData?.categories.find(c => c.name === category);
+  if (!cat || !Array.isArray(cat.items) || cat.items.length === 0) {
+    gallery.innerHTML = '<p class="no-items">Oops, there are no items not available today</p>';
+    return;
+  }
+
+  renderGalleryItems(cat.items, category);
+
+  // Preload all other categories silently
+  preloadOtherCategories(category);
+}
+
+/* Renders the gallery for a given category */
+function renderGalleryItems(items, category) {
+  gallery.innerHTML = '';
+  currentImages = items.map(it => it.src);
+
+  items.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    const isInCart = cart.some(c => c.src === item.src && c.category === category);
+    const btnText = isInCart ? '✔ Added to Cart' : 'Add to Cart';
+    const btnClass = isInCart ? 'add-to-cart added' : 'add-to-cart';
+    const imgSrc = item.src || 'https://via.placeholder.com/400x400?text=No+Image';
+
+    div.innerHTML = `
+      <img src="${imgSrc}" data-index="${index}" data-category="${category}" alt="Product" loading="lazy">
+      <p class="price">GH₵ ${item.price}</p>
+      ${item.sizes ? `<p class="sizes">Sizes: ${item.sizes}</p>` : ''}
+      <button class="${btnClass}" data-index="${index}" data-category="${category}">${btnText}</button>
+    `;
+    gallery.appendChild(div);
+  });
+
+  // Handle clicks
+  gallery.onclick = (e) => {
+    const img = e.target.closest('img[data-index]');
+    const btn = e.target.closest('button.add-to-cart');
+    if (img) {
+      const idx = parseInt(img.dataset.index, 10);
+      openModal(items[idx].src, idx, category);
+      history.pushState({ type: 'modal' }, '');
+    } else if (btn) {
+      const idx = parseInt(btn.dataset.index, 10);
+      addToCart(idx, category, btn);
+    }
+  };
+}
+
+/* Preload other categories in background (smooth experience) */
+function preloadOtherCategories(activeCategory) {
+  try {
+    const otherCats = shopData?.categories.filter(c => c.name !== activeCategory) || [];
+    otherCats.forEach(cat => {
+      (cat.items || []).forEach(item => {
+        const img = new Image();
+        img.src = item.src || '';
+      });
+    });
+  } catch (e) {
+    console.warn('Background preload error:', e);
+  }
+}
+
+    /********** Firestore IO **********/
+    async function fetchBoutiqueData(){
+      const ref=db.collection('Boutiques').doc(boutiqueId);
+      const snap=await ref.get();
+      if(!snap.exists) throw new Error('Boutique not found');
+      const data=snap.data();
+      const mapped={
+        name:data.name||'Boutique Name',
+        slogan:data.slogan||'Your fashion, your style',
+        whatsapp:data.whatsapp||'',
+        themeColor:data.themeColor||'#9e1850',
+        backgroundImage:data.backgroundImage||'',
+        pin:String(data.pin??''),
+        categories:data.categories||{}
+      };
+      return mapped;
+    }
+    async function saveBoutiqueDetails(payload){
+      await db.collection('Boutiques').doc(boutiqueId).set(payload,{merge:true});
+      cacheWrite(payload);
+    }
+    async function uploadImage(fileOrDataURL){
+      let blob,ext='jpg';
+      if(fileOrDataURL instanceof File){
+        blob=fileOrDataURL;
+        const n=fileOrDataURL.name||'';const dot=n.lastIndexOf('.');
+        ext=dot>-1?n.slice(dot+1):'jpg';
+      }else if(typeof fileOrDataURL==='string'&&fileOrDataURL.startsWith('data:')){
+        const res=await fetch(fileOrDataURL);blob=await res.blob();
+        const mime=blob.type||'image/jpeg';ext=(mime.split('/')[1]||'jpg').split(';')[0];
+      }else{throw new Error('Unsupported upload input');}
+      const path=`Boutiques/${boutiqueId}/items/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const ref=storage.ref().child(path);
+      await ref.put(blob);return await ref.getDownloadURL();
+    }
+    async function deleteFromStorageByURL(url){
+      try{await firebase.storage().refFromURL(url).delete();}
+      catch(e){console.warn('Storage delete skipped:',e?.message||e);}
+    }
+
+    /********** Boot with strong cache (Issue #4) **********/
+    /********** Boot with strong cache and silent background refresh **********/
+async function boot() {
+  if (!boutiqueId) {
+    appRoot.innerHTML = '<p class="error-message">No boutique ID provided. <a href="fashion.html">Return to main page</a>.</p>';
+    return;
+  }
+
+  const hasSlide = urlParams.has('slide') || urlParams.has('slideFirestore');
+  if (hasSlide) {
+    // open slider directly
+    slidePage.style.display = 'block';
+    await handleSlideFromURL();
+    updateMainButtonsVisibility();
+    return;
+  }
+
+  // 1️⃣ Render from cache immediately if present
+  const cached = JSON.parse(localStorage.getItem(`boutiqueCache_${boutiqueId}`) || 'null');
+  if (cached?.data) {
+    const data = cached.data;
+    boutiqueData = {
+      name: data.name || 'Boutique Name',
+      slogan: data.slogan || 'Your fashion, your style',
+      whatsapp: data.whatsapp || '',
+      themeColor: data.themeColor || '#9e1850',
+      backgroundImage: data.backgroundImage || '',
+      pin: String(data.pin ?? '')
+    };
+    const norm = normalizeCategories({ categories: data.categories || {} });
+    shopData = { categories: norm.categories };
+    applyBoutiqueData();
+    renderTabs();
+    updateCart();
+    updateMainButtonsVisibility();
+  }
+
+  // 2️⃣ Refresh silently in background (first live load)
+  try {
+    const live = await fetchBoutiqueData();
+    const norm = normalizeCategories(live);
+    boutiqueData = {
+      name: live.name,
+      slogan: live.slogan,
+      whatsapp: live.whatsapp,
+      themeColor: live.themeColor,
+      backgroundImage: live.backgroundImage,
+      pin: String(live.pin ?? '')
+    };
+    shopData = { categories: norm.categories };
+    cacheWrite({ ...boutiqueData, categories: live.categories });
+
+    // update gallery image cache for new data
+    refreshImageCacheWithLive(shopData);
+
+    // render depending on cache
+    if (!cached?.data) {
+      applyBoutiqueData();
+      renderTabs();
+      updateCart();
+      updateMainButtonsVisibility();
+    } else {
+      const active = document.querySelector('.tab.active')?.dataset.category ||
+        alphabetical(shopData.categories.map(c => c.name))[0];
+      buildTabs(active);
+      loadGallery(active);
+      updateCartWithShopData();
+    }
+  } catch (e) {
+    if (!cached?.data) {
+      appRoot.innerHTML = '<p class="error-message">Failed to load boutique details. Please try again or <a href="fashion.html">return to main page</a>.</p>';
+    }
+    console.error(e);
+  }
+
+  // 3️⃣ Continuous background auto-refresh (every 3 minutes)
+  setInterval(async () => {
+    try {
+      const live = await fetchBoutiqueData();
+      const norm = normalizeCategories(live);
+
+      // check if something changed before overwriting
+      const newJSON = JSON.stringify(live.categories || {});
+      const oldJSON = JSON.stringify(shopData?.categories || {});
+      if (newJSON === oldJSON) return; // no change detected
+
+      boutiqueData = {
+        name: live.name,
+        slogan: live.slogan,
+        whatsapp: live.whatsapp,
+        themeColor: live.themeColor,
+        backgroundImage: live.backgroundImage,
+        pin: String(live.pin ?? '')
+      };
+      shopData = { categories: norm.categories };
+      cacheWrite({ ...boutiqueData, categories: live.categories });
+
+      // update cached images for any new or deleted items
+      refreshImageCacheWithLive(shopData);
+
+      // update UI silently (keep current tab active)
+      const active = document.querySelector('.tab.active')?.dataset.category ||
+        alphabetical(shopData.categories.map(c => c.name))[0];
+      buildTabs(active);
+      loadGallery(active);
+      updateCartWithShopData();
+
+      console.log('Background update applied silently.');
+    } catch (err) {
+      console.warn('Background refresh failed:', err?.message || err);
+    }
+  }, 180000); // every 3 minutes (180000 ms)
+}
+
+   /********** Modal preview **********/
+function openModal(src, index, category, isCartPreview = false) {
+  // mark context
+  modal.dataset.isCartPreview = isCartPreview ? 'true' : 'false';
+
+  // set indices for navigation
+  currentIndex = index;
+  if (isCartPreview) {
+    currentCategoryIndex = -1;                 // no gallery category
+    currentImages = cart.map(it => it.src);    // enable arrow nav within cart
+  } else {
+    currentCategoryIndex = shopData.categories.findIndex(c => c.name === category);
+    currentImages = shopData.categories[currentCategoryIndex].items.map(it => it.src);
+  }
+
+  // show modal above everything
+  modal.style.display = 'flex';
+  updateMainButtonsVisibility();
+
+  // resolve current item
+  const item = isCartPreview
+    ? cart[currentIndex]
+    : shopData.categories[currentCategoryIndex].items[currentIndex];
+
+  // image
+  modalImg.src = item.src;
+
+  // === Price & Size info (visible in both gallery & cart preview) ===
+  let infoDiv = modal.querySelector('.modal-info');
+  if (!infoDiv) {
+    infoDiv = document.createElement('div');
+    infoDiv.className = 'modal-info';
+    infoDiv.style.marginTop = '15px';
+    infoDiv.style.textAlign = 'center';
+    infoDiv.style.color = '#fff';
+    infoDiv.style.fontSize = '15px';
+    modal.insertBefore(infoDiv, modalAddToCart);
+  }
+  infoDiv.innerHTML = `
+    <p style="margin:4px 0;">GH₵ ${item.price}</p>
+    ${item.sizes ? `<p style="opacity:.9;">Sizes: ${item.sizes}</p>` : ''}
+  `;
+
+  // === Show/hide the "Add to Cart" button depending on context ===
+  if (isCartPreview) {
+    // In CART preview: hide the add button (we'll use a delete icon instead)
+    modalAddToCart.style.display = 'none';
+  } else {
+    // In GALLERY preview: show/toggle as usual
+    modalAddToCart.style.display = 'inline-block';
+    const isInCart = cart.some(c => c.src === item.src);
+    modalAddToCart.textContent = isInCart ? '✔ Added to Cart' : 'Add to Cart';
+    modalAddToCart.classList.toggle('added', isInCart);
+  }
+
+  // === Delete icon (only visible in CART preview) ===
+  let delBtn = document.getElementById('modalDeleteCart');
+  if (!delBtn) {
+    delBtn = document.createElement('div');
+    delBtn.id = 'modalDeleteCart';
+    delBtn.className = 'modal-delete-cart';
+    delBtn.title = 'Remove from cart';
+    delBtn.textContent = '🗑';
+    modal.appendChild(delBtn);
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't close the modal
+      removeCurrentFromCart();
+    });
+  }
+  delBtn.style.display = isCartPreview ? 'flex' : 'none';
+
+  // === Arrows are on for BOTH contexts ===
+  modalPrev.style.display = 'flex';
+  modalNext.style.display = 'flex';
+}
+
+function closeModal() {
+  modal.style.display = 'none';
+  modal.dataset.isCartPreview = 'false';
+  updateMainButtonsVisibility();
+}
+
+// === Remove the currently previewed CART item; update slider + cart list ===
+function removeCurrentFromCart() {
+  if (cart.length === 0) return;
+
+  // Remove item from cart by currentIndex
+  cart.splice(currentIndex, 1);
+
+  // Persist & refresh UI
+  updateCart();       // updates localStorage + bottom bar + gallery buttons
+  renderCartItems();  // refresh the cart list behind the modal
+
+  // If no items left, just close the modal
+  if (cart.length === 0) {
+    closeModal();
+    return;
+  }
+
+  // Still have items; rebuild slider source and clamp index, then show next
+  currentImages = cart.map(it => it.src);
+  if (currentIndex >= cart.length) currentIndex = cart.length - 1;
+  const nextItem = cart[currentIndex];
+  openModal(nextItem.src, currentIndex, nextItem.category || '', true);
+}
+
+// === Arrow navigation works for BOTH contexts ===
+function nextImage() {
+  if (!currentImages || currentImages.length === 0) return;
+  currentIndex = (currentIndex + 1) % currentImages.length;
+
+  const inCart = modal.dataset.isCartPreview === 'true';
+  if (inCart) {
+    const item = cart[currentIndex];
+    openModal(item.src, currentIndex, item.category || '', true);
+  } else {
+    const category = shopData.categories[currentCategoryIndex].name;
+    const item = shopData.categories[currentCategoryIndex].items[currentIndex];
+    openModal(item.src, currentIndex, category, false);
+  }
+}
+
+function prevImage() {
+  if (!currentImages || currentImages.length === 0) return;
+  currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+
+  const inCart = modal.dataset.isCartPreview === 'true';
+  if (inCart) {
+    const item = cart[currentIndex];
+    openModal(item.src, currentIndex, item.category || '', true);
+  } else {
+    const category = shopData.categories[currentCategoryIndex].name;
+    const item = shopData.categories[currentCategoryIndex].items[currentIndex];
+    openModal(item.src, currentIndex, category, false);
+  }
+}
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) closeModal();
+});
+modalCloseBtn.addEventListener('click', closeModal);
+modalNext.addEventListener('click', nextImage);
+modalPrev.addEventListener('click', prevImage);
+
+// === Add/Drop from inside preview ===
+// In CART preview, the add button is hidden and this becomes a no-op.
+modalAddToCart.addEventListener('click', () => {
+  if (modal.dataset.isCartPreview === 'true') return;
+  if (currentCategoryIndex !== -1) {
+    const category = shopData.categories[currentCategoryIndex].name;
+    addToCart(currentIndex, category, null);
+  }
+});
+
+/********** Enable cart item preview (with arrows above the cart) **********/
+cartItemsEl.addEventListener('click', e => {
+  const clickedImg = e.target.tagName === 'IMG' ? e.target : e.target.closest('.cart-item img');
+  if (!clickedImg) return;
+
+  const allItems = Array.from(cartItemsEl.querySelectorAll('.cart-item'));
+  const clickedItem = clickedImg.closest('.cart-item');
+  const idx = allItems.indexOf(clickedItem);
+  if (idx < 0) return;
+
+  const item = cart[idx];
+  openModal(item.src, idx, item.category || '', true); // modal has higher z-index already
+});
+
+    /********** Shared warning (Issue #5 z-index fixed via CSS) **********/
+    function showWarningThen(onOk){
+      contactModal.style.display='flex';updateMainButtonsVisibility();
+      const cleanup=()=>{contactModal.style.display='none';updateMainButtonsVisibility();contactOkBtn.onclick=null;contactCancelBtn.onclick=null;contactModal.onclick=null;contactX.onclick=null;};
+      contactOkBtn.onclick=()=>{cleanup();onOk&&onOk();};
+      contactCancelBtn.onclick=cleanup;contactX.onclick=cleanup;
+      contactModal.onclick=(e)=>{if(e.target===contactModal)cleanup();};
+    }
+
+    // Contact & Pay (share same warning)
+    contactBtn.addEventListener('click',()=>{
+      showWarningThen(()=>{
+        const msg=`Hi ${boutiqueData.name}, I saw your shop on PickMe Services and I want to see your current available items in *TYPE WHAT YOU WANT TO SEE*`;
+        window.location.href=`https://wa.me/${formatGhanaNumber(boutiqueData.whatsapp,true)}?text=${encodeURIComponent(msg)}`;
+      });
+    });
+    payBtn.addEventListener('click',()=>{
+      showWarningThen(()=>{
+        const msg=`Hi ${boutiqueData.name}, please guide me to make a secure payment via PickMe Services.`;
+        window.location.href=`https://wa.me/${formatGhanaNumber(boutiqueData.whatsapp,true)}?text=${encodeURIComponent(msg)}`;
+      });
+    });
+
+    /********** Admin entry **********/
+    hamburgerBtn.addEventListener('click',()=>{
+      pinModal.style.display='flex';updateMainButtonsVisibility();pinInput.value='';setTimeout(()=>pinInput.focus(),50);
+      history.pushState({type:'pin'},'');
+    });
+    const closePin=()=>{pinModal.style.display='none';updateMainButtonsVisibility();};
+    pinX.addEventListener('click',closePin);
+    pinModal.addEventListener('click',(e)=>{if(e.target===pinModal)closePin();});
+    pinOkBtn.addEventListener('click',()=>{
+      const enteredPin=pinInput.value.trim();
+      if(!boutiqueData){alert('Boutique data not loaded. Please try again.');return;}
+      if(enteredPin===String(boutiqueData.pin).trim()){
+        closePin();menuModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'menu'},'');
+      }else{alert('Incorrect PIN');pinInput.value='';}
+    });
+
+    // Menu
+    const closeMenu=()=>{menuModal.style.display='none';updateMainButtonsVisibility();};
+    menuX.addEventListener('click',closeMenu);
+    menuCancelBtn.addEventListener('click',closeMenu);
+    menuModal.addEventListener('click',(e)=>{if(e.target===menuModal)closeMenu();});
+
+    addItemsBtn.addEventListener('click',()=>{
+      menuModal.style.display='none';currentMode='add';categoriesTitle.textContent='Add Items - Select Category';
+      renderCategories();categoriesModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'categories'},'');
+    });
+    editItemsBtn.addEventListener('click',()=>{
+      menuModal.style.display='none';currentMode='edit';categoriesTitle.textContent='Edit Items - Select Category';
+      renderCategories();categoriesModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'categories'},'');
+    });
+    editBoutiqueDetailsBtn.addEventListener('click',()=>{
+      menuModal.style.display='none';
+      boutiqueNameInput.value=boutiqueData.name;
+      boutiqueSloganInput.value=boutiqueData.slogan;
+      boutiqueWhatsAppInput.value=boutiqueData.whatsapp;
+      boutiqueThemeColorInput.value=boutiqueData.themeColor;
+      isChanged=false;checkBoutiqueDetailsSaveButton();
+      boutiqueDetailsModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'details'},'');
+    });
+
+    // Categories modal
+    const closeCategories=()=>{categoriesModal.style.display='none';menuModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'menu'},'');};
+    categoriesX.addEventListener('click',closeCategories);
+    categoriesCancelBtn.addEventListener('click',closeCategories);
+    categoriesModal.addEventListener('click',(e)=>{if(e.target===categoriesModal)closeCategories();});
+
+    // Manage categories
+    const closeManageCategories=()=>{categoriesManageModal.style.display='none';boutiqueDetailsModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'details'},'');};
+    categoriesManageX.addEventListener('click',closeManageCategories);
+    categoriesManageCancelBtn.addEventListener('click',closeManageCategories);
+    categoriesManageModal.addEventListener('click',(e)=>{if(e.target===categoriesManageModal)closeManageCategories();});
+
+    function renderCategories(){
+      categoriesList.innerHTML='';
+      const cats=alphabetical(shopData.categories.map(c=>c.name));
+      cats.forEach(name=>{
+        const card=document.createElement('div');card.className='category-item';
+        card.innerHTML=`<span class="category-name">${name.charAt(0).toUpperCase()+name.slice(1)}</span><span class="arrow">>>></span>`;
+        card.addEventListener('click',()=>{
+          currentCategory=name;categoriesModal.style.display='none';
+          openItemModal();updateMainButtonsVisibility();history.pushState({type:'itemModal'},'');
+        });
+        categoriesList.appendChild(card);
+      });
+    }
+
+    function renderManageCategories() {
+  categoriesManageList.innerHTML = '';
+  shopData.categories.forEach((cat, index) => {
+    const card = document.createElement('div');
+    card.classList.add('category-item');
+    card.innerHTML = `
+      <span class="category-name">${cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}</span>
+      <div class="category-actions">
+        <span class="category-action" data-edit="${index}">✎</span>
+        <span class="category-action" data-del="${index}">🗑</span>
+      </div>
+    `;
+    categoriesManageList.appendChild(card);
+  });
+
+  // === Edit & Delete handler ===
+  categoriesManageList.onclick = async (e) => {
+  const editEl = e.target.closest('[data-edit]');
+  const delEl = e.target.closest('[data-del]');
+
+  // ===== EDIT CATEGORY =====
+  if (editEl) {
+    const index = parseInt(editEl.dataset.edit, 10);
+    const oldName = shopData.categories[index].name;
+    const newName = prompt('Enter new category name:', oldName);
+    if (!newName || newName.trim() === '') return;
+
+    const newKey = newName.toLowerCase().trim();
+    if (newKey === oldName) return; // no change
+    if (shopData.categories.some(c => c.name === newKey)) {
+      alert('That category already exists.');
+      return;
+    }
+
+    try {
+      const ref = db.collection('Boutiques').doc(boutiqueId);
+      const snap = await ref.get();
+      const data = snap.data() || {};
+      const cats = { ...(data.categories || {}) };
+      const order = Array.isArray(data.categoriesOrder)
+        ? [...data.categoriesOrder]
+        : Object.keys(cats);
+
+      if (!cats[oldName]) {
+        alert('Category not found in database.');
+        return;
+      }
+
+      // move the items to new key, delete old key
+      cats[newKey] = cats[oldName];
+      delete cats[oldName];
+
+      // rename inside order array
+      const idx = order.indexOf(oldName);
+      if (idx !== -1) order[idx] = newKey;
+
+      // write changes permanently to Firestore
+      await ref.update({
+        categories: cats,
+        categoriesOrder: order,
+      });
+
+      // update locally
+      shopData.categories[index].name = newKey;
+      shopData.categoriesOrder = order;
+      buildTabs(newKey);
+      renderManageCategories();
+
+      alert('Category renamed successfully.');
+    } catch (err) {
+      console.error('Rename failed:', err);
+      alert('Rename failed: ' + (err.message || err));
+    }
+  }
+
+  // ===== DELETE CATEGORY =====
+  if (delEl) {
+    const index = parseInt(delEl.dataset.del, 10);
+    const delName = shopData.categories[index].name;
+    if (!confirm(`Delete category "${delName}" and all its items?`)) return;
+
+    try {
+      const ref = db.collection('Boutiques').doc(boutiqueId);
+      const snap = await ref.get();
+      const data = snap.data() || {};
+      const cats = { ...(data.categories || {}) };
+      const order = Array.isArray(data.categoriesOrder)
+        ? [...data.categoriesOrder]
+        : Object.keys(cats);
+
+      // Collect Storage URLs for items in this category BEFORE removing it
+      const itemsInCategory = Array.isArray(cats[delName]) ? cats[delName] : [];
+      const urlsToDelete = itemsInCategory
+        .map(it => it && it.src)
+        .filter(Boolean);
+
+      // 1) Delete all Storage files for this category (skip any non-storage URLs silently)
+      await Promise.allSettled(urlsToDelete.map(u => deleteFromStorageByURL(u)));
+
+      // 2) Remove the category (and its items) from Firestore
+      delete cats[delName];
+      const newOrder = order.filter(n => n !== delName);
+      await ref.update({
+        categories: cats,
+        categoriesOrder: newOrder,
+      });
+
+      // 3) Local in-memory update
+      shopData.categories.splice(index, 1);
+      shopData.categoriesOrder = newOrder;
+
+      // 4) Clear any local gallery cache for this category (prevents stale UI)
+      try { localStorage.removeItem(`galleryCache_${boutiqueId}_${delName}`); } catch (e) {}
+
+      // 5) Rebuild UI as before
+      const nextCat = shopData.categories[0]?.name || '';
+      buildTabs(nextCat);
+      loadGallery(nextCat);
+      renderManageCategories();
+
+      alert('Category and its images deleted successfully.');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Delete failed: ' + (err.message || err));
+    }
+  }
+};
+}
+
+    addCategoryBtn.addEventListener('click',async()=>{
+      if(shopData.categories.length>=6){alert('Maximum 6 categories allowed');return;}
+      const newName=prompt('Enter new category name:'); if(!newName) return;
+      const key=newName.toLowerCase().trim();
+      if(shopData.categories.find(c=>c.name===key)){alert('Category already exists');return;}
+
+      await db.runTransaction(async(t)=>{
+        const ref=db.collection('Boutiques').doc(boutiqueId);
+        const snap=await t.get(ref);const data=snap.data()||{};
+        const cats=data.categories||{}; if(!cats[key]) cats[key]=[];
+        t.set(ref,{categories:cats},{merge:true});
+      });
+
+      // Reload from live to keep alphabetical ordering canonical
+      const live=await fetchBoutiqueData();const norm=normalizeCategories(live);
+      shopData={categories:norm.categories};cacheWrite({...boutiqueData,categories:live.categories});
+      buildTabs(key);loadGallery(key);updateMainButtonsVisibility();
+    });
+
+    manageCategoriesBtn.addEventListener('click',()=>{
+      boutiqueDetailsModal.style.display='none';renderManageCategories();categoriesManageModal.style.display='flex';
+      updateMainButtonsVisibility();history.pushState({type:'manageCats'},'');
+    });
+
+    /********** Item modal (Add/Edit) **********/
+    function openItemModal(){
+      const cat=shopData.categories.find(c=>c.name===currentCategory);
+      tempItems=currentMode==='add'?[]:(cat.items||[]).map(it=>({src:it.src,price:it.price,sizes:it.sizes}));
+      isChanged=currentMode==='edit';
+      itemTitle.textContent=(currentMode==='add'?'Add':'Edit')+' Items for '+(currentCategory.charAt(0).toUpperCase()+currentCategory.slice(1));
+      itemUploadSection.style.display=currentMode==='add'?'block':'none';
+      deleteAllItemsBtn.style.display=(currentMode==='edit'&&tempItems.length>0)?'block':'none';
+      renderItemList();checkSaveButton();itemModal.style.display='flex';
+    }
+    const closeItemModal=()=>{itemModal.style.display='none';categoriesModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'categories'},'');};
+    itemModalCancelBtn.addEventListener('click',closeItemModal);
+    itemX.addEventListener('click',closeItemModal);
+    itemModal.addEventListener('click',(e)=>{if(e.target===itemModal)closeItemModal();});
+
+    itemUpload.addEventListener('change',(e)=>{
+      const files=e.target.files;
+      for(const file of Array.from(files)){
+        if(!file.type.startsWith('image/')) continue;
+        const reader=new FileReader();
+        reader.onload=(ev)=>{tempItems.push({src:ev.target.result,file,price:'',sizes:''});renderItemList();checkSaveButton();};
+        reader.readAsDataURL(file);
+      }
+      e.target.value='';
+    });
+
+    function renderItemList(){
+      itemList.innerHTML='';
+      if(tempItems.length===0){itemList.innerHTML='<p class="no-items">No items added</p>';}
+      tempItems.forEach((item,idx)=>{
+        const wrap=document.createElement('div');wrap.className='item';
+        wrap.innerHTML=`
+          <img src="${item.src}" alt="Item">
+          <input type="number" placeholder="Price" value="${item.price||''}" data-price="${idx}">
+          <input type="text" placeholder="Sizes (e.g. S,M,L)" value="${item.sizes||''}" data-sizes="${idx}">
+          <div class="delete-icon" data-del="${idx}">🗑</div>`;
+        itemList.appendChild(wrap);
+      });
+      itemList.oninput=(e)=>{
+        const p=e.target.getAttribute('data-price'),s=e.target.getAttribute('data-sizes');
+        if(p!==null){tempItems[+p].price=e.target.value;isChanged=true;checkSaveButton();}
+        if(s!==null){tempItems[+s].sizes=e.target.value;isChanged=true;checkSaveButton();}
+      };
+      itemList.onclick=(e)=>{
+        const d=e.target.getAttribute('data-del');
+        if(d!==null){tempItems.splice(+d,1);isChanged=true;renderItemList();checkSaveButton();}
+      };
+      deleteAllItemsBtn.style.display=(currentMode==='edit'&&tempItems.length>0)?'block':'none';
+      updateMainButtonsVisibility();
+    }
+    function checkSaveButton(){
+      const allPriced=tempItems.length===0||tempItems.every(it=>it.price!==''&&!isNaN(parseFloat(it.price)));
+      saveItemsBtn.disabled=!(allPriced&&(isChanged||tempItems.length>0));
+    }
+    deleteAllItemsBtn.addEventListener('click',()=>{
+      if(confirm('Delete all items in this category from this editor view?')){
+        tempItems=[];isChanged=true;renderItemList();checkSaveButton();
+      }
+    });
+
+    // Save Add/Edit (fix add = append, edit = replace, delete storage of removed)
+    saveItemsBtn.addEventListener('click',async()=>{
+      if(saveItemsBtn.disabled) return;
+      const original=saveItemsBtn.textContent;saveItemsBtn.disabled=true;saveItemsBtn.textContent='Saving...';
+      try{
+        const catIdx=shopData.categories.findIndex(c=>c.name===currentCategory);
+        if(catIdx<0) throw new Error('Category not found');
+
+        // Upload new images first
+        const prepared=[];
+        for(const it of tempItems){
+          if(!it.price||isNaN(parseFloat(it.price))) continue;
+          let srcOut=it.src;
+          if(typeof it.src==='string'&&it.src.startsWith('data:image')) srcOut=await uploadImage(it.src);
+          prepared.push({src:srcOut,price:String(it.price).trim(),sizes:String(it.sizes||'').trim()});
+        }
+
+        if(currentMode==='add'){
+          // Append (Issue from you: previously replaced — fixed)
+          await firebase.firestore().runTransaction(async(t)=>{
+            const ref=db.collection('Boutiques').doc(boutiqueId);
+            const snap=await t.get(ref);const data=snap.data()||{};
+            const cats=data.categories||{};const arr=Array.isArray(cats[currentCategory])?cats[currentCategory].slice():[];
+            const newArr=arr.concat(prepared);const newCats={...cats,[currentCategory]:newArr};
+            t.set(ref,{categories:newCats},{merge:true});
+          });
+          shopData.categories[catIdx].items=shopData.categories[catIdx].items.concat(prepared);
+        }else{
+          // EDIT: replace items; delete removed images
+          const prev=shopData.categories[catIdx].items.slice();
+          const preparedSrcs=new Set(prepared.map(i=>i.src));
+          const toDelete=prev.map(i=>i.src).filter(src=>src&&!preparedSrcs.has(src));
+
+          await firebase.firestore().runTransaction(async(t)=>{
+            const ref=db.collection('Boutiques').doc(boutiqueId);
+            const snap=await t.get(ref);const data=snap.data()||{};
+            const cats=data.categories||{};const newCats={...cats,[currentCategory]:prepared};
+            t.set(ref,{categories:newCats},{merge:true});
+          });
+
+          shopData.categories[catIdx].items=prepared;
+          await Promise.all(toDelete.map(deleteFromStorageByURL));
+        }
+
+        // Save confirmation
+        itemModal.style.display='none';
+        saveConfirmationText.textContent=`${prepared.length} item(s) saved successfully.`;
+        saveConfirmationModal.style.display='flex';updateMainButtonsVisibility();
+        loadGallery(currentCategory);updateCartWithShopData();updateCart();
+        // refresh cache live
+        const live=await fetchBoutiqueData();cacheWrite({...boutiqueData,categories:live.categories});
+      }catch(err){
+        alert('Saving failed: '+(err?.message||err));console.error(err);
+      }finally{
+        saveItemsBtn.disabled=false;saveItemsBtn.textContent=original;
+      }
+    });
+
+    const closeSaveConfirmation=()=>{saveConfirmationModal.style.display='none';categoriesModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'categories'},'');};
+    saveConfirmationOkBtn.addEventListener('click',closeSaveConfirmation);
+    saveConfirmationX.addEventListener('click',closeSaveConfirmation);
+    saveConfirmationModal.addEventListener('click',(e)=>{if(e.target===saveConfirmationModal)closeSaveConfirmation();});
+
+    /********** Boutique details **********/
+    function checkBoutiqueDetailsSaveButton(){
+      const isValid=boutiqueNameInput.value.trim()!==''&&boutiqueWhatsAppInput.value.trim()!=='';
+      saveBoutiqueDetailsBtn.disabled=!isValid||!isChanged;
+    }
+    boutiqueNameInput.addEventListener('input',()=>{isChanged=true;checkBoutiqueDetailsSaveButton();});
+    boutiqueSloganInput.addEventListener('input',()=>{isChanged=true;checkBoutiqueDetailsSaveButton();});
+    boutiqueWhatsAppInput.addEventListener('input',()=>{isChanged=true;checkBoutiqueDetailsSaveButton();});
+    boutiqueThemeColorInput.addEventListener('input',()=>{isChanged=true;checkBoutiqueDetailsSaveButton();});
+
+    const closeBoutiqueDetails=()=>{boutiqueDetailsModal.style.display='none';menuModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'menu'},'');};
+    boutiqueDetailsCancelBtn.addEventListener('click',closeBoutiqueDetails);
+    boutiqueDetailsX.addEventListener('click',closeBoutiqueDetails);
+    boutiqueDetailsModal.addEventListener('click',(e)=>{if(e.target===boutiqueDetailsModal)closeBoutiqueDetails();});
+
+    saveBoutiqueDetailsBtn.addEventListener('click',async()=>{
+      boutiqueData.name=boutiqueNameInput.value.trim();
+      boutiqueData.slogan=boutiqueSloganInput.value.trim();
+      boutiqueData.whatsapp=boutiqueWhatsAppInput.value.trim();
+      boutiqueData.themeColor=boutiqueThemeColorInput.value;
+
+      // Preserve categories untouched
+      const live=await fetchBoutiqueData();
+      await saveBoutiqueDetails({...boutiqueData,categories:live.categories});
+      applyBoutiqueData();
+
+      boutiqueDetailsModal.style.display='none';menuModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'menu'},'');
+    });
+
+    /********** Cart **********/
+    function updateCartWithShopData(){
+      if(!shopData||!shopData.categories) return;
+      cart=cart.filter(item=>{
+        const category=shopData.categories.find(cat=>cat.name===item.category);
+        if(!category) return false;
+        const shopItem=category.items.find(si=>si.src===item.src);
+        if(!shopItem) return false;
+        item.price=shopItem.price;item.sizes=shopItem.sizes;return true;
+      });
+      carts[boutiqueId]=cart;localStorage.setItem('carts',JSON.stringify(carts));updateCart();
+    }
+    function updateCart(){
+      carts[boutiqueId]=cart;localStorage.setItem('carts',JSON.stringify(carts));
+      if(cart.length>0){cartButtons.style.display='flex';viewSelected.textContent=`Selected Items (${cart.length})`;}
+      else{cartButtons.style.display='none';}
+      const activeCategory=document.querySelector('.tab.active')?.dataset.category||alphabetical(shopData?.categories?.map(c=>c.name)||[])[0]||'';
+      if(activeCategory) loadGallery(activeCategory);
+    }
+    function renderCartItems(){
+      cartItemsEl.innerHTML='';
+      if(cart.length===0){cartItemsEl.innerHTML='<p class="no-items">No items in cart</p>'; }
+      else{
+        cart.forEach((item,idx)=>{
+          const div=document.createElement('div');div.className='cart-item';
+          div.innerHTML=`
+            <img src="${item.src}">
+            <p class="price">GH₵ ${item.price}</p>
+            ${item.sizes?`<p class="sizes">Sizes: ${item.sizes}</p>`:''}
+            <div class="delete-cart" data-index="${idx}">🗑</div>`;
+          cartItemsEl.appendChild(div);
+        });
+        cartItemsEl.onclick=(e)=>{
+          const del=e.target.closest('.delete-cart');
+          if(del){const idx=parseInt(del.dataset.index,10);cart.splice(idx,1);updateCart();renderCartItems();}
+        };
+      }
+      const total=cart.reduce((s,it)=>s+parseFloat(it.price||0),0);cartTotal.textContent=total;
+    }
+
+    viewSelected.addEventListener('click',()=>{cartModal.style.display='block';renderCartItems();whatsappInput.value='';updateMainButtonsVisibility();history.pushState({type:'cart'},'');});
+    closeCart.addEventListener('click',()=>{cartModal.style.display='none';updateMainButtonsVisibility();history.pushState({type:'main'},'');});
+
+    deleteAllCartBtn.addEventListener('click',()=>{
+      if(confirm('Are you sure you want to delete all items in the cart?')){
+        cart=[];updateCart();renderCartItems();cartModal.style.display='none';updateMainButtonsVisibility();history.pushState({type:'main'},'');
+      }
+    });
+
+    function addToCart(index,category,buttonEl){
+      const cat=shopData.categories.find(c=>c.name===category);
+      const item=cat.items[index];
+      const existsIdx=cart.findIndex(c=>c.src===item.src);
+      const inModal=(modal.style.display==='flex'&&currentCategoryIndex!==-1&&index===currentIndex);
+
+      if(existsIdx>=0){
+        cart.splice(existsIdx,1);
+        if(buttonEl){buttonEl.textContent='Add to Cart';buttonEl.classList.remove('added');}
+        if(inModal){modalAddToCart.textContent='Add to Cart';modalAddToCart.classList.remove('added');}
+      }else{
+        cart.push({...item,category});
+        if(buttonEl){buttonEl.textContent='✔ Added to Cart';buttonEl.classList.add('added');}
+        if(inModal){modalAddToCart.textContent='✔ Added to Cart';modalAddToCart.classList.add('added');}
+      }
+      updateCart();
+    }
+
+    // Buy Selected (quick path)
+    buySelected.addEventListener('click',()=>{
+      if(cart.length===0) return;
+      showWarningThen(()=>{
+        quickBuyModal.style.display='flex';quickWhatsapp.value='';updateMainButtonsVisibility();setTimeout(()=>quickWhatsapp.focus(),50);
+        history.pushState({type:'quick'},'');
+      });
+    });
+    const closeQuick=()=>{quickBuyModal.style.display='none';updateMainButtonsVisibility();history.pushState({type:'main'},'');};
+    quickBuyCancel.addEventListener('click',closeQuick);
+    quickBuyX.addEventListener('click',closeQuick);
+
+    let buying=false;
+    quickBuyOk.addEventListener('click',async()=>{
+      if(buying) return;
+      const whatsapp=quickWhatsapp.value.trim();
+      const formatted=formatGhanaNumber(whatsapp);
+      if(!formatted){quickWhatsapp.style.border='2px solid red';setTimeout(()=>quickWhatsapp.style.border='1px solid var(--theme-color)',2000);return;}
+      buying=true;closeQuick();await proceedToBuy(cart,formatted);buying=false;
+    });
+
+    // Buy Now (from cart) — show warning ABOVE cart (z-index handled) and format number (Issue #5 & #7)
+    buyNowBtn.addEventListener('click',()=>{
+      const raw=whatsappInput.value.trim();
+      const formatted=formatGhanaNumber(raw);
+      if(!formatted){
+        whatsappInput.scrollIntoView({behavior:'smooth',block:'center'});
+        whatsappInput.style.border='2px solid red';setTimeout(()=>whatsappInput.style.border='1px solid var(--theme-color)',2000);return;
+      }
+      showWarningThen(async()=>{
+        if(buying) return;buying=true;await proceedToBuy(cart,formatted);buying=false;
+      });
+    });
+
+    /********** WhatsApp number formatting (Issue #7) **********/
+    // Returns digits-only version for wa.me if ok, else ''
+    function formatGhanaNumber(input,allowRaw233=false){
+      // strip non-digits
+      let d=(input||'').replace(/\D+/g,'');
+      if(d==='') return '';
+
+      // If starts with '233' and followed by 9 digits, accept 233XXXXXXXXX
+      if(d.startsWith('233')){
+        d=d.slice(0,12); // 233 + 9
+        if(d.length===12) return d;
+        return '';
+      }
+      // If 10 digits starting with 0 -> remove first 0, prepend 233
+      if(d.length===10&&d.startsWith('0')){
+        return '233'+d.slice(1);
+      }
+      // If 9 digits (no leading 0) -> prepend 233
+      if(d.length===9){
+        return '233'+d;
+      }
+      // Allow vendor raw when we already stored as proper wa number
+      if(allowRaw233 && d.length>=9) return d;
+      return '';
+    }
+    // Prevent user from typing '+' in GH inputs (visual hint stays in placeholder)
+    [whatsappInput,quickWhatsapp,boutiqueWhatsAppInput].forEach(inp=>{
+      inp.addEventListener('keypress',(e)=>{ if(e.key==='+') e.preventDefault(); });
+    });
+
+    /********** Slide links **********/
+    async function createSlideDoc(payload){
+      const id=Date.now()+Math.random().toString(36).slice(2);
+      await db.collection('Slides').doc(id).set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      return id;
+    }
+    function buildSlideLink(id){
+      const base=new URL(location.href);
+      base.searchParams.set('id',boutiqueId);
+      base.searchParams.set('slideFirestore',id);
+      return base.toString();
+    }
+    async function proceedToBuy(items,waDigits){
+      if(items.length===0) return;
+      const total=items.reduce((s,i)=>s+parseFloat(i.price||0),0);
+      const slidePayload={items:items.map(it=>({...it,available:true})),total,userWhatsapp:waDigits,isForUser:false,boutiqueId};
+      const slideId=await createSlideDoc(slidePayload);
+      const link=buildSlideLink(slideId);
+      const msg=`Hi ${boutiqueData.name}, I selected the following items from your shop on PickMe Services costing GH₵ ${total} and I want to confirm if they are available so I can proceed with payment. ITEMS LINK: ${link}`;
+      // Send to vendor whatsapp
+      const owner= formatGhanaNumber(boutiqueData.whatsapp,true);
+      window.location.href=`https://wa.me/${owner}?text=${encodeURIComponent(msg)}`;
+    }
+
+    async function handleSlideFromURL(){
+      const legacy=urlParams.get('slide');
+      const fsId=urlParams.get('slideFirestore');
+      slideShell.style.display='block';slideLoading.style.display='block';
+      let data=null;
+      if(fsId){
+        try{const snap=await db.collection('Slides').doc(fsId).get();if(snap.exists) data=snap.data();}catch(e){console.error('Slide fetch error:',e?.message||e);}
+      }else if(legacy){
+        const slides=JSON.parse(localStorage.getItem('slides')||'{}');if(slides[legacy]) data=slides[legacy];
+      }
+      if(!data||data.boutiqueId!==boutiqueId){slideLoading.textContent='Could not load selection.';return;}
+      initSlider(data);
+    }
+
+    // === FIXED initSlider with working arrows and top-left labels ===
+function initSlider(data) {
+  let slideIndex = 0;
+
+  // ===== Add page title =====
+  const headerTitle = document.createElement('h2');
+  headerTitle.style.color = 'var(--theme-color)';
+  headerTitle.style.fontWeight = '700';
+  headerTitle.style.marginBottom = '20px';
+  headerTitle.style.textAlign = 'center';
+
+  if (data.isForUser) {
+    headerTitle.textContent = 'Selected Items Availability';
+  } else {
+    headerTitle.textContent = "Customer's Selected Items";
+  }
+
+  const existingTitle = slidePage.querySelector('h2');
+  if (existingTitle) existingTitle.remove();
+  slidePage.insertBefore(headerTitle, slideShell);
+
+  // ===== Core slide display =====
+  function showSlide(i) {
+    // protect index always valid
+    if (!data.items || data.items.length === 0) return;
+    slideIndex = (i + data.items.length) % data.items.length;
+
+    const item = data.items[slideIndex];
+    slideImg.src = item.src;
+    slidePrice.textContent = `GH₵ ${item.price}`;
+    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+
+    // clear previous label
+    slideImg.classList.remove('dimmed');
+    document.querySelectorAll('.availability-label').forEach(el => el.remove());
+
+    // === For user side ===
+    if (data.isForUser) {
+      notAvailBtn.style.display = 'none';
+      doneBtn.style.display = 'none';
+      okBtn.style.display = 'inline-block';
+
+      const label = document.createElement('div');
+      label.className = 'availability-label';
+      label.textContent = item.available ? 'Available' : 'Not Available';
+      label.style.background = item.available ? 'green' : '#b00';
+      slideShell.appendChild(label);
+
+      if (!item.available) slideImg.classList.add('dimmed');
+    }
+    // === For owner side ===
+    else {
+      okBtn.style.display = 'none';
+      doneBtn.style.display = 'inline-block';
+      notAvailBtn.style.display = 'inline-block';
+      notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
+      if (!item.available) slideImg.classList.add('dimmed');
+    }
+  }
+
+  // ===== Initialize slider =====
+  slideLoading.style.display = 'none';
+  slidePage.style.display = 'block';
+  slideShell.style.display = 'block';
+  showSlide(slideIndex);
+
+  // ===== Navigation arrows (always active) =====
+  slideLeft.onclick = () => {
+    slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
+    showSlide(slideIndex);
+  };
+  slideRight.onclick = () => {
+    slideIndex = (slideIndex + 1) % data.items.length;
+    showSlide(slideIndex);
+  };
+
+  // ===== Owner “Not Available” toggle =====
+  notAvailBtn.onclick = () => {
+    data.items[slideIndex].available = !data.items[slideIndex].available;
+    showSlide(slideIndex);
+  };
+
+  // ===== Owner “Done” =====
+  doneBtn.onclick = async () => {
+    const available = data.items.filter(it => it.available);
+    const unavail = data.items.length - available.length;
+    const newTotal = available.reduce((s, it) => s + parseFloat(it.price || 0), 0);
+    let text;
+
+    if (unavail > 0) {
+      const newPayload = {
+        items: available.concat(data.items.filter(it => !it.available)),
+        total: newTotal,
+        userWhatsapp: data.userWhatsapp,
+        isForUser: true,
+        boutiqueId
+      };
+      const newId = await createSlideDoc(newPayload);
+      const link = buildSlideLink(newId);
+      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
+    } else {
+      text = `Hello cherished customer, all your selected items are available. You can proceed with payment on our page. Total Amount: GH₵ ${newTotal}`;
+    }
+
+    window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
+  };
+
+  // ===== User “OK” =====
+  okBtn.onclick = () => {
+    const u = new URL(location.href);
+    u.searchParams.delete('slide');
+    u.searchParams.delete('slideFirestore');
+    document.documentElement.classList.remove('loading-slide');
+    location.href = u.toString();
+  };
+}
+
+    /********** Main page affordances **********/
+    closeFloating.addEventListener('click',()=>{location.href='fashion.html';});
+    window.addEventListener('scroll',()=>{if(scrollY>100) topBanner.style.transform='translateY(-150%)'; else topBanner.style.transform='translateY(0)';});
+
+    /********** Hardware Back Button behavior (Issue #11) **********/
+    // Push an initial state
+    if(!history.state) history.replaceState({type:'main'},'');
+    window.addEventListener('popstate',(e)=>{
+      // Close the upper-most open modal step by step (no jump to fashion.html)
+      const openOrder=[
+        contactModal,quickBuyModal,cartModal,modal,saveConfirmationModal,itemModal,categoriesManageModal,boutiqueDetailsModal,categoriesModal,menuModal,pinModal
+      ];
+      for(const m of openOrder){
+        if(m.style.display==='flex'||m.style.display==='block'){
+          m.style.display='none';
+          // If we closed categories/item details etc, show the right previous layer if needed
+          if(m===categoriesModal) {menuModal.style.display='flex';}
+          if(m===categoriesManageModal){boutiqueDetailsModal.style.display='flex';}
+          updateMainButtonsVisibility();
+          return;
         }
       }
+      // If nothing is open and we are on main, then go back to fashion.html
+      if(!document.querySelector('.tab.active')){location.href='fashion.html';}
     });
+
+    /********** Boot **********/
+    boot();
   </script>
 </body>
 </html>
