@@ -704,19 +704,26 @@ async function refreshImageCacheWithLive(currentShopData) {
     // Always alphabetical order (Issue #2)
     function alphabetical(names){return names.slice().sort((a,b)=>a.localeCompare(b));}
 
-    function normalizeCategories(data){
-      const categoriesObj=data.categories||{};
-      const keys=alphabetical(Object.keys(categoriesObj));
-      const categories=keys.map(name=>({
-        name:name.toLowerCase(),
-        items:(categoriesObj[name]||[]).map(item=>({
-          src:item.src||'https://via.placeholder.com/400x400?text=Item',
-          price:String(item.price??'').trim(),
-          sizes:String(item.sizes??'').trim()
-        }))
-      }));
-      return {categories};
-    }
+    function normalizeCategories(data) {
+  const categoriesObj = data.categories || {};
+  const keys = alphabetical(Object.keys(categoriesObj));
+
+  const categories = keys.map(name => {
+    const items = (categoriesObj[name] || []).map(item => ({
+      src: item.src || 'https://via.placeholder.com/400x400?text=Item',
+      price: String(item.price ?? '').trim(),
+      sizes: String(item.sizes ?? '').trim(),
+      createdAt: item.createdAt ? Number(item.createdAt) : Date.now() // ✅ preserve createdAt if exists
+    }));
+
+    // ✅ Sort newest first permanently, even from Firestore
+    const sortedItems = items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    return { name: name.toLowerCase(), items: sortedItems };
+  });
+
+  return { categories };
+}
 
     function applyBoutiqueData(){
       document.documentElement.style.setProperty('--theme-color',boutiqueData.themeColor);
@@ -768,7 +775,14 @@ function loadGallery(category) {
     return;
   }
 
-  renderGalleryItems(cat.items, category);
+  // ✅ Sort items so newest appear at the top
+  const sortedItems = cat.items.slice().sort((a, b) => {
+    const aTime = a.createdAt || 0;
+    const bTime = b.createdAt || 0;
+    return bTime - aTime; // newest first
+  });
+
+  renderGalleryItems(sortedItems, category);
 
   // Preload all other categories silently
   preloadOtherCategories(category);
@@ -1468,12 +1482,20 @@ cartItemsEl.addEventListener('click', e => {
         if(catIdx<0) throw new Error('Category not found');
 
         // Upload new images first
-        const prepared=[];
-        for(const it of tempItems){
-          if(!it.price||isNaN(parseFloat(it.price))) continue;
-          let srcOut=it.src;
-          if(typeof it.src==='string'&&it.src.startsWith('data:image')) srcOut=await uploadImage(it.src);
-          prepared.push({src:srcOut,price:String(it.price).trim(),sizes:String(it.sizes||'').trim()});
+        const prepared = [];
+        for (const it of tempItems) {
+          if (!it.price || isNaN(parseFloat(it.price))) continue;
+          let srcOut = it.src;
+          if (typeof it.src === 'string' && it.src.startsWith('data:image')) {
+            srcOut = await uploadImage(it.src);
+          }
+          // ✅ include createdAt so Firestore remembers upload time permanently
+          prepared.push({
+            src: srcOut,
+            price: String(it.price).trim(),
+            sizes: String(it.sizes || '').trim(),
+            createdAt: it.createdAt || Date.now()
+          });
         }
 
         if(currentMode==='add'){
@@ -1682,53 +1704,12 @@ cartItemsEl.addEventListener('click', e => {
       inp.addEventListener('keypress',(e)=>{ if(e.key==='+') e.preventDefault(); });
     });
 
-    /********** SLIDES AUTO-DELETE SYSTEM **********/
-
-// ============ CONFIGURATION ============
-// How long to keep a Slide document before deleting (in hours)
-const SLIDE_EXPIRY_HOURS = 0.0167;
-
-// ============ CREATE SLIDE WITH EXPIRY ============
-async function createSlideDoc(payload) {
-  const id = Date.now() + Math.random().toString(36).slice(2);
-  const expireAt = new Date(Date.now() + SLIDE_EXPIRY_HOURS * 60 * 60 * 1000);
-
-  await db.collection('Slides').doc(id).set({
-    ...payload,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    expireAt: expireAt, // 👈 used to know when to delete
-  });
-
-  return id;
-}
-
-// ============ AUTO DELETE OLD SLIDES ============
-async function autoDeleteExpiredSlides() {
-  try {
-    const now = new Date();
-    const ref = db.collection('Slides');
-    const snapshot = await ref.where('expireAt', '<=', now).get();
-
-    if (!snapshot.empty) {
-      const batch = db.batch();
-      snapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-      console.log(`✅ Deleted ${snapshot.size} expired slides`);
-    } else {
-      console.log('No expired slides found to delete');
+    /********** Slide links **********/
+    async function createSlideDoc(payload){
+      const id=Date.now()+Math.random().toString(36).slice(2);
+      await db.collection('Slides').doc(id).set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      return id;
     }
-  } catch (err) {
-    console.error('Auto-delete error:', err);
-  }
-}
-
-// Run cleanup automatically every time the page loads
-autoDeleteExpiredSlides();
-
-// Optional: also check again every 30 minutes automatically
-setInterval(autoDeleteExpiredSlides, 30 * 60 * 1000);
     function buildSlideLink(id){
       const base=new URL(location.href);
       base.searchParams.set('id',boutiqueId);
