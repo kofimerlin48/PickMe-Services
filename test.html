@@ -101,6 +101,28 @@ textarea:focus {
 }
 .arrow.left { left: 20px; }
 .arrow.right { right: 20px; }
+/* --- FIX: prevent Not Available dimming from affecting arrows --- */
+.slide-content {
+  position: relative;
+  isolation: isolate;   /* ensures dim filter doesn't affect siblings like arrows */
+}
+
+.slide-content img {
+  position: relative;
+  z-index: 1;
+}
+
+.arrow {
+  position: absolute;
+  z-index: 100 !important; /* arrows always above */
+  filter: none !important; /* prevent dimming */
+  opacity: 1 !important;
+}
+
+.dimmed {
+  filter: grayscale(100%) brightness(0.6);
+  pointer-events: none; /* don't block arrow clicks */
+}
 /* Availability tag at top-left of image inside slider */
 .availability-label {
   position: absolute;
