@@ -1845,64 +1845,89 @@ saveItemsBtn.addEventListener('click', async () => {
       initSlider(data);
     }
 
-    // === FIXED initSlider with working arrows and top-left labels ===
+
+// === DROP-IN REPLACEMENT: keeps flicker fix + adds image preloading ===
 function initSlider(data) {
   let slideIndex = 0;
+  let loadToken = 0;
+  const imageCache = {}; // 🧠 Preload storage
 
-  // ===== Add page title =====
+  // ===== Page title (same behavior as before) =====
   const headerTitle = document.createElement('h2');
   headerTitle.style.color = 'var(--theme-color)';
   headerTitle.style.fontWeight = '700';
   headerTitle.style.marginBottom = '20px';
   headerTitle.style.textAlign = 'center';
-
-  if (data.isForUser) {
-    headerTitle.textContent = 'Selected Items Availability';
-  } else {
-    headerTitle.textContent = "Customer's Selected Items";
-  }
+  headerTitle.textContent = data.isForUser ? 'Selected Items Availability' : "Customer's Selected Items";
 
   const existingTitle = slidePage.querySelector('h2');
   if (existingTitle) existingTitle.remove();
   slidePage.insertBefore(headerTitle, slideShell);
 
-  // ===== Core slide display =====
+  // Hide until first image is ready (prevents broken-icon flash)
+  slideImg.style.opacity = '0';
+  slideImg.style.transition = 'opacity 120ms ease';
+
+  // ===== Preload all images in the background =====
+  if (data.items && data.items.length > 0) {
+    data.items.forEach(it => {
+      const img = new Image();
+      img.src = it.src;
+      imageCache[it.src] = img;
+    });
+  }
+
   function showSlide(i) {
-    // protect index always valid
     if (!data.items || data.items.length === 0) return;
+
     slideIndex = (i + data.items.length) % data.items.length;
-
     const item = data.items[slideIndex];
-    slideImg.src = item.src;
-    slidePrice.textContent = `GH₵ ${item.price}`;
-    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+    const myToken = ++loadToken;
 
-    // clear previous label
-    slideImg.classList.remove('dimmed');
-    document.querySelectorAll('.availability-label').forEach(el => el.remove());
-
-    // === For user side ===
+    // Mode UI (owner vs user)
     if (data.isForUser) {
       notAvailBtn.style.display = 'none';
       doneBtn.style.display = 'none';
       okBtn.style.display = 'inline-block';
+    } else {
+      notAvailBtn.style.display = 'inline-block';
+      doneBtn.style.display = 'inline-block';
+      okBtn.style.display = 'none';
+    }
 
+    // Remove previous labels and fade out current image
+    slideShell.querySelectorAll('.availability-label').forEach(el => el.remove());
+    slideImg.style.opacity = '0';
+
+    // ===== Use cached image if already loaded =====
+    const cached = imageCache[item.src];
+    if (cached && cached.complete) {
+      applySlide(item, myToken);
+    } else {
+      slideImg.onload = () => applySlide(item, myToken);
+      slideImg.src = item.src;
+    }
+  }
+
+  function applySlide(item, myToken) {
+    if (myToken !== loadToken) return;
+
+    slidePrice.textContent = `GH₵ ${item.price}`;
+    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+    slideImg.src = item.src;
+    slideImg.classList.toggle('dimmed', !item.available);
+
+    if (data.isForUser) {
       const label = document.createElement('div');
       label.className = 'availability-label';
       label.textContent = item.available ? 'Available' : 'Not Available';
       label.style.background = item.available ? 'green' : '#b00';
       slideShell.appendChild(label);
-
-      if (!item.available) slideImg.classList.add('dimmed');
-    }
-    // === For owner side ===
-    else {
-      okBtn.style.display = 'none';
-      doneBtn.style.display = 'inline-block';
-      notAvailBtn.style.display = 'inline-block';
+    } else {
       notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
-      if (!item.available) slideImg.classList.add('dimmed');
     }
+
+    requestAnimationFrame(() => { slideImg.style.opacity = '1'; });
   }
 
   // ===== Initialize slider =====
@@ -1911,17 +1936,11 @@ function initSlider(data) {
   slideShell.style.display = 'block';
   showSlide(slideIndex);
 
-  // ===== Navigation arrows (always active) =====
-  slideLeft.onclick = () => {
-    slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
-    showSlide(slideIndex);
-  };
-  slideRight.onclick = () => {
-    slideIndex = (slideIndex + 1) % data.items.length;
-    showSlide(slideIndex);
-  };
+  // ===== Navigation arrows (flash-free) =====
+  slideLeft.onclick  = () => showSlide(slideIndex - 1);
+  slideRight.onclick = () => showSlide(slideIndex + 1);
 
-  // ===== Owner “Not Available” toggle =====
+  // ===== Owner toggle =====
   notAvailBtn.onclick = () => {
     data.items[slideIndex].available = !data.items[slideIndex].available;
     showSlide(slideIndex);
@@ -1944,7 +1963,8 @@ function initSlider(data) {
       };
       const newId = await createSlideDoc(newPayload);
       const link = buildSlideLink(newId);
-      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
+      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.
+Click this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
     } else {
       text = `Hello cherished customer, all your selected items are available. You can proceed with payment on our page. Total Amount: GH₵ ${newTotal}`;
     }
@@ -1961,6 +1981,8 @@ function initSlider(data) {
     location.href = u.toString();
   };
 }
+
+
 
     /********** Main page affordances **********/
     closeFloating.addEventListener('click',()=>{location.href='fashion.html';});
@@ -1992,4 +2014,4 @@ function initSlider(data) {
     boot();
   </script>
 </body>
-  </html>
+</html>
