@@ -238,6 +238,19 @@ textarea:focus {
     .dimmed{opacity:.7;filter:grayscale(100%);}
     
     .error-message{text-align:center;color:#b00;padding:20px;font-size:16px;}
+  /* ✅ Gallery empty message - fully positionable */
+.gallery-empty {
+  position: absolute;         /* allows you to control its exact spot */
+  top: 50%;                   /* move from top */
+  left: 50%;                  /* move from left */
+  transform: translate(-50%, -50%); /* centers perfectly */
+  text-align: center;
+  color: #888;
+  font-size: 16px;
+  font-weight: 500;
+  width: 100%;
+  pointer-events: none;       /* text won’t block clicks */
+}
   </style>
 
   <!-- Prevent main flashing when opening slide links -->
@@ -362,7 +375,11 @@ textarea:focus {
     <div class="pin-card">
       <div class="modal-x" id="pinX">×</div>
       <h3>Enter PIN</h3>
-      <input type="password" id="pinInput" maxlength="6" placeholder="6-digit PIN">
+      <input type="text" id="pinInput" maxlength="6" placeholder="6-digit PIN"
+       inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" 
+       autocapitalize="off" spellcheck="false"
+       oninput="this.value=this.value.replace(/[^0-9]/g,'');"
+       style="-webkit-text-security: disc;">
       <button class="contact-ok" id="pinOkBtn">OK</button>
     </div>
   </div>
@@ -771,7 +788,7 @@ function loadGallery(category) {
 
   const cat = shopData?.categories.find(c => c.name === category);
   if (!cat || !Array.isArray(cat.items) || cat.items.length === 0) {
-    gallery.innerHTML = '<p class="no-items">Oops, there are no items available today</p>';
+    gallery.innerHTML = '<p class="gallery-empty">Oops, there are no items available today</p>';
     return;
   }
 
