@@ -123,6 +123,53 @@ textarea:focus {
   filter: grayscale(100%) brightness(0.6);
   pointer-events: none; /* don't block arrow clicks */
 }
+/* === FIXED NAVIGATION ARROWS (for both preview and slider) === */
+.slide-arrow,
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100 !important;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.slide-arrow:hover,
+.arrow:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Position left/right variants consistently */
+.slide-left,
+.arrow.left {
+  left: 15px;
+}
+
+.slide-right,
+.arrow.right {
+  right: 15px;
+}
+
+/* Make arrows slightly larger and easier to tap on mobile */
+@media (max-width: 600px) {
+  .slide-arrow,
+  .arrow {
+    width: 54px;
+    height: 54px;
+    font-size: 30px;
+  }
+}
 /* Availability tag at top-left of image inside slider */
 .availability-label {
   position: absolute;
