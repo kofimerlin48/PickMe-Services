@@ -771,7 +771,7 @@ function loadGallery(category) {
 
   const cat = shopData?.categories.find(c => c.name === category);
   if (!cat || !Array.isArray(cat.items) || cat.items.length === 0) {
-    gallery.innerHTML = '<p class="no-items">Oops, there are no items not available today</p>';
+    gallery.innerHTML = '<p class="no-items">Oops, there are no items available today</p>';
     return;
   }
 
