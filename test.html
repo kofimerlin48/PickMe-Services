@@ -140,8 +140,33 @@ textarea:focus {
     .close-btn{position:absolute;top:20px;right:20px;font-size:22px;color:#fff;cursor:pointer;}
 
     .bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 0;box-shadow:0 -2px 5px rgba(0,0,0,.1);overflow-x:auto;white-space:nowrap;z-index:2;}
-    .bottom-tabs .tab{display:inline-block;padding:10px 20px;font-size:14px;color:var(--theme-color);font-weight:600;cursor:pointer;white-space:nowrap;}
-    .bottom-tabs .tab.active{border-bottom:2px solid var(--theme-color);}
+    .bottom-tabs .tab{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 20px;
+  font-size:14px;
+  color:var(--theme-color);
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+}
+.bottom-tabs .tab.active{
+  border-bottom:2px solid var(--theme-color);
+}
+.bottom-tabs .tab .count-badge{
+  display:inline-block;
+  min-width:20px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:var(--theme-color);
+  color:#fff;
+  font-weight:700;
+  font-size:12px;
+  line-height:1;
+  text-align:center;
+}
     .bottom-tabs::-webkit-scrollbar{display:none;}
 
     /* All modals */
@@ -760,26 +785,42 @@ async function refreshImageCacheWithLive(currentShopData) {
     }
 
     function buildTabs(activeName){
-      bottomTabs.innerHTML='';
-      const cats=alphabetical(shopData.categories.map(c=>c.name));
-      cats.forEach(name=>{
-        const tab=document.createElement('div');
-        tab.className='tab';
-        tab.dataset.category=name;
-        tab.textContent=name.charAt(0).toUpperCase()+name.slice(1);
-        if(name===activeName) tab.classList.add('active');
-        tab.addEventListener('click',()=>{
-          document.querySelector('.tab.active')?.classList.remove('active');
-          tab.classList.add('active');
-          loadGallery(name);
-          history.pushState({type:'tab',category:name},'');
-        });
-        bottomTabs.appendChild(tab);
-      });
-      if(!document.querySelector('.tab.active')&&cats[0]){
-        bottomTabs.querySelector(`.tab[data-category="${cats[0]}"]`)?.classList.add('active');
-      }
-    }
+  bottomTabs.innerHTML='';
+  const cats = alphabetical(shopData.categories.map(c => c.name));
+
+  cats.forEach(name => {
+    const tab = document.createElement('div');
+    tab.className = 'tab';
+    tab.dataset.category = name;
+
+    // Get item count for this category
+    const catObj = shopData.categories.find(c => c.name === name);
+    const count = (catObj && Array.isArray(catObj.items)) ? catObj.items.length : 0;
+
+    // Label + badge
+    tab.innerHTML = `
+      <span class="tab-label">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+      <span class="count-badge">${count}</span>
+    `;
+
+    if (name === activeName) tab.classList.add('active');
+
+    tab.addEventListener('click', () => {
+      document.querySelector('.tab.active')?.classList.remove('active');
+      tab.classList.add('active');
+      loadGallery(name);
+      history.pushState({ type: 'tab', category: name }, '');
+    });
+
+    bottomTabs.appendChild(tab);
+  });
+
+  if (!document.querySelector('.tab.active') && cats[0]) {
+    bottomTabs
+      .querySelector(`.tab[data-category="${cats[0]}"]`)
+      ?.classList.add('active');
+  }
+}
 
     function renderTabs(){
       if(!shopData||!shopData.categories.length){
@@ -1499,71 +1540,107 @@ cartItemsEl.addEventListener('click', e => {
       }
     });
 
-    // Save Add/Edit (fix add = append, edit = replace, delete storage of removed)
-    saveItemsBtn.addEventListener('click',async()=>{
-      if(saveItemsBtn.disabled) return;
-      const original=saveItemsBtn.textContent;saveItemsBtn.disabled=true;saveItemsBtn.textContent='Saving...';
-      try{
-        const catIdx=shopData.categories.findIndex(c=>c.name===currentCategory);
-        if(catIdx<0) throw new Error('Category not found');
+    // === OPTIMIZED SAVE HANDLER (fixed add/replace, no undefined calls) ===
+saveItemsBtn.addEventListener('click', async () => {
+  if (saveItemsBtn.disabled) return;
 
-        // Upload new images first
-        const prepared = [];
-        for (const it of tempItems) {
-          if (!it.price || isNaN(parseFloat(it.price))) continue;
-          let srcOut = it.src;
-          if (typeof it.src === 'string' && it.src.startsWith('data:image')) {
-            srcOut = await uploadImage(it.src);
-          }
-          // ✅ include createdAt so Firestore remembers upload time permanently
-          prepared.push({
-            src: srcOut,
-            price: String(it.price).trim(),
-            sizes: String(it.sizes || '').trim(),
-            createdAt: it.createdAt || Date.now()
-          });
-        }
+  const original = saveItemsBtn.textContent;
+  saveItemsBtn.disabled = true;
+  saveItemsBtn.textContent = 'Preparing…';
 
-        if(currentMode==='add'){
-          // Append (Issue from you: previously replaced — fixed)
-          await firebase.firestore().runTransaction(async(t)=>{
-            const ref=db.collection('Boutiques').doc(boutiqueId);
-            const snap=await t.get(ref);const data=snap.data()||{};
-            const cats=data.categories||{};const arr=Array.isArray(cats[currentCategory])?cats[currentCategory].slice():[];
-            const newArr=arr.concat(prepared);const newCats={...cats,[currentCategory]:newArr};
-            t.set(ref,{categories:newCats},{merge:true});
-          });
-          shopData.categories[catIdx].items=shopData.categories[catIdx].items.concat(prepared);
-        }else{
-          // EDIT: replace items; delete removed images
-          const prev=shopData.categories[catIdx].items.slice();
-          const preparedSrcs=new Set(prepared.map(i=>i.src));
-          const toDelete=prev.map(i=>i.src).filter(src=>src&&!preparedSrcs.has(src));
+  try {
+    const catIdx = shopData.categories.findIndex(c => c.name === currentCategory);
+    if (catIdx < 0) throw new Error('Category not found');
 
-          await firebase.firestore().runTransaction(async(t)=>{
-            const ref=db.collection('Boutiques').doc(boutiqueId);
-            const snap=await t.get(ref);const data=snap.data()||{};
-            const cats=data.categories||{};const newCats={...cats,[currentCategory]:prepared};
-            t.set(ref,{categories:newCats},{merge:true});
-          });
+    // Keep only items that have a valid price
+    const valid = tempItems.filter(it => it.price && !isNaN(parseFloat(it.price)));
 
-          shopData.categories[catIdx].items=prepared;
-          await Promise.all(toDelete.map(deleteFromStorageByURL));
-        }
-
-        // Save confirmation
-        itemModal.style.display='none';
-        saveConfirmationText.textContent=`${prepared.length} item(s) saved successfully.`;
-        saveConfirmationModal.style.display='flex';updateMainButtonsVisibility();
-        loadGallery(currentCategory);updateCartWithShopData();updateCart();
-        // refresh cache live
-        const live=await fetchBoutiqueData();cacheWrite({...boutiqueData,categories:live.categories});
-      }catch(err){
-        alert('Saving failed: '+(err?.message||err));console.error(err);
-      }finally{
-        saveItemsBtn.disabled=false;saveItemsBtn.textContent=original;
-      }
+    // Prepare upload list + progress
+    let uploads = 0, done = 0;
+    const prepared = valid.map(it => {
+      const needsUpload = typeof it.src === 'string' && it.src.startsWith('data:image');
+      if (needsUpload) uploads++;
+      return {
+        src: it.src,
+        price: String(it.price).trim(),
+        sizes: String(it.sizes || '').trim(),
+        createdAt: it.createdAt || Date.now(),
+        _needsUpload: needsUpload
+      };
     });
+
+    const setProgress = () => {
+      saveItemsBtn.textContent = uploads > 0 ? `Uploading ${done}/${uploads}…` : 'Saving…';
+    };
+    setProgress();
+
+    // Upload images in parallel
+    await Promise.all(prepared.map(async it => {
+      if (!it._needsUpload) return;
+      const url = await uploadImage(it.src);
+      it.src = url;
+      it._needsUpload = false;
+      done++;
+      setProgress();
+    }));
+
+    prepared.forEach(it => delete it._needsUpload);
+
+    // Write to Firestore (add = append, edit = replace)
+    const ref = db.collection('Boutiques').doc(boutiqueId);
+    await firebase.firestore().runTransaction(async t => {
+      const snap = await t.get(ref);
+      const data = snap.data() || {};
+      const cats = data.categories || {};
+      const serverExisting = Array.isArray(cats[currentCategory]) ? cats[currentCategory] : [];
+
+      if (currentMode === 'add') {
+        cats[currentCategory] = serverExisting.concat(prepared);
+      } else {
+        // EDIT: find removed and delete from Storage (don’t block txn)
+        const prevLocal = shopData.categories[catIdx].items.slice();
+        const keep = new Set(prepared.map(i => i.src));
+        const toDelete = prevLocal.map(i => i.src).filter(src => src && !keep.has(src));
+        Promise.allSettled(toDelete.map(u => deleteFromStorageByURL(u)));
+        cats[currentCategory] = prepared;
+      }
+
+      t.set(ref, { categories: cats }, { merge: true });
+    });
+
+    // ✅ Local state mirrors server change (prevents “old items disappeared”)
+    if (currentMode === 'add') {
+      const prevLocal = shopData.categories[catIdx].items || [];
+      shopData.categories[catIdx].items = prevLocal.concat(prepared);
+    } else {
+      shopData.categories[catIdx].items = prepared;
+    }
+
+    // UI feedback
+    itemModal.style.display = 'none';
+    saveConfirmationText.textContent = `${prepared.length} item(s) saved successfully.`;
+    saveConfirmationModal.style.display = 'flex';
+    updateMainButtonsVisibility();
+
+    // Refresh gallery + tab counts (stay on same category)
+    buildTabs(currentCategory);
+    loadGallery(currentCategory);
+
+    updateCartWithShopData();
+    updateCart();
+
+    // Refresh cache quietly
+    const fresh = await fetchBoutiqueData();
+    cacheWrite({ ...boutiqueData, categories: fresh.categories });
+
+  } catch (err) {
+    console.error(err);
+    alert('Saving failed: ' + (err?.message || err));
+  } finally {
+    saveItemsBtn.disabled = false;
+    saveItemsBtn.textContent = original;
+  }
+});
 
     const closeSaveConfirmation=()=>{saveConfirmationModal.style.display='none';categoriesModal.style.display='flex';updateMainButtonsVisibility();history.pushState({type:'categories'},'');};
     saveConfirmationOkBtn.addEventListener('click',closeSaveConfirmation);
