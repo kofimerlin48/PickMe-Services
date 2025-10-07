@@ -1878,24 +1878,25 @@ saveItemsBtn.addEventListener('click', async () => {
       window.location.href=`https://wa.me/${owner}?text=${encodeURIComponent(msg)}`;
     }
 
-    // === SECURED: Boutique owner slide requires PIN verification ===
+    // === SIMPLE SECURE VERSION: owner link requires PIN ===
 async function handleSlideFromURL() {
   const legacy = urlParams.get('slide');
   const fsId = urlParams.get('slideFirestore');
+
   slideShell.style.display = 'block';
   slideLoading.style.display = 'block';
 
   let data = null;
-  if (fsId) {
-    try {
+  try {
+    if (fsId) {
       const snap = await db.collection('Slides').doc(fsId).get();
       if (snap.exists) data = snap.data();
-    } catch (e) {
-      console.error('Slide fetch error:', e?.message || e);
+    } else if (legacy) {
+      const slides = JSON.parse(localStorage.getItem('slides') || '{}');
+      if (slides[legacy]) data = slides[legacy];
     }
-  } else if (legacy) {
-    const slides = JSON.parse(localStorage.getItem('slides') || '{}');
-    if (slides[legacy]) data = slides[legacy];
+  } catch (e) {
+    console.error('Slide fetch error:', e?.message || e);
   }
 
   if (!data || data.boutiqueId !== boutiqueId) {
@@ -1903,37 +1904,48 @@ async function handleSlideFromURL() {
     return;
   }
 
-  // 🧠 If this is the OWNER link, require PIN entry first
-  if (data.isForUser === false) {
-    slideLoading.style.display = 'none';
-    pinModal.style.display = 'flex';
-    updateMainButtonsVisibility();
-    pinInput.value = '';
-    setTimeout(() => pinInput.focus(), 50);
+  // === CUSTOMER LINK ===
+  if (data.isForUser === true) {
+    initSlider(data);
+    return;
+  }
 
-    pinOkBtn.onclick = () => {
-      const entered = pinInput.value.trim();
-      if (entered === String(boutiqueData.pin).trim()) {
+  // === OWNER LINK: ask for boutique PIN before continuing ===
+  slideLoading.style.display = 'none';
+  pinModal.style.display = 'flex';
+  updateMainButtonsVisibility();
+  pinInput.value = '';
+  setTimeout(() => pinInput.focus(), 50);
+
+  pinOkBtn.onclick = async () => {
+    const entered = pinInput.value.trim();
+    try {
+      // read boutique's saved PIN from Firestore
+      const docSnap = await db.collection('Boutiques').doc(boutiqueId).get();
+      const pinFromDb = String(docSnap.data()?.pin || '').trim();
+
+      if (entered === pinFromDb) {
         pinModal.style.display = 'none';
         updateMainButtonsVisibility();
-        initSlider(data); // ✅ proceed after correct PIN
+        initSlider(data); // ✅ open slide securely
       } else {
-        alert('Incorrect PIN');
+        alert('Incorrect PIN. Try again.');
         pinInput.value = '';
       }
-    };
+    } catch (e) {
+      alert('Boutique data failed to load. Please refresh and try again.');
+      console.error(e);
+    }
+  };
 
-    pinModal.onclick = (e) => {
-      if (e.target === pinModal) {
-        pinModal.style.display = 'none';
-        updateMainButtonsVisibility();
-        slideLoading.textContent = 'PIN required to view this page.';
-      }
-    };
-  } else {
-    // 🧍‍♀️ Customer link — open freely
-    initSlider(data);
-  }
+  // Close modal safely
+  pinModal.onclick = (e) => {
+    if (e.target === pinModal) {
+      pinModal.style.display = 'none';
+      updateMainButtonsVisibility();
+      slideLoading.textContent = 'PIN required to view this page.';
+    }
+  };
 }
 
 
