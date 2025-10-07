@@ -372,17 +372,26 @@ textarea:focus {
 
   <!-- Admin: PIN (Issue #1 layout: input on top, button beneath; Issue #10 size matched via CSS) -->
   <div class="pin-modal" id="pinModal">
-    <div class="pin-card">
-      <div class="modal-x" id="pinX">×</div>
-      <h3>Enter PIN</h3>
-      <input type="text" id="pinInput" maxlength="6" placeholder="6-digit PIN"
-       inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" 
-       autocapitalize="off" spellcheck="false"
-       oninput="this.value=this.value.replace(/[^0-9]/g,'');"
-       style="-webkit-text-security: disc;">
-      <button class="contact-ok" id="pinOkBtn">OK</button>
-    </div>
+  <div class="pin-card">
+    <div class="modal-x" id="pinX">×</div>
+    <h3>Enter PIN</h3>
+    <!-- ✅ Safe PIN field: looks like password but no Chrome warning -->
+    <input
+      id="pinInput"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="6"
+      placeholder="6-digit PIN"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      style="-webkit-text-security: disc; text-security: disc;"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'');"
+    >
+    <button class="contact-ok" id="pinOkBtn">OK</button>
   </div>
+</div>
 
   <div class="menu-modal" id="menuModal">
     <div class="menu-card">
