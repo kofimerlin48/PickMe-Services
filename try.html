@@ -1688,13 +1688,40 @@ saveItemsBtn.addEventListener('click', async () => {
       });
       carts[boutiqueId]=cart;localStorage.setItem('carts',JSON.stringify(carts));updateCart();
     }
-    function updateCart(){
-      carts[boutiqueId]=cart;localStorage.setItem('carts',JSON.stringify(carts));
-      if(cart.length>0){cartButtons.style.display='flex';viewSelected.textContent=`Selected Items (${cart.length})`;}
-      else{cartButtons.style.display='none';}
-      const activeCategory=document.querySelector('.tab.active')?.dataset.category||alphabetical(shopData?.categories?.map(c=>c.name)||[])[0]||'';
-      if(activeCategory) loadGallery(activeCategory);
-    }
+    function updateCart() {
+  // persist cart to localStorage
+  carts[boutiqueId] = cart;
+  localStorage.setItem('carts', JSON.stringify(carts));
+
+  // update bottom cart bar
+  if (cart.length > 0) {
+    cartButtons.style.display = 'flex';
+    viewSelected.textContent = `Selected Items (${cart.length})`;
+  } else {
+    cartButtons.style.display = 'none';
+  }
+
+  // ✅ new logic: don't reload gallery (prevents flicker)
+  // just update button texts/icons inside the existing gallery
+  try {
+    document.querySelectorAll('.gallery-item').forEach(div => {
+      const img = div.querySelector('img');
+      const btn = div.querySelector('button.add-to-cart');
+      if (!img || !btn) return;
+      const src = img.getAttribute('src');
+      const inCart = cart.some(c => c.src === src);
+      if (inCart) {
+        btn.textContent = '✔ Added to Cart';
+        btn.classList.add('added');
+      } else {
+        btn.textContent = 'Add to Cart';
+        btn.classList.remove('added');
+      }
+    });
+  } catch (e) {
+    console.warn('Cart button refresh skipped:', e);
+  }
+}
     function renderCartItems(){
       cartItemsEl.innerHTML='';
       if(cart.length===0){cartItemsEl.innerHTML='<p class="no-items">No items in cart</p>'; }
