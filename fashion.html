@@ -138,17 +138,31 @@
         btn.onclick = () => {
           const card = btn.closest(".card");
           const id = card.dataset.id;
-          window.location.href = `test.html?id=${encodeURIComponent(id)}`;
+          window.location.href = `template.html?id=${encodeURIComponent(id)}`;
         };
       });
     }
 
     // Fetch boutiques and rebuild HTML
+    // Fetch boutiques and rebuild HTML
     async function fetchBoutiques() {
       const snap = await getDocs(collection(db, "Boutiques"));
       let html = "";
+      const now = Date.now();
+
       snap.forEach(doc => {
         const b = { id: doc.id, ...doc.data() };
+
+        // ✅ Skip expired boutiques
+        if (b.expiry) {
+          const expiryTime = new Date(b.expiry).getTime();
+          if (!isNaN(expiryTime) && expiryTime < now) {
+            console.log(`Skipping expired boutique: ${b.name}`);
+            return; // don't render this one
+          }
+        }
+
+        // ✅ Render only active boutiques
         html += `
           <div class="card" data-id="${b.id}" style="background-image:url('${b.backgroundImage || ""}')"
                data-name="${b.name?.toLowerCase() || ""}">
@@ -162,6 +176,7 @@
           </div>
         `;
       });
+
       container.innerHTML = html;
       attachCardEvents();
       saveToCache(html);
@@ -181,6 +196,15 @@
       const hadCache = loadFromCache();
       try {
         await fetchBoutiques();
+
+// 🔄 Silent background refresh every 10 minutes
+setInterval(async () => {
+  try {
+    await fetchBoutiques();
+  } catch (err) {
+    // no message, no log — fully silent
+  }
+}, 3 * 60 * 1000);
       } catch (err) {
         console.error("Failed to fetch boutiques:", err);
         if (!hadCache) {
