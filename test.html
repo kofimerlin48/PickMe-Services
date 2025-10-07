@@ -1846,10 +1846,11 @@ saveItemsBtn.addEventListener('click', async () => {
     }
 
 
-// === DROP-IN REPLACEMENT: fixes image flash when navigating ===
+// === DROP-IN REPLACEMENT: keeps flicker fix + adds image preloading ===
 function initSlider(data) {
   let slideIndex = 0;
-  let loadToken = 0; // prevents out-of-order loads on fast clicks
+  let loadToken = 0;
+  const imageCache = {}; // 🧠 Preload storage
 
   // ===== Page title (same behavior as before) =====
   const headerTitle = document.createElement('h2');
@@ -1863,8 +1864,18 @@ function initSlider(data) {
   if (existingTitle) existingTitle.remove();
   slidePage.insertBefore(headerTitle, slideShell);
 
-  // Ensure a quick fade transition exists
+  // Hide until first image is ready (prevents broken-icon flash)
+  slideImg.style.opacity = '0';
   slideImg.style.transition = 'opacity 120ms ease';
+
+  // ===== Preload all images in the background =====
+  if (data.items && data.items.length > 0) {
+    data.items.forEach(it => {
+      const img = new Image();
+      img.src = it.src;
+      imageCache[it.src] = img;
+    });
+  }
 
   function showSlide(i) {
     if (!data.items || data.items.length === 0) return;
@@ -1884,41 +1895,39 @@ function initSlider(data) {
       okBtn.style.display = 'none';
     }
 
-    // Remove older label, but don't touch image classes yet
+    // Remove previous labels and fade out current image
     slideShell.querySelectorAll('.availability-label').forEach(el => el.remove());
-
-    // Fade out current image immediately to prevent any flash of the old photo
     slideImg.style.opacity = '0';
 
-    // Set up after-load finalization so the new image never appears in the wrong state
-    slideImg.onload = () => {
-      // Ignore if a newer navigation already happened
-      if (myToken !== loadToken) return;
+    // ===== Use cached image if already loaded =====
+    const cached = imageCache[item.src];
+    if (cached && cached.complete) {
+      applySlide(item, myToken);
+    } else {
+      slideImg.onload = () => applySlide(item, myToken);
+      slideImg.src = item.src;
+    }
+  }
 
-      // Price/Sizes
-      slidePrice.textContent = `GH₵ ${item.price}`;
-      slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+  function applySlide(item, myToken) {
+    if (myToken !== loadToken) return;
 
-      // Apply availability styling on the NEW image
-      slideImg.classList.toggle('dimmed', !item.available);
-
-      // Label / buttons
-      if (data.isForUser) {
-        const label = document.createElement('div');
-        label.className = 'availability-label';
-        label.textContent = item.available ? 'Available' : 'Not Available';
-        label.style.background = item.available ? 'green' : '#b00';
-        slideShell.appendChild(label);
-      } else {
-        notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
-      }
-
-      // Fade the new image in (no flash)
-      requestAnimationFrame(() => { slideImg.style.opacity = '1'; });
-    };
-
-    // Trigger the load LAST (after onload handler is set)
+    slidePrice.textContent = `GH₵ ${item.price}`;
+    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
     slideImg.src = item.src;
+    slideImg.classList.toggle('dimmed', !item.available);
+
+    if (data.isForUser) {
+      const label = document.createElement('div');
+      label.className = 'availability-label';
+      label.textContent = item.available ? 'Available' : 'Not Available';
+      label.style.background = item.available ? 'green' : '#b00';
+      slideShell.appendChild(label);
+    } else {
+      notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
+    }
+
+    requestAnimationFrame(() => { slideImg.style.opacity = '1'; });
   }
 
   // ===== Initialize slider =====
@@ -1927,17 +1936,17 @@ function initSlider(data) {
   slideShell.style.display = 'block';
   showSlide(slideIndex);
 
-  // ===== Navigation arrows (now flash-free) =====
+  // ===== Navigation arrows (flash-free) =====
   slideLeft.onclick  = () => showSlide(slideIndex - 1);
   slideRight.onclick = () => showSlide(slideIndex + 1);
 
-  // ===== Owner “Not Available” toggle (reuses same safe updater) =====
+  // ===== Owner toggle =====
   notAvailBtn.onclick = () => {
     data.items[slideIndex].available = !data.items[slideIndex].available;
     showSlide(slideIndex);
   };
 
-  // ===== Owner “Done” (unchanged logic) =====
+  // ===== Owner “Done” =====
   doneBtn.onclick = async () => {
     const available = data.items.filter(it => it.available);
     const unavail = data.items.length - available.length;
@@ -1963,7 +1972,7 @@ Click this link to view the available ones and proceed with payment. Total Amoun
     window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
   };
 
-  // ===== User “OK” (unchanged logic) =====
+  // ===== User “OK” =====
   okBtn.onclick = () => {
     const u = new URL(location.href);
     u.searchParams.delete('slide');
@@ -1972,6 +1981,7 @@ Click this link to view the available ones and proceed with payment. Total Amoun
     location.href = u.toString();
   };
 }
+
 
 
     /********** Main page affordances **********/
