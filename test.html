@@ -1845,64 +1845,80 @@ saveItemsBtn.addEventListener('click', async () => {
       initSlider(data);
     }
 
-    // === FIXED initSlider with working arrows and top-left labels ===
+
+// === DROP-IN REPLACEMENT: fixes image flash when navigating ===
 function initSlider(data) {
   let slideIndex = 0;
+  let loadToken = 0; // prevents out-of-order loads on fast clicks
 
-  // ===== Add page title =====
+  // ===== Page title (same behavior as before) =====
   const headerTitle = document.createElement('h2');
   headerTitle.style.color = 'var(--theme-color)';
   headerTitle.style.fontWeight = '700';
   headerTitle.style.marginBottom = '20px';
   headerTitle.style.textAlign = 'center';
-
-  if (data.isForUser) {
-    headerTitle.textContent = 'Selected Items Availability';
-  } else {
-    headerTitle.textContent = "Customer's Selected Items";
-  }
+  headerTitle.textContent = data.isForUser ? 'Selected Items Availability' : "Customer's Selected Items";
 
   const existingTitle = slidePage.querySelector('h2');
   if (existingTitle) existingTitle.remove();
   slidePage.insertBefore(headerTitle, slideShell);
 
-  // ===== Core slide display =====
+  // Ensure a quick fade transition exists
+  slideImg.style.transition = 'opacity 120ms ease';
+
   function showSlide(i) {
-    // protect index always valid
     if (!data.items || data.items.length === 0) return;
+
     slideIndex = (i + data.items.length) % data.items.length;
-
     const item = data.items[slideIndex];
-    slideImg.src = item.src;
-    slidePrice.textContent = `GH₵ ${item.price}`;
-    slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+    const myToken = ++loadToken;
 
-    // clear previous label
-    slideImg.classList.remove('dimmed');
-    document.querySelectorAll('.availability-label').forEach(el => el.remove());
-
-    // === For user side ===
+    // Mode UI (owner vs user)
     if (data.isForUser) {
       notAvailBtn.style.display = 'none';
       doneBtn.style.display = 'none';
       okBtn.style.display = 'inline-block';
-
-      const label = document.createElement('div');
-      label.className = 'availability-label';
-      label.textContent = item.available ? 'Available' : 'Not Available';
-      label.style.background = item.available ? 'green' : '#b00';
-      slideShell.appendChild(label);
-
-      if (!item.available) slideImg.classList.add('dimmed');
-    }
-    // === For owner side ===
-    else {
-      okBtn.style.display = 'none';
-      doneBtn.style.display = 'inline-block';
+    } else {
       notAvailBtn.style.display = 'inline-block';
-      notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
-      if (!item.available) slideImg.classList.add('dimmed');
+      doneBtn.style.display = 'inline-block';
+      okBtn.style.display = 'none';
     }
+
+    // Remove older label, but don't touch image classes yet
+    slideShell.querySelectorAll('.availability-label').forEach(el => el.remove());
+
+    // Fade out current image immediately to prevent any flash of the old photo
+    slideImg.style.opacity = '0';
+
+    // Set up after-load finalization so the new image never appears in the wrong state
+    slideImg.onload = () => {
+      // Ignore if a newer navigation already happened
+      if (myToken !== loadToken) return;
+
+      // Price/Sizes
+      slidePrice.textContent = `GH₵ ${item.price}`;
+      slideSizes.textContent = item.sizes ? `Sizes: ${item.sizes}` : '';
+
+      // Apply availability styling on the NEW image
+      slideImg.classList.toggle('dimmed', !item.available);
+
+      // Label / buttons
+      if (data.isForUser) {
+        const label = document.createElement('div');
+        label.className = 'availability-label';
+        label.textContent = item.available ? 'Available' : 'Not Available';
+        label.style.background = item.available ? 'green' : '#b00';
+        slideShell.appendChild(label);
+      } else {
+        notAvailBtn.textContent = item.available ? 'Not Available' : 'Available';
+      }
+
+      // Fade the new image in (no flash)
+      requestAnimationFrame(() => { slideImg.style.opacity = '1'; });
+    };
+
+    // Trigger the load LAST (after onload handler is set)
+    slideImg.src = item.src;
   }
 
   // ===== Initialize slider =====
@@ -1911,23 +1927,17 @@ function initSlider(data) {
   slideShell.style.display = 'block';
   showSlide(slideIndex);
 
-  // ===== Navigation arrows (always active) =====
-  slideLeft.onclick = () => {
-    slideIndex = (slideIndex - 1 + data.items.length) % data.items.length;
-    showSlide(slideIndex);
-  };
-  slideRight.onclick = () => {
-    slideIndex = (slideIndex + 1) % data.items.length;
-    showSlide(slideIndex);
-  };
+  // ===== Navigation arrows (now flash-free) =====
+  slideLeft.onclick  = () => showSlide(slideIndex - 1);
+  slideRight.onclick = () => showSlide(slideIndex + 1);
 
-  // ===== Owner “Not Available” toggle =====
+  // ===== Owner “Not Available” toggle (reuses same safe updater) =====
   notAvailBtn.onclick = () => {
     data.items[slideIndex].available = !data.items[slideIndex].available;
     showSlide(slideIndex);
   };
 
-  // ===== Owner “Done” =====
+  // ===== Owner “Done” (unchanged logic) =====
   doneBtn.onclick = async () => {
     const available = data.items.filter(it => it.available);
     const unavail = data.items.length - available.length;
@@ -1944,7 +1954,8 @@ function initSlider(data) {
       };
       const newId = await createSlideDoc(newPayload);
       const link = buildSlideLink(newId);
-      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.\nClick this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
+      text = `Hello our cherished customer, this is to inform you that ${available.length} of your selected items are available and ${unavail} are not available.
+Click this link to view the available ones and proceed with payment. Total Amount: GH₵ ${newTotal}. LINK: ${link}`;
     } else {
       text = `Hello cherished customer, all your selected items are available. You can proceed with payment on our page. Total Amount: GH₵ ${newTotal}`;
     }
@@ -1952,7 +1963,7 @@ function initSlider(data) {
     window.location.href = `https://wa.me/${data.userWhatsapp}?text=${encodeURIComponent(text)}`;
   };
 
-  // ===== User “OK” =====
+  // ===== User “OK” (unchanged logic) =====
   okBtn.onclick = () => {
     const u = new URL(location.href);
     u.searchParams.delete('slide');
@@ -1961,6 +1972,7 @@ function initSlider(data) {
     location.href = u.toString();
   };
 }
+
 
     /********** Main page affordances **********/
     closeFloating.addEventListener('click',()=>{location.href='fashion.html';});
