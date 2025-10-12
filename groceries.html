@@ -341,6 +341,7 @@ import {
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+/* ============== CONFIG ============== */
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
   authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -404,14 +405,23 @@ const GROCERY_DATA = [
   }
 ];
 
-/* ========= Groceries root collections/paths =========
-   - Shortlinks:  Groceries / Links / items / {id}
-   - Shops meta:  Groceries / ShopsMeta / items / {shopName}
-   - Buyers:      Groceries / Shops / {shopName} / buyers
-   - Customers:   Groceries / Shops / {shopName} / customers
+/* ========= Collections/paths =========
+   GLOBAL (kept for links to resolve):
+   - Groceries / Links / items / {id}
+   - Groceries / ShopsMeta / items / {shopName}
+   PER-SHOP (grouped, as requested):
+   - Groceries / Shops / {shop} / metadata / meta
+   - Groceries / Shops / {shop} / links / {id}
+   - Groceries / Shops / {shop} / buyers / {phoneKey}
+   - Groceries / Shops / {shop} / customers / {phoneKey}
 */
-const linksCol  = collection(db, "Groceries", "Links", "items");
-const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
+const globalLinksCol  = collection(db, "Groceries", "Links", "items");
+const globalShopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
+const shopDoc = (shop) => doc(db, "Groceries", "Shops", shop);
+const shopMetaDoc = (shop) => doc(db, "Groceries", "Shops", shop, "metadata", "meta");
+const shopLinksCol = (shop) => collection(db, "Groceries", "Shops", shop, "links");
+const buyersCol = (shop) => collection(db, "Groceries", "Shops", shop, "buyers");
+const customersCol = (shop) => collection(db, "Groceries", "Shops", shop, "customers");
 
 /* ======== DOM ======== */
 const cardsContainer  = document.getElementById("cardsContainer");
@@ -486,74 +496,52 @@ function loadItemsForShop(shop){
 function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
 
 /* ======== Firestore customer + buyers (dedup) ======== */
-/* ======== Firestore customer + buyers (dedup + trusted count fix) ======== */
+function phoneKey(p){ return String(p||"").replace(/[^\d+]/g,''); }
+
 async function saveCustomerWhatsApp(shopName, phoneE164){
   try{
     if(!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g,'');
-    const custCol = collection(db, "Groceries", "Shops", shopName, "customers");
     await setDoc(
-      doc(custCol, clean),
-      {
-        whatsapp: phoneE164,
-        timestamp: serverTimestamp()
-      },
+      doc(customersCol(shopName), phoneKey(phoneE164)),
+      { whatsapp: phoneE164, timestamp: serverTimestamp() },
       { merge: true }
     );
-  }catch(e){
-    console.error("saveCustomerWhatsApp error:", e);
-  }
+  }catch(e){ console.error("saveCustomerWhatsApp error:", e); }
 }
 
 async function saveBuyerUnique(shopName, phoneE164){
   try{
     if(!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g,'');
-    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
-    const ref = doc(buyersCol, clean);
+    const ref = doc(buyersCol(shopName), phoneKey(phoneE164));
     const snap = await getDoc(ref);
     if (!snap.exists()){
-      await setDoc(ref, {
-        whatsapp: phoneE164,
-        timestamp: serverTimestamp()
-      });
-      console.log(`✅ Added buyer for ${shopName}:`, phoneE164);
-    } else {
-      console.log(`⚠️ Buyer already exists for ${shopName}`);
+      await setDoc(ref, { whatsapp: phoneE164, timestamp: serverTimestamp() });
     }
-  }catch(e){
-    console.error("saveBuyerUnique error:", e);
-  }
+  }catch(e){ console.error("saveBuyerUnique error:", e); }
 }
 
 async function fetchBuyersCount(shopName){
   try{
-    if(!shopName) return 0;
-    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
-    const snap = await getDocs(buyersCol);
-    const count = snap.size || 0;
-    console.log(`🔢 ${shopName} has ${count} buyers`);
-    return count;
-  }catch(e){
-    console.error("fetchBuyersCount error:", e);
-    return 0;
-  }
+    const snap = await getDocs(buyersCol(shopName));
+    return snap.size||0;
+  }catch{ return 0; }
 }
 
-/* ======== Persist shops meta under Groceries root ======== */
+/* ======== Persist shops meta (global + per-shop) ======== */
 async function upsertShopsMeta(){
   try{
     await Promise.all(GROCERY_DATA.map(async shop=>{
-      const id = shop.name;
-      await setDoc(doc(shopsMeta, id), {
-        name: shop.name,
-        slogan: shop.slogan||"",
-        category: shop.category||"",
-        heroImage: shop.heroImage||"",
-        samples: shop.samples||[],
-        phone: shop.phone||"",
-        expiry: shop.expiry||null,
-        updatedAt: serverTimestamp()
+      // global
+      await setDoc(doc(globalShopsMeta, shop.name), {
+        name: shop.name, slogan: shop.slogan||"", category: shop.category||"",
+        heroImage: shop.heroImage||"", samples: shop.samples||[],
+        phone: shop.phone||"", expiry: shop.expiry||null, updatedAt: serverTimestamp()
+      }, { merge: true });
+      // per-shop
+      await setDoc(shopMetaDoc(shop.name), {
+        name: shop.name, slogan: shop.slogan||"", category: shop.category||"",
+        heroImage: shop.heroImage||"", samples: shop.samples||[],
+        phone: shop.phone||"", expiry: shop.expiry||null, updatedAt: serverTimestamp()
       }, { merge: true });
     }));
   }catch(e){ console.warn("shops meta upsert failed:", e); }
@@ -567,7 +555,6 @@ function loadBuyersCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KE
 async function buildBuyersCountMap(){
   const cache = loadBuyersCache();
   if(cache) buyersCountMap = cache;
-  // Render immediately with cache (if any), then refresh actual counts:
   const entries = await Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
   buyersCountMap = Object.fromEntries(entries);
   cacheBuyers(buyersCountMap);
@@ -624,7 +611,6 @@ function openShop(shop){
   shopNameEl.textContent = shop.name;
   shopSloganEl.textContent = shop.slogan || "";
   buildCarousel(shop.samples||[]);
-  // Load per-shop saved items
   loadItemsForShop(shop.name);
   detailsPanel.classList.add("show");
 }
@@ -775,14 +761,14 @@ searchInput.addEventListener("input",()=>{
   renderCards(active, searchInput.value);
 });
 
-/* ======== Short links in Firestore (cross-device) + 7-day cleanup ======== */
+/* ======== Short links (global + per-shop) + cleanup ======== */
 function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
 
 async function cleanupOldLinks(){
   try{
     const sevenDaysMs = 7*24*60*60*1000;
     const cutoff = new Date(Date.now() - sevenDaysMs);
-    const qy = query(linksCol, orderBy("createdAt","asc"), limit(200));
+    const qy = query(globalLinksCol, orderBy("createdAt","asc"), limit(200));
     const snap = await getDocs(qy);
     const deletions = [];
     snap.forEach(d=>{
@@ -793,38 +779,45 @@ async function cleanupOldLinks(){
   }catch(e){ console.warn("cleanup failed:", e); }
 }
 
+/* Write link both globally and inside the specific shop/links for grouping */
 async function putShort(data){
   const id = makeId();
+  const payload = {
+    payload: data,
+    type: data?.type || null,
+    shop: data?.shop || null,
+    createdAt: serverTimestamp()
+  };
   try{
-    await setDoc(doc(linksCol, id), {
-      payload: data,
-      type: data?.type || null,
-      shop: data?.shop || null,
-      createdAt: serverTimestamp()
-    });
+    // global (used to resolve links)
+    await setDoc(doc(globalLinksCol, id), payload);
+    // per-shop grouping (easy browsing)
+    if (data?.shop){
+      await setDoc(doc(shopLinksCol(data.shop), id), payload);
+    }
     return id;
   }catch(e){
     console.error("putShort error:", e);
-    sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); // fallback (same device)
+    try{ sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); }catch{}
     return id;
   }
 }
+
+/* Resolve link primarily from global (backward compatible) */
 async function getShort(id){
   try{
-    const snap = await getDoc(doc(linksCol, id));
+    const snap = await getDoc(doc(globalLinksCol, id));
     if (snap.exists()){
       const data = snap.data();
       const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
       if (ts && (Date.now() - ts.getTime()) > 7*24*60*60*1000){
-        await deleteDoc(doc(linksCol, id));
+        await deleteDoc(doc(globalLinksCol, id));
         return null;
       }
       return data.payload || null;
     }
   }catch(e){ console.error("getShort error:", e); }
-  try{
-    return JSON.parse(sessionStorage.getItem("pkm_"+id));
-  }catch{ return null; }
+  try{ return JSON.parse(sessionStorage.getItem("pkm_"+id)); }catch{ return null; }
 }
 
 /* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
@@ -877,7 +870,6 @@ Open Order: ${link}`;
   const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.location.href = waUrl;
 
-  // persist per-shop items
   saveItemsForShop(currentShop.name);
   formModal.classList.remove("show");
 });
@@ -972,32 +964,6 @@ function openAdmin(payload){
 closeAdminBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 adminCancelBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 
-/* Admin Done: send customer link via WhatsApp (carry cust phone for later unique count) */
-adminDoneBtn.addEventListener('click', async ()=>{
-  const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
-  const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
-
-  const customerPayload = {
-    type:'order',
-    shop: currentAdmin.shop,
-    cust: currentAdmin.cust || null, // carry forward for unique buyer credit
-    items: currentAdmin.items.map(it=>({
-      name: it.name,
-      qty:  Math.max(1, parseInt(it.qty||1,10)),
-      available: !!it.available,
-      price: (it.available && it.price!=null) ? money(it.price) : null
-    })),
-    fees: { service: useService, delivery: useDelivery }
-  };
-  const id = await putShort(customerPayload);
-  const link = `${location.origin}${location.pathname}?order=${id}`;
-
-  const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
-Open to view: ${link}`;
-  window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
-});
-
 /* ======== CUSTOMER UI (modern) ======== */
 function addCustCard(container, idx, name, qty, subText){
   const card=document.createElement('div');
@@ -1033,10 +999,14 @@ function openCustomer(data){
   hideHome();
   customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
 
-  // Proceed to payment: count a unique buyer (once) then redirect
+  // ✅ Count unique buyer *reliably* BEFORE redirect (await + tiny delay to avoid abort)
   custPayBtn.onclick = async ()=>{
-    if (data.cust) await saveBuyerUnique(data.shop, data.cust);
-    window.location.href = PAYSTACK_LINK;
+    try{
+      if (data.cust) await saveBuyerUnique(data.shop, data.cust);
+    }finally{
+      await new Promise(r=>setTimeout(r,150));
+      window.location.href = PAYSTACK_LINK;
+    }
   };
   const closeAll=()=>{ customerPanel.style.display='none'; customerPanel.setAttribute('aria-hidden','true'); };
   closeCustomerBtn.onclick=closeAll; custCancelBtn.onclick=closeAll;
@@ -1084,16 +1054,14 @@ async function router(){
 
 /* ======== Init ======== */
 (async()=>{
-  // keep shops info under Groceries root
-  upsertShopsMeta().catch(()=>{});
-  // use cached buyers to render fast, then refresh
+  await upsertShopsMeta().catch(()=>{});
   const cached = loadBuyersCache(); if (cached){ buyersCountMap=cached; }
   renderCards("All","");
   await buildBuyersCountMap(); // refresh counts + cache
-  await cleanupOldLinks();     // prune >7-day links
-  await router();              // deep-links go straight to admin/customer with no home flash
+  await cleanupOldLinks();
+  await router();
 })();
-</script>
+  </script>
 
 <!-- =========FOOTER ========= -->
 <div class="footer-wrap">
