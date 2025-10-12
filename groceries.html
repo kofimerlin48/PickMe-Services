@@ -77,18 +77,14 @@ body{
 .card-title{font-weight:bold;font-size:22px;margin-bottom:4px}
 .card-description{font-size:13px;opacity:.95;margin-bottom:4px}
 
-/* trusted buyers + button line (FIX #2) */
+/* trusted buyers + button line */
 .card-lower {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
 }
-.card-meta {
-  font-size: 12px;
-  opacity: 0.9;
-  margin: 0;
-}
+.card-meta { font-size: 12px; opacity: 0.9; margin: 0; }
 
 .btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
 
@@ -105,11 +101,15 @@ body{
 }
 #detailsPanel.show #detailsBackBtn{right:15px;}
 
+/* Shorter banner (with much darker overlay for full readability) */
 .banner{
-  position:relative;width:100%;height:46vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
+  position:relative;width:100%;height:35vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
   background:#333 center/cover no-repeat;
 }
-.banner::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.banner::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(0,0,0,.118), rgba(0,0,0,.56), rgba(0,0,0,.68));
+}
 .banner-text{position:relative;z-index:2}
 .banner-text h2{font-size:16px;margin:0 0 6px}
 .banner-text h1{font-size:26px;margin:0 0 8px}
@@ -150,25 +150,44 @@ body{
 }
 .item-top{display:flex;align-items:center;gap:10px}
 .item-num{font-weight:700;color:#333;min-width:22px;text-align:right}
-.item-name{flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;}
+.item-name{
+  flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;
+  transition:border-color .2s, box-shadow .2s;
+}
 .item-name::placeholder{color:#aaa}
+.item-name:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 
-/* FIX #1: dustbin icon always visible (inline SVG) */
+/* dustbin icon always visible (inline SVG) */
 .item-del{
   margin-left:8px;background:var(--theme-color);border:none;color:#fff;border-radius:50%;
   width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;z-index:2;
 }
-.item-del svg{width:24px;height:24px;fill:#fff;display:block;pointer-events:none;}
+.item-del svg{width:20px;height:20px;fill:#fff;display:block;pointer-events:none;}
 
-.item-qty{margin-top:10px;display:flex;align-items:center;gap:8px;}
-.qty-btn{width:38px;height:38px;border:none;border-radius:8px;background:var(--theme-color);color:#fff;font-size:22px;cursor:pointer;}
-.qty-input{width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;}
+/* Quantity section */
+.item-qty{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.qty-label{font-size:12px;color:#666;margin-left:4px;}
+.qty-controls{display:flex;align-items:center;gap:8px;}
+.qty-btn{
+  width:38px;height:38px;border:none;border-radius:8px;
+  background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer;
+}
+.qty-btn:active{filter:brightness(0.9);}
+.qty-input{
+  width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.qty-input:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 .qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .qty-input[type=number]{-moz-appearance:textfield}
 
 .small-note{font-size:12px;color:#666;margin:8px 0 0}
 .whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
-#whatsappInput{padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px}
+#whatsappInput{
+  padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px;
+  transition:border-color .2s, box-shadow .2s;
+}
+#whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 .error{color:#b00020;font-size:13px;margin-top:8px;display:none}
 
 /* Footer iframe pinned */
@@ -234,7 +253,7 @@ body{
         <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
       </div>
 
-      <div class="error" id="formError">Please enter at least one item and a valid WhatsApp number.</div>
+      <div class="error" id="formError"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
@@ -475,17 +494,21 @@ body{
     });
   }
 
-  /* ===== Modal open/close ===== */
+  /* ==================== Modal open/close ==================== */
   function openForm(){
     formModal.classList.add("show");
     formError.style.display = "none";
+
     if (itemsHolder.children.length === 0) addRow();
+
+    const firstName = itemsHolder.querySelector(".item-card .item-name");
+    if (firstName) setTimeout(()=> firstName.focus(), 50);
   }
   function closeForm(){ formModal.classList.remove("show"); }
   document.getElementById("openFormBtn").addEventListener("click", openForm);
   cancelBtn.addEventListener("click", closeForm);
 
-  /* ===== Item-card logic ===== */
+  /* ==================== Item-card logic ==================== */
   function renumberRows(){
     const nums = itemsHolder.querySelectorAll(".item-num");
     nums.forEach((el, idx) => el.textContent = `${idx+1}.`);
@@ -494,7 +517,7 @@ body{
   function trashSVG(){
     return `
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7H4V5h4V4a1 1 0 0 1 1-1zm2 0v1h2V3h-2zm-2.8 6.2 1.4-.4.9 9.2-1.5.2-.8-9zm6.2-.4 1.4.4-.8 9-1.5-.2.9-9.2z"/>
+        <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7H4V5h4V4a1 1 0 0 1 1-1zm2 0v1h2V3h-2z"/>
       </svg>
     `;
   }
@@ -509,9 +532,12 @@ body{
         <button class="item-del" title="Delete">${trashSVG()}</button>
       </div>
       <div class="item-qty">
-        <button class="qty-btn minus" type="button">−</button>
-        <input class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="${escapeAttr(qtyVal)}"/>
-        <button class="qty-btn plus" type="button">+</button>
+        <div class="qty-label">Set quantity</div>
+        <div class="qty-controls">
+          <button class="qty-btn minus" type="button">−</button>
+          <input class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="${escapeAttr(qtyVal)}"/>
+          <button class="qty-btn plus" type="button">+</button>
+        </div>
       </div>
     `;
 
@@ -521,17 +547,24 @@ body{
     const qtyInput = card.querySelector(".qty-input");
     const nameEl   = card.querySelector(".item-name");
 
-    delBtn.addEventListener("click", () => { card.remove(); renumberRows(); });
+    delBtn.addEventListener("click", () => {
+      const toFocusNext = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
+                       || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
+      card.remove(); renumberRows();
+      if (toFocusNext) setTimeout(()=> toFocusNext.focus(), 30);
+    });
 
     minusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       if (v > 1) qtyInput.value = String(v - 1);
+      setTimeout(()=> qtyInput.focus(), 0);
     });
     plusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       qtyInput.value = String(v + 1);
+      setTimeout(()=> qtyInput.focus(), 0);
     });
 
     // Restrict to digits; enforce >=1 on blur
@@ -547,7 +580,6 @@ body{
     itemsHolder.appendChild(card);
     renumberRows();
 
-    // focus the name instantly
     setTimeout(()=> nameEl.focus(), 0);
   }
 
@@ -555,7 +587,7 @@ body{
   addRowBtn.addEventListener("click", () => {
     const last = itemsHolder.querySelector(".item-card:last-child .item-name");
     if (last && !last.value.trim()){
-      last.focus();
+      last.focus(); // point user to type name
       return;
     }
     addRow();
@@ -587,41 +619,46 @@ body{
     catch { return btoa(JSON.stringify(data)); }
   }
 
-  /* ===== Submit: send to PickMe WhatsApp with admin link, save customer ===== */
+  /* ===== Submit: validations & send WA to PickMe (kept same content) ===== */
   submitBtn.addEventListener("click", async () => {
     const rows = Array.from(itemsHolder.querySelectorAll(".item-card"));
-    const items = rows.map((row, i) => {
+    const items = rows.map((row) => {
       const nameEl = row.querySelector(".item-name");
       const qtyEl  = row.querySelector(".qty-input");
       const name = (nameEl.value||"").trim();
       let qty = parseInt((qtyEl.value||"1"), 10);
       if (!qty || qty < 1) qty = 1;
-      return { name, qty };
+      return { name, qty, nameEl };
     }).filter(x => x.name);
 
     const rawWhats = whatsappInput.value.trim();
     const normalized = normalizeGhanaNumber(rawWhats);
 
-    // Validation: separate messages depending on what’s missing
-  if (items.length === 0) {
-    formError.textContent = "Please add at least one item before submitting.";
-    formError.style.display = "block";
-    return;
-  }
+    // Validation with focus behavior
+    if (items.length === 0) {
+      formError.textContent = "Please add at least one item before submitting.";
+      formError.style.display = "block";
 
-  if (!normalized) {
-    formError.textContent = "Please enter your WhatsApp number.";
-    formError.style.display = "block";
-    return;
-  }
+      const firstName = itemsHolder.querySelector(".item-card .item-name");
+      if (firstName) firstName.focus();
+      else { addRow(); setTimeout(()=> itemsHolder.querySelector(".item-card .item-name")?.focus(), 30); }
+      return;
+    }
 
-  formError.style.display = "none";
+    if (!normalized) {
+      formError.textContent = "Please enter your WhatsApp number.";
+      formError.style.display = "block";
+      whatsappInput.focus();
+      return;
+    }
+
+    formError.style.display = "none";
 
     const { e164 } = normalized;
 
     await saveCustomerWhatsApp(currentShop.name, e164);
 
-    const payload = buildOrderPayload(currentShop.name, e164, items);
+    const payload = buildOrderPayload(currentShop.name, e164, items.map(({name,qty})=>({name,qty})));
     const adminLink = `https://pickme.example/admin-grocery.html#${payload}`; // replace with real admin URL
 
     const listLines = items.map((x,i) => `${i+1}. ${x.name} × ${x.qty}`).join("%0A");
@@ -638,7 +675,6 @@ Open Admin: ${adminLink}`;
     const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
     window.location.href = waUrl;
 
-    formError.style.display = "none";
     formModal.classList.remove("show");
   });
 
