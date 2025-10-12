@@ -192,6 +192,37 @@ body{
 }
 .fee-input input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
 
+/* Modern Admin Action Buttons */
+.admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+.btn-cancel {
+  background: #777;
+  color: #fff;
+}
+.btn-cancel:hover {
+  background: #555;
+}
+.btn-done {
+  background: var(--theme-color);
+  color: #fff;
+}
+.btn-done:hover {
+  background: #a21f60;
+}
+  
 /* Customer panel (modern cards) */
 #customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 .cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
@@ -1168,27 +1199,23 @@ async function router(){
 
 /* ======== Init ======== */
 (async()=>{
-  // keep shops info under Groceries root
-  upsertShopsMeta().catch(()=>{});
+  // run router immediately (no waiting)
+  router();
 
-  // 1️⃣ Load cached buyers if any (for instant display)
+  // continue background work silently
+  upsertShopsMeta().catch(()=>{});
   const cached = loadBuyersCache();
   if (cached) buyersCountMap = cached;
-
-  // 2️⃣ Render immediately (shows cached counts)
   renderCards("All", "");
 
-  // 3️⃣ Refresh buyers count quietly in background
-  const entries = await Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
-  buyersCountMap = Object.fromEntries(entries);
-  cacheBuyers(buyersCountMap);
+  Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]))
+    .then(entries=>{
+      buyersCountMap = Object.fromEntries(entries);
+      cacheBuyers(buyersCountMap);
+      renderCards(document.querySelector(".tab.active")?.dataset.cat || "All", searchInput.value);
+    }).catch(console.warn);
 
-  // 4️⃣ Update visible cards with fresh counts
-  renderCards(document.querySelector(".tab.active")?.dataset.cat || "All", searchInput.value);
-
-  // 5️⃣ Continue normal background tasks
-  await cleanupOldLinks();
-  await router();
+  cleanupOldLinks().catch(()=>{});
 })();
 </script>
 
