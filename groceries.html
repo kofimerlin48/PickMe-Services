@@ -485,22 +485,19 @@ function loadItemsForShop(shop){
 }
 function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
 
-/* ======== Firestore customer + buyers (dedup + permanent count) ======== */
+/* ======== Firestore customer + buyers (dedup + permanent count, adjusted for your structure) ======== */
 
 // Save WhatsApp leads (for general advertisements)
 async function saveCustomerWhatsApp(shopName, phoneE164) {
   try {
     if (!shopName || !phoneE164) return;
     const clean = phoneE164.replace(/[^\d+]/g, '');
-    const custCol = collection(db, "Groceries", "Shops", shopName, "customers");
+    // ✅ Corrected path: under ShopsMeta → items → shopName → customers
+    const custCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "customers");
 
-    // No duplicate: each phone number = one doc
     await setDoc(
       doc(custCol, clean),
-      {
-        whatsapp: phoneE164,
-        timestamp: serverTimestamp(),
-      },
+      { whatsapp: phoneE164, timestamp: serverTimestamp() },
       { merge: true }
     );
     console.log(`✅ Customer saved (unique): ${phoneE164}`);
@@ -514,14 +511,15 @@ async function saveBuyerUnique(shopName, phoneE164) {
   try {
     if (!shopName || !phoneE164) return;
     const clean = phoneE164.replace(/[^\d+]/g, '');
-    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
+    // ✅ Corrected path: under ShopsMeta → items → shopName → buyers
+    const buyersCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "buyers");
     const ref = doc(buyersCol, clean);
-
     const snap = await getDoc(ref);
+
     if (!snap.exists()) {
       await setDoc(ref, {
         whatsapp: phoneE164,
-        timestamp: serverTimestamp(),
+        timestamp: serverTimestamp()
       });
       console.log(`🛒 Added new unique buyer for ${shopName}: ${phoneE164}`);
     } else {
@@ -532,11 +530,12 @@ async function saveBuyerUnique(shopName, phoneE164) {
   }
 }
 
-// Count all unique buyers permanently (no deletion)
+// Count all unique buyers (no duplicates, optional 7-day cleanup)
 async function fetchBuyersCount(shopName) {
   try {
     if (!shopName) return 0;
-    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
+    // ✅ Corrected path: under ShopsMeta → items → shopName → buyers
+    const buyersCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "buyers");
     const snap = await getDocs(buyersCol);
     const count = snap.size || 0;
     console.log(`⭐ ${shopName} has ${count} trusted buyers`);
