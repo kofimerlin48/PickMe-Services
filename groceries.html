@@ -1065,77 +1065,17 @@ function openAdmin(payload){
   hideHome();
   adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
-closeAdminBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
-adminCancelBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
-
-/* Admin Done: send customer link via WhatsApp (carry cust phone for later unique count) */
-adminDoneBtn.addEventListener('click', async ()=>{
-  const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
-  const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
-
-  const customerPayload = {
-    type:'order',
-    shop: currentAdmin.shop,
-    cust: currentAdmin.cust || null, // carry forward for unique buyer credit
-    items: currentAdmin.items.map(it=>({
-      name: it.name,
-      qty:  Math.max(1, parseInt(it.qty||1,10)),
-      available: !!it.available,
-      price: (it.available && it.price!=null) ? money(it.price) : null
-    })),
-    fees: { service: useService, delivery: useDelivery }
-  };
-  const id = await putShort(customerPayload);
-  const link = `${location.origin}${location.pathname}?order=${id}`;
-
-  const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
-Open to view: ${link}`;
-  window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
-});
-
-/* ======== CUSTOMER UI (modern) ======== */
-function addCustCard(container, idx, it){
-  const available = !!it.available && it.price!=null;
-  const unit = available ? money(it.price) : 0;
-  const qty  = Math.max(1, parseInt(it.qty||1,10));
-  const sub  = available ? (unit * qty) : 0;
-
-  const card=document.createElement('div');
-  card.className='cust-item-card';
-  card.innerHTML=`
-    <div class="cust-row1">
-      <div class="cust-item-num">${idx}.</div>
-      <div class="cust-item-name">${escapeHtml(it.name)}</div>
-      <div class="cust-item-meta">Qty: ${qty}</div>
-    </div>
-    <div class="cust-row2">
-      <div class="cust-badge ${available?'':'off'}">
-        ${available?'Available':'Unavailable'}
-      </div>
-      ${
-        available
-        ? `<div class="cust-price-block">
-             <div class="cust-price-line">
-               <span class="unit">Unit: GH₵ ${unit.toFixed(2).replace(/\.00$/,'')}</span>
-               <span>× ${qty}</span>
-               <span class="sub">= GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}</span>
-             </div>
-           </div>`
-        : ``
-      }
-    </div>
-  `;
-  container.appendChild(card);
-}
-
 function openCustomer(data){
   custShop.textContent = `Order · ${data.shop||''}`;
-  custAvail.innerHTML=''; custUnavail.innerHTML='';
+  custAvail.innerHTML=''; 
+  custUnavail.innerHTML='';
 
   let itemsTotal=0;
+  let availableCount=0;
+
   (data.items||[]).forEach((it,i)=>{
     if (it.available && it.price!=null){
+      availableCount++;
       const qty = Math.max(1, parseInt(it.qty||1,10));
       const sub = money(it.price)*qty;
       itemsTotal += sub;
@@ -1145,29 +1085,74 @@ function openCustomer(data){
     }
   });
 
-  const service=money(data.fees?.service ?? SERVICE_FEE);
-  const delivery=money(data.fees?.delivery ?? DELIVERY_FEE);
+  // If all unavailable → no fees
+  const service = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
+  const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE) : 0;
   const grand = itemsTotal + service + delivery;
 
-  // Show all lines clearly
+  // Update totals visually
   document.querySelector('.cust-totals').innerHTML = `
-    <div class="line"><span>Items total</span><span>GH₵ <span id="custItemsTotal">${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></span></div>
+    <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
     <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
     <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
-    <div class="line grand"><span>Grand total</span><span>GH₵ <span id="custGrandTotal">${grand.toFixed(2).replace(/\.00$/,'')}</span></span></div>
+    <div class="line grand"><span>Grand total</span><span>GH₵ ${grand.toFixed(2).replace(/\.00$/,'')}</span></div>
   `;
 
   hideHome();
-  customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
+  customerPanel.style.display='block'; 
+  customerPanel.setAttribute('aria-hidden','false');
 
-  // Proceed to payment: count a unique buyer (once) then redirect
+  // Hide Proceed to Payment if grand total is 0
+  if (grand <= 0) {
+    custPayBtn.style.display = "none";
+  } else {
+    custPayBtn.style.display = "inline-block";
+  }
+
+  // Proceed to Payment logic
   custPayBtn.onclick = async ()=>{
     if (data.cust) await saveBuyerUnique(data.shop, data.cust);
+    const amountNum = grand.toFixed(2).replace(/\.00$/,''); // Copy only the number
+    try {
+      await navigator.clipboard.writeText(amountNum);
+      const toast = document.createElement("div");
+      toast.textContent = `Amount copied: GH₵${amountNum}. You can now paste it in Paystack.`;
+      Object.assign(toast.style, {
+        position: "fixed",
+        bottom: "80px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "#333",
+        color: "#fff",
+        padding: "12px 18px",
+        borderRadius: "8px",
+        fontSize: "14px",
+        zIndex: "10050",
+        opacity: "0",
+        transition: "opacity .4s ease"
+      });
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.style.opacity="1",50);
+      setTimeout(()=>{
+        toast.style.opacity="0";
+        setTimeout(()=>toast.remove(),400);
+      },2500);
+    } catch(e) {
+      alert(`Copied amount: GH₵${amountNum}`);
+    }
     window.location.href = PAYSTACK_LINK;
   };
-  const closeAll=()=>{ customerPanel.style.display='none'; customerPanel.setAttribute('aria-hidden','true'); };
-  closeCustomerBtn.onclick=closeAll; custCancelBtn.onclick=closeAll;
+
+  // Customer close/cancel → go back to groceries.html
+  const goHome = () => window.location.href = "groceries.html";
+  closeCustomerBtn.onclick = goHome;
+  custCancelBtn.onclick = goHome;
 }
+
+/* ======== ADMIN CLOSE/CANCEL ======== */
+closeAdminBtn.addEventListener('click',()=>{ window.close(); });
+adminCancelBtn.addEventListener('click',()=>{ window.close(); });
+
 
 /* ======== Router + no-home flash ======== */
 function hideHome(){
