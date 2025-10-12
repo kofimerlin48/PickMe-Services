@@ -485,56 +485,63 @@ function loadItemsForShop(shop){
 }
 function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
 
-/* ======== Firestore customer + buyers (dedup) ======== */
-/* ======== Firestore customer + buyers (dedup + trusted count fix) ======== */
-async function saveCustomerWhatsApp(shopName, phoneE164){
-  try{
-    if(!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g,'');
+/* ======== Firestore customer + buyers (dedup + permanent count) ======== */
+
+// Save WhatsApp leads (for general advertisements)
+async function saveCustomerWhatsApp(shopName, phoneE164) {
+  try {
+    if (!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g, '');
     const custCol = collection(db, "Groceries", "Shops", shopName, "customers");
+
+    // No duplicate: each phone number = one doc
     await setDoc(
       doc(custCol, clean),
       {
         whatsapp: phoneE164,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
       },
       { merge: true }
     );
-  }catch(e){
+    console.log(`✅ Customer saved (unique): ${phoneE164}`);
+  } catch (e) {
     console.error("saveCustomerWhatsApp error:", e);
   }
 }
 
-async function saveBuyerUnique(shopName, phoneE164){
-  try{
-    if(!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g,'');
+// Save real buyers (for Trusted Buyers count)
+async function saveBuyerUnique(shopName, phoneE164) {
+  try {
+    if (!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g, '');
     const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
     const ref = doc(buyersCol, clean);
+
     const snap = await getDoc(ref);
-    if (!snap.exists()){
+    if (!snap.exists()) {
       await setDoc(ref, {
         whatsapp: phoneE164,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
       });
-      console.log(`✅ Added buyer for ${shopName}:`, phoneE164);
+      console.log(`🛒 Added new unique buyer for ${shopName}: ${phoneE164}`);
     } else {
-      console.log(`⚠️ Buyer already exists for ${shopName}`);
+      console.log(`⚠️ Buyer already counted for ${shopName}`);
     }
-  }catch(e){
+  } catch (e) {
     console.error("saveBuyerUnique error:", e);
   }
 }
 
-async function fetchBuyersCount(shopName){
-  try{
-    if(!shopName) return 0;
+// Count all unique buyers permanently (no deletion)
+async function fetchBuyersCount(shopName) {
+  try {
+    if (!shopName) return 0;
     const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
     const snap = await getDocs(buyersCol);
     const count = snap.size || 0;
-    console.log(`🔢 ${shopName} has ${count} buyers`);
+    console.log(`⭐ ${shopName} has ${count} trusted buyers`);
     return count;
-  }catch(e){
+  } catch (e) {
     console.error("fetchBuyersCount error:", e);
     return 0;
   }
