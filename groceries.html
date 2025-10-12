@@ -30,7 +30,7 @@
 <!-- =========HEADER CODE ENDS HERE ================== -->
 
 <style>
-:root{ --theme-color:#c12872; }
+:root{ --theme-color:#c12872; --card-bg:#fff; --soft:#f7f7f8; --line:#eee; --text:#333; }
 
 *{box-sizing:border-box}
 * { -webkit-tap-highlight-color: transparent; }
@@ -120,19 +120,22 @@ body{
 .dot{width:8px;height:8px;border-radius:50%;background:#ddd}
 .dot.active{background:var(--theme-color)}
 
-/* Add Items button (raised up) */
-.action-row{display:flex;justify-content:center;margin:22px 0 120px;}
+/* Primary button */
 .btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
+
+/* Action row */
+.action-row{display:flex;justify-content:center;margin:22px 0 120px;}
 
 /* Modal form */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
 .modal.show{display:flex}
 .modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
-.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold}
+.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.modal-header .header-actions{display:flex;gap:8px}
 .modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
 .modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
 
-/* item card layout — screenshot style */
+/* Reusable modern “card” for items (used by modal, admin, customer) */
 .item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
   padding:12px 12px 10px;margin-bottom:12px;
@@ -143,6 +146,7 @@ body{
   flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;
   transition:border-color .2s, box-shadow .2s;
 }
+.item-name.readonly{background:#fafafa;border-bottom-color:#f0f0f0;cursor:not-allowed}
 .item-name::placeholder{color:#aaa}
 .item-name:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 
@@ -153,11 +157,10 @@ body{
 }
 .item-del svg{width:20px;height:20px;fill:#fff;display:block;pointer-events:none;}
 
-/* Quantity section */
+/* Quantity section (modal only) */
 .item-qty{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
 .qty-label{font-size:12px;color:#666;margin-left:4px;}
 .qty-controls{display:flex;align-items:center;gap:8px;}
-/* dark ash buttons */
 .qty-btn{ width:38px;height:38px;border:none;border-radius:8px;background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer; }
 .qty-btn:active{filter:brightness(0.9);}
 .qty-input{
@@ -168,16 +171,18 @@ body{
 .qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .qty-input[type=number]{-moz-appearance:textfield}
 
-.small-note{font-size:12px;color:#666;margin:8px 0 0}
-.whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
-#whatsappInput{
-  padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px;
-  transition:border-color .2s, box-shadow .2s;
-}
-#whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
-.error{color:#b00020;font-size:13px;margin-top:8px;display:none}
+/* Info tags */
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px}
+.badge-gray{background:#f1f3f5;color:#333;border:1px solid #e5e7eb;}
+.badge-green{background:#e9fff1;color:#146c2e;border:1px solid #b7e7c5;}
+.badge-red{background:#fff3f3;color:#8a1c1c;border:1px solid #f0c3c3;}
+.badge-purple{background:#f3e8ff;color:#5b21b6;border:1px solid #e9d5ff;}
 
-/* ===== Admin (Hidden) Panel ===== */
+/* Admin / Customer sections share cards */
+.group-title{font-weight:700;margin:10px 0 8px;}
+.group{display:grid;grid-template-columns:1fr;gap:10px}
+
+/* Admin (Hidden) Panel */
 #adminPanel{
   position:fixed; inset:0; background:#fff; z-index:10002; display:none;
   overflow-y:auto; padding:16px 16px 90px;
@@ -185,39 +190,18 @@ body{
 #adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
 #adminPanel .admin-top h2{margin:0; font-size:18px;}
 #adminPanel .close-admin{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
-
 .admin-shop-actions{display:flex; gap:8px; margin:8px 0 14px;}
 .admin-shop-actions a{display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:8px; text-decoration:none; color:#fff; font-size:14px;}
 .call-btn{background:#0a7d0a;}
 .wa-btn{background:#25D366;}
+.admin-card-line{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+.price-input{width:140px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}
+.subtext{font-size:13px;color:#444}
 
-.admin-section{margin:10px 0 16px;}
-.group-title{font-weight:700; margin:10px 0 8px;}
-
-.admin-item{
-  border:1px solid #eee; border-radius:10px; padding:10px; margin:8px 0; display:grid;
-  grid-template-columns: 1fr 110px 90px; grid-template-areas:
-  "name qty subtotal"
-  "avail price subtotal";
-  gap:6px 10px; align-items:center;
-}
-.ai-name{ grid-area:name; font-weight:600; }
-.ai-qty{ grid-area:qty; display:flex; align-items:center; gap:6px; justify-content:flex-end; }
-.ai-qty .qty-btn{ width:30px; height:30px; font-size:18px; }
-.ai-qty .qty-input{ width:54px; height:32px; font-size:14px; }
-.ai-avail{ grid-area:avail; }
-.ai-price{ grid-area:price; }
-.ai-price input{ width:140px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; }
-.ai-sub{ grid-area:subtotal; text-align:right; font-weight:700; }
-
-.avail-toggle{padding:6px 10px; border-radius:999px; border:1px solid #ddd; cursor:pointer; background:#f7f7f7; font-size:13px;}
-.avail-toggle.on{background:#e9fff1; border-color:#b7e7c5; color:#146c2e;}
-.avail-toggle.off{background:#fff3f3; border-color:#f0c3c3; color:#8a1c1c;}
-
+/* Admin totals / actions */
 .admin-fee-row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
 .fee-input{display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #eee; border-radius:8px; padding:6px 8px;}
 .fee-input input{width:90px; border:none; outline:none; font-weight:600;}
-
 .admin-totals{margin-top:10px; padding-top:8px; border-top:1px dashed #ddd;}
 .admin-totals div{margin:6px 0;}
 .admin-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px;}
@@ -225,7 +209,7 @@ body{
 .btn-done{background:var(--theme-color); color:#fff;}
 .btn-cancel{background:#777; color:#fff;}
 
-/* ===== Customer (Hidden) Panel ===== */
+/* Customer (Hidden) Panel */
 #customerPanel{
   position:fixed; inset:0; background:#fff; z-index:10002; display:none;
   overflow-y:auto; padding:16px 16px 90px;
@@ -235,7 +219,7 @@ body{
 .cust-close{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
 .cust-card{border:1px solid #eee; border-radius:10px; padding:12px; margin:10px 0;}
 .cust-items h3{margin:0 0 8px 0; font-size:16px;}
-.cust-list li{margin:6px 0;}
+.cust-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .cust-totals{margin-top:10px; border-top:1px dashed #ddd; padding-top:10px; font-weight:600;}
 .cust-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
 .cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer; }
@@ -290,11 +274,16 @@ body{
 <!-- ===== Modal: Add Items Form ===== -->
 <div class="modal" id="formModal">
   <div class="modal-card">
-    <div class="modal-header">List your items</div>
+    <div class="modal-header">
+      <span>List your items</span>
+      <div class="header-actions">
+        <button class="btn-primary" id="clearAllBtn" style="background:#ef4444">Clear all</button>
+      </div>
+    </div>
     <div class="modal-body">
       <div id="itemsHolder"></div>
       <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">Add another item</button>
-      <div class="whats-row">
+      <div class="whats-row" style="margin-top:12px">
         <input type="tel" id="whatsappInput" placeholder="Your WhatsApp (+233… or 0…)" />
         <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
       </div>
@@ -312,20 +301,15 @@ body{
   <div class="admin-top">
     <div>
       <h2 id="adminShop">Order</h2>
-      <div class="admin-shop-actions" id="adminShopActions">
-        <!-- filled dynamically: Call / WhatsApp -->
-      </div>
+      <div class="admin-shop-actions" id="adminShopActions"></div>
     </div>
     <button class="close-admin" id="closeAdminBtn">Close</button>
   </div>
 
   <div class="admin-section">
-    <div class="group-title">Available items</div>
-    <div id="adminAvail"></div>
-  </div>
-  <div class="admin-section">
-    <div class="group-title">Unavailable items</div>
-    <div id="adminUnavail"></div>
+    <div class="group-title">Items</div>
+    <div id="adminItemsGroup" class="group"></div>
+    <div class="subtext">Tap to toggle availability. Enter unit price for available items. Quantity is set by customer.</div>
   </div>
 
   <div class="admin-section">
@@ -355,10 +339,8 @@ body{
   </div>
 
   <div class="cust-card cust-items">
-    <h3>Available items</h3>
-    <ul id="custAvail" class="cust-list"></ul>
-    <h3 style="margin-top:12px;">Unavailable items</h3>
-    <ul id="custUnavail" class="cust-list"></ul>
+    <h3>Items</h3>
+    <ul id="custList" class="cust-list"></ul>
     <div class="cust-totals">
       <div>Items total: GH₵ <span id="custItemsTotal">0</span></div>
       <div>Grand total (with fees): GH₵ <span id="custGrandTotal">0</span></div>
@@ -371,14 +353,14 @@ body{
   </div>
 </div>
 
-<!-- ========= FIREBASE + PAGE LOGIC ========= -->
+  <!-- ========= FIREBASE + PAGE LOGIC ========= -->
 <script type="module">
 /* Firebase */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc,
-  serverTimestamp, query, orderBy, limit
+  serverTimestamp, Timestamp, query, where, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -467,6 +449,7 @@ const openFormBtn   = document.getElementById("openFormBtn");
 const formModal     = document.getElementById("formModal");
 const itemsHolder   = document.getElementById("itemsHolder");
 const addRowBtn     = document.getElementById("addRowBtn");
+const clearAllBtn   = document.getElementById("clearAllBtn");
 const whatsappInput = document.getElementById("whatsappInput");
 const submitBtn     = document.getElementById("submitBtn");
 const cancelBtn     = document.getElementById("cancelBtn");
@@ -475,8 +458,7 @@ const formError     = document.getElementById("formError");
 /* Admin panel */
 const adminPanel      = document.getElementById("adminPanel");
 const adminShop       = document.getElementById("adminShop");
-const adminAvail      = document.getElementById("adminAvail");
-const adminUnavail    = document.getElementById("adminUnavail");
+const adminItemsGroup = document.getElementById("adminItemsGroup");
 const feeServiceInput = document.getElementById("feeServiceInput");
 const feeDeliveryInput= document.getElementById("feeDeliveryInput");
 const adminItemsTotal = document.getElementById("adminItemsTotal");
@@ -490,8 +472,7 @@ const adminShopActions= document.getElementById("adminShopActions");
 const customerPanel   = document.getElementById("customerPanel");
 const closeCustomerBtn= document.getElementById("closeCustomerBtn");
 const custShop        = document.getElementById("custShop");
-const custAvail       = document.getElementById("custAvail");
-const custUnavail     = document.getElementById("custUnavail");
+const custList        = document.getElementById("custList");
 const custItemsTotal  = document.getElementById("custItemsTotal");
 const custGrandTotal  = document.getElementById("custGrandTotal");
 const custPayBtn      = document.getElementById("custPay");
@@ -517,28 +498,7 @@ function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"
 const linksCol  = collection(db, "Groceries", "Links", "items");
 const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
 
-/* ======== Firestore (buyers/customers) ======== */
-async function saveCustomerWhatsApp(shopName, phone){
-  try{
-    const custCol = collection(db,"Groceries","Shops",shopName,"customers");
-    await addDoc(custCol,{ whatsapp:phone, timestamp: serverTimestamp() });
-  }catch(e){ console.error(e); }
-}
-async function saveBuyer(shopName, phone){
-  try{
-    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
-    await addDoc(buyersCol,{ whatsapp:phone||null, timestamp: serverTimestamp() });
-  }catch(e){ console.error(e); }
-}
-async function fetchBuyersCount(shopName){
-  try{
-    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
-    const snap = await getDocs(buyersCol);
-    return snap.size||0;
-  }catch{ return 0; }
-}
-
-/* ======== Persist shops meta under Groceries root ======== */
+/* ======== Upsert shops meta under Groceries root ======== */
 async function upsertShopsMeta(){
   try{
     await Promise.all(GROCERY_DATA.map(async shop=>{
@@ -557,6 +517,33 @@ async function upsertShopsMeta(){
   }catch(e){ console.warn("shops meta upsert failed:", e); }
 }
 
+/* ======== Firestore: unique save helpers ======== */
+async function addIfNew(colRef, e164){
+  if (!e164) return;
+  try{
+    const qy = query(colRef, where("whatsapp","==", e164), limit(1));
+    const snap = await getDocs(qy);
+    if (snap.empty){
+      await addDoc(colRef, { whatsapp:e164, timestamp: serverTimestamp() });
+    }
+  }catch(e){ console.error("addIfNew:", e); }
+}
+async function saveCustomerWhatsAppUnique(shopName, e164){
+  const colRef = collection(db,"Groceries","Shops",shopName,"customers");
+  return addIfNew(colRef, e164);
+}
+async function saveBuyerUnique(shopName, e164){
+  const colRef = collection(db,"Groceries","Shops",shopName,"buyers");
+  return addIfNew(colRef, e164);
+}
+async function fetchBuyersCount(shopName){
+  try{
+    const colRef = collection(db,"Groceries","Shops",shopName,"buyers");
+    const snap = await getDocs(colRef);
+    return snap.size||0;
+  }catch{ return 0; }
+}
+
 /* ======== Buyers cache (for instant home render) ======== */
 const CACHE_KEY = "pkm_grocery_buyers";
 function cacheData(data){ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
@@ -568,6 +555,34 @@ async function buildBuyersCountMap(){
   const entries = await Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
   buyersCountMap = Object.fromEntries(entries);
   cacheData(buyersCountMap);
+}
+
+/* ======== Per-shop draft items (modal) ======== */
+const SHOP_DRAFT_KEY = "pkm_shop_drafts";
+function readDrafts(){
+  try{ return JSON.parse(sessionStorage.getItem(SHOP_DRAFT_KEY)) || {}; }catch{ return {}; }
+}
+function writeDrafts(obj){
+  sessionStorage.setItem(SHOP_DRAFT_KEY, JSON.stringify(obj||{}));
+}
+function loadShopDraft(shopName){
+  const all = readDrafts();
+  return Array.isArray(all[shopName]) ? all[shopName] : [];
+}
+function saveShopDraft(shopName){
+  const all = readDrafts();
+  const rows = [...itemsHolder.querySelectorAll(".item-card")];
+  all[shopName] = rows.map(r=>{
+    const name=(r.querySelector(".item-name").value||"").trim();
+    let qty=parseInt(r.querySelector(".qty-input").value||"1",10); if(!qty||qty<1) qty=1;
+    return { name, qty };
+  }).filter(x=>x.name);
+  writeDrafts(all);
+}
+function clearShopDraft(shopName){
+  const all = readDrafts();
+  delete all[shopName];
+  writeDrafts(all);
 }
 
 /* ======== Cards ======== */
@@ -674,7 +689,16 @@ function buildCarousel(images){
 function openForm(){
   formModal.classList.add("show");
   formError.style.display="none";
-  if (itemsHolder.children.length===0) addRow();
+
+  // Load per-shop draft into the modal
+  itemsHolder.innerHTML = "";
+  const draft = loadShopDraft(currentShop.name);
+  if (draft.length){
+    draft.forEach(d => addRow(d.name, String(d.qty)));
+  }else{
+    addRow();
+  }
+
   const first=itemsHolder.querySelector(".item-card .item-name");
   if (first) setTimeout(()=>first.focus(),50);
 }
@@ -718,15 +742,18 @@ function addRow(itemVal="", qtyVal="1"){
   const qtyIn =card.querySelector(".qty-input");
   const nameEl=card.querySelector(".item-name");
 
+  const persistDraft = ()=>{ if (currentShop) saveShopDraft(currentShop.name); };
+
   delBtn.addEventListener("click",()=>{
     const nextFocus = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
                    || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
-    card.remove(); renumberRows(); restoreFocusSoon(nextFocus||stickyFocusEl);
+    card.remove(); renumberRows(); persistDraft(); restoreFocusSoon(nextFocus||stickyFocusEl);
   });
-  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); restoreFocusSoon(qtyIn); });
-  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); restoreFocusSoon(qtyIn); });
-  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); });
-  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); });
+  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persistDraft(); restoreFocusSoon(qtyIn); });
+  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persistDraft(); restoreFocusSoon(qtyIn); });
+  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persistDraft(); });
+  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persistDraft(); });
+  nameEl.addEventListener("input", persistDraft);
 
   itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0);
 }
@@ -734,6 +761,12 @@ addRowBtn.addEventListener("click",()=>{
   const last=itemsHolder.querySelector(".item-card:last-child .item-name");
   if (last && !last.value.trim()){ last.focus(); return; }
   addRow(); const newest=itemsHolder.querySelector(".item-card:last-child .item-name"); restoreFocusSoon(newest);
+});
+clearAllBtn.addEventListener("click", ()=>{
+  if (!currentShop) return;
+  itemsHolder.innerHTML = "";
+  addRow(); // keep one empty row
+  clearShopDraft(currentShop.name);
 });
 
 /* ======== Phone utils ======== */
@@ -749,19 +782,6 @@ function normalizeGhanaNumber(input){
   return null;
 }
 
-/* ======== Tabs + search ======== */
-tabs.forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    tabs.forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    renderCards(tab.dataset.cat, searchInput.value);
-  });
-});
-searchInput.addEventListener("input",()=>{
-  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
-  renderCards(active, searchInput.value);
-});
-
 /* ======== Short links in Firestore (cross-device) + 7-day cleanup ======== */
 function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
 
@@ -769,7 +789,6 @@ async function cleanupOldLinks(){
   try{
     const sevenDaysMs = 7*24*60*60*1000;
     const cutoff = new Date(Date.now() - sevenDaysMs);
-    // Fetch a window and prune client-side (serverTimestamp used on create)
     const qy = query(linksCol, orderBy("createdAt","asc"), limit(200));
     const snap = await getDocs(qy);
     const deletions = [];
@@ -793,7 +812,7 @@ async function putShort(data){
     return id;
   }catch(e){
     console.error("putShort error:", e);
-    sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); // fallback (same device)
+    sessionStorage.setItem("pkm_"+id, JSON.stringify(data));
     return id;
   }
 }
@@ -803,7 +822,6 @@ async function getShort(id){
     const snap = await getDoc(doc(linksCol, id));
     if (snap.exists()){
       const data = snap.data();
-      // 7-day TTL check (client-side guard)
       const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
       if (ts && (Date.now() - ts.getTime()) > 7*24*60*60*1000){
         await deleteDoc(doc(linksCol, id));
@@ -812,10 +830,7 @@ async function getShort(id){
       return data.payload || null;
     }
   }catch(e){ console.error("getShort error:", e); }
-  // fallback: same-device
-  try{
-    return JSON.parse(sessionStorage.getItem("pkm_"+id));
-  }catch{ return null; }
+  try{ return JSON.parse(sessionStorage.getItem("pkm_"+id)); }catch{ return null; }
 }
 
 /* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
@@ -823,31 +838,23 @@ submitBtn.addEventListener("click", async ()=>{
   const rows=[...itemsHolder.querySelectorAll(".item-card")];
   const items=rows.map(r=>{
     const name=(r.querySelector(".item-name").value||"").trim();
-    let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
-    if(!qty||qty<1) qty=1;
+    let qty=parseInt(r.querySelector(".qty-input").value||"1",10); if(!qty||qty<1) qty=1;
     return { name, qty };
   }).filter(x=>x.name);
 
   const raw = whatsappInput.value.trim();
   const norm = normalizeGhanaNumber(raw);
-
   if (items.length===0){
-    formError.textContent="Please add at least one item before submitting.";
-    formError.style.display="block";
-    const first=itemsHolder.querySelector(".item-card .item-name");
-    if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
+    formError.textContent="Please add at least one item before submitting."; formError.style.display="block";
+    const first=itemsHolder.querySelector(".item-card .item-name"); if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
     return;
   }
-  if (!norm){
-    formError.textContent="Please enter a valid WhatsApp number.";
-    formError.style.display="block";
-    whatsappInput.focus();
-    return;
-  }
+  if (!norm){ formError.textContent="Please enter your WhatsApp number."; formError.style.display="block"; whatsappInput.focus(); return; }
   formError.style.display="none";
 
   const { e164, wa } = norm;
-  await saveCustomerWhatsApp(currentShop.name, e164);
+  // Save interested customer once per shop (no duplicates)
+  await saveCustomerWhatsAppUnique(currentShop.name, e164);
 
   const adminPayload = {
     type:"admin",
@@ -857,79 +864,77 @@ submitBtn.addEventListener("click", async ()=>{
     items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
     fees: { service:SERVICE_FEE, delivery:DELIVERY_FEE }
   };
-
   const id = await putShort(adminPayload);
   const link = `${location.origin}${location.pathname}?admin=${id}`;
 
-  const msg = `Hello PickMe Services,
-I would like to buy from *${currentShop.name}*.
-
-Open Order: ${link}`;
+  const msg = `Hello PickMe Services,\nI would like to buy from *${currentShop.name}*.\n\nOpen Order: ${link}`;
   const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.location.href = waUrl;
+
+  // keep draft per-shop after submit (do NOT clear)
   formModal.classList.remove("show");
 });
 
-/* ======== ADMIN UI ======== */
-function drawAdminItem(idx, rec, container){
-  const wrap=document.createElement("div");
-  wrap.className="admin-item";
-  wrap.dataset.index=idx;
-  wrap.innerHTML=`
-    <div class="ai-name">${idx+1}. ${escapeHtml(rec.name)}</div>
-    <div class="ai-qty">
-      <button class="qty-btn minus" type="button">−</button>
-      <input class="qty-input" type="number" min="1" step="1" value="${rec.qty}"/>
-      <button class="qty-btn plus" type="button">+</button>
+/* ======== Tabs + search ======== */
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCards(tab.dataset.cat, searchInput.value);
+  });
+});
+searchInput.addEventListener("input",()=>{
+  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
+  renderCards(active, searchInput.value);
+});
+
+/* ======== ADMIN UI (modern cards, qty read-only) ======== */
+function drawAdminItemCard(idx, rec, onChange){
+  const li = document.createElement("div");
+  li.className = "item-card";
+  li.innerHTML = `
+    <div class="item-top" style="align-items:flex-start">
+      <div class="item-num">${idx+1}.</div>
+      <input class="item-name readonly" type="text" readonly value="${escapeAttr(rec.name)}"/>
+      <span class="badge badge-gray" title="Quantity">× ${escapeHtml(String(Math.max(1,parseInt(rec.qty||1,10))))}</span>
     </div>
-    <div class="ai-avail">
-      <button class="avail-toggle ${rec.available?'on':'off'}">${rec.available?'Available':'Not available'}</button>
+    <div class="admin-card-line">
+      <button class="badge ${rec.available?'badge-green':'badge-red'} avail-toggle" type="button">${rec.available?'Available':'Not available'}</button>
+      <div class="price-wrap" style="${rec.available?'':'display:none'}">
+        <input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" value="${rec.price??''}">
+      </div>
+      <div class="subtext">Subtotal: GH₵ <span class="subv">0</span></div>
     </div>
-    <div class="ai-price" ${rec.available?'':'style="display:none"'} >
-      <input type="number" min="0" step="1" placeholder="Unit price (GH₵)" value="${rec.price??''}">
-    </div>
-    <div class="ai-sub">GH₵ <span class="subv">0</span></div>
   `;
-  const minus=wrap.querySelector('.minus');
-  const plus =wrap.querySelector('.plus');
-  const qtyIn=wrap.querySelector('.qty-input');
-  const avail=wrap.querySelector('.avail-toggle');
-  const priceIn=wrap.querySelector('.ai-price input');
-  const subV =wrap.querySelector('.subv');
+  const toggle = li.querySelector(".avail-toggle");
+  const priceIn = li.querySelector(".price-input");
+  const subV = li.querySelector(".subv");
 
   function recalc(){
-    const qty=Math.max(1, parseInt(qtyIn.value||'1',10)); qtyIn.value=qty;
-    const unit= rec.available ? money(priceIn.value||0) : 0;
+    const qty = Math.max(1, parseInt(rec.qty||1,10));
+    const unit= rec.available ? money(priceIn?.value||0) : 0;
     const sub = rec.available ? qty*unit : 0;
-    subV.textContent=sub.toFixed(2).replace(/\.00$/,'');
-    updateTotals();
+    subV.textContent = sub.toFixed(2).replace(/\.00$/,'');
+    onChange && onChange();
   }
 
-  minus.addEventListener('click',()=>{ qtyIn.stepDown(); if(parseInt(qtyIn.value,10)<1) qtyIn.value=1; rec.qty=parseInt(qtyIn.value,10); recalc(); });
-  plus .addEventListener('click',()=>{ qtyIn.stepUp(); rec.qty=parseInt(qtyIn.value,10); recalc(); });
-  qtyIn.addEventListener('input',()=>{ rec.qty=Math.max(1,parseInt(qtyIn.value||'1',10)); recalc(); });
-
-  avail.addEventListener('click',()=>{
-    rec.available=!rec.available;
-    avail.classList.toggle('on',rec.available);
-    avail.classList.toggle('off',!rec.available);
-    avail.textContent=rec.available?'Available':'Not available';
-    if(rec.available){
-      wrap.querySelector('.ai-price').style.display='';
-      priceIn.focus();
-      adminUnavail.removeChild(wrap); adminAvail.appendChild(wrap);
-    }else{
-      wrap.querySelector('.ai-price').style.display='none';
-      priceIn.value=''; rec.price=null;
-      adminAvail.removeChild(wrap); adminUnavail.appendChild(wrap);
-    }
+  toggle.addEventListener("click", ()=>{
+    rec.available = !rec.available;
+    toggle.classList.toggle("badge-green", rec.available);
+    toggle.classList.toggle("badge-red", !rec.available);
+    toggle.textContent = rec.available ? "Available" : "Not available";
+    const wrap = li.querySelector(".price-wrap");
+    if (rec.available){ wrap.style.display=''; priceIn?.focus(); }
+    else { wrap.style.display='none'; if (priceIn) { priceIn.value=''; rec.price=null; } }
     recalc();
   });
 
-  if (priceIn){ priceIn.addEventListener('input',()=>{ rec.price=priceIn.value===''?null:money(priceIn.value); recalc(); }); }
+  if (priceIn){
+    priceIn.addEventListener("input", ()=>{ rec.price = priceIn.value===''?null:money(priceIn.value); recalc(); });
+  }
 
-  container.appendChild(wrap);
   recalc();
+  return li;
 }
 
 function updateTotals(){
@@ -954,10 +959,9 @@ function openAdmin(payload){
     adminShopActions.append(a1,a2);
   }
 
-  adminAvail.innerHTML=''; adminUnavail.innerHTML='';
+  adminItemsGroup.innerHTML='';
   currentAdmin.items.forEach((rec,idx)=>{
-    if (rec.available) drawAdminItem(idx,rec,adminAvail);
-    else drawAdminItem(idx,rec,adminUnavail);
+    adminItemsGroup.appendChild(drawAdminItemCard(idx, rec, updateTotals));
   });
 
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
@@ -966,18 +970,14 @@ function openAdmin(payload){
   feeDeliveryInput.addEventListener('input', updateTotals);
   updateTotals();
 
-  // hide home instantly (no flash)
-  homeHeader.style.display='none'; homeSearch.style.display='none';
-  document.getElementById('tabs').style.display='none';
-  cardsContainer.style.display='none';
-  detailsPanel.classList.remove('show');
-
+  // hide home immediately (no flash)
+  hideHome();
   adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
 closeAdminBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 adminCancelBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 
-/* Admin Done: send customer link via WhatsApp */
+/* Admin Done: send customer link via WhatsApp (includes cust phone) */
 adminDoneBtn.addEventListener('click', async ()=>{
   const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
   const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
@@ -985,6 +985,7 @@ adminDoneBtn.addEventListener('click', async ()=>{
   const customerPayload = {
     type:'order',
     shop: currentAdmin.shop,
+    cust: currentAdmin.cust || null, // carry to customer page for unique buyer count
     items: currentAdmin.items.map(it=>({
       name: it.name,
       qty:  Math.max(1, parseInt(it.qty||1,10)),
@@ -997,88 +998,126 @@ adminDoneBtn.addEventListener('click', async ()=>{
   const link = `${location.origin}${location.pathname}?order=${id}`;
 
   const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
-Open to view: ${link}`;
+  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.\nOpen to view: ${link}`;
   window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
 });
 
-/* ======== CUSTOMER UI ======== */
+/* ======== CUSTOMER UI (modern cards) ======== */
+function drawCustomerItemCard(idx, it){
+  const qty = Math.max(1, parseInt(it.qty||1,10));
+  const available = !!it.available && it.price!=null;
+  const sub = available ? (qty * money(it.price)) : 0;
+  const li = document.createElement("li");
+  li.className = "item-card";
+  li.innerHTML = `
+    <div class="item-top" style="align-items:flex-start">
+      <div class="item-num">${idx+1}.</div>
+      <input class="item-name readonly" type="text" readonly value="${escapeAttr(it.name)}"/>
+      <span class="badge badge-gray">× ${qty}</span>
+      <span class="badge ${available?'badge-green':'badge-red'}">${available?'Available':'Not available'}</span>
+    </div>
+    <div class="admin-card-line" style="margin-top:8px">
+      <div class="subtext">${available ? `Unit: GH₵ ${money(it.price).toFixed(2).replace(/\.00$/,'')}` : `Price: —`}</div>
+      <div class="subtext">Subtotal: GH₵ <span>${available?sub.toFixed(2).replace(/\.00$/,''):'0'}</span></div>
+    </div>
+  `;
+  return li;
+}
+
 function openCustomer(data){
   custShop.textContent = `Order · ${data.shop||''}`;
-  custAvail.innerHTML=''; custUnavail.innerHTML='';
+  custList.innerHTML = '';
 
   let itemsTotal=0;
   (data.items||[]).forEach((it,i)=>{
-    const li=document.createElement('li');
+    const qty = Math.max(1, parseInt(it.qty||1,10));
     if (it.available && it.price!=null){
-      const sub=Math.max(1,parseInt(it.qty||1,10))*money(it.price);
-      itemsTotal+=sub;
-      li.textContent=`${i+1}. ${it.name} × ${it.qty} — GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}`;
-      custAvail.appendChild(li);
-    }else{
-      li.textContent=`${i+1}. ${it.name} × ${it.qty}`;
-      custUnavail.appendChild(li);
+      itemsTotal += qty * money(it.price);
     }
+    custList.appendChild(drawCustomerItemCard(i, it));
   });
   const service=money(data.fees?.service ?? SERVICE_FEE);
   const delivery=money(data.fees?.delivery ?? DELIVERY_FEE);
   custItemsTotal.textContent=itemsTotal.toFixed(2).replace(/\.00$/,'');
   custGrandTotal.textContent=(itemsTotal+service+delivery).toFixed(2).replace(/\.00$/,'');
 
-  homeHeader.style.display='none'; homeSearch.style.display='none';
-  document.getElementById('tabs').style.display='none';
-  cardsContainer.style.display='none';
-  detailsPanel.classList.remove('show');
-
+  hideHome();
   customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
 
-  custPayBtn.onclick = ()=>{ window.location.href = PAYSTACK_LINK; };
+  // Count a buyer only when they proceed to payment; unique per phone per shop
+  custPayBtn.onclick = async ()=>{
+    const shopName = (data.shop||'');
+    const phoneE164 = data.cust || null; // carried from admin payload
+    if (phoneE164) await saveBuyerUnique(shopName, phoneE164);
+    window.location.href = PAYSTACK_LINK;
+  };
   const closeAll=()=>{ customerPanel.style.display='none'; customerPanel.setAttribute('aria-hidden','true'); };
   closeCustomerBtn.onclick=closeAll; custCancelBtn.onclick=closeAll;
 }
 
-/* ======== Router (cross-device short links) ======== */
-async function router(){
-  const url=new URL(location.href);
-  const adminId=url.searchParams.get('admin');
-  const orderId=url.searchParams.get('order');
-
-  // Hide home instantly to avoid flash
+/* ======== Router with Admin Code gate + no-home flash ======== */
+function hideHome(){
   homeHeader.style.display='none';
   homeSearch.style.display='none';
   document.getElementById('tabs').style.display='none';
   cardsContainer.style.display='none';
   detailsPanel.classList.remove('show');
-
-  if (adminId){
-    const payload=await getShort(adminId);
-    if (payload && payload.type==='admin'){
-      // Optional: gate with code (remove if you don't want the prompt)
-      const code = prompt("Enter admin access code:");
-      if (code===ADMIN_CODE){ openAdmin(payload); return; }
-      alert("Incorrect code. Access denied.");
-      location.href=location.pathname; // back to home without query
-      return;
-    }
-  }
-  if (orderId){
-    const payload=await getShort(orderId);
-    if (payload && payload.type==='order'){ openCustomer(payload); return; }
-  }
-  // invalid or none => show home
+}
+function showHome(){
   homeHeader.style.display='';
   homeSearch.style.display='';
   document.getElementById('tabs').style.display='';
   cardsContainer.style.display='';
 }
+/* router(): returns true if it opened admin/customer (so caller won't render home) */
+async function router(){
+  const url=new URL(location.href);
+  const adminId=url.searchParams.get('admin');
+  const orderId=url.searchParams.get('order');
+
+  hideHome(); // prevent flash always
+
+  if (adminId){
+    const payload=await getShort(adminId);
+    if (payload && payload.type==='admin'){
+      const code=prompt("Enter admin access code:");
+      if (code===ADMIN_CODE){ openAdmin(payload); return true; }
+      alert("Incorrect code. Access denied.");
+      history.replaceState({}, "", location.pathname); // remove query
+      showHome();
+      return false;
+    } else {
+      history.replaceState({}, "", location.pathname);
+      showHome();
+      return false;
+    }
+  }
+  if (orderId){
+    const payload=await getShort(orderId);
+    if (payload && payload.type==='order'){ openCustomer(payload); return true; }
+    history.replaceState({}, "", location.pathname);
+    showHome();
+    return false;
+  }
+  // No special link
+  showHome();
+  return false;
+}
 
 /* ======== Init ======== */
 (async()=>{
-  await upsertShopsMeta();     // keep shops info under Groceries root
-  await buildBuyersCountMap(); // populate trusted buyers
-  renderCards("All","");
-  await cleanupOldLinks();     // delete >7-day links
-  await router();              // open admin/customer directly if query present
+  // keep everything snappy: clean links, upsert shop meta, build counts
+  await cleanupOldLinks();
+  await upsertShopsMeta();
+
+  // Build buyers count cache first (may use cached instantly)
+  await buildBuyersCountMap();
+
+  // If link present, open target without flashing home; otherwise render home
+  const opened = await router();
+  if (!opened){
+    renderCards("All","");
+  }
 })();
 </script>
 
