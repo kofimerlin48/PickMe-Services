@@ -486,32 +486,58 @@ function loadItemsForShop(shop){
 function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
 
 /* ======== Firestore customer + buyers (dedup) ======== */
+/* ======== Firestore customer + buyers (dedup + trusted count fix) ======== */
 async function saveCustomerWhatsApp(shopName, phoneE164){
   try{
-    const custCol = collection(db,"Groceries","Shops",shopName,"customers");
-    // Use deterministic doc id from normalized phone so we never duplicate
-    const id = phoneE164.replace(/[^\d+]/g,'');
-    await setDoc(doc(custCol, id), { whatsapp:phoneE164, timestamp: serverTimestamp() }, { merge: true });
-  }catch(e){ console.error(e); }
+    if(!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g,'');
+    const custCol = collection(db, "Groceries", "Shops", shopName, "customers");
+    await setDoc(
+      doc(custCol, clean),
+      {
+        whatsapp: phoneE164,
+        timestamp: serverTimestamp()
+      },
+      { merge: true }
+    );
+  }catch(e){
+    console.error("saveCustomerWhatsApp error:", e);
+  }
 }
+
 async function saveBuyerUnique(shopName, phoneE164){
-  if(!phoneE164) return; // if we somehow don't have it, skip
   try{
-    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
-    const id = phoneE164.replace(/[^\d+]/g,''); // one doc per unique buyer per shop
-    const ref = doc(buyersCol, id);
+    if(!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g,'');
+    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
+    const ref = doc(buyersCol, clean);
     const snap = await getDoc(ref);
     if (!snap.exists()){
-      await setDoc(ref, { whatsapp: phoneE164, timestamp: serverTimestamp() });
+      await setDoc(ref, {
+        whatsapp: phoneE164,
+        timestamp: serverTimestamp()
+      });
+      console.log(`✅ Added buyer for ${shopName}:`, phoneE164);
+    } else {
+      console.log(`⚠️ Buyer already exists for ${shopName}`);
     }
-  }catch(e){ console.error(e); }
+  }catch(e){
+    console.error("saveBuyerUnique error:", e);
+  }
 }
+
 async function fetchBuyersCount(shopName){
   try{
-    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
+    if(!shopName) return 0;
+    const buyersCol = collection(db, "Groceries", "Shops", shopName, "buyers");
     const snap = await getDocs(buyersCol);
-    return snap.size||0;
-  }catch{ return 0; }
+    const count = snap.size || 0;
+    console.log(`🔢 ${shopName} has ${count} buyers`);
+    return count;
+  }catch(e){
+    console.error("fetchBuyersCount error:", e);
+    return 0;
+  }
 }
 
 /* ======== Persist shops meta under Groceries root ======== */
