@@ -30,7 +30,7 @@
 <!-- =========HEADER CODE ENDS HERE ================== -->
 
 <style>
-:root{ --theme-color:#c12872; --card-bg:#fff; --soft:#f7f7f8; --line:#eee; --text:#333; }
+:root{ --theme-color:#c12872; }
 
 *{box-sizing:border-box}
 * { -webkit-tap-highlight-color: transparent; }
@@ -55,11 +55,10 @@ body{
 .tab{padding:10px 14px;border-radius:999px;background:#fff;border:1px solid #eee;cursor:pointer;white-space:nowrap;font-size:14px;}
 .tab.active{color:#fff;background:var(--theme-color);border-color:var(--theme-color);}
 
-/* EXTRA BOTTOM SPACE so footer iframe doesn't block last card */
+/* Cards grid */
 .cards-container{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:70px;padding:20px;
-  padding-bottom:160px;
+  gap:70px;padding:20px;padding-bottom:160px;
 }
 .card{
   position:relative;border-radius:15px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.1);
@@ -70,14 +69,11 @@ body{
 .card-content{position:relative;color:#fff;padding:15px;width:100%;display:flex;flex-direction:column;justify-content:space-between;z-index:1}
 .card-title{font-weight:bold;font-size:22px;margin-bottom:4px}
 .card-description{font-size:13px;opacity:.95;margin-bottom:4px}
-
-/* trusted buyers + button line */
 .card-lower { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
 .card-meta { font-size:12px; opacity:0.9; margin:0; }
-
 .btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
 
-/* ============ DETAILS PANEL ============ */
+/* Details */
 #detailsPanel{
   position:fixed;top:0;right:-100%;width:100%;max-width:1100px;height:100%;
   background:#fff;z-index:9999;overflow-y:auto;transition:right .5s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
@@ -89,29 +85,21 @@ body{
   font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .5s ease;
 }
 #detailsPanel.show #detailsBackBtn{right:15px;}
-
-/* Shorter banner with darker overlay (full readability) */
 .banner{
   position:relative;width:100%;height:35vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
   background:#333 center/cover no-repeat;
 }
-.banner::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,.70), rgba(0,0,0,.80));
-}
+.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,.70), rgba(0,0,0,.80))}
 .banner-text{position:relative;z-index:2}
 .banner-text h2{font-size:16px;margin:0 0 6px}
 .banner-text h1{font-size:26px;margin:0 0 8px}
 .banner-text p{font-size:13px;margin:0;opacity:.95}
-
 .details-content{padding:18px;max-width:1100px;margin:0 auto}
 .section-title{font-weight:bold;margin:8px 0 12px;color:#333}
 
 /* Carousel */
 .carousel{position:relative;width:100%;height:240px;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.carousel img{
-  position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;
-}
+.carousel img{position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;}
 .carousel img.active{left:0;opacity:1}
 .carousel .nav{position:absolute;top:50%;transform:translateY(-50%);font-size:24px;color:#fff;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:50%;cursor:pointer;user-select:none}
 .carousel .nav.left{left:10px}
@@ -120,22 +108,19 @@ body{
 .dot{width:8px;height:8px;border-radius:50%;background:#ddd}
 .dot.active{background:var(--theme-color)}
 
-/* Primary button */
-.btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
-
 /* Action row */
 .action-row{display:flex;justify-content:center;margin:22px 0 120px;}
+.btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
 
 /* Modal form */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
 .modal.show{display:flex}
 .modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
-.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.modal-header .header-actions{display:flex;gap:8px}
+.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
 .modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
 
-/* Reusable modern “card” for items (used by modal, admin, customer) */
+/* item card layout (modern) */
 .item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
   padding:12px 12px 10px;margin-bottom:12px;
@@ -146,47 +131,26 @@ body{
   flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;
   transition:border-color .2s, box-shadow .2s;
 }
-.item-name.readonly{background:#fafafa;border-bottom-color:#f0f0f0;cursor:not-allowed}
 .item-name::placeholder{color:#aaa}
 .item-name:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
-
-/* dustbin icon always visible (inline SVG) */
-.item-del{
-  margin-left:8px;background:var(--theme-color);border:none;color:#fff;border-radius:50%;
-  width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;z-index:2;
-}
-.item-del svg{width:20px;height:20px;fill:#fff;display:block;pointer-events:none;}
-
-/* Quantity section (modal only) */
+.item-del{margin-left:8px;background:var(--theme-color);border:none;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.item-del svg{width:20px;height:20px;fill:#fff;display:block}
 .item-qty{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
 .qty-label{font-size:12px;color:#666;margin-left:4px;}
 .qty-controls{display:flex;align-items:center;gap:8px;}
-.qty-btn{ width:38px;height:38px;border:none;border-radius:8px;background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer; }
-.qty-btn:active{filter:brightness(0.9);}
-.qty-input{
-  width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;
+.qty-btn{ width:38px;height:38px;border:none;border-radius:8px;background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer;}
+.qty-input{width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;}
+.small-note{font-size:12px;color:#666;margin:8px 0 0}
+.whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+#whatsappInput{
+  padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px;
   transition:border-color .2s, box-shadow .2s;
 }
-.qty-input:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
-.qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.qty-input[type=number]{-moz-appearance:textfield}
+#whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
+.error{color:#b00020;font-size:13px;margin-top:8px;display:none}
 
-/* Info tags */
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px}
-.badge-gray{background:#f1f3f5;color:#333;border:1px solid #e5e7eb;}
-.badge-green{background:#e9fff1;color:#146c2e;border:1px solid #b7e7c5;}
-.badge-red{background:#fff3f3;color:#8a1c1c;border:1px solid #f0c3c3;}
-.badge-purple{background:#f3e8ff;color:#5b21b6;border:1px solid #e9d5ff;}
-
-/* Admin / Customer sections share cards */
-.group-title{font-weight:700;margin:10px 0 8px;}
-.group{display:grid;grid-template-columns:1fr;gap:10px}
-
-/* Admin (Hidden) Panel */
-#adminPanel{
-  position:fixed; inset:0; background:#fff; z-index:10002; display:none;
-  overflow-y:auto; padding:16px 16px 90px;
-}
+/* Admin panel */
+#adminPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 #adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
 #adminPanel .admin-top h2{margin:0; font-size:18px;}
 #adminPanel .close-admin{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
@@ -194,35 +158,42 @@ body{
 .admin-shop-actions a{display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:8px; text-decoration:none; color:#fff; font-size:14px;}
 .call-btn{background:#0a7d0a;}
 .wa-btn{background:#25D366;}
-.admin-card-line{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
-.price-input{width:140px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}
-.subtext{font-size:13px;color:#444}
 
-/* Admin totals / actions */
-.admin-fee-row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
-.fee-input{display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #eee; border-radius:8px; padding:6px 8px;}
-.fee-input input{width:90px; border:none; outline:none; font-weight:600;}
-.admin-totals{margin-top:10px; padding-top:8px; border-top:1px dashed #ddd;}
-.admin-totals div{margin:6px 0;}
-.admin-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px;}
-.btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
-.btn-done{background:var(--theme-color); color:#fff;}
-.btn-cancel{background:#777; color:#fff;}
+.admin-section{margin:10px 0 16px;}
+.group-title{font-weight:700; margin:10px 0 8px;}
 
-/* Customer (Hidden) Panel */
-#customerPanel{
-  position:fixed; inset:0; background:#fff; z-index:10002; display:none;
-  overflow-y:auto; padding:16px 16px 90px;
+/* Admin item card (modern, qty read-only) */
+.admin-item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:10px;
 }
+.admin-row-top{display:flex;align-items:center;gap:10px}
+.admin-item-num{font-weight:700;min-width:22px;text-align:right;color:#333}
+.admin-item-name{flex:1;border:none;border-bottom:1px dashed #e7e7e7;padding:6px 0;font-weight:600;pointer-events:none;background:transparent}
+.admin-qty-pill{border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:13px;color:#333;background:#fafafa}
+.admin-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.avail-toggle{padding:8px 10px;border-radius:999px;border:1px solid #ddd;cursor:pointer;background:#f7f7f7;font-size:13px;}
+.avail-toggle.on{background:#e9fff1;border-color:#b7e7c5;color:#146c2e;}
+.avail-toggle.off{background:#fff3f3;border-color:#f0c3c3;color:#8a1c1c;}
+.price-input{width:140px;padding:8px 10px;border:1px solid #ddd;border-radius:8px;}
+.subtotal{margin-left:auto;font-weight:700}
+
+/* Customer panel (modern cards) */
+#customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 .cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
 .cust-top h2{margin:0; font-size:18px;}
 .cust-close{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
-.cust-card{border:1px solid #eee; border-radius:10px; padding:12px; margin:10px 0;}
-.cust-items h3{margin:0 0 8px 0; font-size:16px;}
-.cust-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.cust-totals{margin-top:10px; border-top:1px dashed #ddd; padding-top:10px; font-weight:600;}
+.cust-group{margin:10px 0 16px;}
+.cust-group h3{margin:0 0 8px 0; font-size:16px;}
+.cust-items-wrap{display:grid;gap:10px}
+.cust-item-card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);padding:12px;display:flex;align-items:center;gap:10px}
+.cust-item-num{font-weight:700;min-width:22px;text-align:right}
+.cust-item-name{flex:1}
+.cust-item-meta{font-size:13px;color:#444}
+.cust-item-sub{font-weight:700;margin-left:auto}
+.cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
 .cust-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
-.cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer; }
+.cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
 .cust-pay{background:var(--theme-color); color:#fff;}
 .cust-cancel{background:#777; color:#fff;}
 
@@ -232,6 +203,7 @@ body{
 </head>
 <body>
 
+<!-- ===== Home ===== -->
 <div class="page-header" id="homeHeader">
   <h1></h1>
   <p>Find grocery shops around you and send your list</p>
@@ -276,14 +248,12 @@ body{
   <div class="modal-card">
     <div class="modal-header">
       <span>List your items</span>
-      <div class="header-actions">
-        <button class="btn-primary" id="clearAllBtn" style="background:#ef4444">Clear all</button>
-      </div>
+      <button class="btn-primary" id="clearAllBtn" style="background:#f33">Clear all</button>
     </div>
     <div class="modal-body">
       <div id="itemsHolder"></div>
       <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">Add another item</button>
-      <div class="whats-row" style="margin-top:12px">
+      <div class="whats-row">
         <input type="tel" id="whatsappInput" placeholder="Your WhatsApp (+233… or 0…)" />
         <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
       </div>
@@ -307,9 +277,12 @@ body{
   </div>
 
   <div class="admin-section">
-    <div class="group-title">Items</div>
-    <div id="adminItemsGroup" class="group"></div>
-    <div class="subtext">Tap to toggle availability. Enter unit price for available items. Quantity is set by customer.</div>
+    <div class="group-title">Available items</div>
+    <div id="adminAvail"></div>
+  </div>
+  <div class="admin-section">
+    <div class="group-title">Unavailable items</div>
+    <div id="adminUnavail"></div>
   </div>
 
   <div class="admin-section">
@@ -338,13 +311,18 @@ body{
     <button class="cust-close" id="closeCustomerBtn">Close</button>
   </div>
 
-  <div class="cust-card cust-items">
-    <h3>Items</h3>
-    <ul id="custList" class="cust-list"></ul>
-    <div class="cust-totals">
-      <div>Items total: GH₵ <span id="custItemsTotal">0</span></div>
-      <div>Grand total (with fees): GH₵ <span id="custGrandTotal">0</span></div>
-    </div>
+  <div class="cust-group">
+    <h3>Available items</h3>
+    <div id="custAvail" class="cust-items-wrap"></div>
+  </div>
+  <div class="cust-group">
+    <h3>Unavailable items</h3>
+    <div id="custUnavail" class="cust-items-wrap"></div>
+  </div>
+
+  <div class="cust-totals">
+    <div>Items total: GH₵ <span id="custItemsTotal">0</span></div>
+    <div>Grand total (with fees): GH₵ <span id="custGrandTotal">0</span></div>
   </div>
 
   <div class="cust-actions">
@@ -353,14 +331,14 @@ body{
   </div>
 </div>
 
-  <!-- ========= FIREBASE + PAGE LOGIC ========= -->
+<!-- ========= FIREBASE + PAGE LOGIC ========= -->
 <script type="module">
 /* Firebase */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc,
-  serverTimestamp, Timestamp, query, where, orderBy, limit
+  serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -374,18 +352,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ======== ADMIN ACCESS CODE (hard-coded) ======== */
+/* ======== Constants ======== */
 const ADMIN_CODE = "123456";
-
-/* ======== FEES (hard-coded but editable) ======== */
 const SERVICE_FEE  = 5;   // GH₵
 const DELIVERY_FEE = 15;  // GH₵
-
-/* ======== PICKME + PAYSTACK ======== */
 const PICKME_WHATSAPP = "233534742142"; // no '+'
 const PAYSTACK_LINK   = "https://paystack.com/pay/example-link";
 
-/* ======== SHOPS (keep/edit here) ======== */
+/* ======== Hardcoded shops ======== */
 const GROCERY_DATA = [
   {
     name: "E&G Supermarket",
@@ -430,6 +404,15 @@ const GROCERY_DATA = [
   }
 ];
 
+/* ========= Groceries root collections/paths =========
+   - Shortlinks:  Groceries / Links / items / {id}
+   - Shops meta:  Groceries / ShopsMeta / items / {shopName}
+   - Buyers:      Groceries / Shops / {shopName} / buyers
+   - Customers:   Groceries / Shops / {shopName} / customers
+*/
+const linksCol  = collection(db, "Groceries", "Links", "items");
+const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
+
 /* ======== DOM ======== */
 const cardsContainer  = document.getElementById("cardsContainer");
 const searchInput     = document.getElementById("searchInput");
@@ -458,7 +441,8 @@ const formError     = document.getElementById("formError");
 /* Admin panel */
 const adminPanel      = document.getElementById("adminPanel");
 const adminShop       = document.getElementById("adminShop");
-const adminItemsGroup = document.getElementById("adminItemsGroup");
+const adminAvail      = document.getElementById("adminAvail");
+const adminUnavail    = document.getElementById("adminUnavail");
 const feeServiceInput = document.getElementById("feeServiceInput");
 const feeDeliveryInput= document.getElementById("feeDeliveryInput");
 const adminItemsTotal = document.getElementById("adminItemsTotal");
@@ -472,7 +456,8 @@ const adminShopActions= document.getElementById("adminShopActions");
 const customerPanel   = document.getElementById("customerPanel");
 const closeCustomerBtn= document.getElementById("closeCustomerBtn");
 const custShop        = document.getElementById("custShop");
-const custList        = document.getElementById("custList");
+const custAvail       = document.getElementById("custAvail");
+const custUnavail     = document.getElementById("custUnavail");
 const custItemsTotal  = document.getElementById("custItemsTotal");
 const custGrandTotal  = document.getElementById("custGrandTotal");
 const custPayBtn      = document.getElementById("custPay");
@@ -488,17 +473,48 @@ function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,
 function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 function money(n){ return Number(n||0); }
 function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"T23:59:59"); }
+function shopKey(shop){ return `pkm_items_${shop}`; }
+function serializeItems(){ return [...itemsHolder.querySelectorAll(".item-card")].map(r=>({ name:(r.querySelector(".item-name").value||"").trim(), qty: parseInt(r.querySelector(".qty-input").value||"1",10)||1 })); }
+function loadItemsForShop(shop){
+  itemsHolder.innerHTML="";
+  try{
+    const raw = sessionStorage.getItem(shopKey(shop));
+    const arr = raw? JSON.parse(raw): [];
+    if (arr.length) arr.forEach(it=>addRow(it.name, String(it.qty)));
+  }catch{}
+}
+function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
 
-/* ========= Groceries root collections/paths =========
-   - Shortlinks:  Groceries / Links / items / {id}
-   - Shops meta:  Groceries / ShopsMeta / items / {shopName}
-   - Buyers:      Groceries / Shops / {shopName} / buyers
-   - Customers:   Groceries / Shops / {shopName} / customers
-*/
-const linksCol  = collection(db, "Groceries", "Links", "items");
-const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
+/* ======== Firestore customer + buyers (dedup) ======== */
+async function saveCustomerWhatsApp(shopName, phoneE164){
+  try{
+    const custCol = collection(db,"Groceries","Shops",shopName,"customers");
+    // Use deterministic doc id from normalized phone so we never duplicate
+    const id = phoneE164.replace(/[^\d+]/g,'');
+    await setDoc(doc(custCol, id), { whatsapp:phoneE164, timestamp: serverTimestamp() }, { merge: true });
+  }catch(e){ console.error(e); }
+}
+async function saveBuyerUnique(shopName, phoneE164){
+  if(!phoneE164) return; // if we somehow don't have it, skip
+  try{
+    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
+    const id = phoneE164.replace(/[^\d+]/g,''); // one doc per unique buyer per shop
+    const ref = doc(buyersCol, id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()){
+      await setDoc(ref, { whatsapp: phoneE164, timestamp: serverTimestamp() });
+    }
+  }catch(e){ console.error(e); }
+}
+async function fetchBuyersCount(shopName){
+  try{
+    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
+    const snap = await getDocs(buyersCol);
+    return snap.size||0;
+  }catch{ return 0; }
+}
 
-/* ======== Upsert shops meta under Groceries root ======== */
+/* ======== Persist shops meta under Groceries root ======== */
 async function upsertShopsMeta(){
   try{
     await Promise.all(GROCERY_DATA.map(async shop=>{
@@ -517,78 +533,24 @@ async function upsertShopsMeta(){
   }catch(e){ console.warn("shops meta upsert failed:", e); }
 }
 
-/* ======== Firestore: unique save helpers ======== */
-async function addIfNew(colRef, e164){
-  if (!e164) return;
-  try{
-    const qy = query(colRef, where("whatsapp","==", e164), limit(1));
-    const snap = await getDocs(qy);
-    if (snap.empty){
-      await addDoc(colRef, { whatsapp:e164, timestamp: serverTimestamp() });
-    }
-  }catch(e){ console.error("addIfNew:", e); }
-}
-async function saveCustomerWhatsAppUnique(shopName, e164){
-  const colRef = collection(db,"Groceries","Shops",shopName,"customers");
-  return addIfNew(colRef, e164);
-}
-async function saveBuyerUnique(shopName, e164){
-  const colRef = collection(db,"Groceries","Shops",shopName,"buyers");
-  return addIfNew(colRef, e164);
-}
-async function fetchBuyersCount(shopName){
-  try{
-    const colRef = collection(db,"Groceries","Shops",shopName,"buyers");
-    const snap = await getDocs(colRef);
-    return snap.size||0;
-  }catch{ return 0; }
-}
-
 /* ======== Buyers cache (for instant home render) ======== */
 const CACHE_KEY = "pkm_grocery_buyers";
-function cacheData(data){ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
-function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch{return null;} }
+function cacheBuyers(data){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch{} }
+function loadBuyersCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch{return null;} }
 
 async function buildBuyersCountMap(){
-  const cache = loadCache();
+  const cache = loadBuyersCache();
   if(cache) buyersCountMap = cache;
+  // Render immediately with cache (if any), then refresh actual counts:
   const entries = await Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
   buyersCountMap = Object.fromEntries(entries);
-  cacheData(buyersCountMap);
-}
-
-/* ======== Per-shop draft items (modal) ======== */
-const SHOP_DRAFT_KEY = "pkm_shop_drafts";
-function readDrafts(){
-  try{ return JSON.parse(sessionStorage.getItem(SHOP_DRAFT_KEY)) || {}; }catch{ return {}; }
-}
-function writeDrafts(obj){
-  sessionStorage.setItem(SHOP_DRAFT_KEY, JSON.stringify(obj||{}));
-}
-function loadShopDraft(shopName){
-  const all = readDrafts();
-  return Array.isArray(all[shopName]) ? all[shopName] : [];
-}
-function saveShopDraft(shopName){
-  const all = readDrafts();
-  const rows = [...itemsHolder.querySelectorAll(".item-card")];
-  all[shopName] = rows.map(r=>{
-    const name=(r.querySelector(".item-name").value||"").trim();
-    let qty=parseInt(r.querySelector(".qty-input").value||"1",10); if(!qty||qty<1) qty=1;
-    return { name, qty };
-  }).filter(x=>x.name);
-  writeDrafts(all);
-}
-function clearShopDraft(shopName){
-  const all = readDrafts();
-  delete all[shopName];
-  writeDrafts(all);
+  cacheBuyers(buyersCountMap);
 }
 
 /* ======== Cards ======== */
 function renderCards(activeCategory="All", term=""){
   cardsContainer.innerHTML = "";
-  const q = term.trim().toLowerCase();
+  const q = (term||"").trim().toLowerCase();
 
   const data = [...GROCERY_DATA]
     .filter(s => !isExpired(s.expiry))
@@ -636,6 +598,8 @@ function openShop(shop){
   shopNameEl.textContent = shop.name;
   shopSloganEl.textContent = shop.slogan || "";
   buildCarousel(shop.samples||[]);
+  // Load per-shop saved items
+  loadItemsForShop(shop.name);
   detailsPanel.classList.add("show");
 }
 detailsBackBtn.addEventListener("click",()=>detailsPanel.classList.remove("show"));
@@ -685,20 +649,11 @@ function buildCarousel(images){
   });
 }
 
-/* ======== Modal (items) + keyboard stability ======== */
+/* ======== Modal (items) + keyboard stability + per-shop save ======== */
 function openForm(){
   formModal.classList.add("show");
   formError.style.display="none";
-
-  // Load per-shop draft into the modal
-  itemsHolder.innerHTML = "";
-  const draft = loadShopDraft(currentShop.name);
-  if (draft.length){
-    draft.forEach(d => addRow(d.name, String(d.qty)));
-  }else{
-    addRow();
-  }
-
+  if (itemsHolder.children.length===0) addRow();
   const first=itemsHolder.querySelector(".item-card .item-name");
   if (first) setTimeout(()=>first.focus(),50);
 }
@@ -742,20 +697,20 @@ function addRow(itemVal="", qtyVal="1"){
   const qtyIn =card.querySelector(".qty-input");
   const nameEl=card.querySelector(".item-name");
 
-  const persistDraft = ()=>{ if (currentShop) saveShopDraft(currentShop.name); };
+  const persist=()=>{ if(currentShop) saveItemsForShop(currentShop.name); };
 
   delBtn.addEventListener("click",()=>{
     const nextFocus = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
                    || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
-    card.remove(); renumberRows(); persistDraft(); restoreFocusSoon(nextFocus||stickyFocusEl);
+    card.remove(); renumberRows(); persist(); restoreFocusSoon(nextFocus||stickyFocusEl);
   });
-  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persistDraft(); restoreFocusSoon(qtyIn); });
-  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persistDraft(); restoreFocusSoon(qtyIn); });
-  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persistDraft(); });
-  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persistDraft(); });
-  nameEl.addEventListener("input", persistDraft);
+  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persist(); restoreFocusSoon(qtyIn); });
+  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persist(); restoreFocusSoon(qtyIn); });
+  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persist(); });
+  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persist(); });
+  nameEl.addEventListener("input", persist);
 
-  itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0);
+  itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0); persist();
 }
 addRowBtn.addEventListener("click",()=>{
   const last=itemsHolder.querySelector(".item-card:last-child .item-name");
@@ -764,12 +719,11 @@ addRowBtn.addEventListener("click",()=>{
 });
 clearAllBtn.addEventListener("click", ()=>{
   if (!currentShop) return;
-  itemsHolder.innerHTML = "";
-  addRow(); // keep one empty row
-  clearShopDraft(currentShop.name);
+  itemsHolder.innerHTML="";
+  renumberRows();
+  sessionStorage.removeItem(shopKey(currentShop.name));
 });
 
-/* ======== Phone utils ======== */
 function normalizeGhanaNumber(input){
   let s=String(input).trim().replace(/[\s\-]/g,'');
   if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
@@ -781,6 +735,19 @@ function normalizeGhanaNumber(input){
   if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
   return null;
 }
+
+/* ======== Tabs + search ======== */
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCards(tab.dataset.cat, searchInput.value);
+  });
+});
+searchInput.addEventListener("input",()=>{
+  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
+  renderCards(active, searchInput.value);
+});
 
 /* ======== Short links in Firestore (cross-device) + 7-day cleanup ======== */
 function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
@@ -812,11 +779,10 @@ async function putShort(data){
     return id;
   }catch(e){
     console.error("putShort error:", e);
-    sessionStorage.setItem("pkm_"+id, JSON.stringify(data));
+    sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); // fallback (same device)
     return id;
   }
 }
-
 async function getShort(id){
   try{
     const snap = await getDoc(doc(linksCol, id));
@@ -830,7 +796,9 @@ async function getShort(id){
       return data.payload || null;
     }
   }catch(e){ console.error("getShort error:", e); }
-  try{ return JSON.parse(sessionStorage.getItem("pkm_"+id)); }catch{ return null; }
+  try{
+    return JSON.parse(sessionStorage.getItem("pkm_"+id));
+  }catch{ return null; }
 }
 
 /* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
@@ -838,103 +806,105 @@ submitBtn.addEventListener("click", async ()=>{
   const rows=[...itemsHolder.querySelectorAll(".item-card")];
   const items=rows.map(r=>{
     const name=(r.querySelector(".item-name").value||"").trim();
-    let qty=parseInt(r.querySelector(".qty-input").value||"1",10); if(!qty||qty<1) qty=1;
+    let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
+    if(!qty||qty<1) qty=1;
     return { name, qty };
   }).filter(x=>x.name);
 
   const raw = whatsappInput.value.trim();
   const norm = normalizeGhanaNumber(raw);
+
   if (items.length===0){
-    formError.textContent="Please add at least one item before submitting."; formError.style.display="block";
-    const first=itemsHolder.querySelector(".item-card .item-name"); if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
+    formError.textContent="Please add at least one item before submitting.";
+    formError.style.display="block";
+    const first=itemsHolder.querySelector(".item-card .item-name");
+    if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
     return;
   }
-  if (!norm){ formError.textContent="Please enter your WhatsApp number."; formError.style.display="block"; whatsappInput.focus(); return; }
+  if (!norm){
+    formError.textContent="Please enter a valid WhatsApp number.";
+    formError.style.display="block";
+    whatsappInput.focus();
+    return;
+  }
   formError.style.display="none";
 
-  const { e164, wa } = norm;
-  // Save interested customer once per shop (no duplicates)
-  await saveCustomerWhatsAppUnique(currentShop.name, e164);
+  const { e164 } = norm;
+  await saveCustomerWhatsApp(currentShop.name, e164);
 
   const adminPayload = {
     type:"admin",
     shop: currentShop.name,
     shopPhone: currentShop.phone||"",
-    cust: e164,
+    cust: e164, // carry forward to customer link so we can count unique buyer later
     items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
     fees: { service:SERVICE_FEE, delivery:DELIVERY_FEE }
   };
+
   const id = await putShort(adminPayload);
   const link = `${location.origin}${location.pathname}?admin=${id}`;
 
-  const msg = `Hello PickMe Services,\nI would like to buy from *${currentShop.name}*.\n\nOpen Order: ${link}`;
+  const msg = `Hello PickMe Services,
+I would like to buy from *${currentShop.name}*.
+
+Open Order: ${link}`;
   const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.location.href = waUrl;
 
-  // keep draft per-shop after submit (do NOT clear)
+  // persist per-shop items
+  saveItemsForShop(currentShop.name);
   formModal.classList.remove("show");
 });
 
-/* ======== Tabs + search ======== */
-tabs.forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    tabs.forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    renderCards(tab.dataset.cat, searchInput.value);
-  });
-});
-searchInput.addEventListener("input",()=>{
-  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
-  renderCards(active, searchInput.value);
-});
-
-/* ======== ADMIN UI (modern cards, qty read-only) ======== */
-function drawAdminItemCard(idx, rec, onChange){
-  const li = document.createElement("div");
-  li.className = "item-card";
-  li.innerHTML = `
-    <div class="item-top" style="align-items:flex-start">
-      <div class="item-num">${idx+1}.</div>
-      <input class="item-name readonly" type="text" readonly value="${escapeAttr(rec.name)}"/>
-      <span class="badge badge-gray" title="Quantity">× ${escapeHtml(String(Math.max(1,parseInt(rec.qty||1,10))))}</span>
+/* ======== ADMIN UI (modern, qty read-only) ======== */
+function drawAdminCard(idx, rec, container){
+  const wrap=document.createElement("div");
+  wrap.className="admin-item-card";
+  wrap.dataset.index=idx;
+  wrap.innerHTML=`
+    <div class="admin-row-top">
+      <div class="admin-item-num">${idx+1}.</div>
+      <input class="admin-item-name" value="${escapeAttr(rec.name)}" readonly />
+      <div class="admin-qty-pill">Qty: ${rec.qty}</div>
     </div>
-    <div class="admin-card-line">
-      <button class="badge ${rec.available?'badge-green':'badge-red'} avail-toggle" type="button">${rec.available?'Available':'Not available'}</button>
-      <div class="price-wrap" style="${rec.available?'':'display:none'}">
-        <input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" value="${rec.price??''}">
-      </div>
-      <div class="subtext">Subtotal: GH₵ <span class="subv">0</span></div>
+    <div class="admin-controls">
+      <button class="avail-toggle ${rec.available?'on':'off'}">${rec.available?'Available':'Not available'}</button>
+      <input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" ${rec.available?'':'style="display:none"'} value="${rec.price??''}">
+      <div class="subtotal">GH₵ <span class="subv">0</span></div>
     </div>
   `;
-  const toggle = li.querySelector(".avail-toggle");
-  const priceIn = li.querySelector(".price-input");
-  const subV = li.querySelector(".subv");
+
+  const availBtn = wrap.querySelector('.avail-toggle');
+  const priceIn  = wrap.querySelector('.price-input');
+  const subV     = wrap.querySelector('.subv');
 
   function recalc(){
-    const qty = Math.max(1, parseInt(rec.qty||1,10));
-    const unit= rec.available ? money(priceIn?.value||0) : 0;
-    const sub = rec.available ? qty*unit : 0;
+    const unit = (rec.available && priceIn.value!=='') ? money(priceIn.value) : 0;
+    const sub  = rec.available ? (Math.max(1,parseInt(rec.qty||1,10))*unit) : 0;
     subV.textContent = sub.toFixed(2).replace(/\.00$/,'');
-    onChange && onChange();
+    updateTotals();
   }
 
-  toggle.addEventListener("click", ()=>{
+  availBtn.addEventListener('click',()=>{
     rec.available = !rec.available;
-    toggle.classList.toggle("badge-green", rec.available);
-    toggle.classList.toggle("badge-red", !rec.available);
-    toggle.textContent = rec.available ? "Available" : "Not available";
-    const wrap = li.querySelector(".price-wrap");
-    if (rec.available){ wrap.style.display=''; priceIn?.focus(); }
-    else { wrap.style.display='none'; if (priceIn) { priceIn.value=''; rec.price=null; } }
+    availBtn.classList.toggle('on',rec.available);
+    availBtn.classList.toggle('off',!rec.available);
+    availBtn.textContent = rec.available? 'Available':'Not available';
+    if (rec.available){
+      priceIn.style.display='';
+      priceIn.focus();
+      if (container===adminUnavail){ adminUnavail.removeChild(wrap); adminAvail.appendChild(wrap); }
+    }else{
+      priceIn.style.display='none';
+      priceIn.value=''; rec.price=null;
+      if (container===adminAvail){ adminAvail.removeChild(wrap); adminUnavail.appendChild(wrap); }
+    }
     recalc();
   });
+  priceIn.addEventListener('input',()=>{ rec.price = priceIn.value===''? null : money(priceIn.value); recalc(); });
 
-  if (priceIn){
-    priceIn.addEventListener("input", ()=>{ rec.price = priceIn.value===''?null:money(priceIn.value); recalc(); });
-  }
-
+  container.appendChild(wrap);
   recalc();
-  return li;
 }
 
 function updateTotals(){
@@ -959,9 +929,9 @@ function openAdmin(payload){
     adminShopActions.append(a1,a2);
   }
 
-  adminItemsGroup.innerHTML='';
+  adminAvail.innerHTML=''; adminUnavail.innerHTML='';
   currentAdmin.items.forEach((rec,idx)=>{
-    adminItemsGroup.appendChild(drawAdminItemCard(idx, rec, updateTotals));
+    (rec.available? drawAdminCard(idx,rec,adminAvail) : drawAdminCard(idx,rec,adminUnavail));
   });
 
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
@@ -970,14 +940,13 @@ function openAdmin(payload){
   feeDeliveryInput.addEventListener('input', updateTotals);
   updateTotals();
 
-  // hide home immediately (no flash)
   hideHome();
   adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
 closeAdminBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 adminCancelBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 
-/* Admin Done: send customer link via WhatsApp (includes cust phone) */
+/* Admin Done: send customer link via WhatsApp (carry cust phone for later unique count) */
 adminDoneBtn.addEventListener('click', async ()=>{
   const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
   const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
@@ -985,7 +954,7 @@ adminDoneBtn.addEventListener('click', async ()=>{
   const customerPayload = {
     type:'order',
     shop: currentAdmin.shop,
-    cust: currentAdmin.cust || null, // carry to customer page for unique buyer count
+    cust: currentAdmin.cust || null, // carry forward for unique buyer credit
     items: currentAdmin.items.map(it=>({
       name: it.name,
       qty:  Math.max(1, parseInt(it.qty||1,10)),
@@ -998,43 +967,37 @@ adminDoneBtn.addEventListener('click', async ()=>{
   const link = `${location.origin}${location.pathname}?order=${id}`;
 
   const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.\nOpen to view: ${link}`;
+  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
+Open to view: ${link}`;
   window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
 });
 
-/* ======== CUSTOMER UI (modern cards) ======== */
-function drawCustomerItemCard(idx, it){
-  const qty = Math.max(1, parseInt(it.qty||1,10));
-  const available = !!it.available && it.price!=null;
-  const sub = available ? (qty * money(it.price)) : 0;
-  const li = document.createElement("li");
-  li.className = "item-card";
-  li.innerHTML = `
-    <div class="item-top" style="align-items:flex-start">
-      <div class="item-num">${idx+1}.</div>
-      <input class="item-name readonly" type="text" readonly value="${escapeAttr(it.name)}"/>
-      <span class="badge badge-gray">× ${qty}</span>
-      <span class="badge ${available?'badge-green':'badge-red'}">${available?'Available':'Not available'}</span>
-    </div>
-    <div class="admin-card-line" style="margin-top:8px">
-      <div class="subtext">${available ? `Unit: GH₵ ${money(it.price).toFixed(2).replace(/\.00$/,'')}` : `Price: —`}</div>
-      <div class="subtext">Subtotal: GH₵ <span>${available?sub.toFixed(2).replace(/\.00$/,''):'0'}</span></div>
-    </div>
+/* ======== CUSTOMER UI (modern) ======== */
+function addCustCard(container, idx, name, qty, subText){
+  const card=document.createElement('div');
+  card.className='cust-item-card';
+  card.innerHTML=`
+    <div class="cust-item-num">${idx}.</div>
+    <div class="cust-item-name">${escapeHtml(name)}</div>
+    <div class="cust-item-meta">Qty: ${qty}</div>
+    ${subText? `<div class="cust-item-sub">${subText}</div>`:''}
   `;
-  return li;
+  container.appendChild(card);
 }
 
 function openCustomer(data){
   custShop.textContent = `Order · ${data.shop||''}`;
-  custList.innerHTML = '';
+  custAvail.innerHTML=''; custUnavail.innerHTML='';
 
   let itemsTotal=0;
   (data.items||[]).forEach((it,i)=>{
-    const qty = Math.max(1, parseInt(it.qty||1,10));
     if (it.available && it.price!=null){
-      itemsTotal += qty * money(it.price);
+      const sub=Math.max(1,parseInt(it.qty||1,10))*money(it.price);
+      itemsTotal+=sub;
+      addCustCard(custAvail, i+1, it.name, it.qty, `GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}`);
+    }else{
+      addCustCard(custUnavail, i+1, it.name, it.qty, "");
     }
-    custList.appendChild(drawCustomerItemCard(i, it));
   });
   const service=money(data.fees?.service ?? SERVICE_FEE);
   const delivery=money(data.fees?.delivery ?? DELIVERY_FEE);
@@ -1044,18 +1007,16 @@ function openCustomer(data){
   hideHome();
   customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
 
-  // Count a buyer only when they proceed to payment; unique per phone per shop
+  // Proceed to payment: count a unique buyer (once) then redirect
   custPayBtn.onclick = async ()=>{
-    const shopName = (data.shop||'');
-    const phoneE164 = data.cust || null; // carried from admin payload
-    if (phoneE164) await saveBuyerUnique(shopName, phoneE164);
+    if (data.cust) await saveBuyerUnique(data.shop, data.cust);
     window.location.href = PAYSTACK_LINK;
   };
   const closeAll=()=>{ customerPanel.style.display='none'; customerPanel.setAttribute('aria-hidden','true'); };
   closeCustomerBtn.onclick=closeAll; custCancelBtn.onclick=closeAll;
 }
 
-/* ======== Router with Admin Code gate + no-home flash ======== */
+/* ======== Router + no-home flash ======== */
 function hideHome(){
   homeHeader.style.display='none';
   homeSearch.style.display='none';
@@ -1069,55 +1030,42 @@ function showHome(){
   document.getElementById('tabs').style.display='';
   cardsContainer.style.display='';
 }
-/* router(): returns true if it opened admin/customer (so caller won't render home) */
 async function router(){
   const url=new URL(location.href);
   const adminId=url.searchParams.get('admin');
   const orderId=url.searchParams.get('order');
 
-  hideHome(); // prevent flash always
+  // Hide home immediately to avoid any flash
+  hideHome();
 
   if (adminId){
     const payload=await getShort(adminId);
     if (payload && payload.type==='admin'){
       const code=prompt("Enter admin access code:");
-      if (code===ADMIN_CODE){ openAdmin(payload); return true; }
+      if (code===ADMIN_CODE){ openAdmin(payload); return; }
       alert("Incorrect code. Access denied.");
-      history.replaceState({}, "", location.pathname); // remove query
-      showHome();
-      return false;
-    } else {
-      history.replaceState({}, "", location.pathname);
-      showHome();
-      return false;
+      location.href=location.pathname; // strip query and go home
+      return;
     }
   }
   if (orderId){
     const payload=await getShort(orderId);
-    if (payload && payload.type==='order'){ openCustomer(payload); return true; }
-    history.replaceState({}, "", location.pathname);
-    showHome();
-    return false;
+    if (payload && payload.type==='order'){ openCustomer(payload); return; }
   }
-  // No special link
+  // invalid or none => show home
   showHome();
-  return false;
 }
 
 /* ======== Init ======== */
 (async()=>{
-  // keep everything snappy: clean links, upsert shop meta, build counts
-  await cleanupOldLinks();
-  await upsertShopsMeta();
-
-  // Build buyers count cache first (may use cached instantly)
-  await buildBuyersCountMap();
-
-  // If link present, open target without flashing home; otherwise render home
-  const opened = await router();
-  if (!opened){
-    renderCards("All","");
-  }
+  // keep shops info under Groceries root
+  upsertShopsMeta().catch(()=>{});
+  // use cached buyers to render fast, then refresh
+  const cached = loadBuyersCache(); if (cached){ buyersCountMap=cached; }
+  renderCards("All","");
+  await buildBuyersCountMap(); // refresh counts + cache
+  await cleanupOldLinks();     // prune >7-day links
+  await router();              // deep-links go straight to admin/customer with no home flash
 })();
 </script>
 
