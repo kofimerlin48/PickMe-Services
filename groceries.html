@@ -1171,30 +1171,48 @@ function showHome(){
   document.getElementById('tabs').style.display='';
   cardsContainer.style.display='';
 }
-async function router(){
-  const url=new URL(location.href);
-  const adminId=url.searchParams.get('admin');
-  const orderId=url.searchParams.get('order');
+async function router() {
+  const url = new URL(location.href);
+  const adminId = url.searchParams.get("admin");
+  const orderId = url.searchParams.get("order");
 
-  // Hide home immediately to avoid any flash
-  hideHome();
+  // Hide everything instantly — even before Firebase fetches anything
+  document.body.style.visibility = "hidden";
 
-  if (adminId){
-    const payload=await getShort(adminId);
-    if (payload && payload.type==='admin'){
-      const code=prompt("Enter admin access code:");
-      if (code===ADMIN_CODE){ openAdmin(payload); return; }
-      alert("Incorrect code. Access denied.");
-      location.href=location.pathname; // strip query and go home
-      return;
+  try {
+    if (adminId) {
+      const payload = await getShort(adminId);
+      if (payload && payload.type === "admin") {
+        const code = prompt("Enter admin access code:");
+        if (code === ADMIN_CODE) {
+          document.body.style.visibility = "visible";
+          openAdmin(payload);
+          return;
+        } else {
+          alert("Incorrect code. Access denied.");
+          location.href = location.pathname;
+          return;
+        }
+      }
     }
+
+    if (orderId) {
+      const payload = await getShort(orderId);
+      if (payload && payload.type === "order") {
+        document.body.style.visibility = "visible";
+        openCustomer(payload);
+        return;
+      }
+    }
+
+    // If no query or invalid → show home as usual
+    document.body.style.visibility = "visible";
+    showHome();
+  } catch (err) {
+    console.error("router error:", err);
+    document.body.style.visibility = "visible";
+    showHome();
   }
-  if (orderId){
-    const payload=await getShort(orderId);
-    if (payload && payload.type==='order'){ openCustomer(payload); return; }
-  }
-  // invalid or none => show home
-  showHome();
 }
 
 /* ======== Init ======== */
