@@ -264,7 +264,19 @@ body{
 </style>
 </head>
 <body>
-
+<style>
+  body.hide-initial * {
+    visibility: hidden !important;
+  }
+  body.ready * {
+    visibility: visible !important;
+  }
+</style>
+<script>
+  // Hide everything instantly before any content paints
+  document.documentElement.style.background = "#fff";
+  document.body.classList.add("hide-initial");
+</script>
 <!-- ===== Home ===== -->
 <div class="page-header" id="homeHeader">
   <h1></h1>
@@ -1176,8 +1188,9 @@ async function router() {
   const adminId = url.searchParams.get("admin");
   const orderId = url.searchParams.get("order");
 
-  // Hide everything instantly — even before Firebase fetches anything
-  document.body.style.visibility = "hidden";
+  // Keep everything hidden until destination is ready
+  document.body.classList.remove("ready");
+  document.body.classList.add("hide-initial");
 
   try {
     if (adminId) {
@@ -1185,8 +1198,10 @@ async function router() {
       if (payload && payload.type === "admin") {
         const code = prompt("Enter admin access code:");
         if (code === ADMIN_CODE) {
-          document.body.style.visibility = "visible";
+          hideHome(); // hide home permanently
           openAdmin(payload);
+          document.body.classList.remove("hide-initial");
+          document.body.classList.add("ready");
           return;
         } else {
           alert("Incorrect code. Access denied.");
@@ -1199,19 +1214,23 @@ async function router() {
     if (orderId) {
       const payload = await getShort(orderId);
       if (payload && payload.type === "order") {
-        document.body.style.visibility = "visible";
+        hideHome(); // hide home permanently
         openCustomer(payload);
+        document.body.classList.remove("hide-initial");
+        document.body.classList.add("ready");
         return;
       }
     }
 
-    // If no query or invalid → show home as usual
-    document.body.style.visibility = "visible";
+    // No admin/order → normal home
     showHome();
+    document.body.classList.remove("hide-initial");
+    document.body.classList.add("ready");
   } catch (err) {
     console.error("router error:", err);
-    document.body.style.visibility = "visible";
     showHome();
+    document.body.classList.remove("hide-initial");
+    document.body.classList.add("ready");
   }
 }
 
