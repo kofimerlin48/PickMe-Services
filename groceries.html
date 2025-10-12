@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Groceries - PickMe Services</title>
+
+<!-- =========HEADER CODE STARTS HERE ================== -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+
+    const pageTitle = "Groceries";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+    );
+
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // re-run scripts from header.html
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const s = document.createElement('script');
+      if (oldScript.src) s.src = oldScript.src;
+      else s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+<!-- =========HEADER CODE ENDS HERE ================== -->
+
+<style>
+:root{ --theme-color:#c12872; }
+
+*{box-sizing:border-box}
+* { -webkit-tap-highlight-color: transparent; }
+:focus, :focus-visible, button:focus, input:focus { outline: none !important; box-shadow: none !important; }
+
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f9f9f9;
+  padding-top:100px;
+  overflow-x:hidden;
+}
+
+.page-header{text-align:center;margin-bottom:20px;}
+.page-header h1{color:var(--theme-color);margin:0;font-size:28px;}
+.page-header p{color:#000;margin-top:5px;font-size:16px;font-weight:bold;}
+
+.search-bar{display:flex;justify-content:center;margin:10px 16px 6px;}
+.search-bar input{width:100%;max-width:480px;padding:10px 14px;border:1px solid #ccc;border-radius:8px;font-size:16px;}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;border-bottom:2px solid #eee;}
+.tab{padding:10px 14px;border-radius:999px;background:#fff;border:1px solid #eee;cursor:pointer;white-space:nowrap;font-size:14px;}
+.tab.active{color:#fff;background:var(--theme-color);border-color:var(--theme-color);}
+
+/* EXTRA BOTTOM SPACE so footer iframe doesn't block last card */
+.cards-container{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:70px;padding:20px;
+  padding-bottom:160px;
+}
+.card{
+  position:relative;border-radius:15px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.1);
+  background-size:cover;background-position:center;height:250px;display:flex;align-items:flex-end;transition:transform .2s;
+}
+.card:hover{transform:translateY(-5px)}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0))}
+.card-content{position:relative;color:#fff;padding:15px;width:100%;display:flex;flex-direction:column;justify-content:space-between;z-index:1}
+.card-title{font-weight:bold;font-size:22px;margin-bottom:4px}
+.card-description{font-size:13px;opacity:.95;margin-bottom:4px}
+
+/* trusted buyers + button line (FIX #2) */
+.card-lower {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.card-meta {
+  font-size: 12px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
+
+/* ============ DETAILS PANEL ============ */
+#detailsPanel{
+  position:fixed;top:0;right:-100%;width:100%;max-width:1100px;height:100%;
+  background:#fff;z-index:9999;overflow-y:auto;transition:right .5s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
+  padding-bottom:140px;
+}
+#detailsPanel.show{right:0;}
+#detailsBackBtn{
+  position:fixed;top:15px;right:-60px;width:40px;height:40px;background:#000;color:#fff;border:none;border-radius:50%;
+  font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .5s ease;
+}
+#detailsPanel.show #detailsBackBtn{right:15px;}
+
+.banner{
+  position:relative;width:100%;height:46vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
+  background:#333 center/cover no-repeat;
+}
+.banner::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.banner-text{position:relative;z-index:2}
+.banner-text h2{font-size:16px;margin:0 0 6px}
+.banner-text h1{font-size:26px;margin:0 0 8px}
+.banner-text p{font-size:13px;margin:0;opacity:.95}
+
+.details-content{padding:18px;max-width:1100px;margin:0 auto}
+.section-title{font-weight:bold;margin:8px 0 12px;color:#333}
+
+/* Carousel */
+.carousel{position:relative;width:100%;height:240px;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.carousel img{
+  position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;
+}
+.carousel img.active{left:0;opacity:1}
+.carousel .nav{position:absolute;top:50%;transform:translateY(-50%);font-size:24px;color:#fff;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:50%;cursor:pointer;user-select:none}
+.carousel .nav.left{left:10px}
+.carousel .nav.right{right:10px}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:#ddd}
+.dot.active{background:var(--theme-color)}
+
+/* Add Items button (raised up) */
+.action-row{display:flex;justify-content:center;margin:22px 0 120px;}
+.btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
+
+/* Modal form */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
+.modal.show{display:flex}
+.modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
+.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold}
+.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
+.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
+
+/* item card layout — screenshot style */
+.item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px 12px 10px;margin-bottom:12px;
+}
+.item-top{display:flex;align-items:center;gap:10px}
+.item-num{font-weight:700;color:#333;min-width:22px;text-align:right}
+.item-name{flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;}
+.item-name::placeholder{color:#aaa}
+
+/* FIX #1: dustbin icon always visible (inline SVG) */
+.item-del{
+  margin-left:8px;background:var(--theme-color);border:none;color:#fff;border-radius:50%;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;z-index:2;
+}
+.item-del svg{width:24px;height:24px;fill:#fff;display:block;pointer-events:none;}
+
+.item-qty{margin-top:10px;display:flex;align-items:center;gap:8px;}
+.qty-btn{width:38px;height:38px;border:none;border-radius:8px;background:var(--theme-color);color:#fff;font-size:22px;cursor:pointer;}
+.qty-input{width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;}
+.qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.qty-input[type=number]{-moz-appearance:textfield}
+
+.small-note{font-size:12px;color:#666;margin:8px 0 0}
+.whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+#whatsappInput{padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px}
+.error{color:#b00020;font-size:13px;margin-top:8px;display:none}
+
+/* Footer iframe pinned */
+.footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1></h1>
+  <p>Find grocery shops around you and send your list</p>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search grocery shops...">
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-cat="All">All</div>
+  <div class="tab" data-cat="Stores">Stores</div>
+  <div class="tab" data-cat="Supermarkets">Supermarkets</div>
+  <div class="tab" data-cat="Market">Market</div>
+</div>
+
+<div class="cards-container" id="cardsContainer"></div>
+
+<!-- ================= DETAILS PANEL ================= -->
+<div id="detailsPanel">
+  <button id="detailsBackBtn">&times;</button>
+
+  <section class="banner" id="detailsBanner">
+    <div class="banner-text">
+      <h2>Welcome to</h2>
+      <h1 id="shopName"></h1>
+      <p id="shopSlogan"></p>
+    </div>
+  </section>
+
+  <div class="details-content">
+    <div class="section-title">Sample of items sold</div>
+
+    <!-- Carousel -->
+    <div class="carousel" id="carousel"></div>
+    <div class="dots" id="dots"></div>
+
+    <div class="action-row">
+      <button class="btn-primary" id="openFormBtn">+ Add Items</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Add Items Form ===== -->
+<div class="modal" id="formModal">
+  <div class="modal-card">
+    <div class="modal-header">List your items</div>
+    <div class="modal-body">
+      <div id="itemsHolder"></div>
+
+      <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">Add another item</button>
+
+      <div class="whats-row">
+        <input type="tel" id="whatsappInput" placeholder="Your WhatsApp (+233… or 0…)" />
+        <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
+      </div>
+
+      <div class="error" id="formError">Please enter at least one item and a valid WhatsApp number.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary" id="submitBtn">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= FIREBASE + PAGE LOGIC ========= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+    authDomain: "pickmeservicesonline.firebaseapp.com",
+    projectId: "pickmeservicesonline",
+    storageBucket: "pickmeservicesonline.firebasestorage.app",
+    messagingSenderId: "265031616239",
+    appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /* Fees (editable in code) */
+  const SERVICE_FEE  = 5;   // GH₵
+  const DELIVERY_FEE = 15;  // GH₵
+
+  /* Hard-coded shops & images (replace URLs with your Drive links) */
+  const GROCERY_DATA = [
+    {
+      name: "E&G Supermarket",
+      slogan: "Everything household & fresh",
+      category: "Supermarkets",
+      heroImage: "https://lh3.googleusercontent.com/d/1rfAPWnEAa4kpCEUyldYl5KEkjXE48QYV",
+      samples: [
+        "https://via.placeholder.com/1000x600?text=Rice+Bags",
+        "https://via.placeholder.com/1000x600?text=Canned+Foods",
+        "https://via.placeholder.com/1000x600?text=Beverages",
+        "https://via.placeholder.com/1000x600?text=Toiletries"
+      ],
+      expiry: "2026-09-19"
+    },
+    {
+      name: "FreshMart Store",
+      slogan: "Your daily essentials",
+      category: "Stores",
+      heroImage: "https://via.placeholder.com/1200x700?text=FreshMart+Store",
+      samples: [
+        "https://via.placeholder.com/1000x600?text=Cooking+Oil",
+        "https://via.placeholder.com/1000x600?text=Bread+%26+Eggs",
+        "https://via.placeholder.com/1000x600?text=Soap+%26+Detergents"
+      ],
+      expiry: "2025-12-31"
+    },
+    {
+      name: "Kumasi Central Market",
+      slogan: "All your perishables",
+      category: "Market",
+      heroImage: "https://via.placeholder.com/1200x700?text=Kumasi+Market",
+      samples: [
+        "https://via.placeholder.com/1000x600?text=Tomatoes",
+        "https://via.placeholder.com/1000x600?text=Plantain",
+        "https://via.placeholder.com/1000x600?text=Yam",
+        "https://via.placeholder.com/1000x600?text=Pepper"
+      ],
+      expiry: "2025-12-31"
+    }
+  ];
+
+  /* Your PickMe WhatsApp receiver (no +) */
+  const PICKME_WHATSAPP = "233534742142";
+
+  /* DOM refs */
+  const cardsContainer  = document.getElementById("cardsContainer");
+  const searchInput     = document.getElementById("searchInput");
+  const tabs            = document.querySelectorAll(".tab");
+
+  const detailsPanel  = document.getElementById("detailsPanel");
+  const detailsBackBtn= document.getElementById("detailsBackBtn");
+  const detailsBanner = document.getElementById("detailsBanner");
+  const shopNameEl    = document.getElementById("shopName");
+  const shopSloganEl  = document.getElementById("shopSlogan");
+  const carouselEl    = document.getElementById("carousel");
+  const dotsEl        = document.getElementById("dots");
+  const openFormBtn   = document.getElementById("openFormBtn");
+
+  const formModal     = document.getElementById("formModal");
+  const itemsHolder   = document.getElementById("itemsHolder");
+  const addRowBtn     = document.getElementById("addRowBtn");
+  const whatsappInput = document.getElementById("whatsappInput");
+  const submitBtn     = document.getElementById("submitBtn");
+  const cancelBtn     = document.getElementById("cancelBtn");
+  const formError     = document.getElementById("formError");
+
+  let currentShop = null;
+  let buyersCountMap = {};
+
+  /* ===== Buyers count (for "Trusted by X Buyers" + sorting) ===== */
+  async function fetchBuyersCount(shopName){
+    try{
+      const ref = collection(db, "GroceryPurchases", shopName, "buyers");
+      const snap = await getDocs(ref);
+      return snap.size || 0;
+    }catch{ return 0; }
+  }
+
+  async function buildBuyersCountMap(){
+    const entries = await Promise.all(GROCERY_DATA.map(async s => {
+      const c = await fetchBuyersCount(s.name);
+      return [s.name, c];
+    }));
+    buyersCountMap = Object.fromEntries(entries);
+  }
+
+  /* Expiry helper */
+  function isExpired(isoDate){
+    if (!isoDate) return false;
+    const end = new Date(isoDate + "T23:59:59");
+    const now = new Date();
+    return now > end;
+  }
+
+  /* ===== Cards rendering ===== */
+  function renderCards(activeCategory = "All", searchTerm = "") {
+    cardsContainer.innerHTML = "";
+    const term = searchTerm.trim().toLowerCase();
+
+    const data = [...GROCERY_DATA]
+      .filter(s => !isExpired(s.expiry))
+      .sort((a,b)=>{
+        const ca = buyersCountMap[a.name] || 0;
+        const cb = buyersCountMap[b.name] || 0;
+        if (cb !== ca) return cb - ca; // highest first
+        return a.name.localeCompare(b.name);
+      });
+
+    data.forEach((shop) => {
+      if (activeCategory !== "All" && shop.category !== activeCategory) return;
+      if (term && !shop.name.toLowerCase().includes(term)) return;
+
+      const buyers = buyersCountMap[shop.name] ?? 0;
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.backgroundImage = `url('${shop.heroImage}')`;
+
+      const content = document.createElement("div");
+      content.className = "card-content";
+      content.innerHTML = `
+        <div>
+          <div class="card-title">${escapeHtml(shop.name)}</div>
+          <div class="card-description">${escapeHtml(shop.slogan || "")}</div>
+        </div>
+        <div class="card-lower">
+          <div class="card-meta">⭐ Trusted by ${buyers} Buyers</div>
+          <button class="btn-enter">Enter Shop</button>
+        </div>
+      `;
+
+      content.querySelector(".btn-enter").addEventListener("click", () => openShop(shop));
+      card.appendChild(content);
+      cardsContainer.appendChild(card);
+    });
+
+    if (!cardsContainer.children.length) {
+      cardsContainer.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:20px;'>No shops available.</p>";
+    }
+  }
+
+  function openShop(shop) {
+    currentShop = shop;
+    detailsBanner.style.backgroundImage = `url('${shop.heroImage}')`;
+    shopNameEl.textContent = shop.name;
+    shopSloganEl.textContent = shop.slogan || "";
+    buildCarousel(shop.samples || []);
+    detailsPanel.classList.add("show");
+  }
+
+  detailsBackBtn.addEventListener("click", () => detailsPanel.classList.remove("show"));
+
+  /* ===== Carousel (right-in / left-out) ===== */
+  function buildCarousel(images) {
+    carouselEl.innerHTML = ""; dotsEl.innerHTML = "";
+    if (!images || images.length === 0) return;
+
+    images.forEach((src, i) => {
+      const img = document.createElement("img");
+      img.src = src; img.alt = `sample-${i+1}`;
+      if (i === 0) img.classList.add("active");
+      carouselEl.appendChild(img);
+
+      const dot = document.createElement("div");
+      dot.className = "dot" + (i===0 ? " active" : "");
+      dot.addEventListener("click", () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    const left = document.createElement("div"); left.className="nav left"; left.innerHTML="&#10094;";
+    const right = document.createElement("div"); right.className="nav right"; right.innerHTML="&#10095;";
+    carouselEl.appendChild(left); carouselEl.appendChild(right);
+
+    let current = 0;
+    const slides = carouselEl.querySelectorAll("img");
+    const dots   = dotsEl.querySelectorAll(".dot");
+
+    function setPositions(prevIdx, nextIdx, direction){
+      const prev = slides[prevIdx], next = slides[nextIdx];
+      next.style.transition="none";
+      next.style.left = (direction===1 ? "100%" : "-100%");
+      next.style.opacity = "1"; void next.offsetWidth;
+      prev.style.transition="left .45s ease, opacity .45s ease";
+      next.style.transition="left .45s ease, opacity .45s ease";
+      prev.style.left = (direction===1 ? "-100%" : "100%");
+      prev.style.opacity = "1";
+      next.style.left = "0";
+    }
+    function goTo(nextIndex){
+      if (nextIndex === current) return;
+      const dir = (nextIndex > current) ? 1 : -1;
+      setPositions(current, nextIndex, dir);
+      slides[current].classList.remove("active");
+      slides[nextIndex].classList.add("active");
+      dots[current].classList.remove("active");
+      dots[nextIndex].classList.add("active");
+      current = nextIndex;
+    }
+    left.addEventListener("click", () => goTo((current - 1 + slides.length) % slides.length));
+    right.addEventListener("click", () => goTo((current + 1) % slides.length));
+
+    let startX = 0;
+    carouselEl.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+    carouselEl.addEventListener("touchend", e => {
+      const endX = e.changedTouches[0].clientX;
+      if (startX - endX > 40) right.click();
+      if (endX - startX > 40) left.click();
+    });
+  }
+
+  /* ===== Modal open/close ===== */
+  function openForm(){
+    formModal.classList.add("show");
+    formError.style.display = "none";
+    if (itemsHolder.children.length === 0) addRow();
+  }
+  function closeForm(){ formModal.classList.remove("show"); }
+  document.getElementById("openFormBtn").addEventListener("click", openForm);
+  cancelBtn.addEventListener("click", closeForm);
+
+  /* ===== Item-card logic ===== */
+  function renumberRows(){
+    const nums = itemsHolder.querySelectorAll(".item-num");
+    nums.forEach((el, idx) => el.textContent = `${idx+1}.`);
+  }
+
+  function trashSVG(){
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7H4V5h4V4a1 1 0 0 1 1-1zm2 0v1h2V3h-2zm-2.8 6.2 1.4-.4.9 9.2-1.5.2-.8-9zm6.2-.4 1.4.4-.8 9-1.5-.2.9-9.2z"/>
+      </svg>
+    `;
+  }
+
+  function addRow(itemVal = "", qtyVal = "1"){
+    const card = document.createElement("div");
+    card.className = "item-card";
+    card.innerHTML = `
+      <div class="item-top">
+        <div class="item-num"></div>
+        <input class="item-name" type="text" placeholder="Enter item name" value="${escapeAttr(itemVal)}"/>
+        <button class="item-del" title="Delete">${trashSVG()}</button>
+      </div>
+      <div class="item-qty">
+        <button class="qty-btn minus" type="button">−</button>
+        <input class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="${escapeAttr(qtyVal)}"/>
+        <button class="qty-btn plus" type="button">+</button>
+      </div>
+    `;
+
+    const delBtn   = card.querySelector(".item-del");
+    const minusBtn = card.querySelector(".minus");
+    const plusBtn  = card.querySelector(".plus");
+    const qtyInput = card.querySelector(".qty-input");
+    const nameEl   = card.querySelector(".item-name");
+
+    delBtn.addEventListener("click", () => { card.remove(); renumberRows(); });
+
+    minusBtn.addEventListener("click", () => {
+      let v = parseInt(qtyInput.value || "1", 10);
+      if (!v || v < 1) v = 1;
+      if (v > 1) qtyInput.value = String(v - 1);
+    });
+    plusBtn.addEventListener("click", () => {
+      let v = parseInt(qtyInput.value || "1", 10);
+      if (!v || v < 1) v = 1;
+      qtyInput.value = String(v + 1);
+    });
+
+    // Restrict to digits; enforce >=1 on blur
+    qtyInput.addEventListener("input", () => {
+      qtyInput.value = qtyInput.value.replace(/[^\d]/g,'');
+    });
+    qtyInput.addEventListener("blur", () => {
+      let v = parseInt(qtyInput.value || "1", 10);
+      if (!v || v < 1) v = 1;
+      qtyInput.value = String(v);
+    });
+
+    itemsHolder.appendChild(card);
+    renumberRows();
+
+    // focus the name instantly
+    setTimeout(()=> nameEl.focus(), 0);
+  }
+
+  // Only add new row if last row has a name
+  addRowBtn.addEventListener("click", () => {
+    const last = itemsHolder.querySelector(".item-card:last-child .item-name");
+    if (last && !last.value.trim()){
+      last.focus();
+      return;
+    }
+    addRow();
+  });
+
+  /* ===== WhatsApp number handling & saving ===== */
+  async function saveCustomerWhatsApp(shopName, whatsappE164){
+    try{
+      const ref = collection(db, "GroceryCustomers", shopName, "customers");
+      await addDoc(ref, { whatsapp: whatsappE164, timestamp: new Date().toISOString() });
+    }catch(err){ console.error("Failed to save WhatsApp:", err); }
+  }
+
+  function normalizeGhanaNumber(input){
+    let s = String(input).trim().replace(/[\s\-]/g,'');
+    if (s.startsWith('+233')) return { e164: s, wa: s.slice(1) };
+    if (s.startsWith('233'))  return { e164: '+'+s, wa: s };
+    if (/^0\d{9}$/.test(s))   return { e164: '+233'+s.slice(1), wa: '233'+s.slice(1) };
+    if (/^\d{9}$/.test(s))    return { e164: '+233'+s, wa: '233'+s };
+    const digits = s.replace(/\D/g,'');
+    if (digits.startsWith('233')) return { e164: '+'+digits, wa: digits };
+    if (digits.length===10 && digits.startsWith('0')) return { e164: '+233'+digits.slice(1), wa: '233'+digits.slice(1) };
+    return null;
+  }
+
+  function buildOrderPayload(shopName, customerE164, items){
+    const data = { shop: shopName, cust: customerE164, items, fees:{service:SERVICE_FEE, delivery:DELIVERY_FEE} };
+    try { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }
+    catch { return btoa(JSON.stringify(data)); }
+  }
+
+  /* ===== Submit: send to PickMe WhatsApp with admin link, save customer ===== */
+  submitBtn.addEventListener("click", async () => {
+    const rows = Array.from(itemsHolder.querySelectorAll(".item-card"));
+    const items = rows.map((row, i) => {
+      const nameEl = row.querySelector(".item-name");
+      const qtyEl  = row.querySelector(".qty-input");
+      const name = (nameEl.value||"").trim();
+      let qty = parseInt((qtyEl.value||"1"), 10);
+      if (!qty || qty < 1) qty = 1;
+      return { name, qty };
+    }).filter(x => x.name);
+
+    const rawWhats = whatsappInput.value.trim();
+    const normalized = normalizeGhanaNumber(rawWhats);
+
+    // Validation: separate messages depending on what’s missing
+  if (items.length === 0) {
+    formError.textContent = "Please add at least one item before submitting.";
+    formError.style.display = "block";
+    return;
+  }
+
+  if (!normalized) {
+    formError.textContent = "Please enter your WhatsApp number.";
+    formError.style.display = "block";
+    return;
+  }
+
+  formError.style.display = "none";
+
+    const { e164 } = normalized;
+
+    await saveCustomerWhatsApp(currentShop.name, e164);
+
+    const payload = buildOrderPayload(currentShop.name, e164, items);
+    const adminLink = `https://pickme.example/admin-grocery.html#${payload}`; // replace with real admin URL
+
+    const listLines = items.map((x,i) => `${i+1}. ${x.name} × ${x.qty}`).join("%0A");
+    const msg =
+`Hello PickMe Services,
+I want to order from *${currentShop.name}*.
+
+*Items:*
+${listLines}
+
+Customer WhatsApp: ${e164}
+Open Admin: ${adminLink}`;
+
+    const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    window.location.href = waUrl;
+
+    formError.style.display = "none";
+    formModal.classList.remove("show");
+  });
+
+  /* Tabs + search */
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      renderCards(tab.dataset.cat, searchInput.value);
+    });
+  });
+  searchInput.addEventListener("input", () => {
+    const activeTab = document.querySelector(".tab.active")?.dataset.cat || "All";
+    renderCards(activeTab, searchInput.value);
+  });
+
+  /* Helpers */
+  function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+  function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+
+  /* Init */
+  (async () => {
+    await buildBuyersCountMap();
+    renderCards("All", "");
+  })();
+</script>
+
+<!-- =========FOOTER ========= -->
+<div class="footer-wrap">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+</div>
+
+</body>
+</html>
