@@ -1180,11 +1180,43 @@ function openCustomer(data){
     custPayBtn.style.display = 'inline-block';
   }
 
-  // Proceed to payment: count a unique buyer (once) then redirect
-  custPayBtn.onclick = async ()=>{
-    if (data.cust) await saveBuyerUnique(data.shop, data.cust);
-    window.location.href = PAYSTACK_LINK;
-  };
+  // Proceed to payment: copy grand total, count buyer, then redirect
+custPayBtn.onclick = async ()=>{
+  if (data.cust) await saveBuyerUnique(data.shop, data.cust);
+
+  const amountNum = grand.toFixed(2).replace(/\.00$/,''); // copy numbers only
+
+  try {
+    await navigator.clipboard.writeText(amountNum);
+    // show confirmation toast
+    const toast = document.createElement("div");
+    toast.textContent = `Copied GH₵${amountNum} to clipboard. You can paste it in Paystack.`;
+    Object.assign(toast.style, {
+      position: "fixed",
+      bottom: "80px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#333",
+      color: "#fff",
+      padding: "12px 18px",
+      borderRadius: "8px",
+      fontSize: "14px",
+      zIndex: "10050",
+      opacity: "0",
+      transition: "opacity .4s ease"
+    });
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.style.opacity="1",50);
+    setTimeout(()=>{
+      toast.style.opacity="0";
+      setTimeout(()=>toast.remove(),400);
+    },2500);
+  } catch(e) {
+    alert(`Copied amount: GH₵${amountNum}`);
+  }
+
+  window.location.href = PAYSTACK_LINK;
+};
 
   // Customer Close / Cancel → groceries.html
   const goHome = () => window.location.href = "groceries.html";
