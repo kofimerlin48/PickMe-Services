@@ -1030,17 +1030,25 @@ function renderAdminLists() {
   });
 }
 
+/* ======== Update Totals (Admin side) ======== */
 function updateTotals(){
-  const itemsTotal = currentAdmin.items.reduce((sum,it)=>{
-    if (!it.available || it.price==null) return sum;
+  // Filter available items
+  const availableItems = currentAdmin.items.filter(it => it.available && it.price!=null);
+
+  // Compute totals only for available items
+  const itemsTotal = availableItems.reduce((sum,it)=>{
     return sum + (Math.max(1,parseInt(it.qty||1,10))*money(it.price));
   },0);
-  const service = money(feeServiceInput.value || SERVICE_FEE);
-  const delivery= money(feeDeliveryInput.value || DELIVERY_FEE);
+
+  // Fees go to 0 if no available items
+  const service = availableItems.length ? money(feeServiceInput.value || SERVICE_FEE) : 0;
+  const delivery = availableItems.length ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0;
+
   adminItemsTotal.textContent = itemsTotal.toFixed(2).replace(/\.00$/,'');
   adminGrandTotal.textContent = (itemsTotal+service+delivery).toFixed(2).replace(/\.00$/,'');
 }
 
+/* ======== Open Admin Panel ======== */
 function openAdmin(payload){
   currentAdmin = JSON.parse(JSON.stringify(payload));
   adminShop.textContent = `Order · ${currentAdmin.shop||''}`;
@@ -1052,10 +1060,7 @@ function openAdmin(payload){
     adminShopActions.append(a1,a2);
   }
 
-  // render lists with new 2-row cards
   renderAdminLists();
-
-  // modern fee inputs still use same IDs
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
   feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
   feeServiceInput.addEventListener('input', updateTotals);
@@ -1063,8 +1068,80 @@ function openAdmin(payload){
   updateTotals();
 
   hideHome();
-  adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
+  adminPanel.style.display='block'; 
+  adminPanel.setAttribute('aria-hidden','false');
 }
+
+/* ======== ADMIN BUTTONS ======== */
+function tryCloseWindow(){
+  window.open('', '_self');
+  window.close();
+}
+
+// Close & Cancel → close tab
+closeAdminBtn.onclick = tryCloseWindow;
+adminCancelBtn.onclick = tryCloseWindow;
+
+// Done → generate customer link and open
+adminDoneBtn.onclick = async ()=>{
+  if (!currentAdmin) return;
+
+  const availableItems = currentAdmin.items.filter(it => it.available && it.price!=null);
+  const orderPayload = {
+    type: "order",
+    shop: currentAdmin.shop,
+    items: availableItems.map(it=>({
+      name: it.name,
+      qty: Math.max(1,parseInt(it.qty||1,10)),
+      available: true,
+      price: money(it.price)
+    })),
+    fees: {
+      service: availableItems.length ? money(feeServiceInput.value || SERVICE_FEE) : 0,
+      delivery: availableItems.length ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0
+    },
+    cust: currentAdmin.cust || ""
+  };
+
+  const id = await putShort(orderPayload);
+  const link = `${location.origin}${location.pathname}?order=${id}`;
+  alert(`Customer link generated:\n\n${link}\n\nCopy and send to the buyer.`);
+  window.open(link, "_blank");
+};
+
+/* ======== CUSTOMER PAGE ======== */
+function addCustCard(container, idx, it){
+  const available = !!it.available && it.price!=null;
+  const unit = available ? money(it.price) : 0;
+  const qty  = Math.max(1, parseInt(it.qty||1,10));
+  const sub  = available ? (unit * qty) : 0;
+
+  const card=document.createElement('div');
+  card.className='cust-item-card';
+  card.innerHTML=`
+    <div class="cust-row1">
+      <div class="cust-item-num">${idx}.</div>
+      <div class="cust-item-name">${escapeHtml(it.name)}</div>
+      <div class="cust-item-meta">Qty: ${qty}</div>
+    </div>
+    <div class="cust-row2">
+      <div class="cust-badge ${available?'':'off'}">${available?'Available':'Unavailable'}</div>
+      ${
+        available
+        ? `<div class="cust-price-block">
+             <div class="cust-price-line">
+               <span class="unit">Unit: GH₵ ${unit.toFixed(2).replace(/\.00$/,'')}</span>
+               <span>× ${qty}</span>
+               <span class="sub">= GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}</span>
+             </div>
+           </div>`
+        : ``
+      }
+    </div>
+  `;
+  container.appendChild(card);
+}
+
 function openCustomer(data){
   custShop.textContent = `Order · ${data.shop||''}`;
   custAvail.innerHTML=''; 
@@ -1085,12 +1162,10 @@ function openCustomer(data){
     }
   });
 
-  // If all unavailable → no fees
   const service = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
   const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE) : 0;
   const grand = itemsTotal + service + delivery;
 
-  // Update totals visually
   document.querySelector('.cust-totals').innerHTML = `
     <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
     <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
@@ -1102,57 +1177,17 @@ function openCustomer(data){
   customerPanel.style.display='block'; 
   customerPanel.setAttribute('aria-hidden','false');
 
-  // Hide Proceed to Payment if grand total is 0
-  if (grand <= 0) {
-    custPayBtn.style.display = "none";
-  } else {
-    custPayBtn.style.display = "inline-block";
-  }
-
-  // Proceed to Payment logic
+  // Proceed to Payment
   custPayBtn.onclick = async ()=>{
     if (data.cust) await saveBuyerUnique(data.shop, data.cust);
-    const amountNum = grand.toFixed(2).replace(/\.00$/,''); // Copy only the number
-    try {
-      await navigator.clipboard.writeText(amountNum);
-      const toast = document.createElement("div");
-      toast.textContent = `Amount copied: GH₵${amountNum}. You can now paste it in Paystack.`;
-      Object.assign(toast.style, {
-        position: "fixed",
-        bottom: "80px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "#333",
-        color: "#fff",
-        padding: "12px 18px",
-        borderRadius: "8px",
-        fontSize: "14px",
-        zIndex: "10050",
-        opacity: "0",
-        transition: "opacity .4s ease"
-      });
-      document.body.appendChild(toast);
-      setTimeout(()=>toast.style.opacity="1",50);
-      setTimeout(()=>{
-        toast.style.opacity="0";
-        setTimeout(()=>toast.remove(),400);
-      },2500);
-    } catch(e) {
-      alert(`Copied amount: GH₵${amountNum}`);
-    }
     window.location.href = PAYSTACK_LINK;
   };
 
-  // Customer close/cancel → go back to groceries.html
+  // Customer close/cancel → go home
   const goHome = () => window.location.href = "groceries.html";
   closeCustomerBtn.onclick = goHome;
   custCancelBtn.onclick = goHome;
 }
-
-/* ======== ADMIN CLOSE/CANCEL ======== */
-closeAdminBtn.addEventListener('click',()=>{ window.close(); });
-adminCancelBtn.addEventListener('click',()=>{ window.close(); });
-
 
 /* ======== Router + no-home flash ======== */
 function hideHome(){
