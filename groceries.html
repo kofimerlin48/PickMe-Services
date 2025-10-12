@@ -371,11 +371,15 @@ body{
   </div>
 </div>
 
-  <!-- ========= FIREBASE + PAGE LOGIC ========= -->
+<!-- ========= FIREBASE + PAGE LOGIC ========= -->
 <script type="module">
 /* Firebase */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getFirestore,
+  collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc,
+  serverTimestamp, query, orderBy, limit
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
@@ -504,25 +508,53 @@ function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g
 function money(n){ return Number(n||0); }
 function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"T23:59:59"); }
 
-/* ======== Firestore (scoped under Groceries/Shops/{shop}/...) ======== */
+/* ========= Groceries root collections/paths =========
+   - Shortlinks:  Groceries / Links / items / {id}
+   - Shops meta:  Groceries / ShopsMeta / items / {shopName}
+   - Buyers:      Groceries / Shops / {shopName} / buyers
+   - Customers:   Groceries / Shops / {shopName} / customers
+*/
+const linksCol  = collection(db, "Groceries", "Links", "items");
+const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
+
+/* ======== Firestore (buyers/customers) ======== */
 async function saveCustomerWhatsApp(shopName, phone){
   try{
-    const ref = collection(db,"Groceries","Shops",shopName,"customers");
-    await addDoc(ref,{ whatsapp:phone, timestamp:new Date().toISOString() });
+    const custCol = collection(db,"Groceries","Shops",shopName,"customers");
+    await addDoc(custCol,{ whatsapp:phone, timestamp: serverTimestamp() });
   }catch(e){ console.error(e); }
 }
 async function saveBuyer(shopName, phone){
   try{
-    const ref = collection(db,"Groceries","Shops",shopName,"buyers");
-    await addDoc(ref,{ whatsapp:phone||null, timestamp:new Date().toISOString() });
+    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
+    await addDoc(buyersCol,{ whatsapp:phone||null, timestamp: serverTimestamp() });
   }catch(e){ console.error(e); }
 }
 async function fetchBuyersCount(shopName){
   try{
-    const ref = collection(db,"Groceries","Shops",shopName,"buyers");
-    const snap = await getDocs(ref);
+    const buyersCol = collection(db,"Groceries","Shops",shopName,"buyers");
+    const snap = await getDocs(buyersCol);
     return snap.size||0;
   }catch{ return 0; }
+}
+
+/* ======== Persist shops meta under Groceries root ======== */
+async function upsertShopsMeta(){
+  try{
+    await Promise.all(GROCERY_DATA.map(async shop=>{
+      const id = shop.name;
+      await setDoc(doc(shopsMeta, id), {
+        name: shop.name,
+        slogan: shop.slogan||"",
+        category: shop.category||"",
+        heroImage: shop.heroImage||"",
+        samples: shop.samples||[],
+        phone: shop.phone||"",
+        expiry: shop.expiry||null,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }));
+  }catch(e){ console.warn("shops meta upsert failed:", e); }
 }
 
 /* ======== Buyers cache (for instant home render) ======== */
@@ -717,14 +749,73 @@ function normalizeGhanaNumber(input){
   return null;
 }
 
-/* ======== Short link store (sessionStorage) ======== */
-function putShort(data){
-  const id=(Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase();
-  sessionStorage.setItem("pkm_"+id, JSON.stringify(data));
-  return id;
+/* ======== Tabs + search ======== */
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCards(tab.dataset.cat, searchInput.value);
+  });
+});
+searchInput.addEventListener("input",()=>{
+  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
+  renderCards(active, searchInput.value);
+});
+
+/* ======== Short links in Firestore (cross-device) + 7-day cleanup ======== */
+function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
+
+async function cleanupOldLinks(){
+  try{
+    const sevenDaysMs = 7*24*60*60*1000;
+    const cutoff = new Date(Date.now() - sevenDaysMs);
+    // Fetch a window and prune client-side (serverTimestamp used on create)
+    const qy = query(linksCol, orderBy("createdAt","asc"), limit(200));
+    const snap = await getDocs(qy);
+    const deletions = [];
+    snap.forEach(d=>{
+      const ts = d.data().createdAt;
+      if (ts && ts.toDate && ts.toDate() < cutoff) deletions.push(deleteDoc(d.ref));
+    });
+    if (deletions.length) await Promise.allSettled(deletions);
+  }catch(e){ console.warn("cleanup failed:", e); }
 }
-function getShort(id){
-  try{ return JSON.parse(sessionStorage.getItem("pkm_"+id)); }catch{ return null; }
+
+async function putShort(data){
+  const id = makeId();
+  try{
+    await setDoc(doc(linksCol, id), {
+      payload: data,
+      type: data?.type || null,
+      shop: data?.shop || null,
+      createdAt: serverTimestamp()
+    });
+    return id;
+  }catch(e){
+    console.error("putShort error:", e);
+    sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); // fallback (same device)
+    return id;
+  }
+}
+
+async function getShort(id){
+  try{
+    const snap = await getDoc(doc(linksCol, id));
+    if (snap.exists()){
+      const data = snap.data();
+      // 7-day TTL check (client-side guard)
+      const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
+      if (ts && (Date.now() - ts.getTime()) > 7*24*60*60*1000){
+        await deleteDoc(doc(linksCol, id));
+        return null;
+      }
+      return data.payload || null;
+    }
+  }catch(e){ console.error("getShort error:", e); }
+  // fallback: same-device
+  try{
+    return JSON.parse(sessionStorage.getItem("pkm_"+id));
+  }catch{ return null; }
 }
 
 /* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
@@ -732,18 +823,27 @@ submitBtn.addEventListener("click", async ()=>{
   const rows=[...itemsHolder.querySelectorAll(".item-card")];
   const items=rows.map(r=>{
     const name=(r.querySelector(".item-name").value||"").trim();
-    let qty=parseInt(r.querySelector(".qty-input").value||"1",10); if(!qty||qty<1) qty=1;
+    let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
+    if(!qty||qty<1) qty=1;
     return { name, qty };
   }).filter(x=>x.name);
 
   const raw = whatsappInput.value.trim();
   const norm = normalizeGhanaNumber(raw);
+
   if (items.length===0){
-    formError.textContent="Please add at least one item before submitting."; formError.style.display="block";
-    const first=itemsHolder.querySelector(".item-card .item-name"); if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
+    formError.textContent="Please add at least one item before submitting.";
+    formError.style.display="block";
+    const first=itemsHolder.querySelector(".item-card .item-name");
+    if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
     return;
   }
-  if (!norm){ formError.textContent="Please enter your WhatsApp number."; formError.style.display="block"; whatsappInput.focus(); return; }
+  if (!norm){
+    formError.textContent="Please enter a valid WhatsApp number.";
+    formError.style.display="block";
+    whatsappInput.focus();
+    return;
+  }
   formError.style.display="none";
 
   const { e164, wa } = norm;
@@ -757,26 +857,17 @@ submitBtn.addEventListener("click", async ()=>{
     items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
     fees: { service:SERVICE_FEE, delivery:DELIVERY_FEE }
   };
-  const id = putShort(adminPayload);
+
+  const id = await putShort(adminPayload);
   const link = `${location.origin}${location.pathname}?admin=${id}`;
 
-  const msg = `Hello PickMe Services,\nI would like to buy from *${currentShop.name}*.\n\nOpen Order: ${link}`;
+  const msg = `Hello PickMe Services,
+I would like to buy from *${currentShop.name}*.
+
+Open Order: ${link}`;
   const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.location.href = waUrl;
   formModal.classList.remove("show");
-});
-
-/* ======== Tabs + search ======== */
-tabs.forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    tabs.forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    renderCards(tab.dataset.cat, searchInput.value);
-  });
-});
-searchInput.addEventListener("input",()=>{
-  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
-  renderCards(active, searchInput.value);
 });
 
 /* ======== ADMIN UI ======== */
@@ -865,10 +956,9 @@ function openAdmin(payload){
 
   adminAvail.innerHTML=''; adminUnavail.innerHTML='';
   currentAdmin.items.forEach((rec,idx)=>{
-    (rec.available?adminAvail:adminUnavail).appendChild((()=>{ const div=document.createElement('div'); return div; })());
+    if (rec.available) drawAdminItem(idx,rec,adminAvail);
+    else drawAdminItem(idx,rec,adminUnavail);
   });
-  adminAvail.innerHTML=''; adminUnavail.innerHTML='';
-  currentAdmin.items.forEach((rec,idx)=>{ (rec.available?drawAdminItem(idx,rec,adminAvail):drawAdminItem(idx,rec,adminUnavail)); });
 
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
   feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
@@ -877,13 +967,17 @@ function openAdmin(payload){
   updateTotals();
 
   // hide home instantly (no flash)
-  hideHome();
+  homeHeader.style.display='none'; homeSearch.style.display='none';
+  document.getElementById('tabs').style.display='none';
+  cardsContainer.style.display='none';
+  detailsPanel.classList.remove('show');
+
   adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
 closeAdminBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 adminCancelBtn.addEventListener('click',()=>{ adminPanel.style.display='none'; adminPanel.setAttribute('aria-hidden','true'); });
 
-/* Admin Done: send customer link via WhatsApp + (optionally) count buyer later at payment */
+/* Admin Done: send customer link via WhatsApp */
 adminDoneBtn.addEventListener('click', async ()=>{
   const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
   const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
@@ -899,11 +993,12 @@ adminDoneBtn.addEventListener('click', async ()=>{
     })),
     fees: { service: useService, delivery: useDelivery }
   };
-  const id = putShort(customerPayload);
+  const id = await putShort(customerPayload);
   const link = `${location.origin}${location.pathname}?order=${id}`;
 
   const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.\nOpen to view: ${link}`;
+  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
+Open to view: ${link}`;
   window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
 });
 
@@ -930,45 +1025,36 @@ function openCustomer(data){
   custItemsTotal.textContent=itemsTotal.toFixed(2).replace(/\.00$/,'');
   custGrandTotal.textContent=(itemsTotal+service+delivery).toFixed(2).replace(/\.00$/,'');
 
-  hideHome();
+  homeHeader.style.display='none'; homeSearch.style.display='none';
+  document.getElementById('tabs').style.display='none';
+  cardsContainer.style.display='none';
+  detailsPanel.classList.remove('show');
+
   customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
 
-  custPayBtn.onclick = async ()=>{
-    // count a buyer when they actually proceed to payment (no phone here, just mark)
-    const shopName = (data.shop||'');
-    await saveBuyer(shopName, null);
-    window.location.href = PAYSTACK_LINK;
-  };
+  custPayBtn.onclick = ()=>{ window.location.href = PAYSTACK_LINK; };
   const closeAll=()=>{ customerPanel.style.display='none'; customerPanel.setAttribute('aria-hidden','true'); };
   closeCustomerBtn.onclick=closeAll; custCancelBtn.onclick=closeAll;
 }
 
-/* ======== Router with Admin Code gate + no-home flash ======== */
-function hideHome(){
+/* ======== Router (cross-device short links) ======== */
+async function router(){
+  const url=new URL(location.href);
+  const adminId=url.searchParams.get('admin');
+  const orderId=url.searchParams.get('order');
+
+  // Hide home instantly to avoid flash
   homeHeader.style.display='none';
   homeSearch.style.display='none';
   document.getElementById('tabs').style.display='none';
   cardsContainer.style.display='none';
   detailsPanel.classList.remove('show');
-}
-function showHome(){
-  homeHeader.style.display='';
-  homeSearch.style.display='';
-  document.getElementById('tabs').style.display='';
-  cardsContainer.style.display='';
-}
-function router(){
-  const url=new URL(location.href);
-  const adminId=url.searchParams.get('admin');
-  const orderId=url.searchParams.get('order');
-
-  // hide home immediately to avoid flashing main page
-  hideHome();
 
   if (adminId){
-    const payload=getShort(adminId);
+    const payload=await getShort(adminId);
     if (payload && payload.type==='admin'){
-      const code=prompt("Enter admin access code:");
+      // Optional: gate with code (remove if you don't want the prompt)
+      const code = prompt("Enter admin access code:");
       if (code===ADMIN_CODE){ openAdmin(payload); return; }
       alert("Incorrect code. Access denied.");
       location.href=location.pathname; // back to home without query
@@ -976,20 +1062,25 @@ function router(){
     }
   }
   if (orderId){
-    const payload=getShort(orderId);
+    const payload=await getShort(orderId);
     if (payload && payload.type==='order'){ openCustomer(payload); return; }
   }
   // invalid or none => show home
-  showHome();
+  homeHeader.style.display='';
+  homeSearch.style.display='';
+  document.getElementById('tabs').style.display='';
+  cardsContainer.style.display='';
 }
 
 /* ======== Init ======== */
 (async()=>{
-  await buildBuyersCountMap();
+  await upsertShopsMeta();     // keep shops info under Groceries root
+  await buildBuyersCountMap(); // populate trusted buyers
   renderCards("All","");
-  router();
+  await cleanupOldLinks();     // delete >7-day links
+  await router();              // open admin/customer directly if query present
 })();
-      </script>
+</script>
 
 <!-- =========FOOTER ========= -->
 <div class="footer-wrap">
