@@ -101,14 +101,14 @@ body{
 }
 #detailsPanel.show #detailsBackBtn{right:15px;}
 
-/* Shorter banner (with much darker overlay for full readability) */
+/* Shorter banner with darker overlay */
 .banner{
   position:relative;width:100%;height:35vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
   background:#333 center/cover no-repeat;
 }
 .banner::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(to bottom, rgba(0,0,0,.118), rgba(0,0,0,.56), rgba(0,0,0,.68));
+  background:linear-gradient(to bottom, rgba(0,0,0,.12), rgba(0,0,0,.56), rgba(0,0,0,.68));
 }
 .banner-text{position:relative;z-index:2}
 .banner-text h2{font-size:16px;margin:0 0 6px}
@@ -168,6 +168,7 @@ body{
 .item-qty{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
 .qty-label{font-size:12px;color:#666;margin-left:4px;}
 .qty-controls{display:flex;align-items:center;gap:8px;}
+/* dark ash buttons */
 .qty-btn{
   width:38px;height:38px;border:none;border-radius:8px;
   background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer;
@@ -189,6 +190,20 @@ body{
 }
 #whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 .error{color:#b00020;font-size:13px;margin-top:8px;display:none}
+
+/* ===== Admin (Hidden) Order View ===== */
+#adminPanel{
+  position:fixed; inset:0; background:#fff; z-index:10002; display:none;
+  overflow-y:auto; padding:16px 16px 90px;
+}
+#adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+#adminPanel .admin-top h2{margin:0; font-size:18px;}
+#adminPanel .close-admin{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
+.admin-card{border:1px solid #eee; border-radius:10px; padding:12px; margin:10px 0;}
+.admin-card h3{margin:0 0 8px 0; font-size:16px;}
+.admin-list li{margin:6px 0;}
+.admin-total{margin-top:10px; font-weight:bold;}
+.admin-fees{font-size:14px; color:#444; margin-top:4px;}
 
 /* Footer iframe pinned */
 .footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
@@ -260,6 +275,22 @@ body{
       <button class="btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
+</div>
+
+<!-- ===== Hidden Admin Panel (opens via #order=...) ===== -->
+<div id="adminPanel" aria-hidden="true">
+  <div class="admin-top">
+    <h2 id="adminShop">Order</h2>
+    <button class="close-admin" id="closeAdminBtn">Close</button>
+  </div>
+  <div class="admin-card">
+    <h3>Items</h3>
+    <ul id="adminList" class="admin-list"></ul>
+    <div class="admin-fees">Service fee: GH₵ <span id="feeService">0</span></div>
+    <div class="admin-fees">Delivery fee: GH₵ <span id="feeDelivery">0</span></div>
+    <div class="admin-total">Total (items only): GH₵ <span id="sumItems">0</span></div>
+  </div>
+  <p style="font-size:12px;color:#666">This view is only accessible via the special link sent to PickMe.</p>
 </div>
 
 <!-- ========= FIREBASE + PAGE LOGIC ========= -->
@@ -349,6 +380,15 @@ body{
   const submitBtn     = document.getElementById("submitBtn");
   const cancelBtn     = document.getElementById("cancelBtn");
   const formError     = document.getElementById("formError");
+
+  /* Admin panel */
+  const adminPanel    = document.getElementById("adminPanel");
+  const adminShop     = document.getElementById("adminShop");
+  const adminList     = document.getElementById("adminList");
+  const feeServiceEl  = document.getElementById("feeService");
+  const feeDeliveryEl = document.getElementById("feeDelivery");
+  const sumItemsEl    = document.getElementById("sumItems");
+  const closeAdminBtn = document.getElementById("closeAdminBtn");
 
   let currentShop = null;
   let buyersCountMap = {};
@@ -508,6 +548,25 @@ body{
   document.getElementById("openFormBtn").addEventListener("click", openForm);
   cancelBtn.addEventListener("click", closeForm);
 
+  /* ==================== Keyboard STICKY focus (no flashing) ==================== */
+  // Keep keyboard open by preventing buttons from stealing focus, and refocusing quickly.
+  let stickyFocusEl = null;
+  formModal.addEventListener('focusin', (e) => {
+    if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) {
+      stickyFocusEl = e.target;
+    }
+  });
+  // Prevent buttons inside modal from taking focus on mousedown (avoids blur -> keyboard hide)
+  formModal.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) {
+      e.preventDefault();
+    }
+  });
+  // When any modal button is clicked, restore focus immediately after action
+  function restoreFocusSoon(el=stickyFocusEl){
+    setTimeout(()=> { if (el) el.focus(); }, 0);
+  }
+
   /* ==================== Item-card logic ==================== */
   function renumberRows(){
     const nums = itemsHolder.querySelectorAll(".item-num");
@@ -551,20 +610,20 @@ body{
       const toFocusNext = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
                        || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
       card.remove(); renumberRows();
-      if (toFocusNext) setTimeout(()=> toFocusNext.focus(), 30);
+      restoreFocusSoon(toFocusNext || stickyFocusEl);
     });
 
     minusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       if (v > 1) qtyInput.value = String(v - 1);
-      setTimeout(()=> qtyInput.focus(), 0);
+      restoreFocusSoon(qtyInput);
     });
     plusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       qtyInput.value = String(v + 1);
-      setTimeout(()=> qtyInput.focus(), 0);
+      restoreFocusSoon(qtyInput);
     });
 
     // Restrict to digits; enforce >=1 on blur
@@ -572,6 +631,7 @@ body{
       qtyInput.value = qtyInput.value.replace(/[^\d]/g,'');
     });
     qtyInput.addEventListener("blur", () => {
+      // If user hides keyboard manually, we still keep valid value
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       qtyInput.value = String(v);
@@ -591,6 +651,9 @@ body{
       return;
     }
     addRow();
+    // focus newest name (keep keyboard up without flashing)
+    const newest = itemsHolder.querySelector(".item-card:last-child .item-name");
+    restoreFocusSoon(newest);
   });
 
   /* ===== WhatsApp number handling & saving ===== */
@@ -619,7 +682,7 @@ body{
     catch { return btoa(JSON.stringify(data)); }
   }
 
-  /* ===== Submit: validations & send WA to PickMe (kept same content) ===== */
+  /* ===== Submit: validations & WhatsApp message (NO items in message) ===== */
   submitBtn.addEventListener("click", async () => {
     const rows = Array.from(itemsHolder.querySelectorAll(".item-card"));
     const items = rows.map((row) => {
@@ -658,19 +721,16 @@ body{
 
     await saveCustomerWhatsApp(currentShop.name, e164);
 
-    const payload = buildOrderPayload(currentShop.name, e164, items.map(({name,qty})=>({name,qty})));
-    const adminLink = `https://pickme.example/admin-grocery.html#${payload}`; // replace with real admin URL
+    const payload   = buildOrderPayload(currentShop.name, e164, items.map(({name,qty})=>({name,qty})));
+    const selfBase  = `${location.origin}${location.pathname}`;
+    const adminLink = `${selfBase}#order=${payload}`;
 
-    const listLines = items.map((x,i) => `${i+1}. ${x.name} × ${x.qty}`).join("%0A");
+    // Minimal message — NO items, NO customer number
     const msg =
 `Hello PickMe Services,
-I want to order from *${currentShop.name}*.
+I would like to buy from *${currentShop.name}*.
 
-*Items:*
-${listLines}
-
-Customer WhatsApp: ${e164}
-Open Admin: ${adminLink}`;
+Open Order: ${adminLink}`;
 
     const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
     window.location.href = waUrl;
@@ -695,10 +755,49 @@ Open Admin: ${adminLink}`;
   function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 
+  /* ===== Admin Panel logic: read #order=... and display list inside this page ===== */
+  function tryOpenAdminFromHash(){
+    const h = location.hash || "";
+    if (!h.startsWith("#order=")) { adminPanel.style.display = "none"; return; }
+    const b64 = decodeURIComponent(h.slice(7));
+    let data;
+    try{
+      const json = decodeURIComponent(escape(atob(b64)));
+      data = JSON.parse(json);
+    }catch{
+      try{ data = JSON.parse(atob(b64)); }catch{ data = null; }
+    }
+    if (!data || !Array.isArray(data.items)) { adminPanel.style.display="none"; return; }
+
+    adminShop.textContent = `Order · ${data.shop || ""}`;
+    adminList.innerHTML = "";
+    let sum = 0; // we don't have prices yet; sum stays 0
+    data.items.forEach((it, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${i+1}. ${it.name} × ${it.qty}`;
+      adminList.appendChild(li);
+    });
+    feeServiceEl.textContent  = (data.fees?.service ?? 0);
+    feeDeliveryEl.textContent = (data.fees?.delivery ?? 0);
+    sumItemsEl.textContent    = sum;
+
+    adminPanel.style.display = "block";
+    adminPanel.setAttribute("aria-hidden","false");
+  }
+
+  window.addEventListener("hashchange", tryOpenAdminFromHash);
+  closeAdminBtn.addEventListener("click", () => {
+    adminPanel.style.display = "none";
+    adminPanel.setAttribute("aria-hidden","true");
+    // keep the hash in case admin wants to reopen via back; or clear if you prefer:
+    // history.replaceState(null, "", location.pathname + location.search);
+  });
+
   /* Init */
   (async () => {
     await buildBuyersCountMap();
     renderCards("All", "");
+    tryOpenAdminFromHash(); // open admin view if link with #order=... is used
   })();
 </script>
 
