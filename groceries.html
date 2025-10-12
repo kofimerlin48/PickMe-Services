@@ -1030,25 +1030,20 @@ function renderAdminLists() {
   });
 }
 
-/* ======== Update Totals (Admin side) ======== */
-function updateTotals(){
-  // Filter available items
-  const availableItems = currentAdmin.items.filter(it => it.available && it.price!=null);
+function updateTotals() {
+  const availableItems = currentAdmin.items.filter(it => it.available && it.price != null);
+  const itemsTotal = availableItems.reduce((sum, it) => {
+    return sum + (Math.max(1, parseInt(it.qty || 1, 10)) * money(it.price));
+  }, 0);
 
-  // Compute totals only for available items
-  const itemsTotal = availableItems.reduce((sum,it)=>{
-    return sum + (Math.max(1,parseInt(it.qty||1,10))*money(it.price));
-  },0);
-
-  // Fees go to 0 if no available items
-  const service = availableItems.length ? money(feeServiceInput.value || SERVICE_FEE) : 0;
-  const delivery = availableItems.length ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0;
+  // Fees become 0 if all items are unavailable
+  const service  = availableItems.length > 0 ? money(feeServiceInput.value || SERVICE_FEE) : 0;
+  const delivery = availableItems.length > 0 ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0;
 
   adminItemsTotal.textContent = itemsTotal.toFixed(2).replace(/\.00$/,'');
-  adminGrandTotal.textContent = (itemsTotal+service+delivery).toFixed(2).replace(/\.00$/,'');
+  adminGrandTotal.textContent = (itemsTotal + service + delivery).toFixed(2).replace(/\.00$/,'');
 }
 
-/* ======== Open Admin Panel ======== */
 function openAdmin(payload){
   currentAdmin = JSON.parse(JSON.stringify(payload));
   adminShop.textContent = `Order · ${currentAdmin.shop||''}`;
@@ -1060,7 +1055,10 @@ function openAdmin(payload){
     adminShopActions.append(a1,a2);
   }
 
+  // render lists with new 2-row cards
   renderAdminLists();
+
+  // modern fee inputs still use same IDs
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
   feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
   feeServiceInput.addEventListener('input', updateTotals);
@@ -1068,48 +1066,43 @@ function openAdmin(payload){
   updateTotals();
 
   hideHome();
-  adminPanel.style.display='block'; 
-  adminPanel.setAttribute('aria-hidden','false');
+  adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
-
-/* ======== ADMIN BUTTONS ======== */
-function tryCloseWindow(){
+function closeEntireBrowser(){
+  // Attempt to close the full window
   window.open('', '_self');
   window.close();
 }
+closeAdminBtn.addEventListener('click', closeEntireBrowser);
+adminCancelBtn.addEventListener('click', closeEntireBrowser);
 
-// Close & Cancel → close tab
-closeAdminBtn.onclick = tryCloseWindow;
-adminCancelBtn.onclick = tryCloseWindow;
+/* Admin Done: send customer link via WhatsApp (carry cust phone for later unique count) */
+adminDoneBtn.addEventListener('click', async ()=>{
+  const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
+  const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
 
-// Done → generate customer link and open
-adminDoneBtn.onclick = async ()=>{
-  if (!currentAdmin) return;
-
-  const availableItems = currentAdmin.items.filter(it => it.available && it.price!=null);
-  const orderPayload = {
-    type: "order",
+  const customerPayload = {
+    type:'order',
     shop: currentAdmin.shop,
-    items: availableItems.map(it=>({
+    cust: currentAdmin.cust || null, // carry forward for unique buyer credit
+    items: currentAdmin.items.map(it=>({
       name: it.name,
-      qty: Math.max(1,parseInt(it.qty||1,10)),
-      available: true,
-      price: money(it.price)
+      qty:  Math.max(1, parseInt(it.qty||1,10)),
+      available: !!it.available,
+      price: (it.available && it.price!=null) ? money(it.price) : null
     })),
-    fees: {
-      service: availableItems.length ? money(feeServiceInput.value || SERVICE_FEE) : 0,
-      delivery: availableItems.length ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0
-    },
-    cust: currentAdmin.cust || ""
+    fees: { service: useService, delivery: useDelivery }
   };
-
-  const id = await putShort(orderPayload);
+  const id = await putShort(customerPayload);
   const link = `${location.origin}${location.pathname}?order=${id}`;
-  alert(`Customer link generated:\n\n${link}\n\nCopy and send to the buyer.`);
-  window.open(link, "_blank");
-};
 
-/* ======== CUSTOMER PAGE ======== */
+  const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
+  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
+Open to view: ${link}`;
+  window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+});
+
+/* ======== CUSTOMER UI (modern) ======== */
 function addCustCard(container, idx, it){
   const available = !!it.available && it.price!=null;
   const unit = available ? money(it.price) : 0;
@@ -1125,7 +1118,9 @@ function addCustCard(container, idx, it){
       <div class="cust-item-meta">Qty: ${qty}</div>
     </div>
     <div class="cust-row2">
-      <div class="cust-badge ${available?'':'off'}">${available?'Available':'Unavailable'}</div>
+      <div class="cust-badge ${available?'':'off'}">
+        ${available?'Available':'Unavailable'}
+      </div>
       ${
         available
         ? `<div class="cust-price-block">
@@ -1147,22 +1142,23 @@ function openCustomer(data){
   custAvail.innerHTML=''; 
   custUnavail.innerHTML='';
 
-  let itemsTotal=0;
-  let availableCount=0;
+  let itemsTotal = 0;
+  let availableCount = 0;
 
   (data.items||[]).forEach((it,i)=>{
-    if (it.available && it.price!=null){
+    if (it.available && it.price != null){
       availableCount++;
       const qty = Math.max(1, parseInt(it.qty||1,10));
-      const sub = money(it.price)*qty;
+      const sub = money(it.price) * qty;
       itemsTotal += sub;
       addCustCard(custAvail, i+1, it);
-    }else{
+    } else {
       addCustCard(custUnavail, i+1, it);
     }
   });
 
-  const service = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
+  // Fees go to 0 if everything is unavailable
+  const service  = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
   const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE) : 0;
   const grand = itemsTotal + service + delivery;
 
@@ -1174,16 +1170,23 @@ function openCustomer(data){
   `;
 
   hideHome();
-  customerPanel.style.display='block'; 
+  customerPanel.style.display='block';
   customerPanel.setAttribute('aria-hidden','false');
 
-  // Proceed to Payment
+  // Hide Proceed to Payment if nothing to pay
+  if (grand <= 0) {
+    custPayBtn.style.display = 'none';
+  } else {
+    custPayBtn.style.display = 'inline-block';
+  }
+
+  // Proceed to payment: count a unique buyer (once) then redirect
   custPayBtn.onclick = async ()=>{
     if (data.cust) await saveBuyerUnique(data.shop, data.cust);
     window.location.href = PAYSTACK_LINK;
   };
 
-  // Customer close/cancel → go home
+  // Customer Close / Cancel → groceries.html
   const goHome = () => window.location.href = "groceries.html";
   closeCustomerBtn.onclick = goHome;
   custCancelBtn.onclick = goHome;
