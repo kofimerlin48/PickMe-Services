@@ -162,21 +162,35 @@ body{
 .admin-section{margin:10px 0 16px;}
 .group-title{font-weight:700; margin:10px 0 8px;}
 
-/* Admin item card (modern, qty read-only) */
+/* Admin item card (modern, 2-row layout) */
 .admin-item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
-  padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:10px;
+  padding:12px;margin-bottom:10px;
 }
-.admin-row-top{display:flex;align-items:center;gap:10px}
+.admin-row1{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
 .admin-item-num{font-weight:700;min-width:22px;text-align:right;color:#333}
-.admin-item-name{flex:1;border:none;border-bottom:1px dashed #e7e7e7;padding:6px 0;font-weight:600;pointer-events:none;background:transparent}
+.admin-item-name{flex:1;border:none;background:transparent;padding:0;font-weight:700;color:#222;pointer-events:none}
 .admin-qty-pill{border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:13px;color:#333;background:#fafafa}
-.admin-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.avail-toggle{padding:8px 10px;border-radius:999px;border:1px solid #ddd;cursor:pointer;background:#f7f7f7;font-size:13px;}
+
+.admin-row2{display:flex;align-items:center;gap:10px}
+.avail-toggle{padding:8px 10px;border-radius:999px;border:1px solid #ddd;cursor:pointer;background:#f7f7f7;font-size:13px;user-select:none}
 .avail-toggle.on{background:#e9fff1;border-color:#b7e7c5;color:#146c2e;}
 .avail-toggle.off{background:#fff3f3;border-color:#f0c3c3;color:#8a1c1c;}
-.price-input{width:140px;padding:8px 10px;border:1px solid #ddd;border-radius:8px;}
+
+.price-input{flex:1;min-width:160px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
+.price-input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
 .subtotal{margin-left:auto;font-weight:700}
+
+/* Modern fee inputs */
+.admin-fee-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.fee-input{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid #eee;border-radius:12px;padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,.06)
+}
+.fee-input input{
+  width:120px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px;text-align:right
+}
+.fee-input input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
 
 /* Customer panel (modern cards) */
 #customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
@@ -186,11 +200,28 @@ body{
 .cust-group{margin:10px 0 16px;}
 .cust-group h3{margin:0 0 8px 0; font-size:16px;}
 .cust-items-wrap{display:grid;gap:10px}
-.cust-item-card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);padding:12px;display:flex;align-items:center;gap:10px}
+
+.cust-item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px;display:flex;flex-direction:column;gap:8px
+}
+.cust-row1{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .cust-item-num{font-weight:700;min-width:22px;text-align:right}
-.cust-item-name{flex:1}
+.cust-item-name{flex:1;font-weight:700}
 .cust-item-meta{font-size:13px;color:#444}
-.cust-item-sub{font-weight:700;margin-left:auto}
+
+.cust-row2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cust-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:#146c2e;background:#e9fff1;border:1px solid #b7e7c5;border-radius:999px;padding:6px 10px}
+.cust-badge.off{color:#8a1c1c;background:#fff3f3;border:1px solid #f0c3c3}
+
+.cust-price-block{font-size:14px;color:#333}
+.cust-price-line{display:flex;gap:8px}
+.cust-price-line .unit{opacity:.85}
+.cust-price-line .sub{font-weight:700}
+
+.cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
+.cust-totals .line{display:flex;justify-content:space-between;margin:4px 0}
+.cust-totals .grand{color:var(--theme-color);font-weight:800}
 .cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
 .cust-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
 .cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
@@ -248,7 +279,7 @@ body{
   <div class="modal-card">
     <div class="modal-header">
       <span>List your items</span>
-      <button class="btn-primary" id="clearAllBtn" style="background:#f33">Clear all</button>
+      <button class="btn-primary" id="clearAllBtn" style="background:#777">Clear all</button>
     </div>
     <div class="modal-body">
       <div id="itemsHolder"></div>
@@ -888,55 +919,72 @@ Open Order: ${link}`;
   formModal.classList.remove("show");
 });
 
-/* ======== ADMIN UI (modern, qty read-only) ======== */
-function drawAdminCard(idx, rec, container){
-  const wrap=document.createElement("div");
-  wrap.className="admin-item-card";
-  wrap.dataset.index=idx;
-  wrap.innerHTML=`
-    <div class="admin-row-top">
-      <div class="admin-item-num">${idx+1}.</div>
+function buildAdminCard(idx, rec) {
+  const wrap = document.createElement("div");
+  wrap.className = "admin-item-card";
+  wrap.dataset.index = idx;
+  wrap.innerHTML = `
+    <div class="admin-row1">
+      <div class="admin-item-num">${idx + 1}.</div>
       <input class="admin-item-name" value="${escapeAttr(rec.name)}" readonly />
       <div class="admin-qty-pill">Qty: ${rec.qty}</div>
     </div>
-    <div class="admin-controls">
-      <button class="avail-toggle ${rec.available?'on':'off'}">${rec.available?'Available':'Not available'}</button>
-      <input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" ${rec.available?'':'style="display:none"'} value="${rec.price??''}">
+    <div class="admin-row2">
+      <button class="avail-toggle ${rec.available ? "on" : "off"}">
+        ${rec.available ? "Available" : "Not available"}
+      </button>
+      ${
+        rec.available
+          ? `<input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" value="${rec.price ?? ""}">`
+          : ``
+      }
       <div class="subtotal">GH₵ <span class="subv">0</span></div>
     </div>
   `;
 
-  const availBtn = wrap.querySelector('.avail-toggle');
-  const priceIn  = wrap.querySelector('.price-input');
-  const subV     = wrap.querySelector('.subv');
+  const availBtn = wrap.querySelector(".avail-toggle");
+  const priceIn = wrap.querySelector(".price-input");
+  const subV = wrap.querySelector(".subv");
 
-  function recalc(){
-    const unit = (rec.available && priceIn.value!=='') ? money(priceIn.value) : 0;
-    const sub  = rec.available ? (Math.max(1,parseInt(rec.qty||1,10))*unit) : 0;
-    subV.textContent = sub.toFixed(2).replace(/\.00$/,'');
+  const recalc = () => {
+    const unit =
+      rec.available && priceIn && priceIn.value !== ""
+        ? money(priceIn.value)
+        : 0;
+    const sub = rec.available
+      ? Math.max(1, parseInt(rec.qty || 1, 10)) * unit
+      : 0;
+    subV.textContent = sub.toFixed(2).replace(/\.00$/, "");
+  };
+
+  availBtn.addEventListener("click", () => {
+    rec.available = !rec.available;
+    if (!rec.available) {
+      rec.price = null;
+    }
+    renderAdminLists(); // move between lists instantly
     updateTotals();
+  });
+
+  if (priceIn) {
+    priceIn.addEventListener("input", () => {
+      rec.price = priceIn.value === "" ? null : money(priceIn.value);
+      recalc();
+      updateTotals();
+    });
   }
 
-  availBtn.addEventListener('click',()=>{
-    rec.available = !rec.available;
-    availBtn.classList.toggle('on',rec.available);
-    availBtn.classList.toggle('off',!rec.available);
-    availBtn.textContent = rec.available? 'Available':'Not available';
-    if (rec.available){
-      priceIn.style.display='';
-      priceIn.focus();
-      if (container===adminUnavail){ adminUnavail.removeChild(wrap); adminAvail.appendChild(wrap); }
-    }else{
-      priceIn.style.display='none';
-      priceIn.value=''; rec.price=null;
-      if (container===adminAvail){ adminAvail.removeChild(wrap); adminUnavail.appendChild(wrap); }
-    }
-    recalc();
-  });
-  priceIn.addEventListener('input',()=>{ rec.price = priceIn.value===''? null : money(priceIn.value); recalc(); });
-
-  container.appendChild(wrap);
   recalc();
+  return wrap;
+}
+
+function renderAdminLists() {
+  adminAvail.innerHTML = "";
+  adminUnavail.innerHTML = "";
+  currentAdmin.items.forEach((rec, idx) => {
+    const card = buildAdminCard(idx, rec);
+    (rec.available ? adminAvail : adminUnavail).appendChild(card);
+  });
 }
 
 function updateTotals(){
@@ -961,11 +1009,10 @@ function openAdmin(payload){
     adminShopActions.append(a1,a2);
   }
 
-  adminAvail.innerHTML=''; adminUnavail.innerHTML='';
-  currentAdmin.items.forEach((rec,idx)=>{
-    (rec.available? drawAdminCard(idx,rec,adminAvail) : drawAdminCard(idx,rec,adminUnavail));
-  });
+  // render lists with new 2-row cards
+  renderAdminLists();
 
+  // modern fee inputs still use same IDs
   feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
   feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
   feeServiceInput.addEventListener('input', updateTotals);
@@ -1005,14 +1052,36 @@ Open to view: ${link}`;
 });
 
 /* ======== CUSTOMER UI (modern) ======== */
-function addCustCard(container, idx, name, qty, subText){
+function addCustCard(container, idx, it){
+  const available = !!it.available && it.price!=null;
+  const unit = available ? money(it.price) : 0;
+  const qty  = Math.max(1, parseInt(it.qty||1,10));
+  const sub  = available ? (unit * qty) : 0;
+
   const card=document.createElement('div');
   card.className='cust-item-card';
   card.innerHTML=`
-    <div class="cust-item-num">${idx}.</div>
-    <div class="cust-item-name">${escapeHtml(name)}</div>
-    <div class="cust-item-meta">Qty: ${qty}</div>
-    ${subText? `<div class="cust-item-sub">${subText}</div>`:''}
+    <div class="cust-row1">
+      <div class="cust-item-num">${idx}.</div>
+      <div class="cust-item-name">${escapeHtml(it.name)}</div>
+      <div class="cust-item-meta">Qty: ${qty}</div>
+    </div>
+    <div class="cust-row2">
+      <div class="cust-badge ${available?'':'off'}">
+        ${available?'Available':'Unavailable'}
+      </div>
+      ${
+        available
+        ? `<div class="cust-price-block">
+             <div class="cust-price-line">
+               <span class="unit">Unit: GH₵ ${unit.toFixed(2).replace(/\.00$/,'')}</span>
+               <span>× ${qty}</span>
+               <span class="sub">= GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}</span>
+             </div>
+           </div>`
+        : ``
+      }
+    </div>
   `;
   container.appendChild(card);
 }
@@ -1024,17 +1093,26 @@ function openCustomer(data){
   let itemsTotal=0;
   (data.items||[]).forEach((it,i)=>{
     if (it.available && it.price!=null){
-      const sub=Math.max(1,parseInt(it.qty||1,10))*money(it.price);
-      itemsTotal+=sub;
-      addCustCard(custAvail, i+1, it.name, it.qty, `GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}`);
+      const qty = Math.max(1, parseInt(it.qty||1,10));
+      const sub = money(it.price)*qty;
+      itemsTotal += sub;
+      addCustCard(custAvail, i+1, it);
     }else{
-      addCustCard(custUnavail, i+1, it.name, it.qty, "");
+      addCustCard(custUnavail, i+1, it);
     }
   });
+
   const service=money(data.fees?.service ?? SERVICE_FEE);
   const delivery=money(data.fees?.delivery ?? DELIVERY_FEE);
-  custItemsTotal.textContent=itemsTotal.toFixed(2).replace(/\.00$/,'');
-  custGrandTotal.textContent=(itemsTotal+service+delivery).toFixed(2).replace(/\.00$/,'');
+  const grand = itemsTotal + service + delivery;
+
+  // Show all lines clearly
+  document.querySelector('.cust-totals').innerHTML = `
+    <div class="line"><span>Items total</span><span>GH₵ <span id="custItemsTotal">${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></span></div>
+    <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
+    <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
+    <div class="line grand"><span>Grand total</span><span>GH₵ <span id="custGrandTotal">${grand.toFixed(2).replace(/\.00$/,'')}</span></span></div>
+  `;
 
   hideHome();
   customerPanel.style.display='block'; customerPanel.setAttribute('aria-hidden','false');
