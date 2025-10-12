@@ -108,7 +108,7 @@ body{
 }
 .banner::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(to bottom, rgba(0,0,0,.12), rgba(0,0,0,.56), rgba(0,0,0,.68));
+  background:linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.68), rgba(0,0,0,.72));
 }
 .banner-text{position:relative;z-index:2}
 .banner-text h2{font-size:16px;margin:0 0 6px}
@@ -140,10 +140,10 @@ body{
 .modal.show{display:flex}
 .modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
 .modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold}
-.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
-.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
+.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 160px)}
+.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:space-between}
 
-/* item card layout — screenshot style */
+/* item card layout */
 .item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
   padding:12px 12px 10px;margin-bottom:12px;
@@ -191,6 +191,9 @@ body{
 #whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
 .error{color:#b00020;font-size:13px;margin-top:8px;display:none}
 
+/* Clear-all */
+#clearAllBtn{background:#f1f1f1;color:#333;border:none;border-radius:8px;padding:10px 14px;cursor:pointer}
+
 /* ===== Admin (Hidden) Order View ===== */
 #adminPanel{
   position:fixed; inset:0; background:#fff; z-index:10002; display:none;
@@ -199,11 +202,34 @@ body{
 #adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
 #adminPanel .admin-top h2{margin:0; font-size:18px;}
 #adminPanel .close-admin{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
-.admin-card{border:1px solid #eee; border-radius:10px; padding:12px; margin:10px 0;}
-.admin-card h3{margin:0 0 8px 0; font-size:16px;}
-.admin-list li{margin:6px 0;}
-.admin-total{margin-top:10px; font-weight:bold;}
-.admin-fees{font-size:14px; color:#444; margin-top:4px;}
+.admin-grid{display:grid; gap:10px;}
+.admin-row{display:grid; grid-template-columns: 1fr auto auto auto; gap:10px; align-items:center; border:1px solid #eee; border-radius:10px; padding:10px;}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;background:#e8f5e9;color:#1b5e20;display:inline-block}
+.badge.off{background:#ffebee;color:#b71c1c}
+.price-input{width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
+.subtotal{min-width:90px;text-align:right;font-weight:600}
+.admin-actions{display:flex;gap:8px;margin-top:12px}
+.admin-fees-wrap{display:flex;gap:10px;margin-top:8px;align-items:center}
+.admin-fees-wrap input{width:100px;padding:8px;border:1px solid #ddd;border-radius:8px}
+.admin-summary{margin-top:8px;font-weight:700}
+.admin-sections{display:grid; gap:16px;}
+.section-box{border:1px solid #eee;border-radius:10px;padding:12px}
+
+/* ===== Customer (Hidden) View ===== */
+#customerPanel{
+  position:fixed; inset:0; background:#fff; z-index:10002; display:none;
+  overflow-y:auto; padding:16px 16px 90px;
+}
+.cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.cust-top h2{margin:0;font-size:18px}
+.cust-grid{display:grid; gap:10px;}
+.cust-row{display:grid; grid-template-columns: 1fr auto auto; gap:10px; align-items:center; border:1px solid #eee; border-radius:10px; padding:10px;}
+.cust-subtotal{text-align:right;min-width:90px;font-weight:600}
+.cust-summary{margin-top:8px;font-weight:700}
+.cust-fees{font-size:14px;color:#444;margin-top:4px}
+.cust-actions{display:flex;gap:10px;margin-top:14px}
+.btn{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
+.btn.gray{background:#777}
 
 /* Footer iframe pinned */
 .footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
@@ -257,7 +283,10 @@ body{
 <!-- ===== Modal: Add Items Form ===== -->
 <div class="modal" id="formModal">
   <div class="modal-card">
-    <div class="modal-header">List your items</div>
+    <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span>List your items</span>
+      <button id="clearAllBtn" title="Clear all items">Clear all</button>
+    </div>
     <div class="modal-body">
       <div id="itemsHolder"></div>
 
@@ -271,32 +300,76 @@ body{
       <div class="error" id="formError"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary gray" id="cancelBtn">Cancel</button>
       <button class="btn-primary" id="submitBtn">Submit</button>
     </div>
   </div>
 </div>
 
-<!-- ===== Hidden Admin Panel (opens via #order=...) ===== -->
+<!-- ===== Hidden Admin Panel (opens via ?admin=...) ===== -->
 <div id="adminPanel" aria-hidden="true">
   <div class="admin-top">
     <h2 id="adminShop">Order</h2>
     <button class="close-admin" id="closeAdminBtn">Close</button>
   </div>
-  <div class="admin-card">
-    <h3>Items</h3>
-    <ul id="adminList" class="admin-list"></ul>
-    <div class="admin-fees">Service fee: GH₵ <span id="feeService">0</span></div>
-    <div class="admin-fees">Delivery fee: GH₵ <span id="feeDelivery">0</span></div>
-    <div class="admin-total">Total (items only): GH₵ <span id="sumItems">0</span></div>
+
+  <div class="admin-sections">
+    <div class="section-box">
+      <h3 style="margin:0 0 8px">Available items</h3>
+      <div id="adminAvail" class="admin-grid"></div>
+    </div>
+    <div class="section-box">
+      <h3 style="margin:0 0 8px">Unavailable items</h3>
+      <div id="adminUnavail" class="admin-grid"></div>
+    </div>
   </div>
-  <p style="font-size:12px;color:#666">This view is only accessible via the special link sent to PickMe.</p>
+
+  <div class="admin-fees-wrap">
+    <label>Service fee (GH₵) <input id="adminServiceFee" type="number" min="0" step="1"></label>
+    <label>Delivery fee (GH₵) <input id="adminDeliveryFee" type="number" min="0" step="1"></label>
+  </div>
+  <div class="admin-summary" id="adminSummary">Total: GH₵ 0</div>
+
+  <div class="admin-actions">
+    <button class="btn" id="adminDoneBtn">Done</button>
+    <button class="btn gray" id="adminCancelBtn">Cancel</button>
+  </div>
+
+  <p style="font-size:12px;color:#666;margin-top:10px">Admin view—only via special link.</p>
+</div>
+
+<!-- ===== Hidden Customer Panel (opens via ?order=...) ===== -->
+<div id="customerPanel" aria-hidden="true">
+  <div class="cust-top">
+    <h2 id="custShop">Your Order</h2>
+    <button class="close-admin" id="closeCustomerBtn">Close</button>
+  </div>
+
+  <div class="section-box">
+    <h3 style="margin:0 0 8px">Available items</h3>
+    <div id="custAvail" class="cust-grid"></div>
+  </div>
+  <div class="section-box">
+    <h3 style="margin:0 0 8px">Unavailable items</h3>
+    <div id="custUnavail" class="cust-grid"></div>
+  </div>
+
+  <div class="cust-fees">Service fee: GH₵ <span id="custService">0</span></div>
+  <div class="cust-fees">Delivery fee: GH₵ <span id="custDelivery">0</span></div>
+  <div class="cust-summary">Grand total: GH₵ <span id="custTotal">0</span></div>
+
+  <div class="cust-actions">
+    <button class="btn" id="custPayBtn">Proceed to Payment</button>
+    <button class="btn gray" id="custCancelBtn">Cancel</button>
+  </div>
+
+  <p style="font-size:12px;color:#666;margin-top:10px">Customer view—read-only.</p>
 </div>
 
 <!-- ========= FIREBASE + PAGE LOGIC ========= -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
@@ -313,6 +386,9 @@ body{
   /* Fees (editable in code) */
   const SERVICE_FEE  = 5;   // GH₵
   const DELIVERY_FEE = 15;  // GH₵
+
+  /* Payment redirect (replace with your real Paystack page) */
+  const PAYSTACK_LINK = "https://paystack.com/pay/pickme";
 
   /* Hard-coded shops & images (replace URLs with your Drive links) */
   const GROCERY_DATA = [
@@ -379,16 +455,32 @@ body{
   const whatsappInput = document.getElementById("whatsappInput");
   const submitBtn     = document.getElementById("submitBtn");
   const cancelBtn     = document.getElementById("cancelBtn");
+  const clearAllBtn   = document.getElementById("clearAllBtn");
   const formError     = document.getElementById("formError");
 
   /* Admin panel */
   const adminPanel    = document.getElementById("adminPanel");
   const adminShop     = document.getElementById("adminShop");
-  const adminList     = document.getElementById("adminList");
-  const feeServiceEl  = document.getElementById("feeService");
-  const feeDeliveryEl = document.getElementById("feeDelivery");
-  const sumItemsEl    = document.getElementById("sumItems");
+  const adminAvail    = document.getElementById("adminAvail");
+  const adminUnavail  = document.getElementById("adminUnavail");
+  const adminServiceFee = document.getElementById("adminServiceFee");
+  const adminDeliveryFee= document.getElementById("adminDeliveryFee");
+  const adminSummary  = document.getElementById("adminSummary");
   const closeAdminBtn = document.getElementById("closeAdminBtn");
+  const adminDoneBtn  = document.getElementById("adminDoneBtn");
+  const adminCancelBtn= document.getElementById("adminCancelBtn");
+
+  /* Customer panel */
+  const customerPanel = document.getElementById("customerPanel");
+  const closeCustomerBtn = document.getElementById("closeCustomerBtn");
+  const custShop      = document.getElementById("custShop");
+  const custAvail     = document.getElementById("custAvail");
+  const custUnavail   = document.getElementById("custUnavail");
+  const custService   = document.getElementById("custService");
+  const custDelivery  = document.getElementById("custDelivery");
+  const custTotal     = document.getElementById("custTotal");
+  const custPayBtn    = document.getElementById("custPayBtn");
+  const custCancelBtn = document.getElementById("custCancelBtn");
 
   let currentShop = null;
   let buyersCountMap = {};
@@ -539,6 +631,9 @@ body{
     formModal.classList.add("show");
     formError.style.display = "none";
 
+    // Load per-shop draft
+    loadDraft(currentShop?.name);
+
     if (itemsHolder.children.length === 0) addRow();
 
     const firstName = itemsHolder.querySelector(".item-card .item-name");
@@ -548,29 +643,23 @@ body{
   document.getElementById("openFormBtn").addEventListener("click", openForm);
   cancelBtn.addEventListener("click", closeForm);
 
-  /* ==================== Keyboard STICKY focus (no flashing) ==================== */
-  // Keep keyboard open by preventing buttons from stealing focus, and refocusing quickly.
+  /* ==================== Sticky Keyboard ==================== */
   let stickyFocusEl = null;
   formModal.addEventListener('focusin', (e) => {
     if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) {
       stickyFocusEl = e.target;
     }
   });
-  // Prevent buttons inside modal from taking focus on mousedown (avoids blur -> keyboard hide)
   formModal.addEventListener('mousedown', (e) => {
-    if (e.target.closest('button')) {
-      e.preventDefault();
-    }
+    if (e.target.closest('button')) e.preventDefault();
   });
-  // When any modal button is clicked, restore focus immediately after action
-  function restoreFocusSoon(el=stickyFocusEl){
-    setTimeout(()=> { if (el) el.focus(); }, 0);
-  }
+  function restoreFocusSoon(el=stickyFocusEl){ setTimeout(()=> { if (el) el.focus(); }, 0); }
 
   /* ==================== Item-card logic ==================== */
   function renumberRows(){
     const nums = itemsHolder.querySelectorAll(".item-num");
     nums.forEach((el, idx) => el.textContent = `${idx+1}.`);
+    saveDraft(currentShop?.name);
   }
 
   function trashSVG(){
@@ -588,14 +677,14 @@ body{
       <div class="item-top">
         <div class="item-num"></div>
         <input class="item-name" type="text" placeholder="Enter item name" value="${escapeAttr(itemVal)}"/>
-        <button class="item-del" title="Delete">${trashSVG()}</button>
+        <button class="item-del" type="button" tabindex="-1" title="Delete">${trashSVG()}</button>
       </div>
       <div class="item-qty">
         <div class="qty-label">Set quantity</div>
         <div class="qty-controls">
-          <button class="qty-btn minus" type="button">−</button>
+          <button class="qty-btn minus" type="button" tabindex="-1">−</button>
           <input class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="${escapeAttr(qtyVal)}"/>
-          <button class="qty-btn plus" type="button">+</button>
+          <button class="qty-btn plus" type="button" tabindex="-1">+</button>
         </div>
       </div>
     `;
@@ -613,48 +702,83 @@ body{
       restoreFocusSoon(toFocusNext || stickyFocusEl);
     });
 
+    nameEl.addEventListener("input", ()=> saveDraft(currentShop?.name));
+    qtyInput.addEventListener("input", () => {
+      qtyInput.value = qtyInput.value.replace(/[^\d]/g,'');
+      saveDraft(currentShop?.name);
+    });
+
     minusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       if (v > 1) qtyInput.value = String(v - 1);
+      saveDraft(currentShop?.name);
       restoreFocusSoon(qtyInput);
     });
     plusBtn.addEventListener("click", () => {
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       qtyInput.value = String(v + 1);
+      saveDraft(currentShop?.name);
       restoreFocusSoon(qtyInput);
     });
 
-    // Restrict to digits; enforce >=1 on blur
-    qtyInput.addEventListener("input", () => {
-      qtyInput.value = qtyInput.value.replace(/[^\d]/g,'');
-    });
     qtyInput.addEventListener("blur", () => {
-      // If user hides keyboard manually, we still keep valid value
       let v = parseInt(qtyInput.value || "1", 10);
       if (!v || v < 1) v = 1;
       qtyInput.value = String(v);
+      saveDraft(currentShop?.name);
     });
 
     itemsHolder.appendChild(card);
     renumberRows();
-
     setTimeout(()=> nameEl.focus(), 0);
   }
 
-  // Only add new row if last row has a name
   addRowBtn.addEventListener("click", () => {
     const last = itemsHolder.querySelector(".item-card:last-child .item-name");
     if (last && !last.value.trim()){
-      last.focus(); // point user to type name
+      last.focus();
       return;
     }
     addRow();
-    // focus newest name (keep keyboard up without flashing)
     const newest = itemsHolder.querySelector(".item-card:last-child .item-name");
     restoreFocusSoon(newest);
   });
+
+  clearAllBtn.addEventListener("click", () => {
+    itemsHolder.innerHTML = "";
+    addRow();
+    saveDraft(currentShop?.name);
+  });
+
+  /* ===== Per-shop DRAFT in localStorage ===== */
+  function draftKey(shopName){ return `groceryDraft_${shopName || "UNKNOWN"}`; }
+  function saveDraft(shopName){
+    if (!shopName) return;
+    const rows = Array.from(itemsHolder.querySelectorAll(".item-card"));
+    const items = rows.map(r => ({
+      name: r.querySelector(".item-name").value || "",
+      qty:  r.querySelector(".qty-input").value || "1"
+    }));
+    localStorage.setItem(draftKey(shopName), JSON.stringify(items));
+  }
+  function loadDraft(shopName){
+    if (!shopName) return;
+    itemsHolder.innerHTML = "";
+    const raw = localStorage.getItem(draftKey(shopName));
+    if (raw){
+      try{
+        const items = JSON.parse(raw);
+        if (Array.isArray(items) && items.length){
+          items.forEach(it => addRow(it.name, it.qty));
+          return;
+        }
+      }catch{}
+    }
+    // no draft
+    itemsHolder.innerHTML = "";
+  }
 
   /* ===== WhatsApp number handling & saving ===== */
   async function saveCustomerWhatsApp(shopName, whatsappE164){
@@ -676,13 +800,40 @@ body{
     return null;
   }
 
-  function buildOrderPayload(shopName, customerE164, items){
-    const data = { shop: shopName, cust: customerE164, items, fees:{service:SERVICE_FEE, delivery:DELIVERY_FEE} };
-    try { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }
-    catch { return btoa(JSON.stringify(data)); }
+  /* ===== Short ID + Firestore Order storage ===== */
+  function shortId(){
+    const t = Date.now().toString(36);
+    const r = Math.random().toString(36).slice(2,8);
+    return t + r;
   }
 
-  /* ===== Submit: validations & WhatsApp message (NO items in message) ===== */
+  async function createOrderInFirestore(id, payload){
+    const ref = doc(db, "GroceryOrders", id);
+    await setDoc(ref, payload, { merge: false });
+  }
+  async function readOrder(id){
+    const ref = doc(db, "GroceryOrders", id);
+    const snap = await getDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  }
+  async function updateOrder(id, data){
+    const ref = doc(db, "GroceryOrders", id);
+    await updateDoc(ref, data);
+  }
+
+  function buildInitialOrder(shopName, customerE164, items){
+    return {
+      shop: shopName,
+      cust: customerE164,
+      status: "new",
+      items: items.map(x => ({ name:x.name, qty:x.qty, available:true, unitPrice:null, subtotal:0 })),
+      fees: { service: SERVICE_FEE, delivery: DELIVERY_FEE },
+      totals: { items: 0, grand: 0 },
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  /* ===== Submit: validations & WhatsApp with SHORT LINK ONLY ===== */
   submitBtn.addEventListener("click", async () => {
     const rows = Array.from(itemsHolder.querySelectorAll(".item-card"));
     const items = rows.map((row) => {
@@ -691,20 +842,17 @@ body{
       const name = (nameEl.value||"").trim();
       let qty = parseInt((qtyEl.value||"1"), 10);
       if (!qty || qty < 1) qty = 1;
-      return { name, qty, nameEl };
+      return { name, qty };
     }).filter(x => x.name);
 
     const rawWhats = whatsappInput.value.trim();
     const normalized = normalizeGhanaNumber(rawWhats);
 
-    // Validation with focus behavior
     if (items.length === 0) {
       formError.textContent = "Please add at least one item before submitting.";
       formError.style.display = "block";
-
       const firstName = itemsHolder.querySelector(".item-card .item-name");
-      if (firstName) firstName.focus();
-      else { addRow(); setTimeout(()=> itemsHolder.querySelector(".item-card .item-name")?.focus(), 30); }
+      if (firstName) firstName.focus(); else { addRow(); setTimeout(()=> itemsHolder.querySelector(".item-card .item-name")?.focus(), 30); }
       return;
     }
 
@@ -716,16 +864,16 @@ body{
     }
 
     formError.style.display = "none";
-
     const { e164 } = normalized;
-
     await saveCustomerWhatsApp(currentShop.name, e164);
 
-    const payload   = buildOrderPayload(currentShop.name, e164, items.map(({name,qty})=>({name,qty})));
-    const selfBase  = `${location.origin}${location.pathname}`;
-    const adminLink = `${selfBase}#order=${payload}`;
+    // create firestore order with short id
+    const id = shortId();
+    const initial = buildInitialOrder(currentShop.name, e164, items);
+    await createOrderInFirestore(id, initial);
 
-    // Minimal message — NO items, NO customer number
+    const adminLink = `https://kofimerlin48.github.io/PickMe-Services/groceries.html?admin=${id}`;
+
     const msg =
 `Hello PickMe Services,
 I would like to buy from *${currentShop.name}*.
@@ -755,49 +903,170 @@ Open Order: ${adminLink}`;
   function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 
-  /* ===== Admin Panel logic: read #order=... and display list inside this page ===== */
-  function tryOpenAdminFromHash(){
-    const h = location.hash || "";
-    if (!h.startsWith("#order=")) { adminPanel.style.display = "none"; return; }
-    const b64 = decodeURIComponent(h.slice(7));
-    let data;
-    try{
-      const json = decodeURIComponent(escape(atob(b64)));
-      data = JSON.parse(json);
-    }catch{
-      try{ data = JSON.parse(atob(b64)); }catch{ data = null; }
+  /* ===== ADMIN PANEL ===== */
+  function currency(n){ n = Number(n||0); return isFinite(n) ? `GH₵ ${n.toFixed(2).replace(/\.00$/,'')}` : 'GH₵ 0'; }
+
+  function renderAdmin(order, id){
+    adminAvail.innerHTML = "";
+    adminUnavail.innerHTML = "";
+
+    adminShop.textContent = `Order · ${order.shop || ""}`;
+    adminServiceFee.value = order.fees?.service ?? SERVICE_FEE;
+    adminDeliveryFee.value= order.fees?.delivery ?? DELIVERY_FEE;
+
+    function rowEl(it, idx){
+      const wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML = `
+        <div><strong>${idx+1}.</strong> ${escapeHtml(it.name)} <span class="badge ${it.available?'':'off'}" style="margin-left:8px">${it.available?'Available':'Not available'}</span><div style="font-size:12px;color:#666">Qty: ${it.qty}</div></div>
+        <button class="btn gray toggle" type="button" style="padding:8px 10px">${it.available?'Mark N/A':'Mark Available'}</button>
+        <input class="price-input" type="number" min="0" step="1" value="${it.unitPrice ?? ''}" placeholder="Unit GH₵">
+        <div class="subtotal">${currency(it.subtotal || 0)}</div>
+      `;
+      const toggle = wrap.querySelector('.toggle');
+      const input  = wrap.querySelector('.price-input');
+      const badge  = wrap.querySelector('.badge');
+      const subtotal = wrap.querySelector('.subtotal');
+
+      toggle.addEventListener('click', async ()=>{
+        it.available = !it.available;
+        badge.textContent = it.available ? 'Available' : 'Not available';
+        badge.classList.toggle('off', !it.available);
+        toggle.textContent = it.available ? 'Mark N/A' : 'Mark Available';
+        // move row between sections
+        renderAdmin(order, id);
+      });
+
+      input.addEventListener('input', ()=>{
+        const price = Number(input.value||0);
+        it.unitPrice = isFinite(price) ? price : null;
+        it.subtotal  = (it.available && isFinite(price)) ? (price * Number(it.qty||1)) : 0;
+        subtotal.textContent = currency(it.subtotal);
+        updateTotals();
+      });
+
+      return wrap;
     }
-    if (!data || !Array.isArray(data.items)) { adminPanel.style.display="none"; return; }
 
-    adminShop.textContent = `Order · ${data.shop || ""}`;
-    adminList.innerHTML = "";
-    let sum = 0; // we don't have prices yet; sum stays 0
-    data.items.forEach((it, i) => {
-      const li = document.createElement("li");
-      li.textContent = `${i+1}. ${it.name} × ${it.qty}`;
-      adminList.appendChild(li);
-    });
-    feeServiceEl.textContent  = (data.fees?.service ?? 0);
-    feeDeliveryEl.textContent = (data.fees?.delivery ?? 0);
-    sumItemsEl.textContent    = sum;
+    function mount(){
+      let idxA = 0, idxU = 0;
+      order.items.forEach(it=>{
+        if (it.available) adminAvail.appendChild(rowEl(it, idxA++));
+        else adminUnavail.appendChild(rowEl(it, idxU++));
+      });
+      updateTotals();
+    }
 
-    adminPanel.style.display = "block";
-    adminPanel.setAttribute("aria-hidden","false");
+    function updateTotals(){
+      const s = Number(adminServiceFee.value||SERVICE_FEE);
+      const d = Number(adminDeliveryFee.value||DELIVERY_FEE);
+      const itemsSum = order.items.reduce((acc, it)=> acc + (it.available ? (Number(it.subtotal||0)) : 0), 0);
+      const grand = itemsSum + s + d;
+      adminSummary.textContent = `Total: ${currency(grand)} (items: ${currency(itemsSum)})`;
+      order.fees = { service: s, delivery: d };
+      order.totals = { items: itemsSum, grand: grand };
+    }
+
+    adminServiceFee.addEventListener('input', ()=> updateTotals());
+    adminDeliveryFee.addEventListener('input', ()=> updateTotals());
+
+    mount();
+
+    adminDoneBtn.onclick = async ()=>{
+      // persist admin edits
+      await updateOrder(id, {
+        items: order.items,
+        fees: order.fees,
+        totals: order.totals,
+        status: "quoted",
+        updatedAt: new Date().toISOString()
+      });
+      const customerLink = `https://kofimerlin48.github.io/PickMe-Services/groceries.html?order=${id}`;
+      try{ await navigator.clipboard.writeText(customerLink); }catch{}
+      alert("Customer link copied:\n" + customerLink);
+    };
+    adminCancelBtn.onclick = ()=> { adminPanel.style.display = "none"; adminPanel.setAttribute("aria-hidden","true"); };
   }
 
-  window.addEventListener("hashchange", tryOpenAdminFromHash);
+  async function openAdmin(id){
+    const order = await readOrder(id);
+    if (!order){ alert("Order not found."); return; }
+    adminPanel.style.display = "block";
+    adminPanel.setAttribute("aria-hidden","false");
+    renderAdmin(order, id);
+  }
+
   closeAdminBtn.addEventListener("click", () => {
     adminPanel.style.display = "none";
     adminPanel.setAttribute("aria-hidden","true");
-    // keep the hash in case admin wants to reopen via back; or clear if you prefer:
-    // history.replaceState(null, "", location.pathname + location.search);
   });
+
+  /* ===== CUSTOMER PANEL ===== */
+  function renderCustomer(order, id){
+    custShop.textContent = `Order · ${order.shop || ""}`;
+    custAvail.innerHTML = "";
+    custUnavail.innerHTML = "";
+
+    order.items.forEach((it, idx)=>{
+      const el = document.createElement('div');
+      el.className = 'cust-row';
+      el.innerHTML = `
+        <div><strong>${idx+1}.</strong> ${escapeHtml(it.name)} <div style="font-size:12px;color:#666">Qty: ${it.qty}</div></div>
+        <div>${it.unitPrice!=null ? currency(it.unitPrice) : '—'}</div>
+        <div class="cust-subtotal">${currency(it.subtotal||0)}</div>
+      `;
+      if (it.available) custAvail.appendChild(el); else custUnavail.appendChild(el);
+    });
+
+    custService.textContent  = Number(order.fees?.service ?? SERVICE_FEE).toFixed(0);
+    custDelivery.textContent = Number(order.fees?.delivery ?? DELIVERY_FEE).toFixed(0);
+    custTotal.textContent    = Number(order.totals?.grand ?? 0).toFixed(0);
+
+    custPayBtn.onclick = async ()=>{
+      // copy total only (no currency text)
+      const amountOnly = String(Number(order.totals?.grand ?? 0));
+      try{ await navigator.clipboard.writeText(amountOnly); }catch{}
+      // count buyer for "Trusted by"
+      try{
+        await addDoc(collection(db, "GroceryPurchases", order.shop, "buyers"), {
+          whatsapp: order.cust, timestamp: new Date().toISOString()
+        });
+      }catch(err){ console.error("Failed to record buyer:", err); }
+      // redirect to Paystack page
+      window.location.href = PAYSTACK_LINK;
+    };
+
+    custCancelBtn.onclick = ()=> { customerPanel.style.display="none"; customerPanel.setAttribute("aria-hidden","true"); };
+  }
+
+  async function openCustomer(id){
+    const order = await readOrder(id);
+    if (!order){ alert("Order not found."); return; }
+    customerPanel.style.display = "block";
+    customerPanel.setAttribute("aria-hidden","false");
+    renderCustomer(order, id);
+  }
+
+  closeCustomerBtn.addEventListener("click", () => {
+    customerPanel.style.display = "none";
+    customerPanel.setAttribute("aria-hidden","true");
+  });
+
+  /* ===== Router: open admin/customer based on query ===== */
+  function routeFromQuery(){
+    const p = new URLSearchParams(location.search);
+    const adminId = p.get('admin');
+    const orderId = p.get('order');
+    if (adminId){ openAdmin(adminId); }
+    if (orderId){ openCustomer(orderId); }
+  }
+  window.addEventListener('popstate', routeFromQuery);
+  window.addEventListener('DOMContentLoaded', routeFromQuery);
 
   /* Init */
   (async () => {
     await buildBuyersCountMap();
     renderCards("All", "");
-    tryOpenAdminFromHash(); // open admin view if link with #order=... is used
   })();
 </script>
 
