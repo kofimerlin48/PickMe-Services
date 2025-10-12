@@ -1030,24 +1030,39 @@ Open to view: ${link}`;
 
   /* ===== Router: direct-page open for ?admin= or ?order= (no home flash) ===== */
   function router(){
-    const url = new URL(location.href);
-    const adminId = url.searchParams.get('admin');
-    const orderId = url.searchParams.get('order');
+  const url = new URL(location.href);
+  const adminId = url.searchParams.get('admin');
+  const orderId = url.searchParams.get('order');
 
-    if (adminId){
-      const payload = getShort(adminId);
-      if (payload && payload.type==='admin'){ openAdmin(payload); return; }
-    }
-    if (orderId){
-      const payload = getShort(orderId);
-      if (payload && payload.type==='order'){ openCustomer(payload); return; }
-    }
+  // hide home instantly before any rendering
+  homeHeader.style.display='none';
+  homeSearch.style.display='none';
+  document.getElementById('tabs').style.display='none';
+  cardsContainer.style.display='none';
+  detailsPanel.classList.remove('show');
 
-    // normal home
-    homeHeader.style.display=''; homeSearch.style.display='';
-    document.getElementById('tabs').style.display='';
-    cardsContainer.style.display='';
+  if (adminId){
+    const payload = getShort(adminId);
+    if (payload && payload.type==='admin'){
+      openAdmin(payload);
+      return;
+    }
   }
+
+  if (orderId){
+    const payload = getShort(orderId);
+    if (payload && payload.type==='order'){
+      openCustomer(payload);
+      return;
+    }
+  }
+
+  // if no valid link payload, show home again
+  homeHeader.style.display='';
+  homeSearch.style.display='';
+  document.getElementById('tabs').style.display='';
+  cardsContainer.style.display='';
+}
 
   /* Init */
   (async () => {
