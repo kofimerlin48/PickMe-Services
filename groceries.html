@@ -895,10 +895,16 @@ async function getShort(id){
     if (snap.exists()){
       const data = snap.data();
       const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
-      if (ts && (Date.now() - ts.getTime()) > 7*24*60*60*1000){
-        await deleteDoc(doc(linksCol, id));
-        return null;
-      }
+      if (ts && (Date.now() - ts.getTime()) > 2*60*1000){
+  await deleteDoc(doc(linksCol, id));
+  
+  // 🔔 Show a friendly message
+  alert("⏰ This link has expired.\nPlease request a new one from the shop or admin.");
+  
+  // Optional: redirect back home (groceries.html)
+  window.location.href = "groceries.html";
+  return null;
+}
       return data.payload || null;
     }
   }catch(e){ console.error("getShort error:", e); }
