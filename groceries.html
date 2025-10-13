@@ -860,7 +860,7 @@ function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).sl
 
 async function cleanupOldLinks(){
   try{
-    const sevenDaysMs = 7*24*60*60*1000;
+    const sevenDaysMs = 2*60*1000;
     const cutoff = new Date(Date.now() - sevenDaysMs);
     const qy = query(linksCol, orderBy("createdAt","asc"), limit(200));
     const snap = await getDocs(qy);
