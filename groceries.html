@@ -855,27 +855,44 @@ searchInput.addEventListener("input",()=>{
   renderCards(active, searchInput.value);
 });
 
-/* ======== Short links in Firestore (cross-device) + 7-day cleanup ======== */
-function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
+/* ======== Short links in Firestore (cross-device) + auto cleanup ======== */
 
-async function cleanupOldLinks(){
-  try{
-    const sevenDaysMs = 2*60*1000;
-    const cutoff = new Date(Date.now() - sevenDaysMs);
-    const qy = query(linksCol, orderBy("createdAt","asc"), limit(200));
-    const snap = await getDocs(qy);
-    const deletions = [];
-    snap.forEach(d=>{
-      const ts = d.data().createdAt;
-      if (ts && ts.toDate && ts.toDate() < cutoff) deletions.push(deleteDoc(d.ref));
-    });
-    if (deletions.length) await Promise.allSettled(deletions);
-  }catch(e){ console.warn("cleanup failed:", e); }
+// 🔧 Set your desired auto-delete duration here
+// Example: 2 * 60 * 1000 = 2 minutes
+//          30 * 60 * 1000 = 30 minutes
+//          7 * 24 * 60 * 60 * 1000 = 7 days
+const LINK_EXPIRY_MS = 2 * 60 * 1000;  
+
+// Generate unique shortlink IDs
+function makeId() {
+  return (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase();
 }
 
-async function putShort(data){
+// 🧹 Automatically delete old links based on LINK_EXPIRY_MS
+async function cleanupOldLinks() {
+  try {
+    const cutoff = new Date(Date.now() - LINK_EXPIRY_MS);
+    const qy = query(linksCol, orderBy("createdAt", "asc"), limit(200));
+    const snap = await getDocs(qy);
+    const deletions = [];
+
+    snap.forEach(d => {
+      const ts = d.data().createdAt;
+      if (ts && ts.toDate && ts.toDate() < cutoff) {
+        deletions.push(deleteDoc(d.ref));
+      }
+    });
+
+    if (deletions.length) await Promise.allSettled(deletions);
+  } catch (e) {
+    console.warn("cleanup failed:", e);
+  }
+}
+
+// ✏️ Save new shortlink
+async function putShort(data) {
   const id = makeId();
-  try{
+  try {
     await setDoc(doc(linksCol, id), {
       payload: data,
       type: data?.type || null,
@@ -883,34 +900,50 @@ async function putShort(data){
       createdAt: serverTimestamp()
     });
     return id;
-  }catch(e){
+  } catch (e) {
     console.error("putShort error:", e);
-    sessionStorage.setItem("pkm_"+id, JSON.stringify(data)); // fallback (same device)
+    sessionStorage.setItem("pkm_" + id, JSON.stringify(data)); // fallback
     return id;
   }
 }
-async function getShort(id){
-  try{
+
+// 🔍 Retrieve shortlink and auto-handle expiry
+async function getShort(id) {
+  try {
     const snap = await getDoc(doc(linksCol, id));
-    if (snap.exists()){
+
+    // Case 1: The document still exists in Firestore
+    if (snap.exists()) {
       const data = snap.data();
       const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
-      if (ts && (Date.now() - ts.getTime()) > 2*60*1000){
-  await deleteDoc(doc(linksCol, id));
-  
-  // 🔔 Show a friendly message
-  alert("⏰ This link has expired.\nPlease request a new one from the shop or admin.");
-  
-  // Optional: redirect back home (groceries.html)
-  window.location.href = "groceries.html";
-  return null;
-}
+
+      // Check expiry using LINK_EXPIRY_MS
+      if (ts && (Date.now() - ts.getTime()) > LINK_EXPIRY_MS) {
+        await deleteDoc(doc(linksCol, id));
+        alert("⏰ This link has expired.\nPlease add new items to get a new link.");
+        window.location.href = "groceries.html";
+        return null;
+      }
+
+      // Still valid
       return data.payload || null;
     }
-  }catch(e){ console.error("getShort error:", e); }
-  try{
-    return JSON.parse(sessionStorage.getItem("pkm_"+id));
-  }catch{ return null; }
+
+    // Case 2: Document no longer exists (was deleted already)
+    alert("⏰ This link has expired.\nPlease add new items to get a new link.");
+    window.location.href = "groceries.html";
+    return null;
+
+  } catch (e) {
+    console.error("getShort error:", e);
+  }
+
+  // Case 3: fallback (same-device session storage)
+  try {
+    return JSON.parse(sessionStorage.getItem("pkm_" + id));
+  } catch {
+    return null;
+  }
 }
 
 /* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
