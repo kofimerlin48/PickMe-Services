@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PickMe — Driver Recruitment Consent</title>
+
+<style>
+  :root{
+    /* Web app theme (pink/white) */
+    --pink:#c12872; --pink-dark:#9e1850; --bg:#f9f9fb; --ink:#111; --muted:#666; --line:#e7e7e7;
+    /* Print (A4) theme (orange/black) */
+    --orange:#f7941d; --black:#000; --linePrint:#d9d9d9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);}
+
+  /* Top bar */
+  .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px}
+  .logoRow{display:flex;align-items:center;gap:12px}
+  .logo{width:56px;height:56px;object-fit:contain}
+  .titles{display:flex;flex-direction:column}
+  .titles .big{font-weight:800;font-size:16px}
+  .titles .sub{color:var(--muted);font-size:13px}
+  .editBtn{background:var(--pink);color:#fff;border:none;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}
+
+  /* Layout */
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0;box-shadow:0 4px 14px rgba(0,0,0,.04)}
+  label{display:block;font-size:13px;color:var(--muted);margin:8px 2px 4px}
+  input[type="text"],input[type="tel"],input[type="date"],textarea,select{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff
+  }
+  textarea{min-height:120px}
+  .btnRow{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+  .btn{border:none;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
+  .btn.pink{background:var(--pink);color:#fff}
+  .btn.pink:hover{background:var(--pink-dark)}
+  .btn.ghost{background:#efefef}
+  .note{font-size:12px;color:var(--muted)}
+  .row{display:flex;flex-direction:column;gap:10px}
+  .split{display:flex;gap:10px}
+  .split>*{flex:1}
+  @media (max-width:640px){ .split{flex-direction:column} }
+
+  .photoBox{width:140px;height:140px;border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fafafa}
+  .photoBox img{width:100%;height:100%;object-fit:cover}
+
+  /* Sections (gate visible by default) */
+  #gate{display:block}
+  #formArea,#termsEdit{display:none}
+
+  /* Print */
+  @media print { .no-print{display:none!important} body{background:#fff} }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar no-print">
+  <div class="logoRow">
+    <!-- Replace with real PickMe logo -->
+    <img class="logo" src="https://via.placeholder.com/140x64?text=PickMe" alt="PickMe">
+    <div class="titles">
+      <div class="big">PickMe Services — Driver Recruitment</div>
+      <div class="sub">Consent Form</div>
+    </div>
+  </div>
+  <button id="btnEditConsent" class="editBtn">Edit Consent</button>
+</div>
+
+<div class="wrap">
+
+  <!-- 0) Gate -->
+  <section id="gate" class="card">
+    <h3 style="margin:0 0 6px">Start / Resume</h3>
+    <p class="note" style="margin:0 0 8px">Enter username and phone to start a new record or resume an existing one.</p>
+    <label>Username</label>
+    <input id="gateUsername" type="text" placeholder="e.g., Kwame Adu">
+    <label>Phone number</label>
+    <input id="gatePhone" type="tel" placeholder="+233… or 0…">
+    <div class="btnRow">
+      <button id="gateEnter" class="btn pink">Enter</button>
+    </div>
+    <div id="gateMsg" class="note"></div>
+  </section>
+
+  <!-- 1) Form Area -->
+  <section id="formArea">
+    <!-- Step header -->
+    <div class="card" id="stepHeader">
+      <div id="stepTitle" style="font-weight:800">Step 1 — Driver Information</div>
+      <div class="note" id="whoLabel" style="margin-top:4px"></div>
+    </div>
+
+    <!-- Step 1: Driver -->
+    <div class="card" id="step1">
+      <label>Driver's full name</label>
+      <input id="d_name" type="text" placeholder="Full name">
+
+      <label>Phone number</label>
+      <input id="d_phone" type="tel" placeholder="+233… or 0…">
+
+      <label>Date of birth</label>
+      <input id="d_dob" type="date">
+
+      <label>Age (auto)</label>
+      <input id="d_age" type="text" readonly placeholder="—">
+
+      <label>Residential address</label>
+      <input id="d_address" type="text" placeholder="Street, Town">
+
+      <label>Driver photo (upload or use camera)</label>
+      <div class="row">
+        <input id="d_photo" type="file" accept="image/*" capture="environment">
+        <div class="photoBox" id="d_photoPrev"><span class="note">No photo</span></div>
+      </div>
+
+      <label>License number</label>
+      <input id="d_lic_no" type="text" placeholder="License #">
+
+      <label>License expiry date</label>
+      <input id="d_lic_exp" type="date">
+
+      <label>License photo — Front (required)</label>
+      <input id="d_lic_front" type="file" accept="image/*" capture="environment">
+
+      <label>License photo — Back (required)</label>
+      <input id="d_lic_back" type="file" accept="image/*" capture="environment">
+
+      <label>Ghana card number (optional)</label>
+      <input id="d_ghana_no" type="text" placeholder="GHA-… (optional)">
+
+      <label>Ghana card — Front (optional)</label>
+      <input id="d_ghana_front" type="file" accept="image/*" capture="environment">
+
+      <label>Ghana card — Back (optional)</label>
+      <input id="d_ghana_back" type="file" accept="image/*" capture="environment">
+
+      <label>Vehicle (optional) — Plate number</label>
+      <input id="v_plate" type="text" placeholder="e.g., AS-1234-24 (optional)">
+
+      <label>Vehicle (optional) — PickMe row number</label>
+      <input id="v_row" type="text" placeholder="e.g., 17 (optional)">
+
+      <label>Vehicle (optional) — Colour</label>
+      <input id="v_color" type="text" placeholder="e.g., Yellow/Black (optional)">
+
+      <div class="btnRow">
+        <button class="btn ghost" id="s1Save">Save draft</button>
+        <button class="btn pink" id="s1Next">Next →</button>
+      </div>
+      <div id="s1Msg" class="note"></div>
+    </div>
+
+    <!-- Step 2: Guarantors -->
+    <div class="card" id="step2" style="display:none;">
+      <h3 style="margin:0 0 8px">Guarantors</h3>
+      <div>
+        <label>Guarantor 1 — Full name</label>
+        <input id="g1_name" type="text">
+        <label>Guarantor 1 — Address</label>
+        <input id="g1_address" type="text">
+        <label>Guarantor 1 — Phone</label>
+        <input id="g1_phone" type="tel">
+        <label>Guarantor 1 — Relationship</label>
+        <input id="g1_relation" type="text">
+      </div>
+      <hr style="border:none;border-top:1px dashed var(--line);margin:12px 0">
+      <div>
+        <label>Guarantor 2 — Full name</label>
+        <input id="g2_name" type="text">
+        <label>Guarantor 2 — Address</label>
+        <input id="g2_address" type="text">
+        <label>Guarantor 2 — Phone</label>
+        <input id="g2_phone" type="tel">
+        <label>Guarantor 2 — Relationship</label>
+        <input id="g2_relation" type="text">
+      </div>
+      <div class="btnRow">
+        <button class="btn ghost" id="s2Back">← Back</button>
+        <button class="btn ghost" id="s2Save">Save draft</button>
+        <button class="btn pink" id="s2Next">Next →</button>
+      </div>
+      <div id="s2Msg" class="note"></div>
+    </div>
+
+    <!-- Step 3: Terms (read-only) -->
+    <div class="card" id="step3" style="display:none;">
+      <h3 style="margin:0 0 8px">Terms & Conditions</h3>
+      <div id="termsView" style="white-space:pre-wrap;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;min-height:160px"></div>
+      <div class="btnRow">
+        <button class="btn ghost" id="s3Back">← Back</button>
+        <button class="btn pink" id="s3Next">Preview →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Preview -->
+    <div class="card" id="step4" style="display:none;">
+      <h3 style="margin:0 0 8px">Preview</h3>
+      <div id="previewBox" style="border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;white-space:pre-wrap;"></div>
+      <div class="btnRow">
+        <button class="btn ghost" id="s4Back">← Back</button>
+        <button class="btn pink" id="submitAll">Submit & Print</button>
+      </div>
+      <div id="submitMsg" class="note"></div>
+    </div>
+  </section>
+
+  <!-- In-page “Edit Consent” (hidden until unlocked) -->
+  <section id="termsEdit" class="card">
+    <h3 style="margin:0 0 6px;">Edit Consent Agreement</h3>
+    <div id="codeGate">
+      <label>Access code</label>
+      <input id="adminCode" type="password" placeholder="Enter code">
+      <div class="btnRow">
+        <button id="codeCheck" class="btn pink">Unlock</button>
+        <button id="codeCancel" class="btn ghost">Cancel</button>
+      </div>
+      <div id="codeMsg" class="note"></div>
+    </div>
+
+    <div id="editorArea" style="display:none;">
+      <label>Consent terms (plain text)</label>
+      <textarea id="termsEditor" placeholder="Type terms here..."></textarea>
+      <div class="btnRow">
+        <button id="termsCancel" class="btn ghost">Back to Form</button>
+        <button id="termsSave" class="btn pink">Save Changes</button>
+      </div>
+      <div id="termsMsg" class="note"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Firebase + App Logic -->
+<script type="module">
+  // ---- Firebase imports (host this file over HTTPS) ----
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDoc, setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import {
+    getStorage, ref as sRef, uploadBytes, getDownloadURL
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+  // ---- Your exact config (from your existing page) ----
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+    authDomain: "pickmeservicesonline.firebaseapp.com",
+    projectId: "pickmeservicesonline",
+    storageBucket: "pickmeservicesonline.firebasestorage.app",
+    messagingSenderId: "265031616239",
+    appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const st  = getStorage(app);
+
+  // ---- Constants / selectors ----
+  const ADMIN_CODE = "123456";
+  const COL_DRIVERS = "DriverConsent";                       // per-driver records
+  const DOC_TERMS   = { col: "DriverConsentSettings", id: "terms" }; // global terms storage
+
+  const $ = (id)=>document.getElementById(id);
+  const gate=$('gate'), formArea=$('formArea'), termsEdit=$('termsEdit');
+
+  const gateUsername=$('gateUsername'), gatePhone=$('gatePhone'), gateEnter=$('gateEnter'), gateMsg=$('gateMsg');
+
+  const stepHeader=$('stepHeader'), stepTitle=$('stepTitle'), whoLabel=$('whoLabel');
+  const step1=$('step1'), step2=$('step2'), step3=$('step3'), step4=$('step4');
+
+  const d_name=$('d_name'), d_phone=$('d_phone'), d_dob=$('d_dob'), d_age=$('d_age'), d_address=$('d_address');
+  const d_photo=$('d_photo'), d_photoPrev=$('d_photoPrev');
+  const d_lic_no=$('d_lic_no'), d_lic_exp=$('d_lic_exp'), d_lic_front=$('d_lic_front'), d_lic_back=$('d_lic_back');
+  const d_ghana_no=$('d_ghana_no'), d_ghana_front=$('d_ghana_front'), d_ghana_back=$('d_ghana_back');
+  const v_plate=$('v_plate'), v_row=$('v_row'), v_color=$('v_color');
+
+  const g1_name=$('g1_name'), g1_address=$('g1_address'), g1_phone=$('g1_phone'), g1_relation=$('g1_relation');
+  const g2_name=$('g2_name'), g2_address=$('g2_address'), g2_phone=$('g2_phone'), g2_relation=$('g2_relation');
+
+  const s1Next=$('s1Next'), s1Save=$('s1Save'), s1Msg=$('s1Msg');
+  const s2Back=$('s2Back'), s2Next=$('s2Next'), s2Save=$('s2Save'), s2Msg=$('s2Msg');
+  const s3Back=$('s3Back'), s3Next=$('s3Next');
+  const s4Back=$('s4Back'), submitAll=$('submitAll'), submitMsg=$('submitMsg');
+
+  const termsView=$('termsView'), previewBox=$('previewBox');
+
+  const btnEditConsent=$('btnEditConsent');
+  const adminCode=$('adminCode'), codeCheck=$('codeCheck'), codeCancel=$('codeCancel'), codeMsg=$('codeMsg');
+  const editorArea=$('editorArea'), termsEditor=$('termsEditor'), termsCancel=$('termsCancel'), termsSave=$('termsSave'), termsMsg=$('termsMsg');
+
+  // ---- State ----
+  let currentTerms = "";
+  let currentKey = null;   // username + '_' + phone
+  let currentPhone = null; // normalized phone (doc id)
+
+  // ---- Helpers ----
+  function show(el){ el.style.display='block'; }
+  function hide(el){ el.style.display='none'; }
+  function setStep(n){
+    stepTitle.textContent =
+      n===1 ? "Step 1 — Driver Information" :
+      n===2 ? "Step 2 — Guarantors" :
+      n===3 ? "Step 3 — Terms & Conditions" :
+              "Step 4 — Preview";
+    step1.style.display=(n===1?'block':'none');
+    step2.style.display=(n===2?'block':'none');
+    step3.style.display=(n===3?'block':'none');
+    step4.style.display=(n===4?'block':'none');
+  }
+  function normalizePhone(input){
+    let s=String(input||'').trim().replace(/[\s\-]/g,'');
+    if (s.startsWith('+233')) return s;
+    if (s.startsWith('233'))  return '+'+s;
+    if (/^0\d{9}$/.test(s))   return '+233'+s.slice(1);
+    if (/^\d{9}$/.test(s))    return '+233'+s;
+    return s;
+  }
+  function calcAge(){
+    const v = d_dob.value; if(!v){ d_age.value=''; return; }
+    const dob=new Date(v); if(isNaN(dob)){ d_age.value=''; return; }
+    const now=new Date(); let age=now.getFullYear()-dob.getFullYear();
+    const m=now.getMonth()-dob.getMonth();
+    if(m<0 || (m===0 && now.getDate()<dob.getDate())) age--;
+    d_age.value=String(Math.max(0,age));
+  }
+  d_dob.addEventListener('change', calcAge);
+
+  d_photo.addEventListener('change', ()=>{
+    const f=d_photo.files?.[0];
+    if(!f){ d_photoPrev.innerHTML='<span class="note">No photo</span>'; return; }
+    const url=URL.createObjectURL(f);
+    d_photoPrev.innerHTML=`<img src="${url}" alt="driver photo">`;
+  });
+
+  function defaultTerms(){
+    return [
+      "Ownership: The vehicle remains the property of PickMe Services (or its owner). This assignment covers operation only.",
+      "License: Driver must hold a valid license while operating the vehicle. Any person allowed to drive must also be licensed.",
+      "Reporting: Driver shall immediately report accidents, damage, police stops, or any impoundment to PickMe.",
+      "Costs & Fines: Driver is responsible for fines, towing/impound fees, repairs, and lost income while the vehicle is unavailable. PickMe may recover such costs from deposit or future earnings.",
+      "Withdrawal: PickMe may withdraw the vehicle and terminate the assignment if these terms are breached.",
+      "Legal Action: Appropriate legal steps may be taken to recover costs or protect assets in case of serious breach."
+    ].join("\n");
+  }
+
+  async function loadTerms(){
+    try{
+      const snap = await getDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id));
+      currentTerms = snap.exists() ? (snap.data().content || defaultTerms()) : defaultTerms();
+    }catch{ currentTerms = defaultTerms(); }
+    termsView.textContent = currentTerms;
+    termsEditor.value     = currentTerms;
+  }
+
+  function collectData(){
+    return {
+      username: (d_name.value||'').trim(),
+      phone: normalizePhone(d_phone.value||''),
+      dob: d_dob.value||null,
+      age: d_age.value||null,
+      address: (d_address.value||'').trim(),
+      license: {
+        number: (d_lic_no.value||'').trim(),
+        expiry: d_lic_exp.value||null
+      },
+      ghanaCard: {
+        number: (d_ghana_no.value||'').trim() || null
+      },
+      vehicle: {
+        plate: (v_plate.value||'').trim() || null,
+        rowNo: (v_row.value||'').trim() || null,
+        color: (v_color.value||'').trim() || null
+      },
+      guarantors: [
+        {
+          name:(g1_name.value||'').trim(),
+          address:(g1_address.value||'').trim(),
+          phone:normalizePhone(g1_phone.value||''),
+          relation:(g1_relation.value||'').trim()
+        },
+        {
+          name:(g2_name.value||'').trim(),
+          address:(g2_address.value||'').trim(),
+          phone:normalizePhone(g2_phone.value||''),
+          relation:(g2_relation.value||'').trim()
+        }
+      ],
+      termsVersion: "current",
+      updatedAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    };
+  }
+
+  async function saveDraft(whereMsg){
+    const data = collectData();
+    if(!data.phone){ whereMsg.textContent="Phone is required."; return; }
+    try{
+      await setDoc(doc(collection(db, COL_DRIVERS), data.phone), data, { merge:true });
+      whereMsg.textContent="Draft saved.";
+    }catch{
+      whereMsg.textContent="Save failed. Check your connection.";
+    }
+  }
+
+  async function uploadIfFile(inputEl, path){
+    const f = inputEl.files?.[0]; if(!f) return null;
+    const rr = sRef(st, path);
+    await uploadBytes(rr, f);
+    return await getDownloadURL(rr);
+  }
+
+  function esc(s){ return String(s ?? ''); }
+  function buildPrintHTML(d, termsText){
+    const rows = (termsText||'').split(/\r?\n/).filter(l=>l.trim().length);
+    const tr = rows.map(line=>{
+      const i=line.indexOf(':');
+      if(i>0){
+        const k=line.slice(0,i).trim(), v=line.slice(i+1).trim();
+        return `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`;
+      }
+      return `<tr><td colspan="2">${line}</td></tr>`;
+    }).join('');
+    return `
+<!doctype html><html><head><meta charset="utf-8">
+<title>PickMe Consent — ${esc(d.username)}</title>
+<style>
+  :root{ --orange:#f7941d; --line:#d9d9d9; }
+  @page{ size:A4; margin:18mm; }
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:18mm;color:#000;}
+  .hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .hdr img{width:80px;height:80px;object-fit:contain}
+  .ttl{font-weight:800;font-size:18px}
+  .sub{color:#333}
+  .section{margin-top:10px}
+  .shead{font-weight:800;margin:6px 0 4px;border-left:6px solid var(--orange);padding-left:8px}
+  table{width:100%;border-collapse:collapse}
+  td{border:1px solid var(--line);vertical-align:top;padding:6px}
+  .sig{height:60px;border-bottom:1px solid #000;margin-top:6px}
+</style>
+</head><body>
+  <div class="hdr">
+    <img src="https://via.placeholder.com/160x80?text=PickMe" alt="logo">
+    <div>
+      <div class="ttl">PickMe Services — Driver Recruitment Consent Form</div>
+      <div class="sub">Official record</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="shead">Section A — Driver Details</div>
+    <table>
+      <tr><td><strong>Name</strong></td><td>${esc(d.username)}</td></tr>
+      <tr><td><strong>Phone</strong></td><td>${esc(d.phone)}</td></tr>
+      <tr><td><strong>Date of Birth</strong></td><td>${esc(d.dob||'')}</td></tr>
+      <tr><td><strong>Age</strong></td><td>${esc(d.age||'')}</td></tr>
+      <tr><td><strong>Address</strong></td><td>${esc(d.address||'')}</td></tr>
+      <tr><td><strong>License #</strong></td><td>${esc(d.license?.number||'')}</td></tr>
+      <tr><td><strong>License Expiry</strong></td><td>${esc(d.license?.expiry||'')}</td></tr>
+      <tr><td><strong>Ghana Card</strong></td><td>${esc(d.ghanaCard?.number||'(none)')}</td></tr>
+      <tr><td><strong>Vehicle (Optional)</strong></td><td>Plate: ${esc(d.vehicle?.plate||'')} · Row: ${esc(d.vehicle?.rowNo||'')} · Color: ${esc(d.vehicle?.color||'')}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="shead">Section B — Terms & Conditions</div>
+    <table>${tr}</table>
+  </div>
+
+  <div class="section">
+    <div class="shead">Section C — Guarantors</div>
+    <table>
+      <tr><td><strong>Guarantor 1</strong></td><td>${esc(d.guarantors?.[0]?.name||'')} · ${esc(d.guarantors?.[0]?.phone||'')}<br>Address: ${esc(d.guarantors?.[0]?.address||'')} · Relation: ${esc(d.guarantors?.[0]?.relation||'')}</td></tr>
+      <tr><td><strong>Guarantor 2</strong></td><td>${esc(d.guarantors?.[1]?.name||'')} · ${esc(d.guarantors?.[1]?.phone||'')}<br>Address: ${esc(d.guarantors?.[1]?.address||'')} · Relation: ${esc(d.guarantors?.[1]?.relation||'')}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="shead">Section D — Signatories</div>
+    <table>
+      <tr><td><strong>Driver Signature</strong></td><td><div class="sig"></div>Date: __________</td></tr>
+      <tr><td><strong>Guarantor 1 Signature</strong></td><td><div class="sig"></div>Date: __________</td></tr>
+      <tr><td><strong>Guarantor 2 Signature</strong></td><td><div class="sig"></div>Date: __________</td></tr>
+      <tr><td><strong>PickMe Officer Signature</strong></td><td><div class="sig"></div>Date: __________</td></tr>
+    </table>
+  </div>
+</body></html>`;
+  }
+
+  // ---- Gate flow ----
+  show(gate); hide(formArea); hide(termsEdit);
+
+  gateEnter.addEventListener('click', async ()=>{
+    gateMsg.textContent="";
+    const uname=(gateUsername.value||'').trim();
+    const rawPhone=(gatePhone.value||'').trim();
+    if(!uname || !rawPhone){ gateMsg.textContent="Enter username and phone."; return; }
+    const norm = normalizePhone(rawPhone);
+    currentKey = uname+'_'+norm;
+    currentPhone = norm;
+
+    // prefill
+    d_name.value = uname;
+    d_phone.value = norm;
+    whoLabel.textContent = `Active record: ${uname} (${norm})`;
+
+    await loadTerms();
+
+    hide(gate);
+    show(formArea);
+    setStep(1);
+  });
+
+  // ---- Draft actions ----
+  s1Save.addEventListener('click', ()=>saveDraft(s1Msg));
+  s2Save.addEventListener('click', ()=>saveDraft(s2Msg));
+
+  // ---- Step nav ----
+  s1Next.addEventListener('click', ()=>{
+    if(!d_name.value.trim() || !d_phone.value.trim() || !d_dob.value || !d_address.value.trim() || !d_lic_no.value.trim() || !d_lic_exp.value){
+      s1Msg.textContent="Name, phone, DOB, address, license number & expiry are required.";
+      return;
+    }
+    s1Msg.textContent="";
+    setStep(2);
+  });
+  s2Back.addEventListener('click', ()=>setStep(1));
+  s2Next.addEventListener('click', ()=>setStep(3));
+  s3Back.addEventListener('click', ()=>setStep(2));
+  s3Next.addEventListener('click', ()=>{
+    const d = collectData();
+    const lines=[];
+    lines.push("Driver Details");
+    lines.push("----------------");
+    lines.push(`Name: ${d.username||''}`);
+    lines.push(`Phone: ${d.phone||''}`);
+    lines.push(`DOB: ${d.dob||''}   Age: ${d.age||''}`);
+    lines.push(`Address: ${d.address||''}`);
+    lines.push(`License #: ${d.license.number||''}  Expiry: ${d.license.expiry||''}`);
+    lines.push(`Ghana Card: ${d.ghanaCard.number||'(none)'}`);
+    lines.push(`Vehicle (opt): Plate=${d.vehicle.plate||''}  Row=${d.vehicle.rowNo||''}  Color=${d.vehicle.color||''}`);
+    lines.push("");
+    lines.push("Guarantors");
+    lines.push("-----------");
+    d.guarantors.forEach((g,i)=>{
+      lines.push(`#${i+1} ${g.name||''} | ${g.phone||''}`);
+      lines.push(`Address: ${g.address||''}   Relation: ${g.relation||''}`);
+    });
+    previewBox.textContent = lines.join("\n");
+    setStep(4);
+  });
+  s4Back.addEventListener('click', ()=>setStep(3));
+
+  // ---- Submit ----
+  submitAll.addEventListener('click', async ()=>{
+    submitMsg.textContent = "Saving...";
+    try{
+      const data = collectData();
+      const phoneKey = data.phone;
+      if(!phoneKey){ submitMsg.textContent="Phone missing."; return; }
+
+      // Upload images (some optional)
+      const base = `${COL_DRIVERS}/${phoneKey}/`;
+      const photoURL    = await uploadIfFile(d_photo,       base+'driver_photo.jpg');
+      const licFrontURL = await uploadIfFile(d_lic_front,   base+'license_front.jpg');
+      const licBackURL  = await uploadIfFile(d_lic_back,    base+'license_back.jpg');
+      const ghFrontURL  = await uploadIfFile(d_ghana_front, base+'ghana_front.jpg');
+      const ghBackURL   = await uploadIfFile(d_ghana_back,  base+'ghana_back.jpg');
+
+      const payload = Object.assign({}, data, {
+        photos: {
+          driver: photoURL||null,
+          licenseFront: licFrontURL||null,
+          licenseBack: licBackURL||null,
+          ghanaFront: ghFrontURL||null,
+          ghanaBack: ghBackURL||null
+        },
+        finalizedAt: serverTimestamp()
+      });
+
+      await setDoc(doc(collection(db, COL_DRIVERS), phoneKey), payload, { merge:true });
+      submitMsg.textContent = "Saved. Opening print…";
+
+      // Print view
+      const printHTML = buildPrintHTML(payload, termsView.textContent||"");
+      const w = window.open('', '_blank', 'width=900,height=1200');
+      w.document.open(); w.document.write(printHTML); w.document.close();
+      w.onload = ()=>{ w.focus(); w.print(); };
+    }catch(e){
+      console.error(e);
+      submitMsg.textContent = "Failed to save. Please check connection and try again.";
+    }
+  });
+
+  // ---- Edit Consent (in-page) ----
+  btnEditConsent.addEventListener('click', ()=>{
+    hide(gate); hide(formArea); show(termsEdit);
+    $('codeGate').style.display='block';
+    $('editorArea').style.display='none';
+    $('codeMsg').textContent='';
+    $('adminCode').value='';
+  });
+
+  $('codeCancel').addEventListener('click', ()=>{
+    hide(termsEdit); show(gate); // return to gate
+  });
+
+  $('codeCheck').addEventListener('click', async ()=>{
+    if (adminCode.value !== ADMIN_CODE){ codeMsg.textContent="Invalid access code."; return; }
+    codeMsg.textContent="";
+    await loadTerms();
+    $('codeGate').style.display='none';
+    $('editorArea').style.display='block';
+  });
+
+  $('termsCancel').addEventListener('click', ()=>{
+    hide(termsEdit); show(gate);
+  });
+
+  $('termsSave').addEventListener('click', async ()=>{
+    termsMsg.textContent = "Saving…";
+    try{
+      const content = termsEditor.value || "";
+      await setDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id), {
+        content, updatedAt: serverTimestamp(), updatedBy: "PickMe Admin"
+      }, { merge:true });
+      termsMsg.textContent = "Saved.";
+      termsView.textContent = content;
+      currentTerms = content;
+    }catch(e){
+      console.error(e);
+      termsMsg.textContent = "Failed to save terms.";
+    }
+  });
+
+  // Load default terms once at start (so Step 3 shows something even before gating)
+  loadTerms().catch(()=>{});
+</script>
+
+</body>
+</html>
