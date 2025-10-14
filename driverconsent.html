@@ -1,250 +1,303 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PickMe — Driver Recruitment Consent</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>PickMe — Driver Recruitment</title>
 
 <style>
   :root{
-    /* Web app theme (pink/white) */
-    --pink:#c12872; --pink-dark:#9e1850; --bg:#f9f9fb; --ink:#111; --muted:#666; --line:#e7e7e7;
-    /* Print (A4) theme (orange/black) */
+    /* Soft web theme */
+    --pink:#f7b6cc; --pink-strong:#c12872; --bg:#ffffff; --ink:#333; --muted:#666; --line:#e9e9ee; --shadow:0 8px 28px rgba(0,0,0,.06);
+    /* Print theme */
     --orange:#f7941d; --black:#000; --linePrint:#d9d9d9;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:760px;margin:0 auto;padding:18px}
 
-  /* Top bar */
-  .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px}
-  .logoRow{display:flex;align-items:center;gap:12px}
-  .logo{width:56px;height:56px;object-fit:contain}
-  .titles{display:flex;flex-direction:column}
-  .titles .big{font-weight:800;font-size:16px}
-  .titles .sub{color:var(--muted);font-size:13px}
-  .editBtn{background:var(--pink);color:#fff;border:none;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}
-
-  /* Layout */
-  .wrap{max-width:720px;margin:0 auto;padding:16px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0;box-shadow:0 4px 14px rgba(0,0,0,.04)}
-  label{display:block;font-size:13px;color:var(--muted);margin:8px 2px 4px}
+  /* Landing */
+  #gate{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px}
+  .gate-card{width:100%;max-width:520px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 22px;box-shadow:var(--shadow);text-align:center}
+  .logo-circle{width:88px;height:88px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#fff,#fef3f7);border:1px solid var(--line);margin:6px auto 12px}
+  .logo-circle img{width:66px;height:66px;object-fit:contain}
+  .title-big{font-weight:800;font-size:22px;letter-spacing:.2px;margin:2px 0 18px}
+  .field{margin:10px 0 14px;text-align:left}
+  label{display:block;font-size:13px;color:#777;margin:0 0 6px}
   input[type="text"],input[type="tel"],input[type="date"],textarea,select{
-    width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff
+    width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:15px;transition:border-color .2s, box-shadow .2s;
   }
-  textarea{min-height:120px}
-  .btnRow{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-  .btn{border:none;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
-  .btn.pink{background:var(--pink);color:#fff}
-  .btn.pink:hover{background:var(--pink-dark)}
-  .btn.ghost{background:#efefef}
-  .note{font-size:12px;color:var(--muted)}
-  .row{display:flex;flex-direction:column;gap:10px}
-  .split{display:flex;gap:10px}
-  .split>*{flex:1}
-  @media (max-width:640px){ .split{flex-direction:column} }
+  input:focus,textarea:focus,select:focus{border-color:var(--pink-strong);box-shadow:0 0 0 4px rgba(193,40,114,.08)}
+  .btn{border:none;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer;transition:transform .06s ease, box-shadow .2s}
+  .btn:active{transform:translateY(1px)}
+  .btn-pink{background:var(--pink-strong);color:#fff;box-shadow:0 10px 22px rgba(193,40,114,.18)}
+  .btn-ghost{background:#f3f3f5;color:#333}
+  .gate-btn{width:100%;margin-top:6px}
 
-  .photoBox{width:140px;height:140px;border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fafafa}
-  .photoBox img{width:100%;height:100%;object-fit:cover}
+  /* Main header */
+  #app{display:none}
+  .topbar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:10}
+  .top-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{width:50px;height:50px;object-fit:contain}
+  .brand .txt{line-height:1.15}
+  .brand .txt .big{font-weight:900}
+  .brand .txt .sub{color:#777;font-size:13px}
+  .edit-consent-btn{background:var(--pink);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(247,182,204,.45)}
 
-  /* Sections (gate visible by default) */
-  #gate{display:block}
-  #formArea,#termsEdit{display:none}
+  /* Sections */
+  .section{max-width:760px;margin:18px auto;padding:0 18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 16px;box-shadow:var(--shadow)}
+  .sec-title{font-weight:900;font-size:16px;margin:0 0 8px}
+  .grid-1{display:grid;grid-template-columns:1fr;gap:16px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:680px){ .row{grid-template-columns:1fr} }
+
+  /* Photo selectors */
+  .photo-group{display:grid;grid-template-columns:1fr;gap:10px}
+  .upload-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-mini{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .thumb{width:140px;height:140px;border:1px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;background:#fafafa;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+
+  /* Steps nav */
+  .steps-nav{display:flex;gap:10px;justify-content:flex-end}
+  .hint{font-size:12px;color:#777}
+
+  /* Edit consent panel (inline) */
+  #editWrap{display:none;max-width:760px;margin:18px auto;padding:0 18px}
+  .editor-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+  .row-inline{display:flex;gap:10px;align-items:center}
+  .grow{flex:1}
+  textarea#termsEditor{min-height:240px}
 
   /* Print */
-  @media print { .no-print{display:none!important} body{background:#fff} }
+  @media print{ .no-print{display:none!important} body{background:#fff} }
 </style>
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar no-print">
-  <div class="logoRow">
-    <!-- Replace with real PickMe logo -->
-    <img class="logo" src="https://via.placeholder.com/140x64?text=PickMe" alt="PickMe">
-    <div class="titles">
-      <div class="big">PickMe Services — Driver Recruitment</div>
-      <div class="sub">Consent Form</div>
+<!-- Landing / Gate -->
+<section id="gate">
+  <div class="gate-card">
+    <div class="logo-circle">
+      <!-- Swap to real logo -->
+      <img src="https://via.placeholder.com/120x60?text=PickMe" alt="PickMe">
+    </div>
+    <div class="title-big">Driver Recruitment</div>
+
+    <div class="field">
+      <label>Username</label>
+      <input id="gateUsername" type="text" placeholder="e.g., kwameAdu7">
+    </div>
+    <div class="field">
+      <label>Phone number</label>
+      <input id="gatePhone" type="tel" placeholder="+233… or 0…">
+    </div>
+    <button id="gateEnter" class="btn btn-pink gate-btn">Enter</button>
+    <div id="gateMsg" class="hint" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<!-- App -->
+<section id="app">
+  <div class="topbar no-print">
+    <div class="top-inner">
+      <div class="brand">
+        <img src="https://via.placeholder.com/120x60?text=PickMe" alt="PickMe">
+        <div class="txt">
+          <div class="big">PickMe Services</div>
+          <div class="sub">Consent Form</div>
+        </div>
+      </div>
+      <button id="btnEditConsent" class="edit-consent-btn">Edit Consent</button>
     </div>
   </div>
-  <button id="btnEditConsent" class="editBtn">Edit Consent</button>
-</div>
 
-<div class="wrap">
+  <!-- Section 1: Driver -->
+  <div class="section">
+    <div class="card">
+      <div class="sec-title">Section 1 — Driver Information</div>
+      <div class="grid-1">
+        <div class="field"><label>Full name</label><input id="d_name" type="text"></div>
+        <div class="row">
+          <div class="field"><label>Phone</label><input id="d_phone" type="tel"></div>
+          <div class="field"><label>Date of birth</label><input id="d_dob" type="date"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Age</label><input id="d_age" type="text" readonly placeholder="Auto"/></div>
+          <div class="field"><label>Address</label><input id="d_address" type="text"></div>
+        </div>
 
-  <!-- 0) Gate -->
-  <section id="gate" class="card">
-    <h3 style="margin:0 0 6px">Start / Resume</h3>
-    <p class="note" style="margin:0 0 8px">Enter username and phone to start a new record or resume an existing one.</p>
-    <label>Username</label>
-    <input id="gateUsername" type="text" placeholder="e.g., Kwame Adu">
-    <label>Phone number</label>
-    <input id="gatePhone" type="tel" placeholder="+233… or 0…">
-    <div class="btnRow">
-      <button id="gateEnter" class="btn pink">Enter</button>
-    </div>
-    <div id="gateMsg" class="note"></div>
-  </section>
+        <div class="field">
+          <label>Driver photo</label>
+          <div class="photo-group">
+            <div class="upload-actions">
+              <button class="btn-mini" data-target="d_photo" data-mode="camera">📷 Take Photo</button>
+              <button class="btn-mini" data-target="d_photo" data-mode="file">📁 Choose from Device</button>
+            </div>
+            <div class="thumb" id="d_photoPrev"><span class="hint">No photo</span></div>
+            <input id="d_photo_cam" type="file" accept="image/*" capture="environment" style="display:none">
+            <input id="d_photo_file" type="file" accept="image/*" style="display:none">
+          </div>
+        </div>
 
-  <!-- 1) Form Area -->
-  <section id="formArea">
-    <!-- Step header -->
-    <div class="card" id="stepHeader">
-      <div id="stepTitle" style="font-weight:800">Step 1 — Driver Information</div>
-      <div class="note" id="whoLabel" style="margin-top:4px"></div>
-    </div>
+        <div class="row">
+          <div class="field"><label>License number</label><input id="d_lic_no" type="text"></div>
+          <div class="field"><label>License expiry</label><input id="d_lic_exp" type="date"></div>
+        </div>
 
-    <!-- Step 1: Driver -->
-    <div class="card" id="step1">
-      <label>Driver's full name</label>
-      <input id="d_name" type="text" placeholder="Full name">
+        <div class="row">
+          <div class="field">
+            <label>License — Front</label>
+            <div class="upload-actions">
+              <button class="btn-mini" data-target="d_lic_front" data-mode="camera">📷 Take Photo</button>
+              <button class="btn-mini" data-target="d_lic_front" data-mode="file">📁 Choose from Device</button>
+            </div>
+            <div class="thumb" id="d_lic_frontPrev"><span class="hint">No image</span></div>
+            <input id="d_lic_front_cam" type="file" accept="image/*" capture="environment" style="display:none">
+            <input id="d_lic_front_file" type="file" accept="image/*" style="display:none">
+          </div>
+          <div class="field">
+            <label>License — Back</label>
+            <div class="upload-actions">
+              <button class="btn-mini" data-target="d_lic_back" data-mode="camera">📷 Take Photo</button>
+              <button class="btn-mini" data-target="d_lic_back" data-mode="file">📁 Choose from Device</button>
+            </div>
+            <div class="thumb" id="d_lic_backPrev"><span class="hint">No image</span></div>
+            <input id="d_lic_back_cam" type="file" accept="image/*" capture="environment" style="display:none">
+            <input id="d_lic_back_file" type="file" accept="image/*" style="display:none">
+          </div>
+        </div>
 
-      <label>Phone number</label>
-      <input id="d_phone" type="tel" placeholder="+233… or 0…">
+        <div class="row">
+          <div class="field"><label>Ghana card number (optional)</label><input id="d_ghana_no" type="text"></div>
+          <div></div>
+        </div>
 
-      <label>Date of birth</label>
-      <input id="d_dob" type="date">
+        <div class="row">
+          <div class="field">
+            <label>Ghana Card — Front (optional)</label>
+            <div class="upload-actions">
+              <button class="btn-mini" data-target="d_ghana_front" data-mode="camera">📷 Take Photo</button>
+              <button class="btn-mini" data-target="d_ghana_front" data-mode="file">📁 Choose from Device</button>
+            </div>
+            <div class="thumb" id="d_ghana_frontPrev"><span class="hint">No image</span></div>
+            <input id="d_ghana_front_cam" type="file" accept="image/*" capture="environment" style="display:none">
+            <input id="d_ghana_front_file" type="file" accept="image/*" style="display:none">
+          </div>
+          <div class="field">
+            <label>Ghana Card — Back (optional)</label>
+            <div class="upload-actions">
+              <button class="btn-mini" data-target="d_ghana_back" data-mode="camera">📷 Take Photo</button>
+              <button class="btn-mini" data-target="d_ghana_back" data-mode="file">📁 Choose from Device</button>
+            </div>
+            <div class="thumb" id="d_ghana_backPrev"><span class="hint">No image</span></div>
+            <input id="d_ghana_back_cam" type="file" accept="image/*" capture="environment" style="display:none">
+            <input id="d_ghana_back_file" type="file" accept="image/*" style="display:none">
+          </div>
+        </div>
 
-      <label>Age (auto)</label>
-      <input id="d_age" type="text" readonly placeholder="—">
+        <div class="row">
+          <div class="field"><label>Vehicle (optional) — Plate</label><input id="v_plate" type="text"></div>
+          <div class="field"><label>PickMe row</label><input id="v_row" type="text"></div>
+        </div>
+        <div class="field"><label>Vehicle colour (optional)</label><input id="v_color" type="text"></div>
 
-      <label>Residential address</label>
-      <input id="d_address" type="text" placeholder="Street, Town">
-
-      <label>Driver photo (upload or use camera)</label>
-      <div class="row">
-        <input id="d_photo" type="file" accept="image/*" capture="environment">
-        <div class="photoBox" id="d_photoPrev"><span class="note">No photo</span></div>
-      </div>
-
-      <label>License number</label>
-      <input id="d_lic_no" type="text" placeholder="License #">
-
-      <label>License expiry date</label>
-      <input id="d_lic_exp" type="date">
-
-      <label>License photo — Front (required)</label>
-      <input id="d_lic_front" type="file" accept="image/*" capture="environment">
-
-      <label>License photo — Back (required)</label>
-      <input id="d_lic_back" type="file" accept="image/*" capture="environment">
-
-      <label>Ghana card number (optional)</label>
-      <input id="d_ghana_no" type="text" placeholder="GHA-… (optional)">
-
-      <label>Ghana card — Front (optional)</label>
-      <input id="d_ghana_front" type="file" accept="image/*" capture="environment">
-
-      <label>Ghana card — Back (optional)</label>
-      <input id="d_ghana_back" type="file" accept="image/*" capture="environment">
-
-      <label>Vehicle (optional) — Plate number</label>
-      <input id="v_plate" type="text" placeholder="e.g., AS-1234-24 (optional)">
-
-      <label>Vehicle (optional) — PickMe row number</label>
-      <input id="v_row" type="text" placeholder="e.g., 17 (optional)">
-
-      <label>Vehicle (optional) — Colour</label>
-      <input id="v_color" type="text" placeholder="e.g., Yellow/Black (optional)">
-
-      <div class="btnRow">
-        <button class="btn ghost" id="s1Save">Save draft</button>
-        <button class="btn pink" id="s1Next">Next →</button>
-      </div>
-      <div id="s1Msg" class="note"></div>
-    </div>
-
-    <!-- Step 2: Guarantors -->
-    <div class="card" id="step2" style="display:none;">
-      <h3 style="margin:0 0 8px">Guarantors</h3>
-      <div>
-        <label>Guarantor 1 — Full name</label>
-        <input id="g1_name" type="text">
-        <label>Guarantor 1 — Address</label>
-        <input id="g1_address" type="text">
-        <label>Guarantor 1 — Phone</label>
-        <input id="g1_phone" type="tel">
-        <label>Guarantor 1 — Relationship</label>
-        <input id="g1_relation" type="text">
-      </div>
-      <hr style="border:none;border-top:1px dashed var(--line);margin:12px 0">
-      <div>
-        <label>Guarantor 2 — Full name</label>
-        <input id="g2_name" type="text">
-        <label>Guarantor 2 — Address</label>
-        <input id="g2_address" type="text">
-        <label>Guarantor 2 — Phone</label>
-        <input id="g2_phone" type="tel">
-        <label>Guarantor 2 — Relationship</label>
-        <input id="g2_relation" type="text">
-      </div>
-      <div class="btnRow">
-        <button class="btn ghost" id="s2Back">← Back</button>
-        <button class="btn ghost" id="s2Save">Save draft</button>
-        <button class="btn pink" id="s2Next">Next →</button>
-      </div>
-      <div id="s2Msg" class="note"></div>
-    </div>
-
-    <!-- Step 3: Terms (read-only) -->
-    <div class="card" id="step3" style="display:none;">
-      <h3 style="margin:0 0 8px">Terms & Conditions</h3>
-      <div id="termsView" style="white-space:pre-wrap;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;min-height:160px"></div>
-      <div class="btnRow">
-        <button class="btn ghost" id="s3Back">← Back</button>
-        <button class="btn pink" id="s3Next">Preview →</button>
+        <div class="steps-nav">
+          <button id="s1Save" class="btn btn-ghost">Save draft</button>
+          <button id="s1Next" class="btn btn-pink">Next →</button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Step 4: Preview -->
-    <div class="card" id="step4" style="display:none;">
-      <h3 style="margin:0 0 8px">Preview</h3>
-      <div id="previewBox" style="border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;white-space:pre-wrap;"></div>
-      <div class="btnRow">
-        <button class="btn ghost" id="s4Back">← Back</button>
-        <button class="btn pink" id="submitAll">Submit & Print</button>
+  <!-- Section 2: Guarantors -->
+  <div class="section" id="sec2" style="display:none">
+    <div class="card">
+      <div class="sec-title">Section 2 — Guarantors</div>
+      <div class="grid-1">
+        <div class="row">
+          <div class="field"><label>Guarantor 1 — Name</label><input id="g1_name" type="text"></div>
+          <div class="field"><label>Phone</label><input id="g1_phone" type="tel"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Address</label><input id="g1_address" type="text"></div>
+          <div class="field"><label>Relationship</label><input id="g1_relation" type="text"></div>
+        </div>
+
+        <div class="row">
+          <div class="field"><label>Guarantor 2 — Name</label><input id="g2_name" type="text"></div>
+          <div class="field"><label>Phone</label><input id="g2_phone" type="tel"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Address</label><input id="g2_address" type="text"></div>
+          <div class="field"><label>Relationship</label><input id="g2_relation" type="text"></div>
+        </div>
+
+        <div class="steps-nav">
+          <button id="s2Back" class="btn btn-ghost">← Back</button>
+          <button id="s2Save" class="btn btn-ghost">Save draft</button>
+          <button id="s2Next" class="btn btn-pink">Next →</button>
+        </div>
       </div>
-      <div id="submitMsg" class="note"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- In-page “Edit Consent” (hidden until unlocked) -->
-  <section id="termsEdit" class="card">
-    <h3 style="margin:0 0 6px;">Edit Consent Agreement</h3>
-    <div id="codeGate">
-      <label>Access code</label>
-      <input id="adminCode" type="password" placeholder="Enter code">
-      <div class="btnRow">
-        <button id="codeCheck" class="btn pink">Unlock</button>
-        <button id="codeCancel" class="btn ghost">Cancel</button>
+  <!-- Section 3: Terms -->
+  <div class="section" id="sec3" style="display:none">
+    <div class="card">
+      <div class="sec-title">Section 3 — Terms & Conditions</div>
+      <div id="termsView" style="white-space:pre-wrap;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;min-height:160px"></div>
+      <div class="steps-nav" style="margin-top:12px">
+        <button id="s3Back" class="btn btn-ghost">← Back</button>
+        <button id="s3Next" class="btn btn-pink">Preview →</button>
       </div>
-      <div id="codeMsg" class="note"></div>
     </div>
+  </div>
 
-    <div id="editorArea" style="display:none;">
-      <label>Consent terms (plain text)</label>
-      <textarea id="termsEditor" placeholder="Type terms here..."></textarea>
-      <div class="btnRow">
-        <button id="termsCancel" class="btn ghost">Back to Form</button>
-        <button id="termsSave" class="btn pink">Save Changes</button>
+  <!-- Section 4: Preview -->
+  <div class="section" id="sec4" style="display:none">
+    <div class="card">
+      <div class="sec-title">Section 4 — Preview</div>
+      <div id="previewBox" style="border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;white-space:pre-wrap;"></div>
+      <div class="steps-nav" style="margin-top:12px">
+        <button id="s4Back" class="btn btn-ghost">← Back</button>
+        <button id="submitAll" class="btn btn-pink">Submit & Print</button>
       </div>
-      <div id="termsMsg" class="note"></div>
+      <div id="submitMsg" class="hint" style="margin-top:6px"></div>
     </div>
-  </section>
+  </div>
 
-</div>
+  <!-- Inline Edit Consent -->
+  <div id="editWrap" class="no-print">
+    <div class="editor-card">
+      <div class="sec-title" style="margin-bottom:10px">Edit Consent Agreement</div>
+      <div id="codeRow" class="row-inline" style="margin-bottom:8px">
+        <div class="grow"><input id="adminCode" type="password" placeholder="Access code"/></div>
+        <button id="codeCheck" class="btn btn-pink">Unlock</button>
+        <button id="codeCancel" class="btn btn-ghost">Cancel</button>
+      </div>
+      <div id="editorArea" style="display:none">
+        <textarea id="termsEditor" placeholder="Type terms here..."></textarea>
+        <div class="btns">
+          <button id="termsCancel" class="btn btn-ghost">Back to form</button>
+          <button id="termsSave" class="btn btn-pink">Save</button>
+        </div>
+        <div id="termsMsg" class="hint" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<!-- Firebase + App Logic -->
+<!-- Firebase + Logic -->
 <script type="module">
-  // ---- Firebase imports (host this file over HTTPS) ----
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import {
-    getFirestore, collection, doc, getDoc, setDoc, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import {
-    getStorage, ref as sRef, uploadBytes, getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+  import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-  // ---- Your exact config (from your existing page) ----
+  /* Your exact config */
   const firebaseConfig = {
     apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
     authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -257,58 +310,66 @@
   const db  = getFirestore(app);
   const st  = getStorage(app);
 
-  // ---- Constants / selectors ----
+  /* Constants */
   const ADMIN_CODE = "123456";
-  const COL_DRIVERS = "DriverConsent";                       // per-driver records
-  const DOC_TERMS   = { col: "DriverConsentSettings", id: "terms" }; // global terms storage
+  const COL_DRIVERS = "DriverConsent";
+  const DOC_TERMS   = { col: "DriverConsentSettings", id: "terms" };
 
+  /* Quick sel */
   const $ = (id)=>document.getElementById(id);
-  const gate=$('gate'), formArea=$('formArea'), termsEdit=$('termsEdit');
-
+  const gate = $('gate'), appRoot = $('app');
   const gateUsername=$('gateUsername'), gatePhone=$('gatePhone'), gateEnter=$('gateEnter'), gateMsg=$('gateMsg');
+  const btnEditConsent=$('btnEditConsent'), editWrap=$('editWrap');
+  const adminCode=$('adminCode'), codeCheck=$('codeCheck'), codeCancel=$('codeCancel');
+  const editorArea=$('editorArea'), termsEditor=$('termsEditor'), termsSave=$('termsSave'), termsCancel=$('termsCancel'), termsMsg=$('termsMsg');
+  const termsView=$('termsView');
 
-  const stepHeader=$('stepHeader'), stepTitle=$('stepTitle'), whoLabel=$('whoLabel');
-  const step1=$('step1'), step2=$('step2'), step3=$('step3'), step4=$('step4');
-
-  const d_name=$('d_name'), d_phone=$('d_phone'), d_dob=$('d_dob'), d_age=$('d_age'), d_address=$('d_address');
-  const d_photo=$('d_photo'), d_photoPrev=$('d_photoPrev');
-  const d_lic_no=$('d_lic_no'), d_lic_exp=$('d_lic_exp'), d_lic_front=$('d_lic_front'), d_lic_back=$('d_lic_back');
-  const d_ghana_no=$('d_ghana_no'), d_ghana_front=$('d_ghana_front'), d_ghana_back=$('d_ghana_back');
-  const v_plate=$('v_plate'), v_row=$('v_row'), v_color=$('v_color');
-
-  const g1_name=$('g1_name'), g1_address=$('g1_address'), g1_phone=$('g1_phone'), g1_relation=$('g1_relation');
-  const g2_name=$('g2_name'), g2_address=$('g2_address'), g2_phone=$('g2_phone'), g2_relation=$('g2_relation');
-
-  const s1Next=$('s1Next'), s1Save=$('s1Save'), s1Msg=$('s1Msg');
-  const s2Back=$('s2Back'), s2Next=$('s2Next'), s2Save=$('s2Save'), s2Msg=$('s2Msg');
+  /* Sections */
+  const sec2=$('sec2'), sec3=$('sec3'), sec4=$('sec4');
+  const s1Next=$('s1Next'), s1Save=$('s1Save');
+  const s2Back=$('s2Back'), s2Next=$('s2Next'), s2Save=$('s2Save');
   const s3Back=$('s3Back'), s3Next=$('s3Next');
   const s4Back=$('s4Back'), submitAll=$('submitAll'), submitMsg=$('submitMsg');
 
-  const termsView=$('termsView'), previewBox=$('previewBox');
+  /* Driver fields */
+  const d_name=$('d_name'), d_phone=$('d_phone'), d_dob=$('d_dob'), d_age=$('d_age'), d_address=$('d_address');
+  const d_lic_no=$('d_lic_no'), d_lic_exp=$('d_lic_exp');
+  const d_ghana_no=$('d_ghana_no'), v_plate=$('v_plate'), v_row=$('v_row'), v_color=$('v_color');
 
-  const btnEditConsent=$('btnEditConsent');
-  const adminCode=$('adminCode'), codeCheck=$('codeCheck'), codeCancel=$('codeCancel'), codeMsg=$('codeMsg');
-  const editorArea=$('editorArea'), termsEditor=$('termsEditor'), termsCancel=$('termsCancel'), termsSave=$('termsSave'), termsMsg=$('termsMsg');
+  /* Photo inputs (camera/file pairs) */
+  const fsets = {
+    d_photo:      { cam:$('d_photo_cam'),      file:$('d_photo_file'),      prev:$('d_photoPrev'),      sel:null },
+    d_lic_front:  { cam:$('d_lic_front_cam'),  file:$('d_lic_front_file'),  prev:$('d_lic_frontPrev'),  sel:null },
+    d_lic_back:   { cam:$('d_lic_back_cam'),   file:$('d_lic_back_file'),   prev:$('d_lic_backPrev'),   sel:null },
+    d_ghana_front:{ cam:$('d_ghana_front_cam'),file:$('d_ghana_front_file'),prev:$('d_ghana_frontPrev'),sel:null },
+    d_ghana_back: { cam:$('d_ghana_back_cam'), file:$('d_ghana_back_file'), prev:$('d_ghana_backPrev'), sel:null },
+  };
 
-  // ---- State ----
-  let currentTerms = "";
-  let currentKey = null;   // username + '_' + phone
-  let currentPhone = null; // normalized phone (doc id)
+  /* Hook the two-option upload buttons */
+  document.querySelectorAll('.upload-actions .btn-mini').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = btn.dataset.target;
+      const mode   = btn.dataset.mode; // "camera" | "file"
+      const pair = fsets[target];
+      if(!pair) return;
+      const el = (mode==='camera') ? pair.cam : pair.file;
+      el.click();
+    });
+  });
 
-  // ---- Helpers ----
-  function show(el){ el.style.display='block'; }
-  function hide(el){ el.style.display='none'; }
-  function setStep(n){
-    stepTitle.textContent =
-      n===1 ? "Step 1 — Driver Information" :
-      n===2 ? "Step 2 — Guarantors" :
-      n===3 ? "Step 3 — Terms & Conditions" :
-              "Step 4 — Preview";
-    step1.style.display=(n===1?'block':'none');
-    step2.style.display=(n===2?'block':'none');
-    step3.style.display=(n===3?'block':'none');
-    step4.style.display=(n===4?'block':'none');
+  function bindPreview(pair){
+    const setPrev = (file)=>{
+      pair.sel = file || null;
+      if(!file){ pair.prev.innerHTML='<span class="hint">No image</span>'; return; }
+      const url = URL.createObjectURL(file);
+      pair.prev.innerHTML = `<img src="${url}" alt="preview">`;
+    };
+    pair.cam.addEventListener('change', ()=> setPrev(pair.cam.files?.[0]||null));
+    pair.file.addEventListener('change',()=> setPrev(pair.file.files?.[0]||null));
   }
+  Object.values(fsets).forEach(bindPreview);
+
+  /* Phone utils */
   function normalizePhone(input){
     let s=String(input||'').trim().replace(/[\s\-]/g,'');
     if (s.startsWith('+233')) return s;
@@ -317,114 +378,186 @@
     if (/^\d{9}$/.test(s))    return '+233'+s;
     return s;
   }
-  function calcAge(){
-    const v = d_dob.value; if(!v){ d_age.value=''; return; }
+
+  /* Age auto */
+  d_dob.addEventListener('change', ()=>{
+    const v=d_dob.value; if(!v){ d_age.value=''; return; }
     const dob=new Date(v); if(isNaN(dob)){ d_age.value=''; return; }
     const now=new Date(); let age=now.getFullYear()-dob.getFullYear();
     const m=now.getMonth()-dob.getMonth();
     if(m<0 || (m===0 && now.getDate()<dob.getDate())) age--;
     d_age.value=String(Math.max(0,age));
-  }
-  d_dob.addEventListener('change', calcAge);
-
-  d_photo.addEventListener('change', ()=>{
-    const f=d_photo.files?.[0];
-    if(!f){ d_photoPrev.innerHTML='<span class="note">No photo</span>'; return; }
-    const url=URL.createObjectURL(f);
-    d_photoPrev.innerHTML=`<img src="${url}" alt="driver photo">`;
   });
 
-  function defaultTerms(){
-    return [
-      "Ownership: The vehicle remains the property of PickMe Services (or its owner). This assignment covers operation only.",
-      "License: Driver must hold a valid license while operating the vehicle. Any person allowed to drive must also be licensed.",
-      "Reporting: Driver shall immediately report accidents, damage, police stops, or any impoundment to PickMe.",
-      "Costs & Fines: Driver is responsible for fines, towing/impound fees, repairs, and lost income while the vehicle is unavailable. PickMe may recover such costs from deposit or future earnings.",
-      "Withdrawal: PickMe may withdraw the vehicle and terminate the assignment if these terms are breached.",
-      "Legal Action: Appropriate legal steps may be taken to recover costs or protect assets in case of serious breach."
-    ].join("\n");
-  }
-
+  /* Terms */
   async function loadTerms(){
     try{
-      const snap = await getDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id));
-      currentTerms = snap.exists() ? (snap.data().content || defaultTerms()) : defaultTerms();
-    }catch{ currentTerms = defaultTerms(); }
-    termsView.textContent = currentTerms;
-    termsEditor.value     = currentTerms;
+      const snap=await getDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id));
+      const content = snap.exists() ? (snap.data().content||"") : defaultTerms();
+      termsView.textContent = content;
+      termsEditor.value = content;
+    }catch{
+      const content = defaultTerms();
+      termsView.textContent = content;
+      termsEditor.value = content;
+    }
+  }
+  function defaultTerms(){
+    return [
+      "Ownership: The vehicle remains the property of PickMe Services (or its owner).",
+      "License: Driver must hold a valid license. Any substitute driver must also be licensed.",
+      "Reporting: Report accidents, damage, police seizures or impounds to PickMe immediately.",
+      "Costs & Fines: Driver bears fines, towing/impound charges, repairs and lost income while the vehicle is unavailable.",
+      "Withdrawal: PickMe may withdraw the vehicle and terminate assignment upon breach.",
+      "Legal Action: Appropriate legal steps may be taken to recover losses in case of serious breach."
+    ].join("\\n");
   }
 
+  /* Gate flow */
+  gateEnter.addEventListener('click', async ()=>{
+    gateMsg.textContent="";
+    const uname=(gateUsername.value||'').trim();
+    const phRaw=(gatePhone.value||'').trim();
+    if(!uname || !phRaw){ gateMsg.textContent="Enter username and phone."; return; }
+    const ph=normalizePhone(phRaw);
+
+    // Prefill main form minimal
+    d_name.value="";          // full name is separate from username
+    d_phone.value=ph;
+
+    await loadTerms();
+    gate.style.display='none';
+    appRoot.style.display='block';
+    // Start at section 1
+    document.querySelector('.section').style.display='block';
+    sec2.style.display='none'; sec3.style.display='none'; sec4.style.display='none';
+  });
+
+  /* Draft save */
   function collectData(){
     return {
-      username: (d_name.value||'').trim(),
-      phone: normalizePhone(d_phone.value||''),
-      dob: d_dob.value||null,
-      age: d_age.value||null,
-      address: (d_address.value||'').trim(),
-      license: {
-        number: (d_lic_no.value||'').trim(),
-        expiry: d_lic_exp.value||null
-      },
-      ghanaCard: {
-        number: (d_ghana_no.value||'').trim() || null
-      },
-      vehicle: {
-        plate: (v_plate.value||'').trim() || null,
-        rowNo: (v_row.value||'').trim() || null,
-        color: (v_color.value||'').trim() || null
-      },
-      guarantors: [
-        {
-          name:(g1_name.value||'').trim(),
-          address:(g1_address.value||'').trim(),
-          phone:normalizePhone(g1_phone.value||''),
-          relation:(g1_relation.value||'').trim()
-        },
-        {
-          name:(g2_name.value||'').trim(),
-          address:(g2_address.value||'').trim(),
-          phone:normalizePhone(g2_phone.value||''),
-          relation:(g2_relation.value||'').trim()
-        }
+      fullName:(d_name.value||'').trim(),
+      phone:normalizePhone(d_phone.value||''),
+      dob:d_dob.value||null,
+      age:d_age.value||null,
+      address:(d_address.value||'').trim(),
+      license:{ number:(d_lic_no.value||'').trim(), expiry:d_lic_exp.value||null },
+      ghanaCard:{ number:(d_ghana_no.value||'').trim()||null },
+      vehicle:{ plate:(v_plate.value||'').trim()||null, rowNo:(v_row.value||'').trim()||null, color:(v_color.value||'').trim()||null },
+      guarantors:[
+        { name:($('g1_name').value||'').trim(), phone:normalizePhone(($('g1_phone').value||'')), address:($('g1_address').value||'').trim(), relation:($('g1_relation').value||'').trim() },
+        { name:($('g2_name').value||'').trim(), phone:normalizePhone(($('g2_phone').value||'')), address:($('g2_address').value||'').trim(), relation:($('g2_relation').value||'').trim() }
       ],
-      termsVersion: "current",
       updatedAt: serverTimestamp(),
       createdAt: serverTimestamp()
     };
   }
-
-  async function saveDraft(whereMsg){
-    const data = collectData();
-    if(!data.phone){ whereMsg.textContent="Phone is required."; return; }
+  async function saveDraft(where){
+    const d=collectData();
+    if(!d.phone){ alert("Phone is required before saving."); return; }
     try{
-      await setDoc(doc(collection(db, COL_DRIVERS), data.phone), data, { merge:true });
-      whereMsg.textContent="Draft saved.";
-    }catch{
-      whereMsg.textContent="Save failed. Check your connection.";
-    }
+      await setDoc(doc(collection(db, COL_DRIVERS), d.phone), d, { merge:true });
+      where.textContent="Draft saved.";
+      setTimeout(()=>where.textContent="",1500);
+    }catch{ where.textContent="Save failed."; setTimeout(()=>where.textContent="",2000); }
   }
 
-  async function uploadIfFile(inputEl, path){
-    const f = inputEl.files?.[0]; if(!f) return null;
-    const rr = sRef(st, path);
-    await uploadBytes(rr, f);
+  s1Save.addEventListener('click', ()=>saveDraft($('s1Save').nextElementSibling?$('s1Save'):$('s1Save'))); // harmless no-op for hint
+  s2Save.addEventListener('click', ()=>saveDraft($('s2Save')));
+
+  /* Step nav */
+  s1Next.addEventListener('click', ()=>{
+    if(!d_phone.value.trim() || !d_lic_no.value.trim() || !d_lic_exp.value || !d_dob.value){ alert("Phone, DOB, license number & expiry are required."); return; }
+    document.querySelector('.section').style.display='block';
+    sec2.style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  s2Back.addEventListener('click', ()=>{ sec2.style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); });
+  s2Next.addEventListener('click', ()=>{ sec3.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
+  s3Back.addEventListener('click', ()=>{ sec3.style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); });
+
+  s3Next.addEventListener('click', ()=>{
+    const d=collectData();
+    const lines=[];
+    lines.push("Driver");
+    lines.push(`  Name: ${d.fullName||'-'}`);
+    lines.push(`  Phone: ${d.phone||'-'}`);
+    lines.push(`  DOB: ${d.dob||'-'}   Age: ${d.age||'-'}`);
+    lines.push(`  Address: ${d.address||'-'}`);
+    lines.push(`  License: ${d.license.number||'-'}   Exp: ${d.license.expiry||'-'}`);
+    lines.push(`  Ghana Card: ${d.ghanaCard.number||'(none)'}`);
+    lines.push(`  Vehicle: Plate=${d.vehicle.plate||'-'}  Row=${d.vehicle.rowNo||'-'}  Color=${d.vehicle.color||'-'}`);
+    lines.push("");
+    lines.push("Guarantors");
+    d.guarantors.forEach((g,i)=>{
+      lines.push(`  #${i+1} ${g.name||'-'} | ${g.phone||'-'} | ${g.relation||'-'}`);
+      lines.push(`     Address: ${g.address||'-'}`);
+    });
+    $('previewBox').textContent = lines.join("\n");
+    sec4.style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  s4Back.addEventListener('click', ()=>{ sec4.style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); });
+
+  /* Upload helper */
+  async function uploadSelected(pairKey, path){
+    const pair=fsets[pairKey];
+    if(!pair || !pair.sel) return null;
+    const rr=sRef(st, path);
+    await uploadBytes(rr, pair.sel);
     return await getDownloadURL(rr);
   }
 
-  function esc(s){ return String(s ?? ''); }
+  /* Submit */
+  submitAll.addEventListener('click', async ()=>{
+    submitMsg.textContent="Saving…";
+    try{
+      const d=collectData();
+      const phoneKey = d.phone;
+      if(!phoneKey){ submitMsg.textContent="Phone missing."; return; }
+
+      const base = `${COL_DRIVERS}/${phoneKey}/`;
+      const photoURL    = await uploadSelected('d_photo',       base+'driver_photo.jpg');
+      const licFrontURL = await uploadSelected('d_lic_front',   base+'license_front.jpg');
+      const licBackURL  = await uploadSelected('d_lic_back',    base+'license_back.jpg');
+      const ghFrontURL  = await uploadSelected('d_ghana_front', base+'ghana_front.jpg');
+      const ghBackURL   = await uploadSelected('d_ghana_back',  base+'ghana_back.jpg');
+
+      const payload = Object.assign({}, d, {
+        photos:{
+          driver:photoURL||null, licenseFront:licFrontURL||null, licenseBack:licBackURL||null,
+          ghanaFront:ghFrontURL||null, ghanaBack:ghBackURL||null
+        },
+        finalizedAt: serverTimestamp()
+      });
+
+      await setDoc(doc(collection(db, COL_DRIVERS), phoneKey), payload, { merge:true });
+      submitMsg.textContent="Saved. Opening print…";
+
+      // Build print
+      const printHTML = buildPrintHTML(payload, termsView.textContent||"");
+      const w = window.open('', '_blank', 'width=900,height=1200');
+      w.document.open(); w.document.write(printHTML); w.document.close();
+      w.onload = ()=>{ w.focus(); w.print(); };
+    }catch(e){
+      console.error(e);
+      submitMsg.textContent="Failed to save. Check connection.";
+    }
+  });
+
+  function esc(s){ return String(s??''); }
   function buildPrintHTML(d, termsText){
-    const rows = (termsText||'').split(/\r?\n/).filter(l=>l.trim().length);
-    const tr = rows.map(line=>{
+    const rows=(termsText||'').split(/\r?\n/).filter(l=>l.trim().length);
+    const tr=rows.map(line=>{
       const i=line.indexOf(':');
-      if(i>0){
-        const k=line.slice(0,i).trim(), v=line.slice(i+1).trim();
+      if(i>0){ const k=line.slice(0,i).trim(), v=line.slice(i+1).trim();
         return `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`;
       }
       return `<tr><td colspan="2">${line}</td></tr>`;
     }).join('');
     return `
 <!doctype html><html><head><meta charset="utf-8">
-<title>PickMe Consent — ${esc(d.username)}</title>
+<title>PickMe Consent — ${esc(d.fullName||'')}</title>
 <style>
   :root{ --orange:#f7941d; --line:#d9d9d9; }
   @page{ size:A4; margin:18mm; }
@@ -451,15 +584,15 @@
   <div class="section">
     <div class="shead">Section A — Driver Details</div>
     <table>
-      <tr><td><strong>Name</strong></td><td>${esc(d.username)}</td></tr>
-      <tr><td><strong>Phone</strong></td><td>${esc(d.phone)}</td></tr>
+      <tr><td><strong>Name</strong></td><td>${esc(d.fullName||'')}</td></tr>
+      <tr><td><strong>Phone</strong></td><td>${esc(d.phone||'')}</td></tr>
       <tr><td><strong>Date of Birth</strong></td><td>${esc(d.dob||'')}</td></tr>
       <tr><td><strong>Age</strong></td><td>${esc(d.age||'')}</td></tr>
       <tr><td><strong>Address</strong></td><td>${esc(d.address||'')}</td></tr>
       <tr><td><strong>License #</strong></td><td>${esc(d.license?.number||'')}</td></tr>
       <tr><td><strong>License Expiry</strong></td><td>${esc(d.license?.expiry||'')}</td></tr>
       <tr><td><strong>Ghana Card</strong></td><td>${esc(d.ghanaCard?.number||'(none)')}</td></tr>
-      <tr><td><strong>Vehicle (Optional)</strong></td><td>Plate: ${esc(d.vehicle?.plate||'')} · Row: ${esc(d.vehicle?.rowNo||'')} · Color: ${esc(d.vehicle?.color||'')}</td></tr>
+      <tr><td><strong>Vehicle</strong></td><td>Plate: ${esc(d.vehicle?.plate||'')} · Row: ${esc(d.vehicle?.rowNo||'')} · Color: ${esc(d.vehicle?.color||'')}</td></tr>
     </table>
   </div>
 
@@ -488,155 +621,31 @@
 </body></html>`;
   }
 
-  // ---- Gate flow ----
-  show(gate); hide(formArea); hide(termsEdit);
-
-  gateEnter.addEventListener('click', async ()=>{
-    gateMsg.textContent="";
-    const uname=(gateUsername.value||'').trim();
-    const rawPhone=(gatePhone.value||'').trim();
-    if(!uname || !rawPhone){ gateMsg.textContent="Enter username and phone."; return; }
-    const norm = normalizePhone(rawPhone);
-    currentKey = uname+'_'+norm;
-    currentPhone = norm;
-
-    // prefill
-    d_name.value = uname;
-    d_phone.value = norm;
-    whoLabel.textContent = `Active record: ${uname} (${norm})`;
-
-    await loadTerms();
-
-    hide(gate);
-    show(formArea);
-    setStep(1);
-  });
-
-  // ---- Draft actions ----
-  s1Save.addEventListener('click', ()=>saveDraft(s1Msg));
-  s2Save.addEventListener('click', ()=>saveDraft(s2Msg));
-
-  // ---- Step nav ----
-  s1Next.addEventListener('click', ()=>{
-    if(!d_name.value.trim() || !d_phone.value.trim() || !d_dob.value || !d_address.value.trim() || !d_lic_no.value.trim() || !d_lic_exp.value){
-      s1Msg.textContent="Name, phone, DOB, address, license number & expiry are required.";
-      return;
-    }
-    s1Msg.textContent="";
-    setStep(2);
-  });
-  s2Back.addEventListener('click', ()=>setStep(1));
-  s2Next.addEventListener('click', ()=>setStep(3));
-  s3Back.addEventListener('click', ()=>setStep(2));
-  s3Next.addEventListener('click', ()=>{
-    const d = collectData();
-    const lines=[];
-    lines.push("Driver Details");
-    lines.push("----------------");
-    lines.push(`Name: ${d.username||''}`);
-    lines.push(`Phone: ${d.phone||''}`);
-    lines.push(`DOB: ${d.dob||''}   Age: ${d.age||''}`);
-    lines.push(`Address: ${d.address||''}`);
-    lines.push(`License #: ${d.license.number||''}  Expiry: ${d.license.expiry||''}`);
-    lines.push(`Ghana Card: ${d.ghanaCard.number||'(none)'}`);
-    lines.push(`Vehicle (opt): Plate=${d.vehicle.plate||''}  Row=${d.vehicle.rowNo||''}  Color=${d.vehicle.color||''}`);
-    lines.push("");
-    lines.push("Guarantors");
-    lines.push("-----------");
-    d.guarantors.forEach((g,i)=>{
-      lines.push(`#${i+1} ${g.name||''} | ${g.phone||''}`);
-      lines.push(`Address: ${g.address||''}   Relation: ${g.relation||''}`);
-    });
-    previewBox.textContent = lines.join("\n");
-    setStep(4);
-  });
-  s4Back.addEventListener('click', ()=>setStep(3));
-
-  // ---- Submit ----
-  submitAll.addEventListener('click', async ()=>{
-    submitMsg.textContent = "Saving...";
-    try{
-      const data = collectData();
-      const phoneKey = data.phone;
-      if(!phoneKey){ submitMsg.textContent="Phone missing."; return; }
-
-      // Upload images (some optional)
-      const base = `${COL_DRIVERS}/${phoneKey}/`;
-      const photoURL    = await uploadIfFile(d_photo,       base+'driver_photo.jpg');
-      const licFrontURL = await uploadIfFile(d_lic_front,   base+'license_front.jpg');
-      const licBackURL  = await uploadIfFile(d_lic_back,    base+'license_back.jpg');
-      const ghFrontURL  = await uploadIfFile(d_ghana_front, base+'ghana_front.jpg');
-      const ghBackURL   = await uploadIfFile(d_ghana_back,  base+'ghana_back.jpg');
-
-      const payload = Object.assign({}, data, {
-        photos: {
-          driver: photoURL||null,
-          licenseFront: licFrontURL||null,
-          licenseBack: licBackURL||null,
-          ghanaFront: ghFrontURL||null,
-          ghanaBack: ghBackURL||null
-        },
-        finalizedAt: serverTimestamp()
-      });
-
-      await setDoc(doc(collection(db, COL_DRIVERS), phoneKey), payload, { merge:true });
-      submitMsg.textContent = "Saved. Opening print…";
-
-      // Print view
-      const printHTML = buildPrintHTML(payload, termsView.textContent||"");
-      const w = window.open('', '_blank', 'width=900,height=1200');
-      w.document.open(); w.document.write(printHTML); w.document.close();
-      w.onload = ()=>{ w.focus(); w.print(); };
-    }catch(e){
-      console.error(e);
-      submitMsg.textContent = "Failed to save. Please check connection and try again.";
-    }
-  });
-
-  // ---- Edit Consent (in-page) ----
+  /* Edit consent flow (main form page only) */
   btnEditConsent.addEventListener('click', ()=>{
-    hide(gate); hide(formArea); show(termsEdit);
-    $('codeGate').style.display='block';
-    $('editorArea').style.display='none';
-    $('codeMsg').textContent='';
-    $('adminCode').value='';
+    editWrap.style.display = (editWrap.style.display==='none'||!editWrap.style.display)?'block':'none';
+    adminCode.value=''; termsMsg.textContent='';
+    editorArea.style.display='none';
   });
-
-  $('codeCancel').addEventListener('click', ()=>{
-    hide(termsEdit); show(gate); // return to gate
-  });
-
-  $('codeCheck').addEventListener('click', async ()=>{
-    if (adminCode.value !== ADMIN_CODE){ codeMsg.textContent="Invalid access code."; return; }
-    codeMsg.textContent="";
+  codeCancel.addEventListener('click', ()=>{ editWrap.style.display='none'; });
+  codeCheck.addEventListener('click', async ()=>{
+    if (adminCode.value!==ADMIN_CODE){ alert("Invalid access code."); return; }
     await loadTerms();
-    $('codeGate').style.display='none';
-    $('editorArea').style.display='block';
+    editorArea.style.display='block';
   });
-
-  $('termsCancel').addEventListener('click', ()=>{
-    hide(termsEdit); show(gate);
-  });
-
-  $('termsSave').addEventListener('click', async ()=>{
-    termsMsg.textContent = "Saving…";
+  termsCancel.addEventListener('click', ()=>{ editWrap.style.display='none'; });
+  termsSave.addEventListener('click', async ()=>{
+    termsMsg.textContent="Saving…";
     try{
-      const content = termsEditor.value || "";
-      await setDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id), {
-        content, updatedAt: serverTimestamp(), updatedBy: "PickMe Admin"
-      }, { merge:true });
-      termsMsg.textContent = "Saved.";
+      const content = termsEditor.value||"";
+      await setDoc(doc(collection(db, DOC_TERMS.col), DOC_TERMS.id), { content, updatedAt: serverTimestamp(), updatedBy:"PickMe Admin" }, { merge:true });
+      termsMsg.textContent="Saved.";
       termsView.textContent = content;
-      currentTerms = content;
-    }catch(e){
-      console.error(e);
-      termsMsg.textContent = "Failed to save terms.";
-    }
+    }catch(e){ console.error(e); termsMsg.textContent="Failed to save."; }
   });
 
-  // Load default terms once at start (so Step 3 shows something even before gating)
+  /* Initial terms load (so Section 3 is ready) */
   loadTerms().catch(()=>{});
 </script>
-
 </body>
 </html>
