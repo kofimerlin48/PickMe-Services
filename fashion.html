@@ -138,15 +138,15 @@
         btn.onclick = () => {
           const card = btn.closest(".card");
           const id = card.dataset.id;
-          window.location.href = `try.html?id=${encodeURIComponent(id)}`;
+          window.location.href = `template.html?id=${encodeURIComponent(id)}`;
         };
       });
     }
 
-    // ✅ Fetch boutiques and show accurate dynamic available items count
+// ✅ Fetch boutiques and show accurate dynamic available items count, sorted by totalItems
 async function fetchBoutiques() {
   const snap = await getDocs(collection(db, "Boutiques"));
-  let html = "";
+  const boutiques = [];
   const now = Date.now();
 
   for (const docSnap of snap.docs) {
@@ -179,7 +179,15 @@ async function fetchBoutiques() {
       console.warn(`⚠️ Counting items for ${b.name} failed:`, err);
     }
 
-    // ✅ Render boutique card with Available Items count at bottom-left
+    boutiques.push({ ...b, totalItems });
+  }
+
+  // ✅ Sort boutiques descending by totalItems (most available items first)
+  boutiques.sort((a, b) => b.totalItems - a.totalItems);
+
+  // ✅ Render boutique cards
+  let html = "";
+  for (const b of boutiques) {
     html += `
       <div class="card" data-id="${b.id}" 
            style="background-image:url('${b.backgroundImage || ""}')"
@@ -191,7 +199,7 @@ async function fetchBoutiques() {
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
             <span style="color:white; font-weight:600; font-size:16px;">
-              Available Items: ${totalItems}
+              Available Items: ${b.totalItems}
             </span>
             <button class="btn-order" style="background-color:${b.themeColor || "#c12872"}">
               Shop from Us
@@ -237,6 +245,16 @@ setInterval(async () => {
         }
       }
     });
+
+// Handle device back navigation → always go to homepage.html
+window.addEventListener("popstate", (e) => {
+  e.preventDefault();
+  window.location.href = "homepage.html";
+});
+
+// Optional: push a dummy state so "back" can be intercepted
+window.history.pushState({}, "");
+  
   </script>
 </body>
 </html>
