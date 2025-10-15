@@ -246,18 +246,17 @@ setInterval(async () => {
       }
     });
 
-// ✅ Back button → go to homepage.html (doesn't interfere with normal clicks)
+// ✅ Force BACK button to always go to homepage.html
 window.addEventListener("DOMContentLoaded", () => {
-  // Add one extra history entry so the first "Back" stays on this page
-  if (!history.state || history.state.key !== "fashion-guard") {
-    history.replaceState({ key: "fashion-guard" }, "", window.location.href);
-    history.pushState({ key: "fashion-guard" }, "", window.location.href);
-  }
+  // Prevent any existing history interference
+  history.pushState(null, "", window.location.href);
+  window.onpopstate = function () {
+    // When the user presses back, go straight to homepage.html
+    window.location.href = "homepage.html";
+  };
 
-  // When the user presses Back from this page, redirect to home
-  window.addEventListener("popstate", () => {
-    window.location.replace("homepage.html");
-  });
+  // Optional safety: also block repeated back attempts
+  setInterval(() => history.pushState(null, "", window.location.href), 1000);
 });
   
   </script>
