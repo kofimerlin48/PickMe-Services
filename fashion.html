@@ -246,17 +246,15 @@ setInterval(async () => {
       }
     });
 
-// ✅ Force BACK button to always go to homepage.html
-window.addEventListener("DOMContentLoaded", () => {
-  // Prevent any existing history interference
-  history.pushState(null, "", window.location.href);
-  window.onpopstate = function () {
-    // When the user presses back, go straight to homepage.html
-    window.location.href = "homepage.html";
-  };
+// ✅ Always send back button from this page straight to homepage.html
+window.addEventListener("load", () => {
+  // lock one fake entry so back is intercepted
+  history.pushState({ page: "lock" }, "", window.location.href);
 
-  // Optional safety: also block repeated back attempts
-  setInterval(() => history.pushState(null, "", window.location.href), 1000);
+  window.addEventListener("popstate", () => {
+    // direct hard redirect — no history walk-through
+    window.location.replace("homepage.html");
+  });
 });
   
   </script>
