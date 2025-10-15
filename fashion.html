@@ -246,23 +246,17 @@ setInterval(async () => {
       }
     });
 
-// ✅ FORCE back navigation to go to homepage.html
+// ✅ Back button → go to homepage.html (doesn't interfere with normal clicks)
 window.addEventListener("DOMContentLoaded", () => {
-  // Push a fake state so we can catch the back event
-  history.pushState({ page: "fashion" }, "", window.location.href);
+  // Add one extra history entry so the first "Back" stays on this page
+  if (!history.state || history.state.key !== "fashion-guard") {
+    history.replaceState({ key: "fashion-guard" }, "", window.location.href);
+    history.pushState({ key: "fashion-guard" }, "", window.location.href);
+  }
 
-  window.addEventListener("popstate", (event) => {
-    event.preventDefault();
-    // Instead of going back in history, go directly to homepage.html
+  // When the user presses Back from this page, redirect to home
+  window.addEventListener("popstate", () => {
     window.location.replace("homepage.html");
-  });
-
-  // Optional: also catch browser "swipe back" or Android system back
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      // If user tries to go back or minimize the tab, redirect
-      window.location.replace("homepage.html");
-    }
   });
 });
   
