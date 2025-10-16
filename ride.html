@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style>
+/* Remove blue outline and tap highlight for clickable cards */
+.card, .card a, .card button {
+    outline: none;                  /* removes the blue focus outline */
+    -webkit-tap-highlight-color: transparent;  /* removes the blue highlight on mobile */
+}
+</style>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PickMe Services - Homepage</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f8f8f8;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .card {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      padding: 20px;
+      height: 80px; /* default height */
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .rectangle { grid-column: span 2; height: 150px; }
+    .square { height: 130px; }
+
+    /* Content text */
+    .content { position: relative; z-index: 2; }
+    .content h3 { margin: 0; }
+    .content p { margin: 5px 0 0; }
+
+    /* Text sizes */
+    .title-sm { font-size: 14px; }
+    .title-md { font-size: 18px; }
+    .title-lg { font-size: 22px; }
+    .title-xxl { font-size: 25px; }
+
+    .desc-sm { font-size: 10px; }
+    .desc-md { font-size: 13px; }
+    .desc-lg { font-size: 16px; }
+
+    /* Alignment */
+    .top-left { align-items: flex-start; justify-content: flex-start; }
+    .center { align-items: center; justify-content: center; text-align: center; }
+    .bottom-left { align-items: flex-end; justify-content: flex-start; }
+
+    /* Font styles */
+    .fancy { font-family: 'Georgia', serif; font-style: italic; }
+    .bold { font-weight: bold; }
+
+    /* Backgrounds */
+    .full-bg {
+      background-size: cover;
+      background-position: center;
+      color: white;
+    }
+    .solid { color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .card-cutout { background: #fff; border: 1px solid #ddd; color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+      z-index: 1;
+    }
+
+    /* Images */
+    .cutout-img { max-height: 80px; margin-bottom: 8px; }
+    .full-img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+
+<!-- =========HEADER CODE STARTS HERE ================== -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+
+    // Replace the <h1> content with the page-specific title
+    const pageTitle = "PICKME SERVICES"; // <-- CHANGE this per page
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`);
+
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // Re-run scripts inside header.html so menus work
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) newScript.src = oldScript.src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+})();
+</script>
+<!-- =========HEADER CODE ENDS HERE ================== -->
+
+
+  <div class="grid" style="padding-top: 70px;">
+    <!-- Add welcome text here above the first cards -->
+    <div style="grid-column: span 2; text-align: center; margin-bottom: 10px; margin-top: 30px;">
+      <p style="margin: 0; font-weight: bold; font-size: 14px; color: black;">Order Anything Within Asante Akim AGOGO & HWIDIEM</p>
+    </div
+
+  <div class="grid">
+
+    <!-- Order a Ride -->
+<a id="orderRideBtn" class="card square card-cutout center" href="#">
+  <div class="content">
+    <img src="https://lh3.googleusercontent.com/d/1bTA3VGmsc-jBhWv2d9Z5BXHoBsITBe5P" class="cutout-img" alt="Pragia">
+    <h3 class="title-lg bold">Order a Ride</h3>
+    <p class="desc-sm"></p>
+  </div>
+</a>
+
+<script>
+(function(){
+  const btn = document.getElementById('orderRideBtn');
+  const storeLink = "http://apl.bz/w@?l=en_US"; // Universal download link
+
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isAndroid = /android/i.test(userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+    const start = Date.now();
+    const delay = 1200; // 1.2 seconds
+
+    // Try to open using common deep-link guesses
+    if (isAndroid) {
+      // Attempt Android intent using verified package name
+      const intentUrl = "intent://#Intent;scheme=pickmeapp;package=com.multibrains.taxi.passenger;end";
+      window.location = intentUrl;
+    } else if (isIOS) {
+      // Attempt iOS scheme guess
+      window.location = "pickmeapp://";
+    } else {
+      // On desktop, open store immediately
+      window.location.href = storeLink;
+      return;
+    }
+
+    // Fallback: if app didn't open, go to store after 1.2s
+    setTimeout(() => {
+      if (Date.now() - start < delay + 100) {
+        window.location.href = storeLink;
+      }
+    }, delay);
+  });
+})();
+</script>
+
+    <!-- Food & Drinks -->
+    <a href="food.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1Q41KM3i-EBT2f4bclNB1p8XjEOrsDDCS" class="cutout-img" alt="Food">
+        <h3 class="title-md fancy">Food & Drinks</h3>
+        <p class="desc-sm">Order your favorite meals</p>
+      </div>
+    </a>
+
+    <!-- Make Deliveries -->
+    <a href="http://apl.bz/w@?l=en_US" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/1410uIW-Pqy3jiNdvB1I8bMW5Z47GPwC-');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Make Deliveries</h3>
+        <p class="desc-md">Send parcels with ease</p>
+      </div>
+    </a>
+
+    <!-- Groceries -->
+    <a href="groceries.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1xVwZ3HDiiJoN--vO4v7b-0P01yY4dR0x" class="cutout-img" alt="Tech">
+        <h3 class="title-md fancy">Groceries</h3>
+        <p class="desc-sm">Shop provisions & ingredients</p>
+      </div>
+    </a>
+
+    <!-- Gas Refill -->
+    <a href="homepage.html" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1b1k60ey-pXHXC_0T1hNH2XRMNz_05Vtc" class="cutout-img" alt="Gas">
+        <h3 class="title-md">Gas Refill</h3>
+        <p class="desc-sm">Refill your gas cylinder at a convenience</p>
+      </div>
+    </a>
+
+    <!-- Fashion -->
+    <a href="fashion.html" class="card square full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/1Snyca65AUGgqSI282lVuZmMH8edLG6au');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-md">Fashion</h3>
+        <p class="desc-sm">Stay trendy with new style</p>
+      </div>
+    </a>
+
+    <!-- Cosmetics -->
+    <a href="https://sites.google.com/view/pickmeservices/beauty-personal-care?authuser=0" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1A1RyI8XRmn2ldXwryVqy3CmfdMY7p34U" class="cutout-img" alt="Cosmetics">
+        <h3 class="title-md">Cosmetics</h3>
+        <p class="desc-sm">Beauty products at your doorstep</p>
+      </div>
+    </a>
+
+    <!-- Home & Living -->
+    <a href="https://sites.google.com/view/pickmeservices/home-living?authuser=0" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/16lkA7eXXp6SkEzXiJ7m_dx-CeUrhqD2_');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg bold">Home & Living</h3>
+        <p class="desc-md">Find items to keep your home comfortable</p>
+      </div>
+    </a>
+
+    <!-- Accommodation -->
+    <a href="accommodation.html" class="card rectangle full-bg bottom-left" style="background-image:url('https://lh3.googleusercontent.com/d/120LyT1v2m1vMGHPzdj7cePL09BSPbVkb');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Accommodation</h3>
+        <p class="desc-md">Book a hotel or rent a house</p>
+      </div>
+    </a>
+
+    <!-- Stationery & Books -->
+    <a href="https://sites.google.com/view/pickmeservices/stationery-books?authuser=0" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1uHcwk3k1srUCaaW9w9-WLu3LFI4yKOWp" class="cutout-img" alt="Stationery">
+        <h3 class="title-md">Stationery & Books</h3>
+        <p class="desc-sm">Get supplies for school and office</p>
+      </div>
+    </a>
+
+    <!-- Tech & Gadgets -->
+    <a href="https://sites.google.com/view/pickmeservices/tech-gadgets?authuser=0" class="card square card-cutout center">
+      <div class="content">
+        <img src="https://lh3.googleusercontent.com/d/1ADSgAlsR2CjsUuJU1clMlwSKtO1Puy_A" class="cutout-img" alt="Tech">
+        <h3 class="title-md fancy">Tech & Gadgets</h3>
+        <p class="desc-sm">Latest devices and accessories</p>
+      </div>
+    </a>
+
+    <!-- Find Events -->
+    <a href="events.html" class="card rectangle full-bg center" style="background-image:url('https://lh3.googleusercontent.com/d/1z4KpL8ahYM_tpS4-Ijm7TLIT7JGgLiT_');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-lg">Find Events</h3>
+        <p class="desc-md">Discover local activities and shows</p>
+      </div>
+    </a>
+
+    <!-- All Other Services -->
+    <a href="allotherservices.html" class="card rectangle full-bg center" style="background-image:url('https://lh3.googleusercontent.com/d/1bKhw-KGUlQeQ_hlCk8kuI7EEtPstmzVQ');">
+      <div class="overlay"></div>
+      <div class="content">
+        <h3 class="title-xxl">All Other Services</h3>
+        <p class="desc-md">Explore more services here</p>
+      </div>
+    </a>
+
+  </div>
+
+    <div id="footer-placeholder"></div>
+
+<script>
+fetch('footer.html')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('footer-placeholder').innerHTML = data;
+  });
+</script>
+
+<!-- =========FOOTER CODE STARTS HERE ================== -->
+  <div style="position:fixed; bottom:0; width:100%; z-index:9999;">
+    <iframe src="footer.html" style="width:100%; height:60px; border:none; overflow:hidden;" scrolling="no"></iframe>
+</div>
+<!-- =========FOOTEE CODE ENDS HERE ================== --> 
+    
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
