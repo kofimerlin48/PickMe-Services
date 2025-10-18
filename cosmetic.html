@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cosmetics</title>
+
+<!-- =========HEADER CODE STARTS HERE ================== -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+    const pageTitle = "Cosmetics";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+    );
+    document.getElementById('header-placeholder').innerHTML = html;
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const s = document.createElement('script');
+      if (oldScript.src) s.src = oldScript.src;
+      else s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    });
+  } catch (err) { console.error(err); }
+})();
+</script>
+<!-- =========HEADER CODE ENDS HERE ================== -->
+
+<style>
+:root{ --theme-color:#c12872; }
+
+*{box-sizing:border-box}
+* { -webkit-tap-highlight-color: transparent; }
+:focus, :focus-visible, button:focus, input:focus { outline: none !important; box-shadow: none !important; }
+
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f9f9f9;
+  padding-top:100px;
+  overflow-x:hidden;
+}
+
+.page-header{text-align:center;margin-bottom:20px;}
+.page-header h1{color:var(--theme-color);margin:0;font-size:28px;}
+.page-header p{color:#000;margin-top:5px;font-size:16px;font-weight:bold;}
+
+.search-bar{display:flex;justify-content:center;margin:10px 16px 6px;}
+.search-bar input{width:100%;max-width:480px;padding:10px 14px;border:1px solid #ccc;border-radius:8px;font-size:16px;}
+
+/* Cards grid (same as Groceries) */
+.cards-container{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:70px;padding:20px;padding-bottom:160px;
+}
+.card{
+  position:relative;border-radius:15px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.1);
+  background-size:cover;background-position:center;height:250px;display:flex;align-items:flex-end;transition:transform .2s;
+}
+.card:hover{transform:translateY(-5px)}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0))}
+.card-content{position:relative;color:#fff;padding:15px;width:100%;display:flex;flex-direction:column;justify-content:space-between;z-index:1}
+.card-title{font-weight:bold;font-size:22px;margin-bottom:4px}
+.card-description{font-size:13px;opacity:.95;margin-bottom:4px}
+.card-lower { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.card-meta { font-size:12px; opacity:0.9; margin:0; }
+.btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
+
+/* Details */
+#detailsPanel{
+  position:fixed;top:0;right:-100%;width:100%;max-width:1100px;height:100%;
+  background:#fff;z-index:9999;overflow-y:auto;transition:right .5s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
+  padding-bottom:140px;
+}
+#detailsPanel.show{right:0;}
+#detailsBackBtn{
+  position:fixed;top:15px;right:-60px;width:40px;height:40px;background:#000;color:#fff;border:none;border-radius:50%;
+  font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .5s ease;
+}
+#detailsPanel.show #detailsBackBtn{right:15px;}
+.banner{
+  position:relative;width:100%;height:35vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
+  background:#333 center/cover no-repeat;
+}
+.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,.70), rgba(0,0,0,.80))}
+.banner-text{position:relative;z-index:2}
+.banner-text h2{font-size:16px;margin:0 0 6px}
+.banner-text h1{font-size:26px;margin:0 0 8px}
+.banner-text p{font-size:13px;margin:0;opacity:.95}
+.details-content{padding:18px;max-width:1100px;margin:0 auto}
+.section-title{font-weight:bold;margin:8px 0 12px;color:#333}
+
+/* Carousel */
+.carousel{position:relative;width:100%;height:240px;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.carousel img{position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;}
+.carousel img.active{left:0;opacity:1}
+.carousel .nav{position:absolute;top:50%;transform:translateY(-50%);font-size:24px;color:#fff;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:50%;cursor:pointer;user-select:none}
+.carousel .nav.left{left:10px}
+.carousel .nav.right{right:10px}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:#ddd}
+.dot.active{background:var(--theme-color)}
+
+/* Action row */
+.action-row{display:flex;justify-content:center;margin:22px 0 120px;}
+.btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
+
+/* Modal form */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
+.modal.show{display:flex}
+.modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
+.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
+.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
+
+/* item card layout (modern) */
+.item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px 12px 10px;margin-bottom:12px;
+}
+.item-top{display:flex;align-items:center;gap:10px}
+.item-num{font-weight:700;color:#333;min-width:22px;text-align:right}
+.item-name{
+  flex:1;border:none;border-bottom:1px solid #eee;padding:8px 6px 6px;font-size:15px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.item-name::placeholder{color:#aaa}
+.item-name:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
+.item-del{margin-left:8px;background:var(--theme-color);border:none;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.item-del svg{width:20px;height:20px;fill:#fff;display:block}
+.item-qty{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.qty-label{font-size:12px;color:#666;margin-left:4px;}
+.qty-controls{display:flex;align-items:center;gap:8px;}
+.qty-btn{ width:38px;height:38px;border:none;border-radius:8px;background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer;}
+.qty-input{width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;}
+.small-note{font-size:12px;color:#666;margin:8px 0 0}
+.whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+#whatsappInput{
+  padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px;
+  transition:border-color .2s, box-shadow .2s;
+}
+#whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
+.error{color:#b00020;font-size:13px;margin-top:8px;display:none}
+
+/* Admin panel */
+#adminPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
+#adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+#adminPanel .admin-top h2{margin:0; font-size:18px;}
+#adminPanel .close-admin{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
+.admin-shop-actions{display:flex; gap:8px; margin:8px 0 14px;}
+.admin-shop-actions a{display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:8px; text-decoration:none; color:#fff; font-size:14px;}
+.call-btn{background:#0a7d0a;}
+.wa-btn{background:#25D366;}
+
+.admin-section{margin:10px 0 16px;}
+.group-title{font-weight:700; margin:10px 0 8px;}
+
+/* Admin item card (modern, 2-row layout) */
+.admin-item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px;margin-bottom:10px;
+}
+.admin-row1{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
+.admin-item-num{font-weight:700;min-width:22px;text-align:right;color:#333}
+.admin-item-name{flex:1;border:none;background:transparent;padding:0;font-weight:700;color:#222;pointer-events:none}
+.admin-qty-pill{border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:13px;color:#333;background:#fafafa}
+
+.admin-row2{display:flex;align-items:center;gap:10px}
+.avail-toggle{padding:8px 10px;border-radius:999px;border:1px solid #ddd;cursor:pointer;background:#f7f7f7;font-size:13px;user-select:none}
+.avail-toggle.on{background:#e9fff1;border-color:#b7e7c5;color:#146c2e;}
+.avail-toggle.off{background:#fff3f3;border-color:#f0c3c3;color:#8a1c1c;}
+
+.price-input{flex:1;min-width:160px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
+.price-input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
+.subtotal{margin-left:auto;font-weight:700}
+
+/* Modern fee inputs */
+.admin-fee-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.fee-input{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid #eee;border-radius:12px;padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,.06)
+}
+.fee-input input{
+  width:120px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px;text-align:right
+}
+.fee-input input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
+
+/* Modern Admin Action Buttons */
+.admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+.btn-cancel { background: #777; color: #fff; }
+.btn-cancel:hover { background: #555; }
+.btn-done { background: var(--theme-color); color: #fff; }
+.btn-done:hover { background: #a21f60; }
+  
+/* Customer panel (modern cards) */
+#customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
+.cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.cust-top h2{margin:0; font-size:18px;}
+.cust-close{background:#000; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;}
+.cust-group{margin:10px 0 16px;}
+.cust-group h3{margin:0 0 8px 0; font-size:16px;}
+.cust-items-wrap{display:grid;gap:10px}
+
+.cust-item-card{
+  background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px;display:flex;flex-direction:column;gap:8px
+}
+.cust-row1{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cust-item-num{font-weight:700;min-width:22px;text-align:right}
+.cust-item-name{flex:1;font-weight:700}
+.cust-item-meta{font-size:13px;color:#444}
+
+.cust-row2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cust-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:#146c2e;background:#e9fff1;border:1px solid #b7e7c5;border-radius:999px;padding:6px 10px}
+.cust-badge.off{color:#8a1c1c;background:#fff3f3;border:1px solid #f0c3c3}
+
+.cust-price-block{font-size:14px;color:#333}
+.cust-price-line{display:flex;gap:8px}
+.cust-price-line .unit{opacity:.85}
+.cust-price-line .sub{font-weight:700}
+
+.cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
+.cust-totals .line{display:flex;justify-content:space-between;margin:4px 0}
+.cust-totals .grand{color:var(--theme-color);font-weight:800}
+.cust-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
+.cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
+.cust-pay{background:var(--theme-color); color:#fff;}
+.cust-cancel{background:#777; color:#fff;}
+
+/* Footer iframe pinned */
+.footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
+</style>
+</head>
+
+<body>
+<style>
+  body.hide-initial * { visibility: hidden !important; }
+  body.ready * { visibility: visible !important; }
+</style>
+<script>
+  document.documentElement.style.background = "#fff";
+  document.body.classList.add("hide-initial");
+</script>
+
+<!-- ===== Home ===== -->
+<div class="page-header" id="homeHeader">
+  <h1></h1>
+  <p>Find cosmetics shops around you and send your list</p>
+</div>
+
+<div class="search-bar" id="homeSearch">
+  <input type="text" id="searchInput" placeholder="Search cosmetics shops...">
+</div>
+
+<!-- ✅ No tabs here for Cosmetics -->
+<div class="cards-container" id="cardsContainer"></div>
+
+<!-- ================= DETAILS PANEL ================= -->
+<div id="detailsPanel">
+  <button id="detailsBackBtn">&times;</button>
+  <section class="banner" id="detailsBanner">
+    <div class="banner-text">
+      <h2>Welcome to</h2>
+      <h1 id="shopName"></h1>
+      <p id="shopSlogan"></p>
+    </div>
+  </section>
+
+  <div class="details-content">
+    <div class="section-title">Sample of items sold</div>
+    <div class="carousel" id="carousel"></div>
+    <div class="dots" id="dots"></div>
+    <div class="action-row">
+      <button class="btn-primary" id="openFormBtn">+ Add Items</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Add Items Form ===== -->
+<div class="modal" id="formModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>List your items</span>
+      <button class="btn-primary" id="clearAllBtn" style="background:#777">Clear all</button>
+    </div>
+    <div class="modal-body">
+      <div id="itemsHolder"></div>
+      <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">Add another item</button>
+      <div class="whats-row">
+        <input type="tel" id="whatsappInput" placeholder="Your WhatsApp (+233… or 0…)" />
+        <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
+      </div>
+      <div class="error" id="formError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary" id="submitBtn">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Hidden Admin Panel (query: ?admin=ID) ===== -->
+<div id="adminPanel" aria-hidden="true">
+  <div class="admin-top">
+    <div>
+      <h2 id="adminShop">Order</h2>
+      <div class="admin-shop-actions" id="adminShopActions"></div>
+    </div>
+    <button class="close-admin" id="closeAdminBtn">Close</button>
+  </div>
+
+  <div class="admin-section">
+    <div class="group-title">Available items</div>
+    <div id="adminAvail"></div>
+  </div>
+  <div class="admin-section">
+    <div class="group-title">Unavailable items</div>
+    <div id="adminUnavail"></div>
+  </div>
+
+  <div class="admin-section">
+    <div class="group-title">Fees</div>
+    <div class="admin-fee-row">
+      <label class="fee-input">Service: GH₵ <input type="number" min="0" step="1" id="feeServiceInput"></label>
+      <label class="fee-input">Delivery: GH₵ <input type="number" min="0" step="1" id="feeDeliveryInput"></label>
+    </div>
+  </div>
+
+  <div class="admin-totals">
+    <div>Items total: GH₵ <span id="adminItemsTotal">0</span></div>
+    <div>Grand total (with fees): GH₵ <span id="adminGrandTotal">0</span></div>
+  </div>
+
+  <div class="admin-actions">
+    <button class="btn btn-cancel" id="adminCancel">Cancel</button>
+    <button class="btn btn-done" id="adminDone">Done</button>
+  </div>
+</div>
+
+<!-- ===== Hidden Customer Panel (query: ?order=ID) ===== -->
+<div id="customerPanel" aria-hidden="true">
+  <div class="cust-top">
+    <h2 id="custShop">Order</h2>
+    <button class="cust-close" id="closeCustomerBtn">Close</button>
+  </div>
+
+  <div class="cust-group">
+    <h3>Available items</h3>
+    <div id="custAvail" class="cust-items-wrap"></div>
+  </div>
+  <div class="cust-group">
+    <h3>Unavailable items</h3>
+    <div id="custUnavail" class="cust-items-wrap"></div>
+  </div>
+
+  <div class="cust-totals">
+    <div>Items total: GH₵ <span id="custItemsTotal">0</span></div>
+    <div>Grand total (with fees): GH₵ <span id="custGrandTotal">0</span></div>
+  </div>
+
+  <div class="cust-actions">
+    <button class="cust-btn cust-cancel" id="custCancel">Cancel</button>
+    <button class="cust-btn cust-pay" id="custPay">Proceed to payment</button>
+  </div>
+</div>
+
+<!-- ========= FIREBASE + PAGE LOGIC ========= -->
+<script type="module">
+/* Firebase */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc,
+  serverTimestamp, query, orderBy, limit
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+  authDomain: "pickmeservicesonline.firebaseapp.com",
+  projectId: "pickmeservicesonline",
+  storageBucket: "pickmeservicesonline.firebasestorage.app",
+  messagingSenderId: "265031616239",
+  appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+/* ======== Constants ======== */
+const ADMIN_CODE = "123456";
+const SERVICE_FEE  = 5;   // GH₵
+const DELIVERY_FEE = 15;  // GH₵
+const PICKME_WHATSAPP = "233534742142"; // no '+'
+const PAYSTACK_LINK   = "https://paystack.com/pay/example-link";
+
+/* ======== Hardcoded shops (Cosmetics) ======== */
+const COSMETICS_DATA = [
+  {
+    name: "Glam Haven",
+    slogan: "All your beauty products in one place",
+    heroImage: "https://via.placeholder.com/1200x700?text=Glam+Haven",
+    samples: [
+      "https://via.placeholder.com/1000x600?text=Makeup+Kit",
+      "https://via.placeholder.com/1000x600?text=Foundation",
+      "https://via.placeholder.com/1000x600?text=Lipsticks"
+    ],
+    phone: "233201234567",
+    expiry: "2026-09-19"
+  },
+  {
+    name: "SkinGlow Emporium",
+    slogan: "Nourish your skin with love",
+    heroImage: "https://via.placeholder.com/1200x700?text=SkinGlow+Emporium",
+    samples: [
+      "https://via.placeholder.com/1000x600?text=Body+Creams",
+      "https://via.placeholder.com/1000x600?text=Essential+Oils",
+      "https://via.placeholder.com/1000x600?text=Soap+Bars"
+    ],
+    phone: "233209876543",
+    expiry: "2025-12-31"
+  },
+  {
+    name: "Beauty Hub",
+    slogan: "Your one-stop beauty supply store",
+    heroImage: "https://via.placeholder.com/1200x700?text=Beauty+Hub",
+    samples: [
+      "https://via.placeholder.com/1000x600?text=Perfumes",
+      "https://via.placeholder.com/1000x600?text=Hair+Products",
+      "https://via.placeholder.com/1000x600?text=Skincare+Set"
+    ],
+    phone: "233551112223",
+    expiry: "2025-12-31"
+  }
+];
+
+/* ========= Cosmetics root collections/paths =========
+   - Shortlinks:  Cosmetics / Links / items / {id}
+   - Shops meta:  Cosmetics / ShopsMeta / items / {shopName}
+   - Buyers:      Cosmetics / ShopsMeta / items / {shopName} / buyers
+   - Customers:   Cosmetics / ShopsMeta / items / {shopName} / customers
+*/
+const linksCol  = collection(db, "Cosmetics", "Links", "items");
+const shopsMeta = collection(db, "Cosmetics", "ShopsMeta", "items");
+
+/* ======== DOM ======== */
+const cardsContainer  = document.getElementById("cardsContainer");
+const searchInput     = document.getElementById("searchInput");
+const homeHeader      = document.getElementById("homeHeader");
+const homeSearch      = document.getElementById("homeSearch");
+
+const detailsPanel  = document.getElementById("detailsPanel");
+const detailsBackBtn= document.getElementById("detailsBackBtn");
+const detailsBanner = document.getElementById("detailsBanner");
+const shopNameEl    = document.getElementById("shopName");
+const shopSloganEl  = document.getElementById("shopSlogan");
+const carouselEl    = document.getElementById("carousel");
+const dotsEl        = document.getElementById("dots");
+const openFormBtn   = document.getElementById("openFormBtn");
+
+const formModal     = document.getElementById("formModal");
+const itemsHolder   = document.getElementById("itemsHolder");
+const addRowBtn     = document.getElementById("addRowBtn");
+const clearAllBtn   = document.getElementById("clearAllBtn");
+const whatsappInput = document.getElementById("whatsappInput");
+const submitBtn     = document.getElementById("submitBtn");
+const cancelBtn     = document.getElementById("cancelBtn");
+const formError     = document.getElementById("formError");
+
+/* Admin panel */
+const adminPanel      = document.getElementById("adminPanel");
+const adminShop       = document.getElementById("adminShop");
+const adminAvail      = document.getElementById("adminAvail");
+const adminUnavail    = document.getElementById("adminUnavail");
+const feeServiceInput = document.getElementById("feeServiceInput");
+const feeDeliveryInput= document.getElementById("feeDeliveryInput");
+const adminItemsTotal = document.getElementById("adminItemsTotal");
+const adminGrandTotal = document.getElementById("adminGrandTotal");
+const closeAdminBtn   = document.getElementById("closeAdminBtn");
+const adminCancelBtn  = document.getElementById("adminCancel");
+const adminDoneBtn    = document.getElementById("adminDone");
+const adminShopActions= document.getElementById("adminShopActions");
+
+/* Customer panel */
+const customerPanel   = document.getElementById("customerPanel");
+const closeCustomerBtn= document.getElementById("closeCustomerBtn");
+const custShop        = document.getElementById("custShop");
+const custAvail       = document.getElementById("custAvail");
+const custUnavail     = document.getElementById("custUnavail");
+const custItemsTotal  = document.getElementById("custItemsTotal");
+const custGrandTotal  = document.getElementById("custGrandTotal");
+const custPayBtn      = document.getElementById("custPay");
+const custCancelBtn   = document.getElementById("custCancel");
+
+/* ======== State ======== */
+let currentShop = null;
+let buyersCountMap = {};
+let currentAdmin = null;
+
+/* ======== Helpers ======== */
+function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+function money(n){ return Number(n||0); }
+function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"T23:59:59"); }
+function shopKey(shop){ return `pkm_items_cos_${shop}`; }
+function serializeItems(){ return [...itemsHolder.querySelectorAll(".item-card")].map(r=>({ name:(r.querySelector(".item-name").value||"").trim(), qty: parseInt(r.querySelector(".qty-input").value||"1",10)||1 })); }
+function loadItemsForShop(shop){
+  itemsHolder.innerHTML="";
+  try{
+    const raw = sessionStorage.getItem(shopKey(shop));
+    const arr = raw? JSON.parse(raw): [];
+    if (arr.length) arr.forEach(it=>addRow(it.name, String(it.qty)));
+  }catch{}
+}
+function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
+
+/* ======== Firestore customer + buyers (dedup + count) ======== */
+
+async function saveCustomerWhatsApp(shopName, phoneE164) {
+  try {
+    if (!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g, '');
+    const custCol = collection(db, "Cosmetics", "ShopsMeta", "items", shopName, "customers");
+    await setDoc(doc(custCol, clean), { whatsapp: phoneE164, timestamp: serverTimestamp() }, { merge: true });
+    console.log(`✅ Cosmetics: customer saved (unique): ${phoneE164}`);
+  } catch (e) { console.error("saveCustomerWhatsApp error:", e); }
+}
+
+async function saveBuyerUnique(shopName, phoneE164) {
+  try {
+    if (!shopName || !phoneE164) return;
+    const clean = phoneE164.replace(/[^\d+]/g, '');
+    const buyersCol = collection(db, "Cosmetics", "ShopsMeta", "items", shopName, "buyers");
+    const ref = doc(buyersCol, clean);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, { whatsapp: phoneE164, timestamp: serverTimestamp() });
+      console.log(`🛒 Cosmetics: New unique buyer for ${shopName}: ${phoneE164}`);
+    } else {
+      console.log(`⚠️ Cosmetics: Buyer already counted for ${shopName}`);
+    }
+  } catch (e) { console.error("saveBuyerUnique error:", e); }
+}
+
+async function fetchBuyersCount(shopName) {
+  try {
+    if (!shopName) return 0;
+    const buyersCol = collection(db, "Cosmetics", "ShopsMeta", "items", shopName, "buyers");
+    const snap = await getDocs(buyersCol);
+    return snap.size || 0;
+  } catch (e) { console.error("fetchBuyersCount error:", e); return 0; }
+}
+
+/* ======== Persist shops meta under Cosmetics root ======== */
+async function upsertShopsMeta(){
+  try{
+    await Promise.all(COSMETICS_DATA.map(async shop=>{
+      const id = shop.name;
+      await setDoc(doc(shopsMeta, id), {
+        name: shop.name,
+        slogan: shop.slogan||"",
+        heroImage: shop.heroImage||"",
+        samples: shop.samples||[],
+        phone: shop.phone||"",
+        expiry: shop.expiry||null,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }));
+  }catch(e){ console.warn("cosmetics shops meta upsert failed:", e); }
+}
+
+/* ======== Buyers cache (for instant home render) ======== */
+const CACHE_KEY = "pkm_cosmetics_buyers";
+function cacheBuyers(data){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch{} }
+function loadBuyersCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch{return null;} }
+
+async function buildBuyersCountMap(){
+  const cache = loadBuyersCache();
+  if(cache) buyersCountMap = cache;
+  const entries = await Promise.all(COSMETICS_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
+  buyersCountMap = Object.fromEntries(entries);
+  cacheBuyers(buyersCountMap);
+}
+
+/* ======== Cards (no tabs; same layout) ======== */
+function renderCards(term=""){
+  cardsContainer.innerHTML = "";
+  const q = (term||"").trim().toLowerCase();
+
+  const data = [...COSMETICS_DATA]
+    .filter(s => !isExpired(s.expiry))
+    .sort((a,b)=>{
+      const ca = buyersCountMap[a.name]||0, cb = buyersCountMap[b.name]||0;
+      if (cb!==ca) return cb-ca;
+      return a.name.localeCompare(b.name);
+    });
+
+  data.forEach(shop=>{
+    if (q && !shop.name.toLowerCase().includes(q)) return;
+
+    const buyers = buyersCountMap[shop.name]??0;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.backgroundImage = `url('${shop.heroImage}')`;
+
+    const content = document.createElement("div");
+    content.className = "card-content";
+    content.innerHTML = `
+      <div>
+        <div class="card-title">${escapeHtml(shop.name)}</div>
+        <div class="card-description">${escapeHtml(shop.slogan||"")}</div>
+      </div>
+      <div class="card-lower">
+        <div class="card-meta">⭐ Trusted by ${buyers} Buyers</div>
+        <button class="btn-enter">Enter Shop</button>
+      </div>
+    `;
+    content.querySelector(".btn-enter").addEventListener("click",()=>openShop(shop));
+    card.appendChild(content);
+    cardsContainer.appendChild(card);
+  });
+
+  if (!cardsContainer.children.length){
+    cardsContainer.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;padding:20px;'>No shops available.</p>";
+  }
+}
+
+/* ======== Details / Carousel ======== */
+function openShop(shop){
+  currentShop = shop;
+  detailsBanner.style.backgroundImage = `url('${shop.heroImage}')`;
+  shopNameEl.textContent = shop.name;
+  shopSloganEl.textContent = shop.slogan || "";
+  buildCarousel(shop.samples||[]);
+  loadItemsForShop(shop.name);
+  detailsPanel.classList.add("show");
+}
+detailsBackBtn.addEventListener("click",()=>detailsPanel.classList.remove("show"));
+
+function buildCarousel(images){
+  carouselEl.innerHTML=""; dotsEl.innerHTML="";
+  if (!images || !images.length) return;
+  images.forEach((src,i)=>{
+    const img=document.createElement("img"); img.src=src; img.alt=`sample-${i+1}`;
+    if(i===0) img.classList.add("active");
+    carouselEl.appendChild(img);
+    const dot=document.createElement("div"); dot.className="dot"+(i===0?" active":"");
+    dot.addEventListener("click",()=>goTo(i)); dotsEl.appendChild(dot);
+  });
+  const left=document.createElement("div"); left.className="nav left"; left.innerHTML="&#10094;";
+  const right=document.createElement("div"); right.className="nav right"; right.innerHTML="&#10095;";
+  carouselEl.append(left,right);
+
+  let current=0;
+  const slides=carouselEl.querySelectorAll("img");
+  const dots=dotsEl.querySelectorAll("dot");
+
+  function setPos(prev,next,dir){
+    const a=slides[prev], b=slides[next];
+    b.style.transition="none"; b.style.left=(dir===1?"100%":"-100%"); b.style.opacity="1"; void b.offsetWidth;
+    a.style.transition="left .45s ease, opacity .45s ease";
+    b.style.transition="left .45s ease, opacity .45s ease";
+    a.style.left=(dir===1?"-100%":"100%"); a.style.opacity="1"; b.style.left="0";
+  }
+  function goTo(n){
+    if (n===current) return;
+    const dir=(n>current)?1:-1;
+    setPos(current,n,dir);
+    slides[current].classList.remove("active");
+    slides[n].classList.add("active");
+    dotsEl.querySelectorAll(".dot")[current].classList.remove("active");
+    dotsEl.querySelectorAll(".dot")[n].classList.add("active");
+    current=n;
+  }
+  left.addEventListener("click",()=>goTo((current-1+slides.length)%slides.length));
+  right.addEventListener("click",()=>goTo((current+1)%slides.length));
+  let startX=0;
+  carouselEl.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
+  carouselEl.addEventListener("touchend",e=>{
+    const endX=e.changedTouches[0].clientX;
+    if (startX-endX>40) right.click();
+    if (endX-startX>40) left.click();
+  });
+}
+
+/* ======== Modal (items) + keyboard stability + per-shop save ======== */
+function openForm(){
+  formModal.classList.add("show");
+  formError.style.display="none";
+  if (itemsHolder.children.length===0) addRow();
+  const first=itemsHolder.querySelector(".item-card .item-name");
+  if (first) setTimeout(()=>first.focus(),50);
+}
+function closeForm(){ formModal.classList.remove("show"); }
+document.getElementById("openFormBtn").addEventListener("click", openForm);
+cancelBtn.addEventListener("click", closeForm);
+
+// sticky keyboard focus helpers (same as Groceries)
+let stickyFocusEl=null;
+formModal.addEventListener('focusin',e=>{
+  if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) stickyFocusEl=e.target;
+});
+formModal.addEventListener('mousedown',e=>{ if (e.target.closest('button')) e.preventDefault(); });
+function restoreFocusSoon(el=stickyFocusEl){ setTimeout(()=>{ if(el) el.focus(); },0); }
+
+function renumberRows(){
+  itemsHolder.querySelectorAll(".item-num").forEach((el,i)=>el.textContent=`${i+1}.`);
+}
+function trashSVG(){ return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7H4V5h4V4a1 1 0 0 1 1-1zm2 0v1h2V3h-2z"/></svg>`; }
+
+function addRow(itemVal="", qtyVal="1"){
+  const card=document.createElement("div");
+  card.className="item-card";
+  card.innerHTML=`
+    <div class="item-top">
+      <div class="item-num"></div>
+      <input class="item-name" type="text" placeholder="Enter item name" value="${escapeAttr(itemVal)}"/>
+      <button class="item-del" title="Delete">${trashSVG()}</button>
+    </div>
+    <div class="item-qty">
+      <div class="qty-label">Set quantity</div>
+      <div class="qty-controls">
+        <button class="qty-btn minus" type="button">−</button>
+        <input class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="${escapeAttr(qtyVal)}"/>
+        <button class="qty-btn plus" type="button">+</button>
+      </div>
+    </div>
+  `;
+  const delBtn=card.querySelector(".item-del");
+  const minus =card.querySelector(".minus");
+  const plus  =card.querySelector(".plus");
+  const qtyIn =card.querySelector(".qty-input");
+  const nameEl=card.querySelector(".item-name");
+
+  const persist=()=>{ if(currentShop) saveItemsForShop(currentShop.name); };
+
+  delBtn.addEventListener("click",()=>{
+    const nextFocus = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
+                   || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
+    card.remove(); renumberRows(); persist(); restoreFocusSoon(nextFocus||stickyFocusEl);
+  });
+  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persist(); restoreFocusSoon(qtyIn); });
+  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persist(); restoreFocusSoon(qtyIn); });
+  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persist(); });
+  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persist(); });
+  nameEl.addEventListener("input", persist);
+
+  itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0); persist();
+}
+addRowBtn.addEventListener("click",()=>{
+  const last=itemsHolder.querySelector(".item-card:last-child .item-name");
+  if (last && !last.value.trim()){ last.focus(); return; }
+  addRow(); const newest=itemsHolder.querySelector(".item-card:last-child .item-name"); restoreFocusSoon(newest);
+});
+clearAllBtn.addEventListener("click", ()=>{
+  if (!currentShop) return;
+  itemsHolder.innerHTML="";
+  renumberRows();
+  sessionStorage.removeItem(shopKey(currentShop.name));
+});
+
+function normalizeGhanaNumber(input){
+  let s=String(input).trim().replace(/[\s\-]/g,'');
+  if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
+  if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
+  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
+  if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
+  const d=s.replace(/\D/g,'');
+  if (d.startsWith('233')) return { e164:'+'+d, wa:d };
+  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
+  return null;
+}
+
+/* ======== Search (no tabs) ======== */
+searchInput.addEventListener("input",()=>{
+  renderCards(searchInput.value);
+});
+
+/* ======== Short links in Firestore + auto cleanup ======== */
+const LINK_EXPIRY_MS = 24 * 60 * 60 * 1000;
+function makeId(){ return (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase(); }
+
+async function cleanupOldLinks() {
+  try {
+    const cutoff = new Date(Date.now() - LINK_EXPIRY_MS);
+    const qy = query(linksCol, orderBy("createdAt", "asc"), limit(200));
+    const snap = await getDocs(qy);
+    const deletions = [];
+    snap.forEach(d => {
+      const ts = d.data().createdAt;
+      if (ts && ts.toDate && ts.toDate() < cutoff) deletions.push(deleteDoc(d.ref));
+    });
+    if (deletions.length) await Promise.allSettled(deletions);
+  } catch (e) { console.warn("cleanup failed:", e); }
+}
+
+async function putShort(data) {
+  const id = makeId();
+  try {
+    await setDoc(doc(linksCol, id), {
+      payload: data,
+      type: data?.type || null,
+      shop: data?.shop || null,
+      createdAt: serverTimestamp()
+    });
+    return id;
+  } catch (e) {
+    console.error("putShort error:", e);
+    sessionStorage.setItem("pkm_cos_" + id, JSON.stringify(data)); // fallback
+    return id;
+  }
+}
+
+async function getShort(id) {
+  try {
+    const snap = await getDoc(doc(linksCol, id));
+    if (snap.exists()) {
+      const data = snap.data();
+      const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
+      if (ts && (Date.now() - ts.getTime()) > LINK_EXPIRY_MS) {
+        await deleteDoc(doc(linksCol, id));
+        alert("⏰ This link has expired.\nPlease add new items to get a new link.");
+        window.location.href = "cosmetics.html";
+        return null;
+      }
+      return data.payload || null;
+    }
+    alert("⏰ This link has expired.\nPlease add new items to get a new link.");
+    window.location.href = "cosmetics.html";
+    return null;
+  } catch (e) {
+    console.error("getShort error:", e);
+  }
+  try { return JSON.parse(sessionStorage.getItem("pkm_cos_" + id)); } catch { return null; }
+}
+
+/* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
+submitBtn.addEventListener("click", async ()=>{
+  const rows=[...itemsHolder.querySelectorAll(".item-card")];
+  const items=rows.map(r=>{
+    const name=(r.querySelector(".item-name").value||"").trim();
+    let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
+    if(!qty||qty<1) qty=1;
+    return { name, qty };
+  }).filter(x=>x.name);
+
+  const raw = whatsappInput.value.trim();
+  const norm = normalizeGhanaNumber(raw);
+
+  if (items.length===0){
+    formError.textContent="Please add at least one item before submitting.";
+    formError.style.display="block";
+    const first=itemsHolder.querySelector(".item-card .item-name");
+    if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
+    return;
+  }
+  if (!norm){
+    formError.textContent="Please enter a valid WhatsApp number.";
+    formError.style.display="block";
+    whatsappInput.focus();
+    return;
+  }
+  formError.style.display="none";
+
+  const { e164 } = norm;
+  await saveCustomerWhatsApp(currentShop.name, e164);
+
+  const adminPayload = {
+    type:"admin",
+    shop: currentShop.name,
+    shopPhone: currentShop.phone||"",
+    cust: e164,
+    items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
+    fees: { service:SERVICE_FEE, delivery:DELIVERY_FEE }
+  };
+
+  const id = await putShort(adminPayload);
+  const link = `${location.origin}${location.pathname}?admin=${id}`;
+
+  const msg = `Hello PickMe Services,
+I would like to buy from *${currentShop.name}*.
+
+Open Order: ${link}`;
+  const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.location.href = waUrl;
+
+  saveItemsForShop(currentShop.name);
+  formModal.classList.remove("show");
+});
+
+/* ======== Admin UI (same as Groceries) ======== */
+function buildAdminCard(idx, rec) {
+  const wrap = document.createElement("div");
+  wrap.className = "admin-item-card";
+  wrap.dataset.index = idx;
+  wrap.innerHTML = `
+    <div class="admin-row1">
+      <div class="admin-item-num">${idx + 1}.</div>
+      <input class="admin-item-name" value="${escapeAttr(rec.name)}" readonly />
+      <div class="admin-qty-pill">Qty: ${rec.qty}</div>
+    </div>
+    <div class="admin-row2">
+      <button class="avail-toggle ${rec.available ? "on" : "off"}">
+        ${rec.available ? "Available" : "Not available"}
+      </button>
+      ${rec.available ? `<input class="price-input" type="number" min="0" step="1" placeholder="Unit price (GH₵)" value="${rec.price ?? ""}">` : ``}
+      <div class="subtotal">GH₵ <span class="subv">0</span></div>
+    </div>
+  `;
+  const availBtn = wrap.querySelector(".avail-toggle");
+  const priceIn = wrap.querySelector(".price-input");
+  const subV = wrap.querySelector(".subv");
+  const recalc = () => {
+    const unit = rec.available && priceIn && priceIn.value !== "" ? money(priceIn.value) : 0;
+    const sub = rec.available ? Math.max(1, parseInt(rec.qty || 1, 10)) * unit : 0;
+    subV.textContent = sub.toFixed(2).replace(/\.00$/, "");
+  };
+  availBtn.addEventListener("click", () => {
+    rec.available = !rec.available;
+    if (!rec.available) rec.price = null;
+    renderAdminLists();
+    updateTotals();
+  });
+  if (priceIn) {
+    priceIn.addEventListener("input", () => { rec.price = priceIn.value === "" ? null : money(priceIn.value); recalc(); updateTotals(); });
+  }
+  recalc();
+  return wrap;
+}
+function renderAdminLists() {
+  adminAvail.innerHTML = "";
+  adminUnavail.innerHTML = "";
+  currentAdmin.items.forEach((rec, idx) => {
+    const card = buildAdminCard(idx, rec);
+    (rec.available ? adminAvail : adminUnavail).appendChild(card);
+  });
+}
+function updateTotals() {
+  const availableItems = currentAdmin.items.filter(it => it.available && it.price != null);
+  const itemsTotal = availableItems.reduce((sum, it) => sum + (Math.max(1, parseInt(it.qty || 1, 10)) * money(it.price)), 0);
+  const service  = availableItems.length > 0 ? money(feeServiceInput.value || SERVICE_FEE) : 0;
+  const delivery = availableItems.length > 0 ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0;
+  adminItemsTotal.textContent = itemsTotal.toFixed(2).replace(/\.00$/,'');
+  adminGrandTotal.textContent = (itemsTotal + service + delivery).toFixed(2).replace(/\.00$/,'');
+}
+function openAdmin(payload){
+  currentAdmin = JSON.parse(JSON.stringify(payload));
+  adminShop.textContent = `Order · ${currentAdmin.shop||''}`;
+
+  adminShopActions.innerHTML='';
+  if (currentAdmin.shopPhone){
+    const a1=document.createElement('a'); a1.href=`tel:${currentAdmin.shopPhone}`; a1.className='call-btn'; a1.innerHTML='📞 Call';
+    const a2=document.createElement('a'); a2.href=`https://wa.me/${currentAdmin.shopPhone}`; a2.target='_blank'; a2.className='wa-btn'; a2.innerHTML='🟢 WhatsApp';
+    adminShopActions.append(a1,a2);
+  }
+  renderAdminLists();
+  feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
+  feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
+  feeServiceInput.addEventListener('input', updateTotals);
+  feeDeliveryInput.addEventListener('input', updateTotals);
+  updateTotals();
+
+  hideHome();
+  adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
+}
+function closeEntireBrowser(){
+  window.open('', '_self'); window.close();
+}
+closeAdminBtn.addEventListener('click', closeEntireBrowser);
+adminCancelBtn.addEventListener('click', closeEntireBrowser);
+
+/* Admin Done: send customer link via WhatsApp (carry cust phone for unique count later) */
+adminDoneBtn.addEventListener('click', async ()=>{
+  const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
+  const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
+
+  const customerPayload = {
+    type:'order',
+    shop: currentAdmin.shop,
+    cust: currentAdmin.cust || null,
+    items: currentAdmin.items.map(it=>({
+      name: it.name,
+      qty:  Math.max(1, parseInt(it.qty||1,10)),
+      available: !!it.available,
+      price: (it.available && it.price!=null) ? money(it.price) : null
+    })),
+    fees: { service: useService, delivery: useDelivery }
+  };
+  const id = await putShort(customerPayload);
+  const link = `${location.origin}${location.pathname}?order=${id}`;
+
+  const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
+  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
+Open to view: ${link}`;
+  window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+});
+
+/* ======== CUSTOMER UI (modern) ======== */
+function addCustCard(container, idx, it){
+  const available = !!it.available && it.price!=null;
+  const unit = available ? money(it.price) : 0;
+  const qty  = Math.max(1, parseInt(it.qty||1,10));
+  const sub  = available ? (unit * qty) : 0;
+
+  const card=document.createElement('div');
+  card.className='cust-item-card';
+  card.innerHTML=`
+    <div class="cust-row1">
+      <div class="cust-item-num">${idx}.</div>
+      <div class="cust-item-name">${escapeHtml(it.name)}</div>
+      <div class="cust-item-meta">Qty: ${qty}</div>
+    </div>
+    <div class="cust-row2">
+      <div class="cust-badge ${available?'':'off'}">
+        ${available?'Available':'Unavailable'}
+      </div>
+      ${
+        available
+        ? `<div class="cust-price-block">
+             <div class="cust-price-line">
+               <span class="unit">Unit: GH₵ ${unit.toFixed(2).replace(/\.00$/,'')}</span>
+               <span>× ${qty}</span>
+               <span class="sub">= GH₵ ${sub.toFixed(2).replace(/\.00$/,'')}</span>
+             </div>
+           </div>`
+        : ``
+      }
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+function openCustomer(data){
+  custShop.textContent = `Order · ${data.shop||''}`;
+  custAvail.innerHTML=''; 
+  custUnavail.innerHTML='';
+
+  let itemsTotal = 0;
+  let availableCount = 0;
+
+  (data.items||[]).forEach((it,i)=>{
+    if (it.available && it.price != null){
+      availableCount++;
+      const qty = Math.max(1, parseInt(it.qty||1,10));
+      const sub = money(it.price) * qty;
+      itemsTotal += sub;
+      addCustCard(custAvail, i+1, it);
+    } else {
+      addCustCard(custUnavail, i+1, it);
+    }
+  });
+
+  const service  = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
+  const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE) : 0;
+  const grand = itemsTotal + service + delivery;
+
+  document.querySelector('.cust-totals').innerHTML = `
+    <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
+    <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
+    <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
+    <div class="line grand"><span>Grand total</span><span>GH₵ ${grand.toFixed(2).replace(/\.00$/,'')}</span></div>
+  `;
+
+  hideHome();
+  customerPanel.style.display='block';
+  customerPanel.setAttribute('aria-hidden','false');
+
+  if (grand <= 0) {
+    custPayBtn.style.display = 'none';
+  } else {
+    custPayBtn.style.display = 'inline-block';
+  }
+
+  custPayBtn.onclick = async ()=>{
+    if (data.cust) await saveBuyerUnique(data.shop, data.cust);
+    const amountNum = grand.toFixed(2).replace(/\.00$/,'');
+    try { await navigator.clipboard.writeText(amountNum); } catch(e) { alert(`Copied amount: GH₵${amountNum}`); }
+    window.location.href = PAYSTACK_LINK;
+  };
+
+  const goHome = () => window.location.href = "cosmetics.html";
+  document.getElementById('closeCustomerBtn').onclick = goHome;
+  document.getElementById('custCancel').onclick = goHome;
+}
+
+/* ======== Router + no-home flash ======== */
+function hideHome(){
+  homeHeader.style.display='none';
+  homeSearch.style.display='none';
+  cardsContainer.style.display='none';
+  detailsPanel.classList.remove('show');
+}
+function showHome(){
+  homeHeader.style.display='';
+  homeSearch.style.display='';
+  cardsContainer.style.display='';
+}
+async function router() {
+  const url = new URL(location.href);
+  const adminId = url.searchParams.get("admin");
+  const orderId = url.searchParams.get("order");
+
+  document.body.classList.remove("ready");
+  document.body.classList.add("hide-initial");
+
+  try {
+    if (adminId) {
+      const payload = await getShort(adminId);
+      if (payload && payload.type === "admin") {
+        const code = prompt("Enter admin access code:");
+        if (code === ADMIN_CODE) {
+          hideHome();
+          openAdmin(payload);
+          document.body.classList.remove("hide-initial");
+          document.body.classList.add("ready");
+          return;
+        } else {
+          alert("Incorrect code. Access denied.");
+          location.href = location.pathname;
+          return;
+        }
+      }
+    }
+
+    if (orderId) {
+      const payload = await getShort(orderId);
+      if (payload && payload.type === "order") {
+        hideHome();
+        openCustomer(payload);
+        document.body.classList.remove("hide-initial");
+        document.body.classList.add("ready");
+        return;
+      }
+    }
+
+    showHome();
+    document.body.classList.remove("hide-initial");
+    document.body.classList.add("ready");
+  } catch (err) {
+    console.error("router error:", err);
+    showHome();
+    document.body.classList.remove("hide-initial");
+    document.body.classList.add("ready");
+  }
+}
+
+/* ======== Init ======== */
+(async()=>{
+  router();
+
+  upsertShopsMeta().catch(()=>{});
+  const cached = loadBuyersCache();
+  if (cached) buyersCountMap = cached;
+  renderCards("");
+
+  Promise.all(COSMETICS_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]))
+    .then(entries=>{
+      buyersCountMap = Object.fromEntries(entries);
+      cacheBuyers(buyersCountMap);
+      renderCards(searchInput.value);
+    }).catch(console.warn);
+
+  cleanupOldLinks().catch(()=>{});
+})();
+</script>
+
+<!-- =========FOOTER ========= -->
+<div class="footer-wrap">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+</div>
+
+</body>
+</html>
