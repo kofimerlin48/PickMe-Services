@@ -842,13 +842,13 @@ async function d_getShort(id) {
       if (ts && (Date.now() - ts.getTime()) > LINK_EXPIRY_MS) {
         await deleteDoc(doc(d_linksCol, id));
         alert("⏰ This link has expired.\nPlease add new items to get a new link.");
-        window.location.href = "food-drinks.html";
+        window.location.href = "food.html";
         return null;
       }
       return data.payload || null;
     }
     alert("⏰ This link has expired.\nPlease add new items to get a new link.");
-    window.location.href = "food-drinks.html";
+    window.location.href = "food.html";
     return null;
   } catch (e) {
     console.error("d_getShort error:", e);
@@ -1119,7 +1119,7 @@ function openCustomer(data){
     window.location.href = PAYSTACK_LINK;
   };
 
-  const goHome = () => window.location.href = "food-drinks.html";
+  const goHome = () => window.location.href = "food.html";
   closeCustomerBtn.onclick = goHome;
   custCancelBtn.onclick = goHome;
 }
