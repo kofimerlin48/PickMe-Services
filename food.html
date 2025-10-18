@@ -166,7 +166,48 @@ body{
 .avail-toggle.off{background:#fff3f3;border-color:#f0c3c3;color:#8a1c1c;}
 .price-input{flex:1;min-width:160px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
 .subtotal{margin-left:auto;font-weight:700}
+/* Modern fee inputs (match Groceries) */
+.admin-fee-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.fee-input{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid #eee;border-radius:12px;padding:8px 12px;box-shadow:0 2px 6px rgba(0,0,0,.06)
+}
+.fee-input input{
+  width:120px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px;text-align:right
+}
+.fee-input input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
 
+/* Modern Admin Action Buttons (match Groceries) */
+.admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+.btn-cancel {
+  background: #777;
+  color: #fff;
+}
+.btn-cancel:hover {
+  background: #555;
+}
+.btn-done {
+  background: var(--theme-color);
+  color: #fff;
+}
+.btn-done:hover {
+  background: #a21f60;
+}
+  
 /* Customer panel */
 #customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 .cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
@@ -673,7 +714,29 @@ function openDrinkShop(shop){
 }
 detailsBackBtn.addEventListener("click",()=>detailsPanel.classList.remove("show"));
 
-/* ======== Modal (items) ======== */
+/* ======== Modal (items) + keyboard stability (match Groceries) ======== */
+function openForm(){
+  formModal.classList.add("show");
+  formError.style.display="none";
+  if (itemsHolder.children.length===0) addRow();
+  const first=itemsHolder.querySelector(".item-card .item-name");
+  if (first) setTimeout(()=>first.focus(),50);
+}
+function closeForm(){ formModal.classList.remove("show"); }
+document.getElementById("openFormBtn").addEventListener("click", openForm);
+cancelBtn.addEventListener("click", closeForm);
+
+// sticky keyboard focus helpers (same as Groceries)
+let stickyFocusEl=null;
+formModal.addEventListener('focusin',e=>{
+  if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) stickyFocusEl=e.target;
+});
+// avoid Android dropping focus when tapping buttons
+formModal.addEventListener('mousedown',e=>{ if (e.target.closest('button')) e.preventDefault(); });
+function restoreFocusSoon(el=stickyFocusEl){ setTimeout(()=>{ if(el) el.focus(); },0); }
+
+function renumberRows(){ itemsHolder.querySelectorAll(".item-num").forEach((el,i)=>el.textContent=`${i+1}.`); }
+
 function addRow(itemVal="", qtyVal="1"){
   const card=document.createElement("div");
   card.className="item-card";
@@ -681,7 +744,11 @@ function addRow(itemVal="", qtyVal="1"){
     <div class="item-top">
       <div class="item-num"></div>
       <input class="item-name" type="text" placeholder="Enter item name" value="${escapeAttr(itemVal)}"/>
-      <button class="item-del" title="Delete">🗑</button>
+      <button class="item-del" title="Delete">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+    <path d="M9 3v1H4v2h16V4h-5V3H9zm1 5v10h2V8h-2zm4 0v10h2V8h-2zM6 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8H6z"/>
+  </svg>
+</button>
     </div>
     <div class="item-qty">
       <div class="qty-label">Set quantity</div>
@@ -699,24 +766,30 @@ function addRow(itemVal="", qtyVal="1"){
   const nameEl=card.querySelector(".item-name");
   const persist=()=>{ if(currentDrinkShop) saveItemsForShop(currentDrinkShop.name); };
 
-  delBtn.addEventListener("click",()=>{ card.remove(); renumberRows(); persist(); });
-  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persist(); });
-  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persist(); });
+  delBtn.addEventListener("click",()=>{
+    const nextFocus = nameEl.closest(".item-card")?.nextElementSibling?.querySelector(".item-name")
+                   || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name")
+                   || stickyFocusEl;
+    card.remove(); renumberRows(); persist(); restoreFocusSoon(nextFocus);
+  });
+  minus.addEventListener("click",()=>{
+    let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1);
+    persist(); restoreFocusSoon(qtyIn);
+  });
+  plus .addEventListener("click",()=>{
+    let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1);
+    persist(); restoreFocusSoon(qtyIn);
+  });
   qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persist(); });
   qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persist(); });
   nameEl.addEventListener("input", persist);
 
   itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0); persist();
 }
-function renumberRows(){ itemsHolder.querySelectorAll(".item-num").forEach((el,i)=>el.textContent=`${i+1}.`); }
-function openForm(){ formModal.classList.add("show"); if (itemsHolder.children.length===0) addRow(); }
-function closeForm(){ formModal.classList.remove("show"); }
-document.getElementById("openFormBtn").addEventListener("click", openForm);
-cancelBtn.addEventListener("click", closeForm);
 addRowBtn.addEventListener("click",()=>{
   const last=itemsHolder.querySelector(".item-card:last-child .item-name");
   if (last && !last.value.trim()){ last.focus(); return; }
-  addRow();
+  addRow(); const newest=itemsHolder.querySelector(".item-card:last-child .item-name"); restoreFocusSoon(newest);
 });
 clearAllBtn.addEventListener("click",()=>{
   if (!currentDrinkShop) return;
@@ -931,9 +1004,12 @@ function openAdmin(payload){
   hideHome();
   adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
 }
-function closeEntireBrowser(){ window.open('', '_self'); window.close(); }
-closeAdminBtn.addEventListener('click', closeEntireBrowser);
-adminCancelBtn.addEventListener('click', closeEntireBrowser);
+// identical redirect style (avoid window.close issues)
+function closeAdminPanel() {
+  window.location.href = "food.html";
+}
+closeAdminBtn.addEventListener('click', closeAdminPanel);
+adminCancelBtn.addEventListener('click', closeAdminPanel);
 
 /* Admin Done → customer link via WhatsApp (NO second-stage save for Drinks) */
 adminDoneBtn.addEventListener('click', async ()=>{
