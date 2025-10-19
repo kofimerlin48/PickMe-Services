@@ -80,7 +80,7 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 .item-desc{font-size:12px;color:#444;line-height:1.3;max-height:30px;overflow:hidden}
 .item-shop{font-size:11px;color:#777}
 
-/* Shop cards (like groceries but with Items count) */
+/* Shop cards */
 .cards-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
   gap:70px;padding:10px 0 0;
@@ -98,16 +98,16 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 .shop-meta{font-size:12px; opacity:0.9; margin:0;}
 .btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
 
-/* Details drawer (for item or shop) */
+/* Drawer (item or shop) */
 #drawer{
   position:fixed;top:0;right:-100%;width:100%;max-width:1100px;height:100%;
-  background:#fff;z-index:9999;overflow-y:auto;transition:right .5s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
+  background:#fff;z-index:9999;overflow-y:auto;transition:right .45s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
   padding-bottom:140px;
 }
 #drawer.show{right:0;}
 #drawerClose{
   position:fixed;top:15px;right:-60px;width:40px;height:40px;background:#000;color:#fff;border:none;border-radius:50%;
-  font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .5s ease;
+  font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .45s ease;
 }
 #drawer.show #drawerClose{right:15px;}
 .banner{
@@ -122,7 +122,7 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 .drawer-content{padding:18px;max-width:1100px;margin:0 auto}
 .section-title{font-weight:bold;margin:8px 0 12px;color:#333}
 
-/* Slider (infinite) */
+/* Slider */
 .slider{position:relative;width:100%;height:260px;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);background:#f2f2f2}
 .slide{position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;}
 .slide.active{left:0;opacity:1}
@@ -143,7 +143,7 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 .btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
 .btn-secondary{background:#3a3a3a;color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
 
-/* Admin modal(s) generic */
+/* Admin modal(s) */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
 .modal.show{display:flex}
 .modal-card{width:95%;max-width:620px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
@@ -166,9 +166,9 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 .thumb img{width:100%;height:100%;object-fit:cover}
 .thumb .trash{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* Shop top bar (hamburger on left, close on right) */
+/* Shop top bar (only inside drawer) */
 .shop-top-actions{
-  position:fixed;top:12px;left:12px;z-index:10002;display:flex;gap:8px
+  position:fixed;top:12px;left:12px;z-index:10002;display:none;gap:8px
 }
 .action-round{background:#000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px}
 
@@ -205,7 +205,6 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 <div id="categoriesView" class="view show">
   <div class="container">
     <div id="categoriesGrid" class="categories-grid"></div>
-    <!-- category items canvas -->
     <div id="categoryItemsWrap" style="display:none; margin-top:14px;">
       <div class="section-title" id="categoryItemsTitle"></div>
       <div class="search-bar" style="margin:6px 0 12px;">
@@ -225,8 +224,8 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 
 <!-- ===== Drawer (item or shop) ===== -->
 <div id="drawer">
-  <button id="drawerClose">&times;</button>
-  <!-- banner for shop mode -->
+  <button id="drawerClose" aria-label="Close">&times;</button>
+
   <section class="banner" id="shopBanner" style="display:none;">
     <div class="banner-text">
       <h2>Welcome to</h2>
@@ -235,9 +234,9 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
     </div>
   </section>
 
-  <!-- Shop actions (hamburger & close are fixed; hamburger here is a backup for non-banner contexts) -->
-  <div class="shop-top-actions" id="shopTopActions" style="display:none;">
-    <button class="action-round" id="hamburgerBtn">&#9776;</button>
+  <!-- Only visible inside drawer -->
+  <div class="shop-top-actions" id="shopTopActions">
+    <button class="action-round" id="hamburgerBtn" aria-label="Admin">&#9776;</button>
   </div>
 
   <div class="drawer-content">
@@ -295,20 +294,20 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
     <div class="modal-body">
       <div class="mopt-grid">
         <div class="mopt-card" id="optAdd">
-          <h4>Add item</h4><p>Create a new advert</p>
+          <h4>Add item</h4>
         </div>
         <div class="mopt-card" id="optDelete">
-          <h4>Delete item</h4><p>Remove an existing advert</p>
+          <h4>Delete item</h4>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="adminOptCancel">Cancel</button>
+      <button class="btn-secondary" id="adminOptCancel">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Choose category -->
+<!-- Choose category (GLOBAL categories only) -->
 <div class="modal" id="catChooseModal">
   <div class="modal-card">
     <div class="modal-header">
@@ -336,18 +335,20 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
       <div class="lbl">Images (1–5)</div>
       <div class="row">
-        <input type="file" id="imgInput" accept="image/*" capture="environment" multiple class="input">
+        <!-- removed capture attribute to present system picker (camera OR gallery) -->
+        <input type="file" id="imgInput" accept="image/*" multiple class="input">
       </div>
       <div class="thumb-row" id="imgThumbs"></div>
 
       <div class="lbl">Name</div>
-      <input class="input" id="nameInput" placeholder="e.g., iPhone 13 Pro Max 128GB (NIB)">
+      <input class="input" id="nameInput" placeholder="e.g., iPhone 13 Pro Max 128GB">
       <div class="lbl">Price (GH₵)</div>
       <input class="input" id="priceInput" type="number" min="0" step="1" placeholder="e.g., 4500">
       <div class="lbl">Description / Specs</div>
       <textarea class="input" id="descInput" rows="4" placeholder="Key specs, condition, warranty..."></textarea>
     </div>
     <div class="modal-footer">
+      <button class="btn-secondary" id="clearFormBtn">Clear form</button>
       <button class="btn-secondary" id="addMoreBtn">Add more</button>
       <button class="btn-primary" id="submitDraftsBtn">Submit</button>
     </div>
@@ -411,13 +412,13 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
-  collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, serverTimestamp,
-  query, where, orderBy, limit
+  collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
+/* ======== CONFIG ======== */
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
   authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -430,14 +431,14 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const st  = getStorage(app);
 
-/* ======== Constants ======== */
-const PAGE_KEY = "Tek&gaget"; // exact spelling with '&'
+/* ======== CONSTANTS ======== */
+const PAGE_KEY = "Tek&gaget";
 const PICKME_WHATSAPP = "233534742142";
-const GLOBAL_ADMIN_CODE = "999888"; // PickMe global review code (change as needed)
-const SHOP_ADMIN_DEFAULT_CODE = "123456"; // per-shop default if not set in hardcode
+const GLOBAL_ADMIN_CODE = "999888";
+const SHOP_ADMIN_DEFAULT_CODE = "123456";
 const MAX_IMAGES = 5;
 
-/* ======== Hardcoded Shops (example seed) ======== */
+/* ======== SHOPS (HARDCODED) ======== */
 const SHOPS = [
   {
     name: "Trick Eye Store",
@@ -445,8 +446,7 @@ const SHOPS = [
     heroImage: "https://via.placeholder.com/1200x700?text=Trick+Eye+Store",
     phone: "233530477395",
     accessCode: "123456",
-    expiry: "2026-12-31",
-    categories: ["Phones", "Computers & Laptops", "Accessories", "Gaming", "Networking"]
+    expiry: "2026-12-31"
   },
   {
     name: "DigiHub",
@@ -454,34 +454,31 @@ const SHOPS = [
     heroImage: "https://via.placeholder.com/1200x700?text=DigiHub",
     phone: "233540576548",
     accessCode: "123456",
-    expiry: "2026-10-31",
-    categories: ["Printers & Scanners", "Cameras & Photo", "Software", "Security & Surveillance"]
+    expiry: "2026-10-31"
   }
 ];
 
-/* ======== Category list (global) ======== */
+/* ======== GLOBAL CATEGORIES (HARDCODED) ======== */
 const CATEGORIES = [
-  { id:"Phones",                icon:"📱", img:"https://via.placeholder.com/200?text=Phones" },
-  { id:"Computers & Laptops",   icon:"💻", img:"https://via.placeholder.com/200?text=Laptops" },
-  { id:"Printers & Scanners",   icon:"🖨️", img:"https://via.placeholder.com/200?text=Printers" },
-  { id:"Accessories",           icon:"🔌", img:"https://via.placeholder.com/200?text=Accessories" },
-  { id:"Security & Surveillance", icon:"🎦", img:"https://via.placeholder.com/200?text=Security" },
-  { id:"Networking",            icon:"🌐", img:"https://via.placeholder.com/200?text=Networking" },
-  { id:"Gaming",                icon:"🎮", img:"https://via.placeholder.com/200?text=Gaming" },
-  { id:"Software",              icon:"💿", img:"https://via.placeholder.com/200?text=Software" },
-  { id:"Cameras & Photo",       icon:"📷", img:"https://via.placeholder.com/200?text=Cameras" }
+  { id:"Phones",                img:"https://via.placeholder.com/200?text=Phones" },
+  { id:"Computers & Laptops",   img:"https://via.placeholder.com/200?text=Laptops" },
+  { id:"Printers & Scanners",   img:"https://via.placeholder.com/200?text=Printers" },
+  { id:"Accessories",           img:"https://via.placeholder.com/200?text=Accessories" },
+  { id:"Security & Surveillance", img:"https://via.placeholder.com/200?text=Security" },
+  { id:"Networking",            img:"https://via.placeholder.com/200?text=Networking" },
+  { id:"Gaming",                img:"https://via.placeholder.com/200?text=Gaming" },
+  { id:"Software",              img:"https://via.placeholder.com/200?text=Software" },
+  { id:"Cameras & Photo",       img:"https://via.placeholder.com/200?text=Cameras" }
 ];
 
 /* ========= Firestore Paths =========
   Tek&gaget
     - Links/items/{id} -> { payload, createdAt }
-    - ShopsMeta/items/{shopName} -> { meta }
     - Shops/{shopName}/items/{adId} -> { ad }
     - Shops/{shopName}/customers/{phoneE164} -> { whatsapp, ts }
     - Numbers/items/{phoneE164} -> { whatsapp, ts }   (dedup within Tek&gaget only)
 */
 const linksCol   = collection(db, PAGE_KEY, "Links", "items");
-const shopsMeta  = collection(db, PAGE_KEY, "ShopsMeta", "items");
 const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
 
 /* ======== DOM ======== */
@@ -546,6 +543,7 @@ const nameInput = document.getElementById("nameInput");
 const priceInput = document.getElementById("priceInput");
 const descInput = document.getElementById("descInput");
 const addMoreBtn = document.getElementById("addMoreBtn");
+const clearFormBtn = document.getElementById("clearFormBtn");
 const submitDraftsBtn = document.getElementById("submitDraftsBtn");
 const draftList = document.getElementById("draftList");
 
@@ -574,8 +572,9 @@ let jumpToAdId = null;        // used when coming from an item “View Shop”
 let currentCategory = null;
 let pendingAction = null;     // "call" | "wa"
 let pendingContactFor = null; // {shopName, phone, itemTitle}
-let drafts = [];              // [{id, cat, name, price, desc, files:[File], urls:[...temp]}]
+let drafts = [];              // [{id, cat, name, price, desc, files:[File]}]
 let userPhoneCache = null;
+let reviewPayloadPending = null; // gated behind admin code
 
 /* ======== Helpers ======== */
 function show(el){ el.style.display = ''; }
@@ -599,24 +598,6 @@ function normalizeGhanaNumber(input){
   return null;
 }
 
-/* ======== Firestore upserts for ShopsMeta ======== */
-async function upsertShopsMeta(){
-  try{
-    await Promise.all(SHOPS.map(async shop=>{
-      const id = shop.name;
-      await setDoc(doc(shopsMeta, id), {
-        name: shop.name,
-        slogan: shop.slogan||"",
-        heroImage: shop.heroImage||"",
-        phone: shop.phone||"",
-        expiry: shop.expiry||null,
-        categories: shop.categories||[],
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-    }));
-  }catch(e){ console.warn("Shops meta upsert failed:", e); }
-}
-
 /* ======== Caching ======== */
 const CACHE = {
   cats: "tk_cats_counts",
@@ -626,11 +607,14 @@ const CACHE = {
 };
 function saveCache(key, data){ try{ localStorage.setItem(key, JSON.stringify(data)); }catch{} }
 function loadCache(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch{ return null; } }
+function clearShopCaches(shop){
+  localStorage.removeItem(CACHE.shopItems(shop));
+  localStorage.removeItem(CACHE.cats);
+  localStorage.removeItem(CACHE.shops);
+}
 
-/* ======== Build Categories grid ======== */
+/* ======== Categories ======== */
 async function countByCategory(){
-  // Count approved items globally per category
-  // We’ll read per shop items and aggregate quickly (best-effort)
   const cached = loadCache(CACHE.cats);
   if (cached) return cached;
 
@@ -653,7 +637,7 @@ function renderCategoriesGrid(counts){
     const card = document.createElement('div');
     card.className = "cat-card";
     card.innerHTML = `
-      <div class="cat-thumb">${c.img ? `<img src="${c.img}" alt="${c.id}">` : c.icon}</div>
+      <div class="cat-thumb">${c.img ? `<img src="${c.img}" alt="${c.id}">` : ''}</div>
       <div class="cat-info">
         <div class="cat-title">${escapeHtml(c.id)}</div>
         <div class="cat-sub">${counts[c.id]||0} adverts</div>
@@ -680,7 +664,6 @@ async function fetchAllItemsInCategory(cat){
       if (it.category===cat) items.push(it);
     });
   }));
-  // sort newest first
   items.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   saveCache(cacheKey, items);
   return items;
@@ -765,12 +748,21 @@ function renderShopsGrid(countMap){
   }
 }
 
-/* ======== Drawer openers ======== */
-function openDrawer(){ drawer.classList.add("show"); }
-function closeDrawer(){ drawer.classList.remove("show"); }
+/* ======== Drawer controls ======== */
+function openDrawer(){
+  drawer.classList.add("show");
+  // ensure hamburger appears only inside drawer
+  shopTopActions.style.display = 'flex';
+}
+function closeDrawer(){
+  drawer.classList.remove("show");
+  // hide inside-only actions to prevent bleed on main page
+  shopTopActions.style.display = 'none';
+  hide(shopBanner); hide(shopGallery); hide(itemDetail);
+}
 drawerClose.addEventListener('click', closeDrawer);
 
-/* Item detail with infinite slider */
+/* ======== Slider ======== */
 function buildSlider(images, sliderEl, dotsEl){
   sliderEl.innerHTML = ""; dotsEl.innerHTML="";
   if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
@@ -816,10 +808,9 @@ function buildSlider(images, sliderEl, dotsEl){
   });
 }
 
-/* Open item detail */
+/* ======== Item Detail ======== */
 function openItemDetail(ad){
-  // item mode
-  hide(shopBanner); hide(shopGallery); hide(shopTopActions);
+  hide(shopBanner); hide(shopGallery);
   show(itemDetail);
   buildSlider(ad.images||[], itemSlider, itemDots);
   detailTitle.textContent = ad.name||"Item";
@@ -828,7 +819,6 @@ function openItemDetail(ad){
   detailDesc.textContent = ad.desc||"";
   openDrawer();
 
-  // actions
   callBtn.onclick = ()=> captureNumberThenProceed("call", ad);
   waBtn.onclick   = ()=> captureNumberThenProceed("wa", ad);
   viewShopBtn.onclick = ()=> {
@@ -838,14 +828,13 @@ function openItemDetail(ad){
   };
 }
 
-/* Open shop gallery */
+/* ======== Shop Gallery ======== */
 async function openShop(shop){
   currentShop = shop;
   currentShopName = shop.name;
   jumpToAdId = jumpToAdId || null;
 
-  // shop mode
-  show(shopBanner); show(shopTopActions);
+  show(shopBanner);
   hide(itemDetail);
   show(shopGallery);
 
@@ -857,25 +846,24 @@ async function openShop(shop){
   hamburgerBtn.onclick = ()=> promptShopCode();
 
   await renderShopTabsAndItems(shop, jumpToAdId);
-  jumpToAdId = null; // reset after jump
+  jumpToAdId = null;
 }
 
 async function renderShopTabsAndItems(shop, focusAdId=null){
-  // tabs are only categories that have items
   const items = await fetchShopItems(shop.name);
   const byCat = {};
   items.forEach(it=>{
     const c = it.category||"Other";
     (byCat[c]||(byCat[c]=[])).push(it);
   });
-  // build tabs
+
   shopTabs.innerHTML = "";
   const cats = Object.keys(byCat).sort((a,b)=> a.localeCompare(b));
   cats.forEach((c,i)=>{
     const tab = document.createElement('div');
     tab.className = "main-tab"+(i===0?" active":"");
     tab.dataset.cat = c;
-    tab.textContent = `${c}  (${byCat[c].length})`;
+    tab.textContent = `${c} (${byCat[c].length})`;
     tab.addEventListener('click', ()=>{
       shopTabs.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
@@ -883,11 +871,12 @@ async function renderShopTabsAndItems(shop, focusAdId=null){
     });
     shopTabs.appendChild(tab);
   });
+
   if (!cats.length){
     shopItemsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No items yet.</p>";
     return;
   }
-  // initial render
+
   const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat]||[]).some(it=>it.id===focusAdId)) : cats[0];
   shopTabs.querySelectorAll('.main-tab').forEach(t=> t.dataset.cat===firstCat && t.classList.add('active'));
   renderShopItems(byCat[firstCat], focusAdId);
@@ -925,9 +914,7 @@ async function fetchShopItems(shopName){
 /* ======== Search ======== */
 globalSearch.addEventListener('input', ()=>{
   const q = (globalSearch.value||"").trim().toLowerCase();
-  // live filter both visible views
   if (!q){
-    // re-render from cached
     if (categoriesView.classList.contains('show') && currentCategory){
       openCategory(currentCategory);
     }
@@ -938,7 +925,6 @@ globalSearch.addEventListener('input', ()=>{
   }
 
   if (categoriesView.classList.contains('show')){
-    // filter current category items if visible
     if (categoryItemsWrap.style.display!=="none"){
       const cards = categoryItemsGrid.querySelectorAll('.item-card');
       cards.forEach(c=>{
@@ -946,7 +932,6 @@ globalSearch.addEventListener('input', ()=>{
         c.style.display = txt.includes(q) ? '' : 'none';
       });
     } else {
-      // filter categories list captions only (simple)
       Array.from(categoriesGrid.children).forEach(card=>{
         const txt = card.textContent.toLowerCase();
         card.style.display = txt.includes(q)?'':'none';
@@ -991,12 +976,10 @@ numberOk.addEventListener('click', async ()=>{
   numberError.style.display='none';
   userPhoneCache = norm.e164;
 
-  // save under Tek&gaget (dedup **within this page only**)
   await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), {
     whatsapp: norm.e164, timestamp: serverTimestamp()
   }, { merge: true });
 
-  // also per-shop unique set
   const shop = pendingContactFor?.shopName;
   if (shop){
     const custCol = collection(db, PAGE_KEY, "Shops", shop, "customers");
@@ -1005,12 +988,10 @@ numberOk.addEventListener('click', async ()=>{
     }, { merge: true });
   }
 
-  // proceed
   const shopPhone = pendingContactFor?.phone || "";
   if (pendingAction==="call"){
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
   } else {
-    // WhatsApp to the shop owner
     const waNum = shopPhone.replace(/^\+/,'');
     const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tek&gaget).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
@@ -1042,13 +1023,13 @@ codeOk.addEventListener('click', ()=>{
 /* ======== Admin options actions ======== */
 optAdd.addEventListener('click', ()=>{
   closeModal(adminOptionsModal);
-  // choose category (only those in shop.categories)
+  // GLOBAL categories only (not per-shop hardcoded)
   catChooseGrid.innerHTML = "";
-  (currentShop?.categories||CATEGORIES.map(c=>c.id)).forEach(c=>{
+  CATEGORIES.forEach(({id})=>{
     const div = document.createElement('div');
     div.className="mopt-card";
-    div.innerHTML = `<h4>${escapeHtml(c)}</h4><p>Add an advert in this category</p>`;
-    div.addEventListener('click', ()=> startAddFlow(c));
+    div.innerHTML = `<h4>${escapeHtml(id)}</h4>`;
+    div.addEventListener('click', ()=> startAddFlow(id));
     catChooseGrid.appendChild(div);
   });
   openModal(catChooseModal);
@@ -1057,7 +1038,6 @@ optAdd.addEventListener('click', ()=>{
 
 optDelete.addEventListener('click', async ()=>{
   closeModal(adminOptionsModal);
-  // list current items with delete buttons
   deleteList.innerHTML = "<p>Loading items…</p>";
   openModal(deleteModal);
   const items = await fetchShopItems(currentShopName);
@@ -1075,11 +1055,9 @@ optDelete.addEventListener('click', async ()=>{
 
 async function deleteAd(ad){
   if (!confirm("Delete this item permanently?")) return;
-  // delete Firestore doc
   try{
     await deleteDoc(doc(db, PAGE_KEY, "Shops", currentShopName, "items", ad.id));
   }catch(e){ console.warn("delete doc err", e); }
-  // delete images in Storage
   try{
     const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
     const listing = await listAll(folder);
@@ -1087,10 +1065,7 @@ async function deleteAd(ad){
   }catch(e){ console.warn("delete images err", e); }
   alert("Deleted.");
   closeModal(deleteModal);
-  // refresh caches
-  localStorage.removeItem(CACHE.shopItems(currentShopName));
-  localStorage.removeItem(CACHE.shops);
-  // refresh view
+  clearShopCaches(currentShopName);
   renderShops();
   if (currentShop) openShop(currentShop);
 }
@@ -1104,11 +1079,7 @@ function startAddFlow(category){
 }
 function openDraftEditor(){
   draftTitle.textContent = `Add items · ${currentAddCategory}`;
-  imgInput.value = "";
-  imgThumbs.innerHTML = "";
-  nameInput.value = "";
-  priceInput.value = "";
-  descInput.value = "";
+  resetForm();
   openModal(draftModal);
 }
 draftClose.addEventListener('click', ()=> closeModal(draftModal));
@@ -1121,7 +1092,7 @@ function refreshThumbs(){
     const url = URL.createObjectURL(file);
     const t = document.createElement('div');
     t.className='thumb';
-    t.innerHTML = `<img src="${url}"><button class="trash" title="Remove">&times;</button>`;
+    t.innerHTML = `<img src="${url}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
     t.querySelector('.trash').addEventListener('click', ()=>{
       filesBuffer.splice(idx,1);
       refreshThumbs();
@@ -1129,12 +1100,21 @@ function refreshThumbs(){
     imgThumbs.appendChild(t);
   });
 }
+function resetForm(){
+  imgInput.value = "";
+  filesBuffer = [];
+  refreshThumbs();
+  nameInput.value = "";
+  priceInput.value = "";
+  descInput.value = "";
+}
 imgInput.addEventListener('change', ()=>{
   const list = Array.from(imgInput.files||[]);
   const wanted = Math.min(MAX_IMAGES - filesBuffer.length, list.length);
   filesBuffer.push(...list.slice(0, wanted));
   refreshThumbs();
 });
+clearFormBtn.addEventListener('click', resetForm);
 
 function pushDraftFromForm(){
   const nm = nameInput.value.trim();
@@ -1144,10 +1124,8 @@ function pushDraftFromForm(){
   if (!filesBuffer.length){ alert("Add at least 1 image"); return false; }
   const id = makeId();
   drafts.push({ id, cat: currentAddCategory, name:nm, price:pr, desc:ds, files:[...filesBuffer] });
-  // visual in draft list
   renderDraftList();
-  // clear form for next (same category)
-  filesBuffer = []; refreshThumbs(); nameInput.value=""; priceInput.value=""; descInput.value="";
+  resetForm();
   return true;
 }
 function renderDraftList(){
@@ -1155,27 +1133,21 @@ function renderDraftList(){
   drafts.forEach((d, i)=>{
     const wrap = document.createElement('div');
     wrap.className="mopt-card";
+    // light, no long paragraphs to keep UI compact
     wrap.innerHTML = `
       <h4>#${i+1} ${escapeHtml(d.name)}</h4>
       <p>${escapeHtml(d.cat)} · ${fmtPrice(d.price)} · ${d.files.length} image(s)</p>
-      <p style="white-space:pre-wrap">${escapeHtml(d.desc||'')}</p>
     `;
     draftList.appendChild(wrap);
   });
 }
 
-addMoreBtn.addEventListener('click', ()=>{
-  if (pushDraftFromForm()) {
-    // stay, continue adding in same category
-  }
-});
+addMoreBtn.addEventListener('click', ()=>{ pushDraftFromForm(); });
 
 submitDraftsBtn.addEventListener('click', async ()=>{
   if (!drafts.length){
-    // if nothing yet, try to push current
     if (!pushDraftFromForm()) return;
   }
-  // Upload images to storage temp path and create payload
   const payload = {
     type:"review",
     page: PAGE_KEY,
@@ -1203,15 +1175,11 @@ submitDraftsBtn.addEventListener('click', async ()=>{
       images: urls
     });
   }
-  // short link
   const id = makeId();
-  await setDoc(doc(linksCol, id), {
-    payload, createdAt: serverTimestamp()
-  });
+  await setDoc(doc(linksCol, id), { payload, createdAt: serverTimestamp() });
   closeModal(draftModal);
-  drafts = []; filesBuffer = []; refreshThumbs(); draftList.innerHTML="";
+  drafts = []; resetForm(); draftList.innerHTML="";
 
-  // WhatsApp to PickMe
   const link = `${location.origin}${location.pathname}?review=${id}`;
   const msg = `New Tek&gaget adverts from *${currentShopName}*.\nOpen: ${link}`;
   window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
@@ -1228,26 +1196,29 @@ async function putShort(payload){
   return id;
 }
 
-function promptReviewCode(){
-  openModal(reviewCodeModal);
-}
-[reviewCodeClose, reviewCodeCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(reviewCodeModal)));
+function promptReviewCode(){ openModal(reviewCodeModal); }
+[reviewCodeClose, reviewCodeCancel].forEach(b=> b.addEventListener('click', ()=> {
+  closeModal(reviewCodeModal);
+  // DO NOT show review if canceled or incorrect
+}));
 reviewCodeOk.addEventListener('click', async ()=>{
   if (reviewCodeInput.value.trim()!==GLOBAL_ADMIN_CODE){ alert("Incorrect admin code."); return; }
   closeModal(reviewCodeModal);
-  // continue (the router already drew the page)
+  if (reviewPayloadPending) openReview(reviewPayloadPending);
 });
 
-/* Render review UI in-page (reuse drawer) */
+/* Render review UI */
 async function openReview(payload){
-  // simple in-page renderer (read-only)
-  hide(shopBanner); hide(shopTopActions);
-  show(itemDetail);
-  // Build a stack of items with approve/reject
+  hide(shopBanner); show(itemDetail); hide(shopGallery);
+  buildSlider([], itemSlider, itemDots);
+  detailTitle.textContent = "Review panel";
+  detailPrice.textContent = "";
+  detailPostedBy.textContent = payload.shop||"";
+  detailDesc.textContent = "";
+
   const container = document.createElement('div');
   container.style.marginTop = "8px";
-  container.innerHTML = `<div class="section-title">Review · ${escapeHtml(payload.shop)}</div>`;
-  const states = []; // {id, approve:boolean|null, reason:string|null}
+  const states = []; // {id, approve:boolean|null, reason:string|null, data}
 
   payload.items.forEach((it, idx)=>{
     const box = document.createElement('div');
@@ -1259,7 +1230,6 @@ async function openReview(payload){
     holder.appendChild(slider); holder.appendChild(dots);
     box.appendChild(holder);
 
-    // fill slider
     buildSlider(it.images||[], slider, dots);
 
     const meta = document.createElement('div');
@@ -1267,11 +1237,9 @@ async function openReview(payload){
       <h4 style="margin:8px 0 4px">#${idx+1} ${escapeHtml(it.name)}</h4>
       <div>${escapeHtml(it.category||'')}</div>
       <div>${fmtPrice(it.price)}</div>
-      <div style="white-space:pre-wrap;margin-top:6px">${escapeHtml(it.desc||'')}</div>
     `;
     box.appendChild(meta);
 
-    // controls
     const row = document.createElement('div'); row.className="row"; row.style.marginTop="8px";
     const approve = document.createElement('button'); approve.className="btn-primary"; approve.textContent="Approve";
     const reject = document.createElement('button'); reject.className="btn-secondary"; reject.textContent="Reject";
@@ -1281,28 +1249,24 @@ async function openReview(payload){
     const st = { id: it.id, approve: null, reason:null, data:it };
     states.push(st);
 
-    approve.onclick = ()=>{ st.approve = true; st.reason=null; approve.style.opacity="1"; reject.style.opacity="0.5"; };
-    reject.onclick = async ()=>{
-      // reason modal (quick prompt for now with dropdown)
-      const reason = prompt("Reason (e.g., blurry images, wrong price, prohibited item, other…):","");
-      st.approve = false; st.reason = reason||"Rejected by admin";
-      approve.style.opacity="0.5"; reject.style.opacity="1";
+    approve.onclick = ()=>{ st.approve = true; st.reason=null; approve.style.opacity="1"; reject.style.opacity="0.55"; };
+    reject.onclick = ()=>{
+      const reason = prompt("Reason (optional):","");
+      st.approve = false; st.reason = reason||"Rejected";
+      approve.style.opacity="0.55"; reject.style.opacity="1";
     };
 
     container.appendChild(box);
   });
 
-  // Done button
   const done = document.createElement('button');
   done.className="btn-primary";
   done.style.marginTop="10px";
   done.textContent="Done";
   done.onclick = async ()=>{
-    // split approved / rejected
     const approved = states.filter(s=>s.approve===true).map(s=>s.data);
     const rejected = states.filter(s=>s.approve===false).map(s=>({ ...s.data, reason:s.reason||"Rejected" }));
 
-    // commit approved to Firestore
     await Promise.all(approved.map(async it=>{
       const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
       await setDoc(ref, {
@@ -1317,43 +1281,32 @@ async function openReview(payload){
       }, { merge:true });
     }));
 
-    // result payload
     const result = { type:"result", page:PAGE_KEY, shop:payload.shop, approved, rejected };
     const id2 = await putShort(result);
 
-    // notify shop via WhatsApp
+    clearShopCaches(payload.shop);
+
     const shopPhone = (SHOPS.find(s=>s.name===payload.shop)?.phone)||"";
     const link = `${location.origin}${location.pathname}?result=${id2}`;
     const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
     if (shopPhone) window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
     else alert("Result link:\n"+link);
-
-    // refresh caches
-    localStorage.removeItem(CACHE.shopItems(payload.shop));
-    localStorage.removeItem(CACHE.cats);
-    localStorage.removeItem(CACHE.shops);
   };
 
-  // paint into itemDetail area
-  itemSlider.innerHTML = ""; itemDots.innerHTML="";
-  detailTitle.textContent = "Review panel";
-  detailPrice.textContent = "";
-  detailPostedBy.textContent = "";
-  detailDesc.textContent = "";
-  const host = document.createElement('div'); host.style.marginTop="10px";
-  host.appendChild(container);
-  host.appendChild(done);
-  // replace the existing detail container content
   const detailContainer = itemDetail.querySelector('.item-detail');
   detailContainer.innerHTML = "";
-  detailContainer.appendChild(host);
+  const title = document.createElement('div');
+  title.className = "section-title";
+  title.textContent = `Review · ${payload.shop}`;
+  detailContainer.appendChild(title);
+  detailContainer.appendChild(container);
+  detailContainer.appendChild(done);
   openDrawer();
 }
 
 /* ======== Result view (shop owner) ======== */
 async function openResult(payload){
-  hide(shopBanner); hide(shopTopActions);
-  show(itemDetail);
+  hide(shopBanner); show(itemDetail); hide(shopGallery);
   itemSlider.innerHTML = ""; itemDots.innerHTML="";
   detailTitle.textContent = "Submission results";
   detailPrice.textContent = "";
@@ -1410,9 +1363,9 @@ async function router(){
       const payload = await getShort(reviewId);
       if (!payload || payload.type!=="review"){ alert("Invalid review link."); }
       else{
+        // Gate: don't render until code verified
+        reviewPayloadPending = payload;
         promptReviewCode();
-        // Wait a tick so code modal shows before building
-        setTimeout(()=> openReview(payload), 50);
         document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
         return;
       }
@@ -1421,7 +1374,7 @@ async function router(){
       const payload = await getShort(resultId);
       if (!payload || payload.type!=="result"){ alert("Invalid result link."); }
       else{
-        openResult(payload);
+        await openResult(payload);
         document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
         return;
       }
@@ -1439,22 +1392,23 @@ async function router(){
 
 /* ======== Init page ======== */
 async function renderCategories(){
-  const counts = await countByCategory();
+  const counts = await countByCategory().catch(()=> ({}));
   renderCategoriesGrid(counts);
 }
 async function renderShops(){
-  const counts = await fetchShopCounts();
+  const counts = await fetchShopCounts().catch(()=> {
+    const fb = {}; SHOPS.forEach(s=> fb[s.name]=0); return fb;
+  });
   renderShopsGrid(counts);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await upsertShopsMeta().catch(()=>{});
-  await renderCategories().catch(()=>{});
-  await renderShops().catch(()=>{});
+  await renderCategories();
+  await renderShops();
   router();
 });
-const fallbackCounts = {};
-SHOPS.forEach(shop => { fallbackCounts[shop.name] = 0; });
+// draw immediately with fallback (no wait)
+const fallbackCounts = {}; SHOPS.forEach(shop => { fallbackCounts[shop.name] = 0; });
 renderShopsGrid(fallbackCounts);
 </script>
 
