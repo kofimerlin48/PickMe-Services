@@ -2,231 +2,249 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Tech & Gadgets - PickMe Services</title>
 
-<!-- ========= HEADER ========= -->
-<div id="header-placeholder"></div>
+<!-- ===================== HEADER (Injected) ===================== -->
+<div id="header-placeholder" aria-hidden="true"></div>
 <script>
+/* Robust header loader (kept inline for portability) */
 (async () => {
   try {
-    const res = await fetch('header.html');
+    const res = await fetch('header.html', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load header');
     let html = await res.text();
     const pageTitle = "Tech & Gadgets";
-    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
-      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+    html = html.replace(
+      /<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">${pageTitle}</h1>`
     );
-    document.getElementById('header-placeholder').innerHTML = html;
-    document.querySelectorAll('#header-placeholder script').forEach(s => {
-      const n = document.createElement('script');
-      if (s.src) n.src = s.src; else n.textContent = s.textContent;
-      document.body.appendChild(n);
+    const host = document.getElementById('header-placeholder');
+    host.innerHTML = html;
+
+    // Re-run any scripts within the injected header
+    host.querySelectorAll('script').forEach(s0 => {
+      const s1 = document.createElement('script');
+      if (s0.src) s1.src = s0.src;
+      else s1.textContent = s0.textContent;
+      document.body.appendChild(s1);
     });
-  } catch (e) { console.error(e); }
+    host.removeAttribute('aria-hidden');
+  } catch (e) { console.error('[header]', e); }
 })();
 </script>
 
+<!-- ===================== STYLES ===================== -->
 <style>
-:root{ --theme-color:#c12872; }
+:root{
+  --theme:#c12872;
+  --ink:#222;
+  --muted:#666;
+  --bg:#f9f9f9;
+  --card:#fff;
+}
 
-*{box-sizing:border-box}
-* { -webkit-tap-highlight-color: transparent; }
-:focus, :focus-visible, button:focus, input:focus { outline: none !important; box-shadow: none !important; }
-body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:100px; overflow-x:hidden; }
+/* base */
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:focus,:focus-visible,button:focus,input:focus,textarea:focus{ outline:none!important; box-shadow:none!important; }
+html,body{ height:100%; }
+body{
+  margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background:var(--bg); color:var(--ink); padding-top:100px; overflow-x:hidden;
+}
 
-/* Page header + search */
-.page-header{text-align:center;margin-bottom:10px;}
-.page-header h1{color:var(--theme-color);margin:0;font-size:28px;}
-.page-header p{color:#000;margin-top:5px;font-size:16px;font-weight:bold;}
-.search-bar{display:flex;justify-content:center;margin:10px 16px 6px;}
-.search-bar input{width:100%;max-width:520px;padding:10px 14px;border:1px solid #ccc;border-radius:10px;font-size:16px;}
+/* header + search */
+.page-header{ text-align:center; margin:0 16px 8px; }
+.page-header h1{ margin:0; color:var(--theme); font-size:28px; font-weight:900; letter-spacing:.2px; }
+.page-header p{ margin:6px 0 0; color:#000; font-weight:700; font-size:15px; }
+.search-bar{ display:flex; justify-content:center; margin:10px 16px 6px; }
+.search-bar input{
+  width:100%; max-width:640px; padding:12px 14px; border:1px solid #ddd; border-radius:12px; background:#fff; font-size:16px;
+}
+.search-bar input::placeholder{ color:#999; }
 
-/* Main tabs: Categories | Shops */
-.main-tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;border-bottom:2px solid #eee;}
-.main-tab{flex:1;text-align:center;padding:12px 14px;border-radius:999px;background:#fff;border:1px solid #eee;cursor:pointer;white-space:nowrap;font-size:14px;font-weight:700;}
-.main-tab.active{color:#fff;background:var(--theme-color);border-color:var(--theme-color);}
+/* top tabs */
+.main-tabs{ display:flex; gap:8px; overflow:auto hidden; padding:8px 16px; border-bottom:2px solid #eee; }
+.main-tab{ padding:10px 14px; border:1px solid #eee; border-radius:999px; background:#fff; cursor:pointer; user-select:none; font-weight:800; font-size:14px; white-space:nowrap; }
+.main-tab.active{ color:#fff; background:var(--theme); border-color:var(--theme); }
 
-/* Containers */
-.view{display:none;}
-.view.show{display:block;}
-.container{padding:16px 16px 120px;}
+/* containers */
+.view{ display:none; }
+.view.show{ display:block; }
+.container{ padding:16px 16px 120px; }
 
-/* Categories small rectangular cards (with > chevron) */
+/* categories list */
 .categories-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;
 }
 .cat-card{
-  display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #eee;border-radius:12px;
-  padding:10px 12px; box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer;
+  display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer;
 }
-.cat-thumb{width:42px;height:42px;border-radius:10px;background:#f2f2f2;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.cat-thumb img{width:100%;height:100%;object-fit:cover;}
-.cat-info{flex:1;min-width:0}
-.cat-title{font-weight:700;font-size:14px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cat-sub{font-size:12px;color:#666}
-.cat-arrow{font-size:18px;color:#999;}
+.cat-thumb{ width:42px; height:42px; border-radius:10px; background:#f2f2f2; overflow:hidden; display:grid; place-items:center; flex-shrink:0; }
+.cat-thumb img{ width:100%; height:100%; object-fit:cover; }
+.cat-info{ flex:1; min-width:0; }
+.cat-title{ font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cat-sub{ font-size:12px; color:#555; }
+.cat-arrow{ font-size:18px; color:#999; margin-left:4px; }
 
-/* Item grid for a category / shop */
-.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
-.item-card{
-  background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;
-  display:flex;flex-direction:column;min-height:240px;
-}
-.item-img{position:relative;width:100%;padding-top:66%;background:#f2f2f2;overflow:hidden}
-.item-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-.item-body{padding:10px;display:flex;flex-direction:column;gap:6px}
-.item-price{font-weight:800;color:#111}
-.item-desc{font-size:12px;color:#444;line-height:1.3;max-height:30px;overflow:hidden}
-.item-shop{font-size:11px;color:#777}
+/* items grid */
+.items-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
+.item-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #eee; display:flex; flex-direction:column; min-height:240px; }
+.item-img{ position:relative; width:100%; padding-top:66%; background:#f2f2f2; overflow:hidden; }
+.item-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.item-body{ padding:10px; display:flex; flex-direction:column; gap:6px; }
+.item-price{ font-weight:900; color:#111; }
+.item-desc{ font-size:12px; color:#444; line-height:1.3; max-height:32px; overflow:hidden; }
+.item-shop{ font-size:11px; color:#777; }
 
-/* Shop cards */
-.cards-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:70px;padding:10px 0 0;
-}
+/* shops grid (hero cards) */
+.cards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; padding-top:6px; }
 .shop-card{
-  position:relative;border-radius:15px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.1);
-  background-size:cover;background-position:center;height:250px;display:flex;align-items:flex-end;transition:transform .2s;
+  position:relative; height:250px; border-radius:15px; overflow:hidden; background:#ddd center/cover no-repeat;
+  box-shadow:0 3px 10px rgba(0,0,0,.08); display:flex; align-items:flex-end; transition:transform .18s ease;
 }
-.shop-card:hover{transform:translateY(-5px)}
-.shop-card::before{content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0))}
-.shop-card .content{position:relative;color:#fff;padding:15px;width:100%;display:flex;flex-direction:column;justify-content:space-between;z-index:1}
-.shop-title{font-weight:bold;font-size:22px;margin-bottom:4px}
-.shop-slogan{font-size:13px;opacity:.95;margin-bottom:4px}
-.shop-lower{display:flex; justify-content:space-between; align-items:center; margin-top:8px;}
-.shop-meta{font-size:12px; opacity:0.9; margin:0;}
-.btn-enter{background:var(--theme-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;align-self:flex-end}
+.shop-card:hover{ transform:translateY(-4px); }
+.shop-card::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.75) 100%); }
+.shop-card .content{ position:relative; z-index:1; color:#fff; width:100%; padding:15px; display:flex; flex-direction:column; justify-content:space-between; }
+.shop-title{ font-weight:900; font-size:20px; margin:0 0 4px; }
+.shop-slogan{ font-size:13px; opacity:.95; margin:0 0 4px; }
+.shop-lower{ display:flex; align-items:center; justify-content:space-between; }
+.shop-meta{ font-size:12px; opacity:.92; }
+.btn-enter{ background:var(--theme); color:#fff; border:0; border-radius:10px; padding:8px 12px; font-weight:800; cursor:pointer; }
 
-/* Drawer (item or shop) */
+/* drawer */
 #drawer{
-  position:fixed;top:0;right:-100%;width:100%;max-width:1100px;height:100%;
-  background:#fff;z-index:9999;overflow-y:auto;transition:right .45s ease;box-shadow:-5px 0 15px rgba(0,0,0,.2);
+  position:fixed; top:0; right:-100%; width:100%; max-width:1100px; height:100%;
+  background:#fff; z-index:9999; overflow-y:auto; transition:right .42s ease; box-shadow:-5px 0 16px rgba(0,0,0,.18);
   padding-bottom:140px;
 }
-#drawer.show{right:0;}
+#drawer.show{ right:0; }
 #drawerClose{
-  position:fixed;top:15px;right:-60px;width:40px;height:40px;background:#000;color:#fff;border:none;border-radius:50%;
-  font-size:24px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;transition:right .45s ease;
+  position:fixed; top:16px; right:-60px; width:42px; height:42px; border-radius:50%;
+  background:#111; color:#fff; border:0; font-size:24px; display:grid; place-items:center; z-index:10000; transition:right .42s ease;
 }
-#drawer.show #drawerClose{right:15px;}
+#drawer.show #drawerClose{ right:16px; }
 .banner{
-  position:relative;width:100%;height:35vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
+  position:relative; height:35vh; display:grid; place-items:center; text-align:center; color:#fff;
   background:#333 center/cover no-repeat;
 }
-.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,.70), rgba(0,0,0,.80))}
-.banner-text{position:relative;z-index:2}
-.banner-text h2{font-size:16px;margin:0 0 6px}
-.banner-text h1{font-size:26px;margin:0 0 8px}
-.banner-text p{font-size:13px;margin:0;opacity:.95}
-.drawer-content{padding:18px;max-width:1100px;margin:0 auto}
-.section-title{font-weight:bold;margin:8px 0 12px;color:#333}
+.banner::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.7), rgba(0,0,0,.82)); }
+.banner-text{ position:relative; z-index:1; padding:0 16px; }
+.banner-text h2{ margin:0 0 6px; font-size:15px; font-weight:700; }
+.banner-text h1{ margin:0 0 6px; font-size:26px; }
+.banner-text p{ margin:0; font-size:13px; opacity:.95; }
+.drawer-content{ max-width:1100px; margin:0 auto; padding:18px; }
+.section-title{ font-weight:900; margin:6px 0 12px; }
 
-/* Slider */
-.slider{position:relative;width:100%;height:260px;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);background:#f2f2f2}
-.slide{position:absolute;top:0;left:100%;width:100%;height:100%;object-fit:cover;opacity:0;transition:left .45s ease, opacity .45s ease;}
-.slide.active{left:0;opacity:1}
-.slider .nav{position:absolute;top:50%;transform:translateY(-50%);font-size:24px;color:#fff;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:50%;cursor:pointer;user-select:none}
-.slider .nav.left{left:10px}
-.slider .nav.right{right:10px}
-.dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
-.dot{width:8px;height:8px;border-radius:50%;background:#ddd}
-.dot.active{background:var(--theme-color)}
+/* slider */
+.slider{ position:relative; height:260px; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#f2f2f2; }
+.slide{ position:absolute; top:0; left:100%; width:100%; height:100%; object-fit:cover; opacity:0; transition:left .45s ease, opacity .45s ease; }
+.slide.active{ left:0; opacity:1; }
+.slider .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:24px; color:#fff; background:rgba(0,0,0,.38); padding:6px 10px; border-radius:50%; cursor:pointer; user-select:none; }
+.slider .nav.left{ left:10px; }
+.slider .nav.right{ right:10px; }
+.dots{ display:flex; justify-content:center; gap:6px; margin-top:10px; }
+.dot{ width:8px; height:8px; border-radius:50%; background:#ddd; }
+.dot.active{ background:var(--theme); }
 
-/* Item detail text + actions */
-.item-detail{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-.detail-title{font-weight:800;font-size:18px}
-.detail-price{font-weight:800;color:#111;font-size:16px}
-.detail-desc{font-size:14px;color:#333;white-space:pre-wrap}
-.detail-meta{font-size:12px;color:#666}
-.actions-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-.btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
-.btn-secondary{background:#3a3a3a;color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
+/* item detail */
+.item-detail{ margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.detail-title{ font-weight:900; font-size:18px; }
+.detail-price{ font-weight:900; color:#111; font-size:16px; }
+.detail-meta{ font-size:12px; color:#666; }
+.detail-desc{ font-size:14px; white-space:pre-wrap; color:#333; }
+.actions-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+.btn-primary{ background:var(--theme); color:#fff; border:0; border-radius:10px; padding:12px 18px; cursor:pointer; font-size:15px; font-weight:800; }
+.btn-secondary{ background:#3a3a3a; color:#fff; border:0; border-radius:10px; padding:12px 18px; cursor:pointer; font-size:15px; }
 
-/* Admin modal(s) */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
-.modal.show{display:flex}
-.modal-card{width:95%;max-width:620px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
-.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
-.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
-.mopt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-.mopt-card{border:1px solid #eee;border-radius:12px;padding:14px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
-.mopt-card h4{margin:0;font-size:14px}
-.mopt-card p{margin:0;font-size:12px;color:#555}
-.close-x{background:#000;color:#fff;border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.input{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
-.input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.lbl{font-size:12px;color:#555;margin:6px 0 4px}
+/* inside-drawer top actions */
+.shop-top-actions{ position:fixed; top:12px; left:12px; z-index:10002; display:none; gap:8px; }
+.action-round{ background:#000; color:#fff; border:0; border-radius:50%; width:40px; height:40px; display:grid; place-items:center; cursor:pointer; font-size:22px; }
 
-/* Thumb list with delete overlay */
-.thumb-row{display:flex;gap:8px;overflow-x:auto}
-.thumb{position:relative;width:90px;height:90px;border-radius:10px;background:#f2f2f2;overflow:hidden;flex-shrink:0}
-.thumb img{width:100%;height:100%;object-fit:cover}
-.thumb .trash{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+/* modal base */
+.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:10001; }
+.modal.show{ display:flex; }
+.modal-card{ width:95%; max-width:640px; max-height:90vh; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:flex; flex-direction:column; }
+.modal-header,.modal-footer{ padding:14px 16px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.modal-footer{ border-top:1px solid #eee; border-bottom:none; justify-content:flex-end; }
+.modal-body{ padding:16px; overflow:auto; }
 
-/* Shop top bar (only inside drawer) */
-.shop-top-actions{
-  position:fixed;top:12px;left:12px;z-index:10002;display:none;gap:8px
-}
-.action-round{background:#000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px}
+/* admin option cards */
+.mopt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+.mopt-card{ border:1px solid #eee; border-radius:12px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:6px; cursor:pointer; }
+.mopt-card h4{ margin:0; font-size:14px; }
+.mopt-card p{ margin:0; font-size:12px; color:#555; }
+.close-x{ background:#000; color:#fff; border:none; border-radius:50%; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; }
 
-/* Footer iframe pinned */
-.footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
+/* inputs */
+.input{ width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:14px; }
+.input:focus{ border-color:var(--theme); box-shadow:0 0 0 3px rgba(193,40,114,.08); }
+.lbl{ font-size:12px; color:#555; margin:6px 0 4px; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* thumbs */
+.thumb-row{ display:flex; gap:8px; overflow-x:auto; }
+.thumb{ position:relative; width:90px; height:90px; border-radius:10px; background:#f2f2f2; overflow:hidden; flex-shrink:0; }
+.thumb img{ width:100%; height:100%; object-fit:cover; }
+.thumb .trash{ position:absolute; top:4px; right:4px; width:22px; height:22px; border:0; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; display:grid; place-items:center; }
+
+/* footer */
+.footer-wrap{ position:fixed; bottom:0; left:0; right:0; z-index:9999; }
 </style>
 </head>
 <body>
+<!-- FOUC control -->
 <style>
-  body.hide-initial * { visibility: hidden !important; }
-  body.ready * { visibility: visible !important; }
+  body.hide-initial *{ visibility:hidden!important; }
+  body.ready *{ visibility:visible!important; }
 </style>
-<script>
-  document.documentElement.style.background = "#fff";
-  document.body.classList.add("hide-initial");
-</script>
+<script> document.documentElement.style.background="#fff"; document.body.classList.add("hide-initial"); </script>
 
-<!-- ===== Header text & search ===== -->
-<div class="page-header">
-  <h1></h1>
+<!-- ===================== PAGE HEADER + SEARCH ===================== -->
+<header class="page-header">
+  <h1 class="sr-only" style="position:absolute;left:-9999px">Tech &amp; Gadgets</h1>
   <p>Find tech & gadget shops around you, browse categories, and contact sellers directly</p>
-</div>
+</header>
+
 <div class="search-bar">
-  <input type="text" id="globalSearch" placeholder="Search items, shops, models, keywords...">
+  <input id="globalSearch" type="search" placeholder="Search items, shops, models, keywords…" aria-label="Search">
 </div>
 
-<!-- ===== Main tabs ===== -->
-<div class="main-tabs">
-  <div class="main-tab active" data-view="categoriesView">Categories</div>
-  <div class="main-tab" data-view="shopsView">Shops</div>
-</div>
+<!-- ===================== TOP TABS ===================== -->
+<nav class="main-tabs" aria-label="Main sections">
+  <button class="main-tab active" data-view="categoriesView" aria-pressed="true">Categories</button>
+  <button class="main-tab" data-view="shopsView" aria-pressed="false">Shops</button>
+</nav>
 
-<!-- ===== CATEGORIES VIEW ===== -->
-<div id="categoriesView" class="view show">
+<!-- ===================== CATEGORIES VIEW ===================== -->
+<section id="categoriesView" class="view show" aria-label="Categories">
   <div class="container">
-    <div id="categoriesGrid" class="categories-grid"></div>
-    <div id="categoryItemsWrap" style="display:none; margin-top:14px;">
-      <div class="section-title" id="categoryItemsTitle"></div>
+    <div id="categoriesGrid" class="categories-grid" aria-live="polite"></div>
+
+    <div id="categoryItemsWrap" style="display:none;margin-top:14px;">
+      <div id="categoryItemsTitle" class="section-title"></div>
       <div class="search-bar" style="margin:6px 0 12px;">
-        <input type="text" id="categorySearch" placeholder="Search within this category...">
+        <input id="categorySearch" class="input" type="search" placeholder="Search within this category…" aria-label="Category search">
       </div>
-      <div id="categoryItemsGrid" class="items-grid"></div>
+      <div id="categoryItemsGrid" class="items-grid" aria-live="polite"></div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ===== SHOPS VIEW ===== -->
-<div id="shopsView" class="view">
+<!-- ===================== SHOPS VIEW ===================== -->
+<section id="shopsView" class="view" aria-label="Shops">
   <div class="container">
-    <div id="shopsGrid" class="cards-grid"></div>
+    <div id="shopsGrid" class="cards-grid" aria-live="polite"></div>
   </div>
-</div>
+</section>
 
-<!-- ===== Drawer (item or shop) ===== -->
-<div id="drawer">
-  <button id="drawerClose" aria-label="Close">&times;</button>
+<!-- ===================== DRAWER (ITEM OR SHOP) ===================== -->
+<aside id="drawer" aria-hidden="true" aria-label="Details drawer">
+  <button id="drawerClose" aria-label="Close details">&times;</button>
 
-  <section class="banner" id="shopBanner" style="display:none;">
+  <!-- shop header -->
+  <section id="shopBanner" class="banner" style="display:none;">
     <div class="banner-text">
       <h2>Welcome to</h2>
       <h1 id="shopName"></h1>
@@ -234,25 +252,25 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
     </div>
   </section>
 
-  <!-- Only visible inside drawer -->
-  <div class="shop-top-actions" id="shopTopActions">
-    <button class="action-round" id="hamburgerBtn" aria-label="Admin">&#9776;</button>
+  <!-- inside-drawer actions -->
+  <div id="shopTopActions" class="shop-top-actions">
+    <button id="hamburgerBtn" class="action-round" aria-label="Admin">&#9776;</button>
   </div>
 
   <div class="drawer-content">
     <!-- Item detail -->
     <div id="itemDetail" style="display:none;">
       <div id="itemSlider" class="slider"></div>
-      <div class="dots" id="itemDots"></div>
+      <div id="itemDots" class="dots"></div>
       <div class="item-detail">
-        <div class="detail-title" id="detailTitle"></div>
-        <div class="detail-price" id="detailPrice"></div>
-        <div class="detail-meta" id="detailPostedBy"></div>
-        <div class="detail-desc" id="detailDesc"></div>
+        <div id="detailTitle" class="detail-title"></div>
+        <div id="detailPrice" class="detail-price"></div>
+        <div id="detailPostedBy" class="detail-meta"></div>
+        <div id="detailDesc" class="detail-desc"></div>
         <div class="actions-row">
-          <button class="btn-primary" id="callBtn">Call</button>
-          <button class="btn-secondary" id="waBtn">WhatsApp</button>
-          <button class="btn-primary" id="viewShopBtn">View Shop</button>
+          <button id="callBtn" class="btn-primary">Call</button>
+          <button id="waBtn" class="btn-secondary">WhatsApp</button>
+          <button id="viewShopBtn" class="btn-primary">View Shop</button>
         </div>
       </div>
     </div>
@@ -260,165 +278,157 @@ body{ margin:0; font-family:Arial, sans-serif; background:#f9f9f9; padding-top:1
     <!-- Shop gallery -->
     <div id="shopGallery" style="display:none;">
       <div class="section-title">Items</div>
-      <div id="shopTabs" class="main-tabs" style="margin:0 0 10px 0;"></div>
+      <div id="shopTabs" class="main-tabs" style="margin:0 0 10px;"></div>
       <div id="shopItemsGrid" class="items-grid"></div>
     </div>
   </div>
-</div>
+</aside>
 
-<!-- ===== Modals (Admin) ===== -->
-<!-- Access code prompt (per shop) -->
-<div class="modal" id="codeModal">
+<!-- ===================== MODALS ===================== -->
+<!-- per-shop access code -->
+<div id="codeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>Enter Access Code</span>
-      <button class="close-x" id="codeClose">&times;</button>
+      <span id="codeTitle">Enter Access Code</span>
+      <button id="codeClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <input class="input" id="codeInput" placeholder="Access code"/>
+      <input id="codeInput" class="input" placeholder="Access code" aria-label="Access code">
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="codeCancel">Cancel</button>
-      <button class="btn-primary" id="codeOk">OK</button>
+      <button id="codeCancel" class="btn-secondary">Cancel</button>
+      <button id="codeOk" class="btn-primary">OK</button>
     </div>
   </div>
 </div>
 
-<!-- Admin options -->
-<div class="modal" id="adminOptionsModal">
+<!-- admin options -->
+<div id="adminOptionsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>Admin</span>
-      <button class="close-x" id="adminOptClose">&times;</button>
+      <span id="adminTitle">Admin</span>
+      <button id="adminOptClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <div class="mopt-grid">
-        <div class="mopt-card" id="optAdd">
-          <h4>Add item</h4>
-        </div>
-        <div class="mopt-card" id="optDelete">
-          <h4>Delete item</h4>
-        </div>
+        <div id="optAdd" class="mopt-card"><h4>Add item</h4></div>
+        <div id="optDelete" class="mopt-card"><h4>Delete item</h4></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="adminOptCancel">Close</button>
+      <button id="adminOptCancel" class="btn-secondary">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Choose category (GLOBAL categories only) -->
-<div class="modal" id="catChooseModal">
+<!-- choose category -->
+<div id="catChooseModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="catChooseTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>Choose Category</span>
-      <button class="close-x" id="catChooseClose">&times;</button>
+      <span id="catChooseTitle">Choose Category</span>
+      <button id="catChooseClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <div id="catChooseGrid" class="mopt-grid"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="catChooseCancel">Cancel</button>
+      <button id="catChooseCancel" class="btn-secondary">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Draft editor (add items) -->
-<div class="modal" id="draftModal">
+<!-- draft editor -->
+<div id="draftModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="draftTitle">
   <div class="modal-card">
     <div class="modal-header">
       <span id="draftTitle">Add items</span>
-      <button class="close-x" id="draftClose">&times;</button>
+      <button id="draftClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <div id="draftList"></div>
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
       <div class="lbl">Images (1–5)</div>
-      <div class="row">
-        <!-- removed capture attribute to present system picker (camera OR gallery) -->
-        <input type="file" id="imgInput" accept="image/*" multiple class="input">
-      </div>
-      <div class="thumb-row" id="imgThumbs"></div>
+      <div class="row"><input id="imgInput" type="file" accept="image/*" multiple class="input" aria-label="Upload images"></div>
+      <div id="imgThumbs" class="thumb-row"></div>
 
       <div class="lbl">Name</div>
-      <input class="input" id="nameInput" placeholder="e.g., iPhone 13 Pro Max 128GB">
+      <input id="nameInput" class="input" placeholder="e.g., iPhone 13 Pro Max 128GB">
       <div class="lbl">Price (GH₵)</div>
-      <input class="input" id="priceInput" type="number" min="0" step="1" placeholder="e.g., 4500">
+      <input id="priceInput" class="input" type="number" min="0" step="1" placeholder="e.g., 4500">
       <div class="lbl">Description / Specs</div>
-      <textarea class="input" id="descInput" rows="4" placeholder="Key specs, condition, warranty..."></textarea>
+      <textarea id="descInput" class="input" rows="4" placeholder="Key specs, condition, warranty…"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="clearFormBtn">Clear form</button>
-      <button class="btn-secondary" id="addMoreBtn">Add more</button>
-      <button class="btn-primary" id="submitDraftsBtn">Submit</button>
+      <button id="clearFormBtn" class="btn-secondary">Clear form</button>
+      <button id="addMoreBtn" class="btn-secondary">Add more</button>
+      <button id="submitDraftsBtn" class="btn-primary">Submit</button>
     </div>
   </div>
 </div>
 
-<!-- Delete picker -->
-<div class="modal" id="deleteModal">
+<!-- delete picker -->
+<div id="deleteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>Delete item</span>
-      <button class="close-x" id="deleteClose">&times;</button>
+      <span id="deleteTitle">Delete item</span>
+      <button id="deleteClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <div id="deleteList"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="deleteCancel">Cancel</button>
+      <button id="deleteCancel" class="btn-secondary">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Number capture (before call/whatsapp) -->
-<div class="modal" id="numberModal">
+<!-- number capture -->
+<div id="numberModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="numberTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>Your WhatsApp number</span>
-      <button class="close-x" id="numberClose">&times;</button>
+      <span id="numberTitle">Your WhatsApp number</span>
+      <button id="numberClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <input class="input" id="waNumberInput" placeholder="+233... or 0..." inputmode="tel">
-      <div id="numberError" style="margin-top:6px;color:#b00020;font-size:13px;display:none"></div>
+      <input id="waNumberInput" class="input" placeholder="+233… or 0…" inputmode="tel" aria-label="WhatsApp number">
+      <div id="numberError" style="display:none;color:#b00020;font-size:13px;margin-top:6px"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="numberCancel">Cancel</button>
-      <button class="btn-primary" id="numberOk">Continue</button>
+      <button id="numberCancel" class="btn-secondary">Cancel</button>
+      <button id="numberOk" class="btn-primary">Continue</button>
     </div>
   </div>
 </div>
 
-<!-- Review (PickMe) global admin -->
-<div class="modal" id="reviewCodeModal">
+<!-- review admin -->
+<div id="reviewCodeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span>PickMe Admin Access</span>
-      <button class="close-x" id="reviewCodeClose">&times;</button>
+      <span id="reviewTitle">PickMe Admin Access</span>
+      <button id="reviewCodeClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <input class="input" id="reviewCodeInput" placeholder="Enter admin code">
+      <input id="reviewCodeInput" class="input" placeholder="Enter admin code" aria-label="Admin code">
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="reviewCodeCancel">Cancel</button>
-      <button class="btn-primary" id="reviewCodeOk">OK</button>
+      <button id="reviewCodeCancel" class="btn-secondary">Cancel</button>
+      <button id="reviewCodeOk" class="btn-primary">OK</button>
     </div>
   </div>
 </div>
 
-<!-- ========= FIREBASE + PAGE LOGIC ========= -->
+<!-- ===================== LOGIC (Firebase + App) ===================== -->
 <script type="module">
-/* Firebase */
+/* Firebase (v10) */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore,
-  collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp
+  getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-/* ======== CONFIG ======== */
+/* ===== Firebase Config (keep as provided) ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
   authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -431,14 +441,14 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const st  = getStorage(app);
 
-/* ======== CONSTANTS ======== */
+/* ===== Constants ===== */
 const PAGE_KEY = "Tek&gaget";
 const PICKME_WHATSAPP = "233534742142";
 const GLOBAL_ADMIN_CODE = "999888";
 const SHOP_ADMIN_DEFAULT_CODE = "123456";
 const MAX_IMAGES = 5;
 
-/* ======== SHOPS (HARDCODED) ======== */
+/* ===== Shops (hardcoded) ===== */
 const SHOPS = [
   {
     name: "Trick Eye Store",
@@ -458,162 +468,160 @@ const SHOPS = [
   }
 ];
 
-/* ======== GLOBAL CATEGORIES (HARDCODED) ======== */
+/* ===== Categories (global) ===== */
 const CATEGORIES = [
-  { id:"Phones",                img:"https://via.placeholder.com/200?text=Phones" },
-  { id:"Computers & Laptops",   img:"https://via.placeholder.com/200?text=Laptops" },
-  { id:"Printers & Scanners",   img:"https://via.placeholder.com/200?text=Printers" },
-  { id:"Accessories",           img:"https://via.placeholder.com/200?text=Accessories" },
+  { id:"Phones", img:"https://via.placeholder.com/200?text=Phones" },
+  { id:"Computers & Laptops", img:"https://via.placeholder.com/200?text=Laptops" },
+  { id:"Printers & Scanners", img:"https://via.placeholder.com/200?text=Printers" },
+  { id:"Accessories", img:"https://via.placeholder.com/200?text=Accessories" },
   { id:"Security & Surveillance", img:"https://via.placeholder.com/200?text=Security" },
-  { id:"Networking",            img:"https://via.placeholder.com/200?text=Networking" },
-  { id:"Gaming",                img:"https://via.placeholder.com/200?text=Gaming" },
-  { id:"Software",              img:"https://via.placeholder.com/200?text=Software" },
-  { id:"Cameras & Photo",       img:"https://via.placeholder.com/200?text=Cameras" }
+  { id:"Networking", img:"https://via.placeholder.com/200?text=Networking" },
+  { id:"Gaming", img:"https://via.placeholder.com/200?text=Gaming" },
+  { id:"Software", img:"https://via.placeholder.com/200?text=Software" },
+  { id:"Cameras & Photo", img:"https://via.placeholder.com/200?text=Cameras" }
 ];
 
-/* ========= Firestore Paths =========
-  Tek&gaget
-    - Links/items/{id} -> { payload, createdAt }
-    - Shops/{shopName}/items/{adId} -> { ad }
-    - Shops/{shopName}/customers/{phoneE164} -> { whatsapp, ts }
-    - Numbers/items/{phoneE164} -> { whatsapp, ts }   (dedup within Tek&gaget only)
+/* ===== Firestore paths =====
+ Tek&gaget
+   - Links/items/{id} -> { payload, createdAt }
+   - Shops/{shopName}/items/{adId} -> ad doc
+   - Shops/{shopName}/customers/{phoneE164}
+   - Numbers/items/{phoneE164}
 */
 const linksCol   = collection(db, PAGE_KEY, "Links", "items");
 const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
 
-/* ======== DOM ======== */
-const tabButtons = document.querySelectorAll(".main-tab");
-const categoriesView = document.getElementById("categoriesView");
-const shopsView = document.getElementById("shopsView");
-const categoriesGrid = document.getElementById("categoriesGrid");
-const categoryItemsWrap = document.getElementById("categoryItemsWrap");
-const categoryItemsTitle= document.getElementById("categoryItemsTitle");
-const categoryItemsGrid = document.getElementById("categoryItemsGrid");
-const categorySearch    = document.getElementById("categorySearch");
-const shopsGrid = document.getElementById("shopsGrid");
-const globalSearch = document.getElementById("globalSearch");
+/* ===== DOM ===== */
+const tabs = document.querySelectorAll('.main-tab');
+const categoriesView = document.getElementById('categoriesView');
+const shopsView = document.getElementById('shopsView');
+const categoriesGrid = document.getElementById('categoriesGrid');
+const categoryItemsWrap = document.getElementById('categoryItemsWrap');
+const categoryItemsTitle= document.getElementById('categoryItemsTitle');
+const categoryItemsGrid = document.getElementById('categoryItemsGrid');
+const categorySearch    = document.getElementById('categorySearch');
+const shopsGrid = document.getElementById('shopsGrid');
+const globalSearch = document.getElementById('globalSearch');
 
-/* Drawer */
-const drawer = document.getElementById("drawer");
-const drawerClose = document.getElementById("drawerClose");
-const shopBanner = document.getElementById("shopBanner");
-const shopNameEl = document.getElementById("shopName");
-const shopSloganEl = document.getElementById("shopSlogan");
-const shopTopActions = document.getElementById("shopTopActions");
-const hamburgerBtn = document.getElementById("hamburgerBtn");
-const shopGallery = document.getElementById("shopGallery");
-const shopTabs = document.getElementById("shopTabs");
-const shopItemsGrid = document.getElementById("shopItemsGrid");
+/* drawer */
+const drawer = document.getElementById('drawer');
+const drawerClose = document.getElementById('drawerClose');
+const shopBanner = document.getElementById('shopBanner');
+const shopTopActions = document.getElementById('shopTopActions');
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const shopNameEl = document.getElementById('shopName');
+const shopSloganEl = document.getElementById('shopSlogan');
+const shopGallery = document.getElementById('shopGallery');
+const shopTabs = document.getElementById('shopTabs');
+const shopItemsGrid = document.getElementById('shopItemsGrid');
 
-const itemDetail = document.getElementById("itemDetail");
-const itemSlider = document.getElementById("itemSlider");
-const itemDots = document.getElementById("itemDots");
-const detailTitle = document.getElementById("detailTitle");
-const detailPrice = document.getElementById("detailPrice");
-const detailDesc = document.getElementById("detailDesc");
-const detailPostedBy = document.getElementById("detailPostedBy");
-const callBtn = document.getElementById("callBtn");
-const waBtn = document.getElementById("waBtn");
-const viewShopBtn = document.getElementById("viewShopBtn");
+/* item detail */
+const itemDetail = document.getElementById('itemDetail');
+const itemSlider = document.getElementById('itemSlider');
+const itemDots   = document.getElementById('itemDots');
+const detailTitle= document.getElementById('detailTitle');
+const detailPrice= document.getElementById('detailPrice');
+const detailDesc = document.getElementById('detailDesc');
+const detailPostedBy = document.getElementById('detailPostedBy');
+const callBtn = document.getElementById('callBtn');
+const waBtn   = document.getElementById('waBtn');
+const viewShopBtn = document.getElementById('viewShopBtn');
 
-/* Modals */
-const codeModal = document.getElementById("codeModal");
-const codeInput = document.getElementById("codeInput");
-const codeOk = document.getElementById("codeOk");
-const codeCancel = document.getElementById("codeCancel");
-const codeClose = document.getElementById("codeClose");
+/* modals */
+const codeModal = document.getElementById('codeModal');
+const codeInput = document.getElementById('codeInput');
+const codeOk = document.getElementById('codeOk');
+const codeCancel = document.getElementById('codeCancel');
+const codeClose = document.getElementById('codeClose');
 
-const adminOptionsModal = document.getElementById("adminOptionsModal");
-const optAdd = document.getElementById("optAdd");
-const optDelete = document.getElementById("optDelete");
-const adminOptClose = document.getElementById("adminOptClose");
-const adminOptCancel = document.getElementById("adminOptCancel");
+const adminOptionsModal = document.getElementById('adminOptionsModal');
+const optAdd = document.getElementById('optAdd');
+const optDelete = document.getElementById('optDelete');
+const adminOptClose = document.getElementById('adminOptClose');
+const adminOptCancel = document.getElementById('adminOptCancel');
 
-const catChooseModal = document.getElementById("catChooseModal");
-const catChooseGrid = document.getElementById("catChooseGrid");
-const catChooseClose = document.getElementById("catChooseClose");
-const catChooseCancel = document.getElementById("catChooseCancel");
+const catChooseModal = document.getElementById('catChooseModal');
+const catChooseGrid = document.getElementById('catChooseGrid');
+const catChooseClose = document.getElementById('catChooseClose');
+const catChooseCancel = document.getElementById('catChooseCancel');
 
-const draftModal = document.getElementById("draftModal");
-const draftClose = document.getElementById("draftClose");
-const draftTitle = document.getElementById("draftTitle");
-const imgInput = document.getElementById("imgInput");
-const imgThumbs = document.getElementById("imgThumbs");
-const nameInput = document.getElementById("nameInput");
-const priceInput = document.getElementById("priceInput");
-const descInput = document.getElementById("descInput");
-const addMoreBtn = document.getElementById("addMoreBtn");
-const clearFormBtn = document.getElementById("clearFormBtn");
-const submitDraftsBtn = document.getElementById("submitDraftsBtn");
-const draftList = document.getElementById("draftList");
+const draftModal = document.getElementById('draftModal');
+const draftClose = document.getElementById('draftClose');
+const draftTitle = document.getElementById('draftTitle');
+const imgInput = document.getElementById('imgInput');
+const imgThumbs = document.getElementById('imgThumbs');
+const nameInput = document.getElementById('nameInput');
+const priceInput = document.getElementById('priceInput');
+const descInput = document.getElementById('descInput');
+const addMoreBtn = document.getElementById('addMoreBtn');
+const clearFormBtn = document.getElementById('clearFormBtn');
+const submitDraftsBtn = document.getElementById('submitDraftsBtn');
+const draftList = document.getElementById('draftList');
 
-const deleteModal = document.getElementById("deleteModal");
-const deleteClose = document.getElementById("deleteClose");
-const deleteCancel = document.getElementById("deleteCancel");
-const deleteList = document.getElementById("deleteList");
+const deleteModal = document.getElementById('deleteModal');
+const deleteClose = document.getElementById('deleteClose');
+const deleteCancel = document.getElementById('deleteCancel');
+const deleteList = document.getElementById('deleteList');
 
-const numberModal = document.getElementById("numberModal");
-const waNumberInput = document.getElementById("waNumberInput");
-const numberOk = document.getElementById("numberOk");
-const numberCancel = document.getElementById("numberCancel");
-const numberClose = document.getElementById("numberClose");
-const numberError = document.getElementById("numberError");
+const numberModal = document.getElementById('numberModal');
+const waNumberInput = document.getElementById('waNumberInput');
+const numberOk = document.getElementById('numberOk');
+const numberCancel = document.getElementById('numberCancel');
+const numberClose = document.getElementById('numberClose');
+const numberError = document.getElementById('numberError');
 
-const reviewCodeModal = document.getElementById("reviewCodeModal");
-const reviewCodeInput = document.getElementById("reviewCodeInput");
-const reviewCodeOk = document.getElementById("reviewCodeOk");
-const reviewCodeClose = document.getElementById("reviewCodeClose");
-const reviewCodeCancel = document.getElementById("reviewCodeCancel");
+const reviewCodeModal = document.getElementById('reviewCodeModal');
+const reviewCodeInput = document.getElementById('reviewCodeInput');
+const reviewCodeOk = document.getElementById('reviewCodeOk');
+const reviewCodeClose = document.getElementById('reviewCodeClose');
+const reviewCodeCancel = document.getElementById('reviewCodeCancel');
 
-/* ======== State ======== */
-let currentShop = null;       // shop object
+/* ===== State ===== */
+let currentShop = null;
 let currentShopName = null;
-let jumpToAdId = null;        // used when coming from an item “View Shop”
+let jumpToAdId = null;
 let currentCategory = null;
-let pendingAction = null;     // "call" | "wa"
-let pendingContactFor = null; // {shopName, phone, itemTitle}
-let drafts = [];              // [{id, cat, name, price, desc, files:[File]}]
+let pendingAction = null;
+let pendingContactFor = null;
+let drafts = [];      // {id, cat, name, price, desc, files[]}
+let filesBuffer = []; // File[] (current add form)
 let userPhoneCache = null;
-let reviewPayloadPending = null; // gated behind admin code
+let reviewPayloadPending = null;
 
-/* ======== Helpers ======== */
-function show(el){ el.style.display = ''; }
-function hide(el){ el.style.display = 'none'; }
-function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
-function money(n){ n = Number(n||0); return isNaN(n)?0:n; }
-function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"T23:59:59"); }
-function fmtPrice(ghc){ const v = Number(ghc||0); return `GH₵ ${v.toFixed(2).replace(/\.00$/,'')}`; }
-function makeId(){ return (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase(); }
+/* ===== Helpers ===== */
+const show = el => el.style.display = '';
+const hide = el => el.style.display = 'none';
+const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+const money = n => Number(n||0);
+const fmtPrice = n => `GH₵ ${Number(n||0).toFixed(2).replace(/\.00$/,'')}`;
+const isExpired = iso => iso ? (new Date() > new Date(iso+"T23:59:59")) : false;
+const makeId = () => (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase();
 
-/* phone normalize (Ghana) */
+/* Ghana phone normalize */
 function normalizeGhanaNumber(input){
-  let s=String(input||'').trim().replace(/[\s\-]/g,'');
+  let s = String(input||'').trim().replace(/[\s\-]/g,'');
   if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
   if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
   if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
   if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
-  const d=s.replace(/\D/g,'');
+  const d = s.replace(/\D/g,'');
   if (d.startsWith('233')) return { e164:'+'+d, wa:d };
   if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
   return null;
 }
 
-/* ======== Caching ======== */
+/* ===== Cache keys ===== */
 const CACHE = {
   cats: "tk_cats_counts",
   shops: "tk_shops_counts",
-  shopItems: (shop)=>`tk_shop_${shop}_items`,
-  catItems: (cat)=>`tk_cat_${cat}_items`
+  shopItems: shop => `tk_shop_${shop}_items`,
+  catItems: cat => `tk_cat_${cat}_items`
 };
-function saveCache(key, data){ try{ localStorage.setItem(key, JSON.stringify(data)); }catch{} }
-function loadCache(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch{ return null; } }
-function clearShopCaches(shop){
-  localStorage.removeItem(CACHE.shopItems(shop));
-  localStorage.removeItem(CACHE.cats);
-  localStorage.removeItem(CACHE.shops);
-}
+const saveCache = (k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
+const loadCache = (k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
+const clearShopCaches = (shop)=>{ localStorage.removeItem(CACHE.shopItems(shop)); localStorage.removeItem(CACHE.cats); localStorage.removeItem(CACHE.shops); };
 
-/* ======== Categories ======== */
+/* ===== Categories & Items ===== */
 async function countByCategory(){
   const cached = loadCache(CACHE.cats);
   if (cached) return cached;
@@ -623,8 +631,7 @@ async function countByCategory(){
     const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
     const snap = await getDocs(col);
     snap.forEach(d=>{
-      const it = d.data();
-      const cat = it.category || "Other";
+      const it = d.data(); const cat = it.category||"Other";
       out[cat] = (out[cat]||0)+1;
     });
   }));
@@ -634,10 +641,10 @@ async function countByCategory(){
 function renderCategoriesGrid(counts){
   categoriesGrid.innerHTML = "";
   CATEGORIES.forEach(c=>{
-    const card = document.createElement('div');
+    const card = document.createElement('article');
     card.className = "cat-card";
     card.innerHTML = `
-      <div class="cat-thumb">${c.img ? `<img src="${c.img}" alt="${c.id}">` : ''}</div>
+      <div class="cat-thumb">${c.img?`<img src="${c.img}" alt="${escapeHtml(c.id)}">`:''}</div>
       <div class="cat-info">
         <div class="cat-title">${escapeHtml(c.id)}</div>
         <div class="cat-sub">${counts[c.id]||0} adverts</div>
@@ -648,24 +655,18 @@ function renderCategoriesGrid(counts){
     categoriesGrid.appendChild(card);
   });
 }
-
-/* ======== Category view (items) ======== */
 async function fetchAllItemsInCategory(cat){
-  const cacheKey = CACHE.catItems(cat);
-  const cached = loadCache(cacheKey);
+  const cached = loadCache(CACHE.catItems(cat));
   if (cached) return cached;
 
   const items = [];
   await Promise.all(SHOPS.map(async sh=>{
     const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
     const snap = await getDocs(col);
-    snap.forEach(d=>{
-      const it = d.data();
-      if (it.category===cat) items.push(it);
-    });
+    snap.forEach(d=>{ const it = d.data(); if ((it.category||'')===cat) items.push(it); });
   }));
   items.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-  saveCache(cacheKey, items);
+  saveCache(CACHE.catItems(cat), items);
   return items;
 }
 function renderItemCard(container, ad){
@@ -687,16 +688,17 @@ async function openCategory(cat){
   currentCategory = cat;
   categoryItemsTitle.textContent = cat;
   show(categoryItemsWrap);
-  categoryItemsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>Loading…</p>";
+  categoryItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Loading…</p>`;
   const items = await fetchAllItemsInCategory(cat);
+
   const render = (list)=>{
     categoryItemsGrid.innerHTML = "";
     list.forEach(ad=> renderItemCard(categoryItemsGrid, ad));
-    if (!list.length) categoryItemsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No items yet.</p>";
+    if (!list.length) categoryItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
   };
   render(items);
   categorySearch.oninput = ()=>{
-    const q = (categorySearch.value||"").toLowerCase();
+    const q = (categorySearch.value||'').toLowerCase();
     render(items.filter(ad =>
       (ad.name||'').toLowerCase().includes(q) ||
       (ad.desc||'').toLowerCase().includes(q) ||
@@ -705,7 +707,7 @@ async function openCategory(cat){
   };
 }
 
-/* ======== Shops grid ======== */
+/* ===== Shops ===== */
 async function fetchShopCounts(){
   const cached = loadCache(CACHE.shops);
   if (cached) return cached;
@@ -723,8 +725,7 @@ function renderShopsGrid(countMap){
   const list = SHOPS.filter(s=>!isExpired(s.expiry))
     .sort((a,b)=> (countMap[b.name]||0)-(countMap[a.name]||0) || a.name.localeCompare(b.name));
   list.forEach(shop=>{
-    const count = countMap[shop.name]||0;
-    const card = document.createElement('div');
+    const card = document.createElement('article');
     card.className = "shop-card";
     card.style.backgroundImage = `url('${shop.heroImage}')`;
     const content = document.createElement('div');
@@ -732,115 +733,101 @@ function renderShopsGrid(countMap){
     content.innerHTML = `
       <div>
         <div class="shop-title">${escapeHtml(shop.name)}</div>
-        <div class="shop-slogan">${escapeHtml(shop.slogan||"")}</div>
+        <div class="shop-slogan">${escapeHtml(shop.slogan||'')}</div>
       </div>
       <div class="shop-lower">
-        <div class="shop-meta">Items: ${count}</div>
-        <button class="btn-enter">Enter Shop</button>
+        <p class="shop-meta">Items: ${countMap[shop.name]||0}</p>
+        <button class="btn-enter" type="button">Enter Shop</button>
       </div>
     `;
-    content.querySelector(".btn-enter").addEventListener('click', ()=> openShop(shop));
+    content.querySelector('.btn-enter').addEventListener('click', ()=> openShop(shop));
     card.appendChild(content);
     shopsGrid.appendChild(card);
   });
   if (!shopsGrid.children.length){
-    shopsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No shops available.</p>";
+    shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
   }
 }
 
-/* ======== Drawer controls ======== */
-function openDrawer(){
-  drawer.classList.add("show");
-  // ensure hamburger appears only inside drawer
-  shopTopActions.style.display = 'flex';
-}
-function closeDrawer(){
-  drawer.classList.remove("show");
-  // hide inside-only actions to prevent bleed on main page
-  shopTopActions.style.display = 'none';
-  hide(shopBanner); hide(shopGallery); hide(itemDetail);
-}
+/* ===== Drawer ===== */
+const openDrawer = ()=>{ drawer.classList.add('show'); drawer.setAttribute('aria-hidden','false'); shopTopActions.style.display='flex'; };
+const closeDrawer = ()=>{ drawer.classList.remove('show'); drawer.setAttribute('aria-hidden','true'); shopTopActions.style.display='none'; hide(shopBanner); hide(shopGallery); hide(itemDetail); };
 drawerClose.addEventListener('click', closeDrawer);
 
-/* ======== Slider ======== */
+/* slider */
 function buildSlider(images, sliderEl, dotsEl){
-  sliderEl.innerHTML = ""; dotsEl.innerHTML="";
+  sliderEl.innerHTML=''; dotsEl.innerHTML='';
   if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
   images.forEach((src,i)=>{
-    const img = document.createElement("img");
-    img.src = src; img.alt = `image-${i+1}`; img.className = "slide" + (i===0?" active":"");
+    const img = document.createElement('img');
+    img.src = src; img.alt = `image-${i+1}`; img.className = 'slide'+(i===0?' active':'');
     sliderEl.appendChild(img);
-    const dot = document.createElement("div"); dot.className="dot"+(i===0?" active":"");
-    dot.addEventListener("click",()=>goTo(i)); dotsEl.appendChild(dot);
+    const dot = document.createElement('div'); dot.className = 'dot'+(i===0?' active':'');
+    dot.addEventListener('click', ()=> goTo(i)); dotsEl.appendChild(dot);
   });
-  const left=document.createElement("div"); left.className="nav left"; left.innerHTML="&#10094;";
-  const right=document.createElement("div"); right.className="nav right"; right.innerHTML="&#10095;";
+  const left = document.createElement('div'); left.className='nav left'; left.innerHTML='&#10094;';
+  const right= document.createElement('div'); right.className='nav right'; right.innerHTML='&#10095;';
   sliderEl.append(left,right);
 
-  let current=0;
-  const slides=sliderEl.querySelectorAll(".slide");
-  const dots=dotsEl.querySelectorAll(".dot");
+  let current = 0;
+  const slides = sliderEl.querySelectorAll('.slide');
+  const dots = dotsEl.querySelectorAll('.dot');
+
   function setPos(prev,next,dir){
     const a=slides[prev], b=slides[next];
-    b.style.transition="none"; b.style.left=(dir===1?"100%":"-100%"); b.style.opacity="1"; void b.offsetWidth;
-    a.style.transition="left .45s ease, opacity .45s ease";
-    b.style.transition="left .45s ease, opacity .45s ease";
-    a.style.left=(dir===1?"-100%":"100%"); a.style.opacity="1"; b.style.left="0";
+    b.style.transition='none'; b.style.left=(dir===1?'100%':'-100%'); b.style.opacity='1'; void b.offsetWidth;
+    a.style.transition='left .45s ease, opacity .45s ease';
+    b.style.transition='left .45s ease, opacity .45s ease';
+    a.style.left=(dir===1?'-100%':'100%'); a.style.opacity='1'; b.style.left='0';
   }
   function goTo(n){
     if (n===current) return;
-    const dir=(n>current)?1:-1;
+    const dir = n>current ? 1 : -1;
     setPos(current,n,dir);
-    slides[current].classList.remove("active");
-    slides[n].classList.add("active");
-    dots[current].classList.remove("active");
-    dots[n].classList.add("active");
+    slides[current].classList.remove('active'); slides[n].classList.add('active');
+    dots[current].classList.remove('active'); dots[n].classList.add('active');
     current=n;
   }
-  left.addEventListener("click",()=>goTo((current-1+slides.length)%slides.length));
-  right.addEventListener("click",()=>goTo((current+1)%slides.length));
+  left.addEventListener('click', ()=> goTo((current-1+slides.length)%slides.length));
+  right.addEventListener('click',()=> goTo((current+1)%slides.length));
   let startX=0;
-  sliderEl.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
-  sliderEl.addEventListener("touchend",e=>{
+  sliderEl.addEventListener('touchstart', e=> startX=e.touches[0].clientX, {passive:true});
+  sliderEl.addEventListener('touchend', e=>{
     const endX=e.changedTouches[0].clientX;
     if (startX-endX>40) right.click();
     if (endX-startX>40) left.click();
-  });
+  }, {passive:true});
 }
 
-/* ======== Item Detail ======== */
+/* item detail */
 function openItemDetail(ad){
-  hide(shopBanner); hide(shopGallery);
-  show(itemDetail);
+  hide(shopBanner); hide(shopGallery); show(itemDetail);
   buildSlider(ad.images||[], itemSlider, itemDots);
-  detailTitle.textContent = ad.name||"Item";
+  detailTitle.textContent = ad.name||'Item';
   detailPrice.textContent = fmtPrice(ad.price);
-  detailPostedBy.textContent = "Posted by " + (ad.shop||"");
-  detailDesc.textContent = ad.desc||"";
+  detailPostedBy.textContent = "Posted by " + (ad.shop||'');
+  detailDesc.textContent = ad.desc||'';
   openDrawer();
 
-  callBtn.onclick = ()=> captureNumberThenProceed("call", ad);
-  waBtn.onclick   = ()=> captureNumberThenProceed("wa", ad);
-  viewShopBtn.onclick = ()=> {
+  callBtn.onclick = ()=> captureNumberThenProceed('call', ad);
+  waBtn.onclick   = ()=> captureNumberThenProceed('wa', ad);
+  viewShopBtn.onclick = ()=>{
     jumpToAdId = ad.id || null;
     const shopObj = SHOPS.find(s=>s.name===ad.shop);
     if (shopObj) openShop(shopObj);
   };
 }
 
-/* ======== Shop Gallery ======== */
+/* shop gallery */
 async function openShop(shop){
   currentShop = shop;
   currentShopName = shop.name;
   jumpToAdId = jumpToAdId || null;
 
-  show(shopBanner);
-  hide(itemDetail);
-  show(shopGallery);
-
+  show(shopBanner); show(shopGallery); hide(itemDetail);
   shopBanner.style.backgroundImage = `url('${shop.heroImage}')`;
   shopNameEl.textContent = shop.name;
-  shopSloganEl.textContent = shop.slogan || "";
+  shopSloganEl.textContent = shop.slogan || '';
   openDrawer();
 
   hamburgerBtn.onclick = ()=> promptShopCode();
@@ -848,150 +835,129 @@ async function openShop(shop){
   await renderShopTabsAndItems(shop, jumpToAdId);
   jumpToAdId = null;
 }
-
 async function renderShopTabsAndItems(shop, focusAdId=null){
   const items = await fetchShopItems(shop.name);
   const byCat = {};
   items.forEach(it=>{
-    const c = it.category||"Other";
-    (byCat[c]||(byCat[c]=[])).push(it);
+    const c = it.category||'Other'; (byCat[c]||(byCat[c]=[])).push(it);
   });
 
   shopTabs.innerHTML = "";
   const cats = Object.keys(byCat).sort((a,b)=> a.localeCompare(b));
   cats.forEach((c,i)=>{
-    const tab = document.createElement('div');
-    tab.className = "main-tab"+(i===0?" active":"");
-    tab.dataset.cat = c;
-    tab.textContent = `${c} (${byCat[c].length})`;
-    tab.addEventListener('click', ()=>{
-      shopTabs.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
+    const btn = document.createElement('button');
+    btn.className = 'main-tab'+(i===0?' active':''); btn.dataset.cat = c; btn.textContent = `${c} (${byCat[c].length})`;
+    btn.addEventListener('click', ()=>{
+      shopTabs.querySelectorAll('.main-tab').forEach(b=> b.classList.remove('active'));
+      btn.classList.add('active');
       renderShopItems(byCat[c]);
     });
-    shopTabs.appendChild(tab);
+    shopTabs.appendChild(btn);
   });
 
   if (!cats.length){
-    shopItemsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No items yet.</p>";
+    shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
     return;
   }
-
-  const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat]||[]).some(it=>it.id===focusAdId)) : cats[0];
-  shopTabs.querySelectorAll('.main-tab').forEach(t=> t.dataset.cat===firstCat && t.classList.add('active'));
+  const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat]||[]).some(it=> it.id===focusAdId)) : cats[0];
+  shopTabs.querySelectorAll('.main-tab').forEach(b=> b.dataset.cat===firstCat && b.classList.add('active'));
   renderShopItems(byCat[firstCat], focusAdId);
 }
-
 function renderShopItems(list, focusAdId=null){
-  shopItemsGrid.innerHTML = "";
-  list.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).forEach(ad=>{
-    renderItemCard(shopItemsGrid, ad);
-  });
-  if (!list.length) shopItemsGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No items in this category.</p>";
-
+  shopItemsGrid.innerHTML='';
+  list.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).forEach(ad=> renderItemCard(shopItemsGrid, ad));
+  if (!list.length) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</p>`;
   if (focusAdId){
-    const ad = list.find(x=>x.id===focusAdId);
+    const ad = list.find(x=> x.id===focusAdId);
     if (ad) openItemDetail(ad);
   }
 }
-
 async function fetchShopItems(shopName){
-  const cacheKey = CACHE.shopItems(shopName);
-  const cached = loadCache(cacheKey);
+  const ck = CACHE.shopItems(shopName);
+  const cached = loadCache(ck);
   if (cached) return cached;
 
   const col = collection(db, PAGE_KEY, "Shops", shopName, "items");
   const snap = await getDocs(col);
   const arr = [];
-  snap.forEach(d=>{
-    const it = d.data(); it.id = d.id; arr.push(it);
-  });
+  snap.forEach(d=>{ const it = d.data(); it.id = d.id; arr.push(it); });
   arr.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-  saveCache(cacheKey, arr);
+  saveCache(ck, arr);
   return arr;
 }
 
-/* ======== Search ======== */
+/* search (global quick filter) */
 globalSearch.addEventListener('input', ()=>{
-  const q = (globalSearch.value||"").trim().toLowerCase();
-  if (!q){
-    if (categoriesView.classList.contains('show') && currentCategory){
-      openCategory(currentCategory);
-    }
-    if (shopsView.classList.contains('show')){
-      fetchShopCounts().then(renderShopsGrid);
-    }
-    return;
-  }
+  const q = (globalSearch.value||'').trim().toLowerCase();
 
+  // categories view
   if (categoriesView.classList.contains('show')){
-    if (categoryItemsWrap.style.display!=="none"){
+    if (categoryItemsWrap.style.display!=='none'){
       const cards = categoryItemsGrid.querySelectorAll('.item-card');
-      cards.forEach(c=>{
-        const txt = c.textContent.toLowerCase();
-        c.style.display = txt.includes(q) ? '' : 'none';
-      });
-    } else {
-      Array.from(categoriesGrid.children).forEach(card=>{
-        const txt = card.textContent.toLowerCase();
-        card.style.display = txt.includes(q)?'':'none';
-      });
+      cards.forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+    }else{
+      [...categoriesGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
     }
   }
-
+  // shops view
   if (shopsView.classList.contains('show')){
-    Array.from(shopsGrid.children).forEach(card=>{
-      const txt = card.textContent.toLowerCase();
-      card.style.display = txt.includes(q)?'':'none';
-    });
+    [...shopsGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+  }
+
+  // empty query: refresh grids
+  if (!q){
+    if (categoriesView.classList.contains('show') && currentCategory){ openCategory(currentCategory); }
+    if (shopsView.classList.contains('show')){ fetchShopCounts().then(renderShopsGrid).catch(()=>{}); }
   }
 });
 
-/* ======== Tabs switching ======== */
-tabButtons.forEach(btn=>{
+/* switch tabs */
+tabs.forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    tabButtons.forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
+    tabs.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
     const target = btn.dataset.view;
-    [categoriesView, shopsView].forEach(v=>v.classList.remove('show'));
+    [categoriesView, shopsView].forEach(v=> v.classList.remove('show'));
     document.getElementById(target).classList.add('show');
   });
 });
 
-/* ======== Number capture + proceed ======== */
+/* ===== Number capture + proceed ===== */
 function openNumberModal(){ numberModal.classList.add('show'); }
 function closeNumberModal(){ numberModal.classList.remove('show'); }
 [numberClose, numberCancel].forEach(b=> b.addEventListener('click', closeNumberModal));
 
 async function captureNumberThenProceed(kind, ad){
   pendingAction = kind;
-  pendingContactFor = { shopName: ad.shop, phone: (SHOPS.find(s=>s.name===ad.shop)?.phone)||"", itemTitle: ad.name };
+  pendingContactFor = {
+    shopName: ad.shop,
+    phone: (SHOPS.find(s=>s.name===ad.shop)?.phone) || "",
+    itemTitle: ad.name
+  };
   waNumberInput.value = userPhoneCache || "";
   numberError.style.display = 'none';
   openNumberModal();
 }
 numberOk.addEventListener('click', async ()=>{
   const norm = normalizeGhanaNumber(waNumberInput.value);
-  if (!norm){ numberError.textContent="Enter a valid WhatsApp number"; numberError.style.display='block'; return; }
+  if (!norm){ numberError.textContent="Enter a valid WhatsApp number."; numberError.style.display='block'; return; }
   numberError.style.display='none';
   userPhoneCache = norm.e164;
 
-  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), {
-    whatsapp: norm.e164, timestamp: serverTimestamp()
-  }, { merge: true });
+  // Global numbers collection (dedup)
+  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
 
-  const shop = pendingContactFor?.shopName;
-  if (shop){
-    const custCol = collection(db, PAGE_KEY, "Shops", shop, "customers");
-    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g,'')), {
-      whatsapp: norm.e164, timestamp: serverTimestamp()
-    }, { merge: true });
+  // Per shop customers
+  const shopName = pendingContactFor?.shopName;
+  if (shopName){
+    const custCol = collection(db, PAGE_KEY, "Shops", shopName, "customers");
+    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
   }
 
   const shopPhone = pendingContactFor?.phone || "";
-  if (pendingAction==="call"){
+  if (pendingAction === 'call'){
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
-  } else {
+  }else{
     const waNum = shopPhone.replace(/^\+/,'');
     const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tek&gaget).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
@@ -999,7 +965,7 @@ numberOk.addEventListener('click', async ()=>{
   closeNumberModal();
 });
 
-/* ======== Admin: per-shop access ======== */
+/* ===== Admin: per-shop access ===== */
 function openModal(m){ m.classList.add('show'); }
 function closeModal(m){ m.classList.remove('show'); }
 
@@ -1011,23 +977,22 @@ function promptShopCode(){
 codeOk.addEventListener('click', ()=>{
   const input = codeInput.value.trim();
   const expected = (currentShop?.accessCode) || SHOP_ADMIN_DEFAULT_CODE;
-  if (input && input===expected){
+  if (input && input === expected){
     closeModal(codeModal);
     openModal(adminOptionsModal);
-  } else {
+  }else{
     alert("Incorrect code.");
   }
 });
 [adminOptClose, adminOptCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(adminOptionsModal)));
 
-/* ======== Admin options actions ======== */
+/* ===== Admin: add items ===== */
 optAdd.addEventListener('click', ()=>{
   closeModal(adminOptionsModal);
-  // GLOBAL categories only (not per-shop hardcoded)
   catChooseGrid.innerHTML = "";
   CATEGORIES.forEach(({id})=>{
     const div = document.createElement('div');
-    div.className="mopt-card";
+    div.className = 'mopt-card';
     div.innerHTML = `<h4>${escapeHtml(id)}</h4>`;
     div.addEventListener('click', ()=> startAddFlow(id));
     catChooseGrid.appendChild(div);
@@ -1036,41 +1001,6 @@ optAdd.addEventListener('click', ()=>{
 });
 [catChooseClose, catChooseCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(catChooseModal)));
 
-optDelete.addEventListener('click', async ()=>{
-  closeModal(adminOptionsModal);
-  deleteList.innerHTML = "<p>Loading items…</p>";
-  openModal(deleteModal);
-  const items = await fetchShopItems(currentShopName);
-  deleteList.innerHTML = "";
-  if (!items.length){ deleteList.innerHTML = "<p>No items to delete.</p>"; return; }
-  items.forEach(ad=>{
-    const blk = document.createElement('div');
-    blk.className="mopt-card";
-    blk.innerHTML = `<h4>${escapeHtml(ad.name||'Item')}</h4><p>${escapeHtml(ad.category||'')}</p><button class="btn-secondary">Delete</button>`;
-    blk.querySelector('button').addEventListener('click', ()=> deleteAd(ad));
-    deleteList.appendChild(blk);
-  });
-});
-[deleteClose, deleteCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(deleteModal)));
-
-async function deleteAd(ad){
-  if (!confirm("Delete this item permanently?")) return;
-  try{
-    await deleteDoc(doc(db, PAGE_KEY, "Shops", currentShopName, "items", ad.id));
-  }catch(e){ console.warn("delete doc err", e); }
-  try{
-    const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
-    const listing = await listAll(folder);
-    await Promise.all(listing.items.map(obj=> deleteObject(obj)));
-  }catch(e){ console.warn("delete images err", e); }
-  alert("Deleted.");
-  closeModal(deleteModal);
-  clearShopCaches(currentShopName);
-  renderShops();
-  if (currentShop) openShop(currentShop);
-}
-
-/* ======== Add flow ======== */
 let currentAddCategory = null;
 function startAddFlow(category){
   currentAddCategory = category;
@@ -1084,15 +1014,13 @@ function openDraftEditor(){
 }
 draftClose.addEventListener('click', ()=> closeModal(draftModal));
 
-/* thumbnails state for current form */
-let filesBuffer = []; // File[]
 function refreshThumbs(){
   imgThumbs.innerHTML = "";
   filesBuffer.forEach((file, idx)=>{
     const url = URL.createObjectURL(file);
     const t = document.createElement('div');
     t.className='thumb';
-    t.innerHTML = `<img src="${url}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
+    t.innerHTML = `<img src="${url}" alt="img ${idx+1}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
     t.querySelector('.trash').addEventListener('click', ()=>{
       filesBuffer.splice(idx,1);
       refreshThumbs();
@@ -1101,12 +1029,8 @@ function refreshThumbs(){
   });
 }
 function resetForm(){
-  imgInput.value = "";
-  filesBuffer = [];
-  refreshThumbs();
-  nameInput.value = "";
-  priceInput.value = "";
-  descInput.value = "";
+  imgInput.value=''; filesBuffer=[]; refreshThumbs();
+  nameInput.value=''; priceInput.value=''; descInput.value='';
 }
 imgInput.addEventListener('change', ()=>{
   const list = Array.from(imgInput.files||[]);
@@ -1124,36 +1048,23 @@ function pushDraftFromForm(){
   if (!filesBuffer.length){ alert("Add at least 1 image"); return false; }
   const id = makeId();
   drafts.push({ id, cat: currentAddCategory, name:nm, price:pr, desc:ds, files:[...filesBuffer] });
-  renderDraftList();
-  resetForm();
-  return true;
+  renderDraftList(); resetForm(); return true;
 }
 function renderDraftList(){
   draftList.innerHTML = "";
   drafts.forEach((d, i)=>{
     const wrap = document.createElement('div');
-    wrap.className="mopt-card";
-    // light, no long paragraphs to keep UI compact
-    wrap.innerHTML = `
-      <h4>#${i+1} ${escapeHtml(d.name)}</h4>
-      <p>${escapeHtml(d.cat)} · ${fmtPrice(d.price)} · ${d.files.length} image(s)</p>
-    `;
+    wrap.className = 'mopt-card';
+    wrap.innerHTML = `<h4>#${i+1} ${escapeHtml(d.name)}</h4><p>${escapeHtml(d.cat)} · ${fmtPrice(d.price)} · ${d.files.length} image(s)</p>`;
     draftList.appendChild(wrap);
   });
 }
-
 addMoreBtn.addEventListener('click', ()=>{ pushDraftFromForm(); });
 
 submitDraftsBtn.addEventListener('click', async ()=>{
-  if (!drafts.length){
-    if (!pushDraftFromForm()) return;
-  }
-  const payload = {
-    type:"review",
-    page: PAGE_KEY,
-    shop: currentShopName,
-    items: []
-  };
+  if (!drafts.length){ if (!pushDraftFromForm()) return; }
+  const payload = { type:"review", page:PAGE_KEY, shop: currentShopName, items: [] };
+
   for (const d of drafts){
     const adId = d.id;
     const urls = [];
@@ -1163,32 +1074,61 @@ submitDraftsBtn.addEventListener('click', async ()=>{
       const rf = sRef(st, key);
       const snap = await uploadBytes(rf, f);
       const url = await getDownloadURL(sRef(st, snap.metadata.fullPath));
-      urls.push(url);
-      idx++;
+      urls.push(url); idx++;
     }
-    payload.items.push({
-      id: adId,
-      category: d.cat,
-      name: d.name,
-      price: d.price,
-      desc: d.desc,
-      images: urls
-    });
+    payload.items.push({ id: adId, category:d.cat, name:d.name, price:d.price, desc:d.desc, images:urls });
   }
-  const id = makeId();
-  await setDoc(doc(linksCol, id), { payload, createdAt: serverTimestamp() });
-  closeModal(draftModal);
-  drafts = []; resetForm(); draftList.innerHTML="";
 
-  const link = `${location.origin}${location.pathname}?review=${id}`;
+  const linkId = await putShort(payload);
+  closeModal(draftModal);
+  drafts=[]; resetForm(); draftList.innerHTML="";
+
+  const link = `${location.origin}${location.pathname}?review=${linkId}`;
   const msg = `New Tek&gaget adverts from *${currentShopName}*.\nOpen: ${link}`;
   window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 });
 
-/* ======== Review Flow (PickMe) ======== */
+/* ===== Admin: delete items ===== */
+optDelete.addEventListener('click', async ()=>{
+  closeModal(adminOptionsModal);
+  deleteList.innerHTML = "<p>Loading items…</p>";
+  openModal(deleteModal);
+  const items = await fetchShopItems(currentShopName);
+  deleteList.innerHTML = "";
+  if (!items.length){ deleteList.innerHTML = "<p>No items to delete.</p>"; return; }
+  items.forEach(ad=>{
+    const blk = document.createElement('div');
+    blk.className = 'mopt-card';
+    blk.innerHTML = `
+      <h4>${escapeHtml(ad.name||'Item')}</h4>
+      <p>${escapeHtml(ad.category||'')}</p>
+      <button class="btn-secondary">Delete</button>
+    `;
+    blk.querySelector('button').addEventListener('click', ()=> deleteAd(ad));
+    deleteList.appendChild(blk);
+  });
+});
+[deleteClose, deleteCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(deleteModal)));
+
+async function deleteAd(ad){
+  if (!confirm("Delete this item permanently?")) return;
+  try{ await deleteDoc(doc(db, PAGE_KEY, "Shops", currentShopName, "items", ad.id)); }catch(e){ console.warn('delete doc',e); }
+  try{
+    const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
+    const listing = await listAll(folder);
+    await Promise.all(listing.items.map(obj => deleteObject(obj)));
+  }catch(e){ console.warn('delete images',e); }
+  alert("Deleted.");
+  closeModal(deleteModal);
+  clearShopCaches(currentShopName);
+  renderShops();
+  if (currentShop) openShop(currentShop);
+}
+
+/* ===== Short links for review flow ===== */
 async function getShort(id){
   const snap = await getDoc(doc(linksCol, id));
-  return snap.exists()? (snap.data().payload||null) : null;
+  return snap.exists() ? (snap.data()?.payload || null) : null;
 }
 async function putShort(payload){
   const id = makeId();
@@ -1196,18 +1136,14 @@ async function putShort(payload){
   return id;
 }
 
+/* ===== Review flow (PickMe admin) ===== */
 function promptReviewCode(){ openModal(reviewCodeModal); }
-[reviewCodeClose, reviewCodeCancel].forEach(b=> b.addEventListener('click', ()=> {
-  closeModal(reviewCodeModal);
-  // DO NOT show review if canceled or incorrect
-}));
-reviewCodeOk.addEventListener('click', async ()=>{
-  if (reviewCodeInput.value.trim()!==GLOBAL_ADMIN_CODE){ alert("Incorrect admin code."); return; }
+[reviewCodeClose, reviewCodeCancel].forEach(b=> b.addEventListener('click', ()=> { closeModal(reviewCodeModal); }));
+reviewCodeOk.addEventListener('click', ()=>{
+  if (reviewCodeInput.value.trim() !== GLOBAL_ADMIN_CODE){ alert('Incorrect admin code.'); return; }
   closeModal(reviewCodeModal);
   if (reviewPayloadPending) openReview(reviewPayloadPending);
 });
-
-/* Render review UI */
 async function openReview(payload){
   hide(shopBanner); show(itemDetail); hide(shopGallery);
   buildSlider([], itemSlider, itemDots);
@@ -1217,19 +1153,18 @@ async function openReview(payload){
   detailDesc.textContent = "";
 
   const container = document.createElement('div');
-  container.style.marginTop = "8px";
+  container.style.marginTop='8px';
   const states = []; // {id, approve:boolean|null, reason:string|null, data}
 
   payload.items.forEach((it, idx)=>{
-    const box = document.createElement('div');
-    box.className = "mopt-card";
-    const holder = document.createElement('div');
-    holder.style.marginBottom = "8px";
-    const slider = document.createElement('div'); slider.className="slider";
-    const dots = document.createElement('div'); dots.className="dots";
-    holder.appendChild(slider); holder.appendChild(dots);
-    box.appendChild(holder);
+    const card = document.createElement('div');
+    card.className = 'mopt-card';
 
+    const holder = document.createElement('div');
+    holder.style.marginBottom='8px';
+    const slider = document.createElement('div'); slider.className='slider';
+    const dots = document.createElement('div'); dots.className='dots';
+    holder.append(slider, dots); card.appendChild(holder);
     buildSlider(it.images||[], slider, dots);
 
     const meta = document.createElement('div');
@@ -1238,95 +1173,81 @@ async function openReview(payload){
       <div>${escapeHtml(it.category||'')}</div>
       <div>${fmtPrice(it.price)}</div>
     `;
-    box.appendChild(meta);
+    card.appendChild(meta);
 
-    const row = document.createElement('div'); row.className="row"; row.style.marginTop="8px";
-    const approve = document.createElement('button'); approve.className="btn-primary"; approve.textContent="Approve";
-    const reject = document.createElement('button'); reject.className="btn-secondary"; reject.textContent="Reject";
-    row.appendChild(approve); row.appendChild(reject);
-    box.appendChild(row);
+    const row = document.createElement('div'); row.className='row'; row.style.marginTop='8px';
+    const approve = document.createElement('button'); approve.className='btn-primary'; approve.textContent='Approve';
+    const reject  = document.createElement('button'); reject.className='btn-secondary'; reject.textContent='Reject';
+    row.append(approve, reject); card.appendChild(row);
 
-    const st = { id: it.id, approve: null, reason:null, data:it };
-    states.push(st);
-
-    approve.onclick = ()=>{ st.approve = true; st.reason=null; approve.style.opacity="1"; reject.style.opacity="0.55"; };
-    reject.onclick = ()=>{
-      const reason = prompt("Reason (optional):","");
-      st.approve = false; st.reason = reason||"Rejected";
-      approve.style.opacity="0.55"; reject.style.opacity="1";
+    const st = { id: it.id, approve:null, reason:null, data:it }; states.push(st);
+    approve.onclick = ()=>{ st.approve=true; st.reason=null; approve.style.opacity='1'; reject.style.opacity='.55'; };
+    reject.onclick  = ()=>{
+      const reason = prompt('Reason (optional):',''); st.approve=false; st.reason=reason||'Rejected';
+      approve.style.opacity='.55'; reject.style.opacity='1';
     };
 
-    container.appendChild(box);
+    container.appendChild(card);
   });
 
   const done = document.createElement('button');
-  done.className="btn-primary";
-  done.style.marginTop="10px";
-  done.textContent="Done";
+  done.className='btn-primary'; done.style.marginTop='10px'; done.textContent='Done';
   done.onclick = async ()=>{
     const approved = states.filter(s=>s.approve===true).map(s=>s.data);
-    const rejected = states.filter(s=>s.approve===false).map(s=>({ ...s.data, reason:s.reason||"Rejected" }));
+    const rejected = states.filter(s=>s.approve===false).map(s=>({ ...s.data, reason:s.reason||'Rejected' }));
 
+    // write approved items to shop
     await Promise.all(approved.map(async it=>{
       const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
       await setDoc(ref, {
-        id: it.id,
-        shop: payload.shop,
-        category: it.category,
-        name: it.name,
-        price: it.price,
-        desc: it.desc,
-        images: it.images||[],
-        createdAt: serverTimestamp()
+        id: it.id, shop: payload.shop, category: it.category, name: it.name, price: it.price,
+        desc: it.desc, images: it.images||[], createdAt: serverTimestamp()
       }, { merge:true });
     }));
 
-    const result = { type:"result", page:PAGE_KEY, shop:payload.shop, approved, rejected };
+    // result payload
+    const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
     const id2 = await putShort(result);
 
     clearShopCaches(payload.shop);
 
-    const shopPhone = (SHOPS.find(s=>s.name===payload.shop)?.phone)||"";
+    const shopPhone = (SHOPS.find(s=>s.name===payload.shop)?.phone) || "";
     const link = `${location.origin}${location.pathname}?result=${id2}`;
     const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
     if (shopPhone) window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
     else alert("Result link:\n"+link);
   };
 
-  const detailContainer = itemDetail.querySelector('.item-detail');
-  detailContainer.innerHTML = "";
-  const title = document.createElement('div');
-  title.className = "section-title";
-  title.textContent = `Review · ${payload.shop}`;
-  detailContainer.appendChild(title);
-  detailContainer.appendChild(container);
-  detailContainer.appendChild(done);
+  const containerHost = itemDetail.querySelector('.item-detail');
+  containerHost.innerHTML='';
+  const title = document.createElement('div'); title.className='section-title'; title.textContent = `Review · ${payload.shop}`;
+  containerHost.append(title, container, done);
   openDrawer();
 }
 
-/* ======== Result view (shop owner) ======== */
+/* ===== Result view (shop owner) ===== */
 async function openResult(payload){
   hide(shopBanner); show(itemDetail); hide(shopGallery);
-  itemSlider.innerHTML = ""; itemDots.innerHTML="";
+  itemSlider.innerHTML=''; itemDots.innerHTML='';
   detailTitle.textContent = "Submission results";
   detailPrice.textContent = "";
   detailPostedBy.textContent = payload.shop||"";
   detailDesc.textContent = "";
 
-  const host = document.createElement('div');
+  const host = itemDetail.querySelector('.item-detail'); host.innerHTML='';
+
   const secA = document.createElement('div'); secA.innerHTML = `<div class="section-title">Approved</div>`;
-  const listA = document.createElement('div'); listA.className="items-grid";
+  const listA = document.createElement('div'); listA.className='items-grid';
   (payload.approved||[]).forEach(ad=> renderItemCard(listA, ad));
   if (!(payload.approved||[]).length) listA.innerHTML = "<p>No approved items.</p>";
   secA.appendChild(listA);
 
-  const secR = document.createElement('div'); secR.style.marginTop="10px";
-  secR.innerHTML = `<div class="section-title">Rejected</div>`;
-  const listR = document.createElement('div'); listR.className="items-grid";
+  const secR = document.createElement('div'); secR.style.marginTop='10px'; secR.innerHTML = `<div class="section-title">Rejected</div>`;
+  const listR = document.createElement('div'); listR.className='items-grid';
   (payload.rejected||[]).forEach(ad=>{
-    const card = document.createElement('div'); card.className="item-card";
+    const card = document.createElement('div'); card.className='item-card';
     card.innerHTML = `
-      <div class="item-img"><img src="${(ad.images&&ad.images[0])||'https://via.placeholder.com/600x400?text=Image'}"></div>
+      <div class="item-img"><img src="${(ad.images&&ad.images[0])||'https://via.placeholder.com/600x400?text=Image'}" alt=""></div>
       <div class="item-body">
         <div class="item-price">${fmtPrice(ad.price)}</div>
         <div class="item-desc">${escapeHtml(ad.desc||'')}</div>
@@ -1338,84 +1259,74 @@ async function openResult(payload){
   if (!(payload.rejected||[]).length) listR.innerHTML = "<p>No rejected items.</p>";
   secR.appendChild(listR);
 
-  const done = document.createElement('button'); done.className="btn-primary"; done.style.marginTop="10px"; done.textContent="Done";
+  const done = document.createElement('button'); done.className='btn-primary'; done.style.marginTop='10px'; done.textContent='Done';
   done.onclick = ()=> closeDrawer();
 
-  const detailContainer = itemDetail.querySelector('.item-detail');
-  detailContainer.innerHTML = "";
-  detailContainer.appendChild(secA);
-  detailContainer.appendChild(secR);
-  detailContainer.appendChild(done);
+  host.append(secA, secR, done);
   openDrawer();
 }
 
-/* ======== Router ======== */
+/* ===== Router ===== */
 async function router(){
   const url = new URL(location.href);
-  const reviewId = url.searchParams.get("review");
-  const resultId = url.searchParams.get("result");
+  const reviewId = url.searchParams.get('review');
+  const resultId = url.searchParams.get('result');
 
-  document.body.classList.remove("ready");
-  document.body.classList.add("hide-initial");
+  document.body.classList.remove('ready');
+  document.body.classList.add('hide-initial');
 
   try{
     if (reviewId){
       const payload = await getShort(reviewId);
-      if (!payload || payload.type!=="review"){ alert("Invalid review link."); }
+      if (!payload || payload.type!=='review'){ alert("Invalid review link."); }
       else{
-        // Gate: don't render until code verified
-        reviewPayloadPending = payload;
+        reviewPayloadPending = payload; // gate by admin code
         promptReviewCode();
-        document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
+        document.body.classList.remove('hide-initial'); document.body.classList.add('ready');
         return;
       }
     }
     if (resultId){
       const payload = await getShort(resultId);
-      if (!payload || payload.type!=="result"){ alert("Invalid result link."); }
+      if (!payload || payload.type!=='result'){ alert("Invalid result link."); }
       else{
         await openResult(payload);
-        document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
+        document.body.classList.remove('hide-initial'); document.body.classList.add('ready');
         return;
       }
     }
 
-    // normal home
-    show(categoriesView); document.querySelector('.main-tab[data-view="categoriesView"]').classList.add('active');
+    // default home
+    categoriesView.classList.add('show'); shopsView.classList.remove('show');
+    document.querySelector('.main-tab[data-view="categoriesView"]').classList.add('active');
+    document.querySelector('.main-tab[data-view="categoriesView"]').setAttribute('aria-pressed','true');
     document.querySelector('.main-tab[data-view="shopsView"]').classList.remove('active');
-    document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
+    document.querySelector('.main-tab[data-view="shopsView"]').setAttribute('aria-pressed','false');
+    document.body.classList.remove('hide-initial'); document.body.classList.add('ready');
   }catch(e){
-    console.error("router error:", e);
-    document.body.classList.remove("hide-initial"); document.body.classList.add("ready");
+    console.error('[router]', e);
+    document.body.classList.remove('hide-initial'); document.body.classList.add('ready');
   }
 }
 
-/* ======== Init page ======== */
-async function renderCategories(){
-  const counts = await countByCategory().catch(()=> ({}));
-  renderCategoriesGrid(counts);
-}
-async function renderShops(){
-  const counts = await fetchShopCounts().catch(()=> {
-    const fb = {}; SHOPS.forEach(s=> fb[s.name]=0); return fb;
-  });
-  renderShopsGrid(counts);
-}
+/* ===== Init ===== */
+async function renderCategories(){ const counts = await countByCategory().catch(()=>({})); renderCategoriesGrid(counts); }
+async function renderShops(){ const counts = await fetchShopCounts().catch(()=>{ const m={}; SHOPS.forEach(s=>m[s.name]=0); return m; }); renderShopsGrid(counts); }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async ()=>{
   await renderCategories();
   await renderShops();
   router();
 });
-// draw immediately with fallback (no wait)
-const fallbackCounts = {}; SHOPS.forEach(shop => { fallbackCounts[shop.name] = 0; });
-renderShopsGrid(fallbackCounts);
+// immediate fallback draw for shops (avoid empty screen on slow network)
+const fb = {}; SHOPS.forEach(s=> fb[s.name]=0); renderShopsGrid(fb);
 </script>
 
-<!-- ========= FOOTER ========= -->
-<div class="footer-wrap">
-  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+<!-- ===================== FOOTER ===================== -->
+<div class="footer-wrap" role="contentinfo" aria-label="Footer">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no" title="Footer"></iframe>
 </div>
 
 </body>
 </html>
+
