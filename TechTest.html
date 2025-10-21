@@ -252,6 +252,10 @@ body{
 
 <!-- ===================== DRAWER (ITEM / CATEGORY / SHOP) ===================== -->
 <aside id="drawer" aria-hidden="true" aria-label="Details drawer">
+  <button id="catBackBtn" aria-label="Back"
+  style="position:fixed;top:12px;left:12px;padding:8px 16px;border:none;border-radius:6px;background:#000;color:#fff;font-weight:700;font-size:14px;display:none;z-index:10002;">
+  BACK
+</button>
   <button id="drawerClose" aria-label="Close details">&times;</button>
 
   <!-- shop header -->
@@ -733,28 +737,53 @@ function renderItemCard(container, ad){
 async function openCategory(cat){
   currentCategory = cat;
 
-  hide(shopBanner); hide(shopGallery); hide(itemDetail); show(catPage);
-  catPageTitle.textContent = `${cat}`;
+  hide(shopBanner);
+  hide(shopGallery);
+  hide(itemDetail);
+  show(catPage);
+
+  // Set title and search placeholder
+  catPageTitle.textContent = cat;
+  catPageTitle.style.fontSize = "20px";
+  catPageTitle.style.fontWeight = "800";
+  catPageTitle.style.textAlign = "center";
+  catPageSearch.placeholder = `Search in ${cat}…`;
+
+  // Clear previous items
   catPageGrid.innerHTML = '';
+
+  // Open drawer
   openDrawer();
 
+  // ✅ Show back button only in category mode
+  catBackBtn.style.display = "block";
+
+  // ✅ Hide hamburger & close icon only for category view
+  hamburgerBtn.style.display = "none";
+  drawerClose.style.display = "none";
+
+  // Load items for the selected category
   const items = await fetchAllItemsInCategory(cat);
-  const draw = (list)=>{
+
+  // Render items
+  const draw = (list) => {
     catPageGrid.innerHTML = "";
-    list.forEach(ad=> renderItemCard(catPageGrid, ad));
-    if (!list.length){
+    list.forEach(ad => renderItemCard(catPageGrid, ad));
+    if (!list.length) {
       catPageGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Oops! No items here today.</p>`;
     }
   };
+
   draw(items);
 
+  // Search filtering
   catPageSearch.value = '';
-  catPageSearch.oninput = ()=>{
-    const q = (catPageSearch.value||'').toLowerCase();
+  catPageSearch.oninput = () => {
+    const q = (catPageSearch.value || '').toLowerCase();
     const list = items.filter(ad =>
-      (ad.name||'').toLowerCase().includes(q) ||
-      (ad.desc||'').toLowerCase().includes(q) ||
-      (ad.shop||'').toLowerCase().includes(q)
+      (ad.name || '').toLowerCase().includes(q) ||
+      (ad.desc || '').toLowerCase().includes(q) ||
+      (ad.shop || '').toLowerCase().includes(q)
     );
     draw(list);
   };
@@ -814,9 +843,12 @@ const closeDrawer = ()=>{
   drawer.setAttribute('aria-hidden','true');
   document.getElementById('shopTopActions').style.display='none';
   hide(shopBanner); hide(shopGallery); hide(itemDetail); hide(catPage);
+
+  // ✅ Hide BACK button when leaving category view
+  catBackBtn.style.display = "none";
 };
 drawerClose.addEventListener('click', closeDrawer);
-
+catBackBtn.addEventListener('click', () => closeDrawer());
 /* slider */
 function buildSlider(images, sliderEl, dotsEl){
   sliderEl.innerHTML=''; dotsEl.innerHTML='';
@@ -893,9 +925,13 @@ async function openShop(shop){
   shopSloganEl.textContent = shop.slogan || '';
 
   show(shopBanner); show(shopGallery); hide(itemDetail); hide(catPage);
-  openDrawer();
+openDrawer();
 
-  hamburgerBtn.onclick = ()=> promptShopCode();
+// ✅ Ensure hamburger and close icon are visible again for shop view
+hamburgerBtn.style.display = "grid";
+drawerClose.style.display = "grid";
+
+hamburgerBtn.onclick = ()=> promptShopCode();
 
   await renderShopTabsAndItems(shop, jumpToAdId);
   jumpToAdId = null;
@@ -1055,7 +1091,10 @@ optAdd.addEventListener('click', ()=>{
   });
   openModal(catChooseModal);
 });
-[catChooseClose, catChooseCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(catChooseModal)));
+[catChooseClose, catChooseCancel].forEach(b => b.addEventListener('click', () => {
+  closeModal(catChooseModal);
+  openModal(adminOptionsModal); // ✅ Return to Add/Delete modal
+}));
 
 let currentAddCategory = null;
 function startAddFlow(category){
@@ -1069,8 +1108,10 @@ function openDraftEditor(){
   renderDraftList(); // show existing drafts (editable)
   openModal(draftModal);
 }
-draftClose.addEventListener('click', ()=> closeModal(draftModal));
-
+draftClose.addEventListener('click', () => {
+  closeModal(draftModal);
+  openModal(catChooseModal); // ✅ Return to Choose Category after exiting Draft
+});
 addImagesBtn.addEventListener('click', ()=> imgInput.click());
 
 function refreshThumbs(){
@@ -1212,6 +1253,11 @@ submitDraftsBtn.addEventListener('click', async ()=>{
   const link = `${location.origin}${location.pathname}?review=${linkId}`;
   const msg = `New Tek&gaget adverts from *${currentShopName}*.\nOpen: ${link}`;
   window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+
+// ✅ After WhatsApp, show Choose Category modal again
+setTimeout(() => {
+  openModal(catChooseModal);
+}, 500);
 });
 
 /* ===== Admin: delete items ===== */
@@ -1233,7 +1279,10 @@ optDelete.addEventListener('click', async ()=>{
     deleteList.appendChild(blk);
   });
 });
-[deleteClose, deleteCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(deleteModal)));
+[deleteClose, deleteCancel].forEach(b => b.addEventListener('click', () => {
+  closeModal(deleteModal);
+  openModal(adminOptionsModal); // ✅ Return to Add/Delete
+}));
 
 async function deleteAd(ad){
   if (!confirm("Delete this item permanently?")) return;
@@ -1359,10 +1408,21 @@ async function openReview(payload){
   done.style.marginTop = '10px';
   done.textContent = 'Submit Review';
   done.onclick = async ()=>{
-    const approved = states.filter(s=>s.approve === true).map(s=>s.data);
-    const rejected = states.filter(s=>s.approve === false).map(s=>({ ...s.data, reason: s.reason || 'Rejected' }));
+  // Collect approved and rejected
+  const approved = states.filter(s=>s.approve === true).map(s=>s.data);
+  const rejected = states.filter(s=>s.approve === false).map(s=>({
+    ...s.data,
+    reason: s.reason || 'Rejected'
+  }));
 
-    // Write approved to Firestore
+  // ✅ If nothing was approved or rejected (admin clicked submit without selecting), alert
+  if (!approved.length && !rejected.length) {
+    alert("Please approve or reject at least one item before submitting.");
+    return;
+  }
+
+  // ✅ Save approved items into Firestore
+  if (approved.length) {
     await Promise.all(approved.map(async it=>{
       const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
       await setDoc(ref, {
@@ -1376,22 +1436,31 @@ async function openReview(payload){
         createdAt: serverTimestamp()
       }, { merge: true });
     }));
+  }
 
-    // Prepare result payload
-    const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
-    const id2 = await putShort(result);
+  // ✅ Prepare result payload (both approved + rejected)
+  const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
 
-    clearShopCaches(payload.shop);
+  // ✅ Generate shortlink
+  const id2 = await putShort(result);
 
-    const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
-    const link = `${location.origin}${location.pathname}?result=${id2}`;
-    const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
-    if (shopPhone) {
-      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
-    } else {
-      alert("Result link:\n" + link);
-    }
-  };
+  // ✅ Clear shop cache so new approved items show immediately in gallery & categories
+  clearShopCaches(payload.shop);
+
+  // ✅ WhatsApp notify shop owner
+  const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
+  const link = `${location.origin}${location.pathname}?result=${id2}`;
+  const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
+  if (shopPhone) {
+    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
+  } else {
+    alert("Result link:\n" + link);
+  }
+
+  // ✅ Close review drawer
+  closeDrawer();
+  toast("Review submitted.");
+};
 
   const containerHost = itemDetail.querySelector('.item-detail');
   containerHost.innerHTML = '';
