@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tech & Gadgets - PickMe Services</title>
+
+<!-- ===================== HEADER (Injected) ===================== -->
+<div id="header-placeholder" aria-hidden="true"></div>
+<script>
+/* Robust header loader (kept inline for portability) */
+(async () => {
+  try {
+    const res = await fetch('header.html', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load header');
+    let html = await res.text();
+    const pageTitle = "Tech & Gadgets";
+    html = html.replace(
+      /<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">${pageTitle}</h1>`
+    );
+    const host = document.getElementById('header-placeholder');
+    host.innerHTML = html;
+
+    // Re-run any scripts within the injected header
+    host.querySelectorAll('script').forEach(s0 => {
+      const s1 = document.createElement('script');
+      if (s0.src) s1.src = s0.src;
+      else s1.textContent = s0.textContent;
+      document.body.appendChild(s1);
+    });
+    host.removeAttribute('aria-hidden');
+  } catch (e) { console.error('[header]', e); }
+})();
+</script>
+
+<!-- ===================== STYLES ===================== -->
+<style>
+:root{
+  --brand:#c12872;
+  --ink:#111;
+  --muted:#666;
+  --bg:#fafafa;
+  --card:#fff;
+  --stroke:#ececf2;
+  --shadow:0 10px 24px rgba(0,0,0,.08);
+  --radius:14px;
+}
+
+/* base */
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:focus,:focus-visible,button:focus,input:focus,textarea:focus{ outline:none!important; box-shadow:none!important; }
+html,body{ height:100%; }
+body{
+  margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background:var(--bg); color:var(--ink); padding-top:96px; overflow-x:hidden;
+}
+
+/* header + search */
+.page-header{ text-align:center; margin:0 16px 8px; }
+.page-header p{ margin:6px 0 0; color:#000; font-weight:700; font-size:15px; }
+.search-bar{ display:flex; justify-content:center; margin:10px 16px 6px; }
+.search-bar input{
+  width:100%; max-width:700px; padding:12px 14px; border:1px solid var(--stroke); border-radius:12px; background:#fff; font-size:16px;
+}
+.search-bar input::placeholder{ color:#999; }
+
+/* top tabs */
+.main-tabs{ display:flex; gap:8px; overflow:auto hidden; padding:8px 16px; border-bottom:2px solid #eee; }
+.main-tab{ padding:10px 14px; border:1px solid var(--stroke); border-radius:999px; background:#fff; cursor:pointer; user-select:none; font-weight:800; font-size:14px; white-space:nowrap; }
+.main-tab.active{ color:#fff; background:var(--brand); border-color:var(--brand); }
+
+/* containers */
+.view{ display:none; }
+.view.show{ display:block; }
+.container{ padding:16px 16px 120px; }
+
+/* categories list */
+.categories-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;
+}
+.cat-card{
+  display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--stroke); border-radius:12px; padding:10px 12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer;
+}
+.cat-thumb{ width:42px; height:42px; border-radius:10px; background:#f2f2f2; overflow:hidden; display:grid; place-items:center; flex-shrink:0; }
+.cat-thumb img{ width:100%; height:100%; object-fit:cover; }
+.cat-info{ flex:1; min-width:0; }
+.cat-title{ font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cat-sub{ font-size:12px; color:#555; }
+.cat-arrow{ font-size:18px; color:#999; margin-left:4px; }
+
+/* items grid */
+.items-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+@media (min-width:720px){ .items-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (min-width:980px){ .items-grid{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+.item-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.08); border:1px solid var(--stroke); display:flex; flex-direction:column; min-height:240px; }
+.item-img{ position:relative; width:100%; padding-top:66%; background:#f2f2f2; overflow:hidden; }
+.item-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.item-body{ padding:10px; display:flex; flex-direction:column; gap:6px; }
+.item-price{ font-weight:900; color:#111; }
+.item-desc{ font-size:12px; color:#444; line-height:1.3; max-height:32px; overflow:hidden; }
+.item-shop{ font-size:11px; color:#777; }
+
+/* shops grid (hero cards) */
+.cards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; padding-top:6px; }
+.shop-card{
+  position:relative; height:250px; border-radius:15px; overflow:hidden; background:#ddd center/cover no-repeat;
+  box-shadow:0 3px 10px rgba(0,0,0,.08); display:flex; align-items:flex-end; transition:transform .18s ease;
+}
+.shop-card:hover{ transform:translateY(-4px); }
+.shop-card::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.75) 100%); }
+.shop-card .content{ position:relative; z-index:1; color:#fff; width:100%; padding:15px; display:flex; flex-direction:column; justify-content:space-between; }
+.shop-title{ font-weight:900; font-size:20px; margin:0 0 4px; }
+.shop-slogan{ font-size:13px; opacity:.95; margin:0 0 4px; }
+.shop-lower{ display:flex; align-items:center; justify-content:space-between; }
+.shop-meta{ font-size:12px; opacity:.92; }
+.btn-enter{ background:var(--brand); color:#fff; border:0; border-radius:10px; padding:8px 12px; font-weight:800; cursor:pointer; }
+
+/* ============ Slide-in Pages (Category / Item / Shop) ============ */
+.sheet{
+  position:fixed; inset:0; z-index:9998; background:#fff; transform:translateX(100%);
+  transition:transform .38s ease; display:flex; flex-direction:column; border-left:1px solid var(--stroke);
+}
+.sheet.show{ transform:translateX(0) }
+.sheet-head{
+  position:sticky; top:0; background:#fff; z-index:3; border-bottom:1px solid var(--stroke);
+  padding:10px 12px; display:flex; align-items:center; gap:10px
+}
+.sheet-head .title{font-weight:900}
+.pill{font-size:12px;background:#f4f5f9;border:1px solid var(--stroke);border-radius:999px;padding:4px 8px;color:#333}
+.search{display:flex;gap:8px;border:1px solid var(--stroke);border-radius:12px;padding:8px 10px;align-items:center}
+.search input{flex:1;border:none;outline:none;background:transparent}
+.sheet-body{padding:12px 12px 28px;overflow:auto}
+
+/* Gallery (Item page) */
+.slider{ position:relative; height:260px; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#f2f2f2; }
+.slide{ position:absolute; top:0; left:100%; width:100%; height:100%; object-fit:cover; opacity:0; transition:left .45s ease, opacity .45s ease; }
+.slide.active{ left:0; opacity:1; }
+.slider .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:24px; color:#fff; background:rgba(0,0,0,.38); padding:6px 10px; border-radius:50%; cursor:pointer; user-select:none; }
+.slider .nav.left{ left:10px; }
+.slider .nav.right{ right:10px; }
+.dots{ display:flex; justify-content:center; gap:6px; margin-top:10px; }
+.dot{ width:8px; height:8px; border-radius:50%; background:#ddd; }
+.dot.active{ background:var(--brand); }
+
+.item-meta{ display:flex; justify-content:space-between; align-items:flex-end; }
+.item-name{ font-weight:900; font-size:18px }
+.item-price{ font-weight:900; }
+.item-desc{ margin-top:8px; color:#333; white-space:pre-wrap }
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:#fff;cursor:pointer}
+.btn.brand{background:var(--brand);border-color:var(--brand);color:#fff}
+
+/* Floating admin controls in Shop */
+.float-top{position:sticky;top:0;z-index:4;display:flex;justify-content:flex-end;gap:8px;padding:8px 0;background:linear-gradient(#fff,#fff 70%,transparent)}
+.fab{width:42px;height:42px;border-radius:999px;border:1px solid var(--stroke);background:#fff;box-shadow:var(--shadow);cursor:pointer}
+
+/* ===== Modal System with Back-Stack ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.18);backdrop-filter:saturate(120%) blur(4px);display:none;z-index:10010}
+.overlay.show{display:block}
+.modal{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(700px,92vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--stroke);
+  border-radius:16px;box-shadow:var(--shadow);z-index:10011;display:none
+}
+.modal.show{display:block}
+.modal .header{padding:12px 14px;border-bottom:1px solid var(--stroke);font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.modal .body{padding:12px 14px;display:grid;gap:10px}
+.modal .footer{padding:12px 14px;border-top:1px solid var(--stroke);display:flex;justify-content:flex-end;gap:8px}
+.mopt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+.mopt-card{ border:1px solid var(--stroke); border-radius:12px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:6px; cursor:pointer; }
+
+/* Add Items Editor */
+.inp, textarea{border:1px solid var(--stroke);border-radius:10px;padding:10px;outline:none;width:100%;font:inherit;background:#fff}
+.addlist{display:grid;gap:10px}
+.addcard{border:1px dashed var(--stroke);border-radius:12px;padding:10px;background:#fff}
+.addrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.addrow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumb{position:relative}
+.thumb img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--stroke);background:#ddd}
+.thumb .x{position:absolute;right:-8px;top:-8px;width:22px;height:22px;border-radius:999px;background:#fff;border:1px solid var(--stroke);cursor:pointer}
+
+/* Progress & Toast */
+.progress{display:flex;align-items:center;gap:10px}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid var(--stroke);border-top-color:var(--brand);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:10020}
+.toast.show{opacity:1}
+
+/* Footer */
+.footer-wrap{ position:fixed; bottom:0; left:0; right:0; z-index:9; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE HEADER + SEARCH ===================== -->
+<header class="page-header">
+  <h1 class="sr-only" style="position:absolute;left:-9999px">Tech &amp; Gadgets</h1>
+  <p>Find tech & gadget shops around you, browse categories, and contact sellers directly</p>
+</header>
+
+<div class="search-bar">
+  <input id="globalSearch" type="search" placeholder="Search items, shops, models, keywords…" aria-label="Search">
+</div>
+
+<!-- ===================== TOP TABS ===================== -->
+<nav class="main-tabs" aria-label="Main sections">
+  <button class="main-tab active" data-view="categoriesView" aria-pressed="true">Categories</button>
+  <button class="main-tab" data-view="shopsView" aria-pressed="false">Shops</button>
+</nav>
+
+<!-- ===================== CATEGORIES VIEW ===================== -->
+<section id="categoriesView" class="view show" aria-label="Categories">
+  <div class="container">
+    <div id="categoriesGrid" class="categories-grid" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ===================== SHOPS VIEW ===================== -->
+<section id="shopsView" class="view" aria-label="Shops">
+  <div class="container">
+    <div id="shopsGrid" class="cards-grid" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ===================== SLIDE-IN PAGE ===================== -->
+<div class="sheet" id="sheet">
+  <div class="sheet-head">
+    <button class="btn" id="backBtn">← Back</button>
+    <div class="title" id="sheetTitle"></div>
+    <span class="pill" id="sheetCount" style="margin-left:auto"></span>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<!-- ===================== MODAL SYSTEM ===================== -->
+<div class="overlay" id="overlay"></div>
+<div id="modals"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ===================== FOOTER ===================== -->
+<div class="footer-wrap" role="contentinfo" aria-label="Footer">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no" title="Footer"></iframe>
+</div>
+
+<!-- ===================== APP (Firebase + Logic) ===================== -->
+<script type="module">
+/* Firebase (v10) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+/* ===== Firebase Config (kept from your project) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+  authDomain: "pickmeservicesonline.firebaseapp.com",
+  projectId: "pickmeservicesonline",
+  storageBucket: "pickmeservicesonline.firebasestorage.app",
+  messagingSenderId: "265031616239",
+  appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const st  = getStorage(app);
+
+/* ===== Constants ===== */
+const PAGE_KEY = "Tek&gaget";
+const PICKME_WHATSAPP = "233534742142";
+const GLOBAL_ADMIN_CODE = "999888";          // Admin review lock
+const SHOP_ADMIN_DEFAULT_CODE = "123456";    // Per-shop access
+const MAX_IMAGES = 5;
+
+/* ===== Shops (you can keep hardcoded or load later) ===== */
+const SHOPS = [
+  {
+    id: "s_trickeye",
+    name: "Trick Eye Store",
+    slogan: "Phones, laptops & accessories",
+    heroImage: "https://via.placeholder.com/1200x700?text=Trick+Eye+Store",
+    phone: "233530477395",
+    accessCode: "123456",
+    expiry: "2026-12-31"
+  },
+  {
+    id: "s_digihub",
+    name: "DigiHub",
+    slogan: "All things electronics",
+    heroImage: "https://via.placeholder.com/1200x700?text=DigiHub",
+    phone: "233540576548",
+    accessCode: "123456",
+    expiry: "2026-10-31"
+  }
+];
+
+/* ===== Global Categories ===== */
+const CATEGORIES = [
+  { id:"Phones", img:"https://via.placeholder.com/200?text=Phones" },
+  { id:"Computers & Laptops", img:"https://via.placeholder.com/200?text=Laptops" },
+  { id:"Printers & Scanners", img:"https://via.placeholder.com/200?text=Printers" },
+  { id:"Accessories", img:"https://via.placeholder.com/200?text=Accessories" },
+  { id:"Security & Surveillance", img:"https://via.placeholder.com/200?text=Security" },
+  { id:"Networking", img:"https://via.placeholder.com/200?text=Networking" },
+  { id:"Gaming", img:"https://via.placeholder.com/200?text=Gaming" },
+  { id:"Software", img:"https://via.placeholder.com/200?text=Software" },
+  { id:"Cameras & Photo", img:"https://via.placeholder.com/200?text=Cameras" }
+];
+
+/* ===== Firestore paths =====
+ Tek&gaget
+   - Links/items/{id} -> { payload, createdAt }
+   - Shops/{shopName}/items/{adId} -> ad doc
+   - Shops/{shopName}/customers/{phoneE164}
+   - Numbers/items/{phoneE164}
+*/
+const linksCol   = collection(db, PAGE_KEY, "Links", "items");
+const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
+
+/* ===== DOM ===== */
+const tabs = document.querySelectorAll('.main-tab');
+const categoriesView = document.getElementById('categoriesView');
+const shopsView = document.getElementById('shopsView');
+const categoriesGrid = document.getElementById('categoriesGrid');
+const shopsGrid = document.getElementById('shopsGrid');
+const globalSearch = document.getElementById('globalSearch');
+
+const sheet = document.getElementById('sheet');
+const sheetTitle = document.getElementById('sheetTitle');
+const sheetCount = document.getElementById('sheetCount');
+const sheetBody = document.getElementById('sheetBody');
+const backBtn = document.getElementById('backBtn');
+
+/* ===== Modal System ===== */
+const overlay = document.getElementById('overlay');
+const modalsRoot = document.getElementById('modals');
+const modalStack = [];
+overlay.addEventListener('click', ()=> stepBackModal());
+
+function openModal(html){
+  const id = 'm'+Math.random().toString(36).slice(2,8);
+  const m = document.createElement('div'); m.className='modal show'; m.id=id; m.innerHTML=html;
+  modalsRoot.appendChild(m);
+  modalStack.push(id);
+  overlay.classList.add('show');
+  return m;
+}
+function stepBackModal(){
+  const id = modalStack.pop();
+  if (!id){ overlay.classList.remove('show'); return; }
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  if (modalStack.length===0) overlay.classList.remove('show');
+}
+function closeAllModals(){
+  modalStack.splice(0,modalStack.length);
+  [...modalsRoot.children].forEach(e=>e.remove());
+  overlay.classList.remove('show');
+}
+
+/* ===== State & Helpers ===== */
+let currentCategory = null;
+let currentShop = null;
+let focusItemId = null;
+let reviewPayloadPending = null;
+let userPhoneCache = null;
+
+const showSheet =()=> sheet.classList.add('show');
+const hideSheet =()=> { sheet.classList.remove('show'); sheetBody.innerHTML=''; sheetTitle.textContent=''; sheetCount.textContent=''; };
+
+const money = n => Number(n||0);
+const fmtPrice = n => `GH₵ ${Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0})}`;
+const isExpired = iso => iso ? (new Date() > new Date(iso+"T23:59:59")) : false;
+const makeId = () => (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase();
+const escapeHTML = s => String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+
+/* Ghana phone normalize */
+function normalizeGhanaNumber(input){
+  let s = String(input||'').trim().replace(/[\s\-]/g,'');
+  if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
+  if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
+  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
+  if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
+  const d = s.replace(/\D/g,'');
+  if (d.startsWith('233')) return { e164:'+'+d, wa:d };
+  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
+  return null;
+}
+
+/* ===== Cache ===== */
+const CACHE = {
+  cats: "tk_cats_counts",
+  shops: "tk_shops_counts",
+  shopItems: shop => `tk_shop_${shop}_items`,
+  catItems: cat => `tk_cat_${cat}_items`
+};
+const saveCache = (k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
+const loadCache = (k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
+const clearShopCaches = (shop)=>{ localStorage.removeItem(CACHE.shopItems(shop)); localStorage.removeItem(CACHE.cats); localStorage.removeItem(CACHE.shops); };
+
+/* ===== Home: Categories ===== */
+async function countByCategory(){
+  const cached = loadCache(CACHE.cats);
+  if (cached) return cached;
+
+  const out = {};
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) return;
+    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+    const snap = await getDocs(col);
+    snap.forEach(d=>{
+      const it = d.data(); const cat = it.category||"Other";
+      out[cat] = (out[cat]||0)+1;
+    });
+  }));
+  saveCache(CACHE.cats, out);
+  return out;
+}
+function renderCategoriesGrid(counts){
+  categoriesGrid.innerHTML = "";
+  CATEGORIES.forEach(c=>{
+    const card = document.createElement('article');
+    card.className = "cat-card";
+    card.innerHTML = `
+      <div class="cat-thumb">${c.img?`<img src="${c.img}" alt="${escapeHTML(c.id)}">`:''}</div>
+      <div class="cat-info">
+        <div class="cat-title">${escapeHTML(c.id)}</div>
+        <div class="cat-sub">${counts[c.id]||0} adverts</div>
+      </div>
+      <div class="cat-arrow">&gt;</div>
+    `;
+    card.addEventListener('click', ()=> openCategoryPage(c.id));
+    categoriesGrid.appendChild(card);
+  });
+}
+
+/* ===== Home: Shops ===== */
+async function fetchShopCounts(){
+  const cached = loadCache(CACHE.shops);
+  if (cached) return cached;
+  const map = {};
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) { map[sh.name]=0; return; }
+    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+    const snap = await getDocs(col);
+    map[sh.name] = snap.size || 0;
+  }));
+  saveCache(CACHE.shops, map);
+  return map;
+}
+function renderShopsGrid(countMap){
+  shopsGrid.innerHTML = "";
+  const list = SHOPS.filter(s=>!isExpired(s.expiry))
+    .sort((a,b)=> (countMap[b.name]||0)-(countMap[a.name]||0) || a.name.localeCompare(b.name));
+  list.forEach(shop=>{
+    const card = document.createElement('article');
+    card.className = "shop-card";
+    card.style.backgroundImage = `url('${shop.heroImage}')`;
+    const content = document.createElement('div');
+    content.className = "content";
+    content.innerHTML = `
+      <div>
+        <div class="shop-title">${escapeHTML(shop.name)}</div>
+        <div class="shop-slogan">${escapeHTML(shop.slogan||'')}</div>
+      </div>
+      <div class="shop-lower">
+        <p class="shop-meta">Items: ${countMap[shop.name]||0}</p>
+        <button class="btn-enter" type="button">Enter Shop</button>
+      </div>
+    `;
+    content.querySelector('.btn-enter').addEventListener('click', ()=> openShopPage(shop.name));
+    card.appendChild(content);
+    shopsGrid.appendChild(card);
+  });
+  if (!shopsGrid.children.length){
+    shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
+  }
+}
+
+/* ===== Routing ===== */
+const routes = {
+  homeCats: '#/categories',
+  homeShops: '#/shops',
+  catPage: id => `#/category/${encodeURIComponent(id)}`,
+  itemPage: id => `#/item/${encodeURIComponent(id)}`,
+  shopPage: (name, focus) => `#/shop/${encodeURIComponent(name)}${focus?`?focus=${encodeURIComponent(focus)}`:''}`,
+  adminReview: '#/admin/review' // + ?batch=...
+};
+
+function parseHash(){
+  const h = location.hash || routes.homeCats;
+  const [path, queryString] = h.split('?');
+  const q = Object.fromEntries(new URLSearchParams(queryString||''));
+  const seg = path.split('/').filter(Boolean);
+  return { path, seg, q };
+}
+window.addEventListener('hashchange', onRoute);
+window.addEventListener('load', onRoute);
+
+function onRoute(){
+  const {path, seg, q} = parseHash();
+  // Tabs
+  document.querySelector('.main-tab[data-view="categoriesView"]').classList.toggle('active', path.startsWith('#/categories')||path.startsWith('#/category/'));
+  document.querySelector('.main-tab[data-view="shopsView"]').classList.toggle('active', path.startsWith('#/shops')||path.startsWith('#/shop/'));
+  categoriesView.classList.toggle('show', !path.startsWith('#/shops'));
+  shopsView.classList.toggle('show', path.startsWith('#/shops'));
+
+  if (path === routes.homeCats) { hideSheet(); }
+  else if (path === routes.homeShops) { hideSheet(); }
+  else if (seg[1]==='category' && seg[2]) { renderCategoryPage(decodeURIComponent(seg[2])); }
+  else if (seg[1]==='item' && seg[2]) { renderItemPage(decodeURIComponent(seg[2])); }
+  else if (seg[1]==='shop' && seg[2])  { renderShopPage(decodeURIComponent(seg[2]), q.focus); }
+  else if (path.startsWith(routes.adminReview)) { renderAdminReviewPage(q.batch); }
+}
+
+/* ===== Category Page (slide-in) ===== */
+async function fetchAllItemsInCategory(cat){
+  const ck = CACHE.catItems(cat);
+  const cached = loadCache(ck);
+  if (cached) return cached;
+
+  const items = [];
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) return;
+    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+    const snap = await getDocs(col);
+    snap.forEach(d=>{
+      const it = d.data(); it.id = d.id;
+      if ((it.category||'')===cat) items.push(it);
+    });
+  }));
+  items.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  saveCache(ck, items);
+  return items;
+}
+
+function itemCard(ad){
+  const card = document.createElement('div');
+  card.className = "item-card";
+  const firstImg = (ad.images && ad.images[0]) || "https://via.placeholder.com/600x400?text=Image";
+  card.innerHTML = `
+    <div class="item-img"><img src="${firstImg}" alt="${escapeHTML(ad.name||'Item')}"></div>
+    <div class="item-body">
+      <div class="item-price">${fmtPrice(ad.price)}</div>
+      <div class="item-desc">${escapeHTML(ad.desc||'')}</div>
+      <div class="item-shop">Posted by ${escapeHTML(ad.shop||'')}</div>
+    </div>
+  `;
+  card.addEventListener('click', ()=> location.hash = routes.itemPage(ad.id));
+  return card;
+}
+
+async function renderCategoryPage(cat){
+  currentCategory = cat;
+  sheetTitle.textContent = cat;
+  sheetCount.textContent = '';
+  sheetBody.innerHTML = `
+    <div class="search" style="margin-bottom:10px">
+      <input id="catSearch" placeholder="Search in ${escapeHTML(cat)}..."/>
+      <span class="pill">2-column</span>
+    </div>
+    <div id="catList" class="items-grid"></div>
+  `;
+  showSheet();
+
+  const listEl = document.getElementById('catList');
+  listEl.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Loading…</p>`;
+  const all = await fetchAllItemsInCategory(cat);
+  sheetCount.textContent = `${all.length} ${all.length===1?'item':'items'}`;
+  const draw = (arr)=>{
+    listEl.innerHTML='';
+    arr.forEach(ad=> listEl.appendChild(itemCard(ad)));
+    if (!arr.length) listEl.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
+  };
+  draw(all);
+  document.getElementById('catSearch').addEventListener('input', e=>{
+    const q = (e.target.value||'').toLowerCase();
+    draw(all.filter(ad =>
+      (ad.name||'').toLowerCase().includes(q) ||
+      (ad.desc||'').toLowerCase().includes(q) ||
+      (ad.shop||'').toLowerCase().includes(q)
+    ));
+  });
+}
+
+/* ===== Item Page (slide-in) ===== */
+function buildSlider(images){
+  const wrap = document.createElement('div');
+  const slider = document.createElement('div'); slider.className='slider';
+  const dots   = document.createElement('div'); dots.className='dots';
+  let imgs = images && images.length ? images : ["https://via.placeholder.com/1000x600?text=Image"];
+  imgs.forEach((src,i)=>{
+    const img = document.createElement('img');
+    img.src = src; img.alt = `image-${i+1}`; img.className = 'slide'+(i===0?' active':'');
+    slider.appendChild(img);
+    const dot = document.createElement('div'); dot.className = 'dot'+(i===0?' active':'');
+    dots.appendChild(dot);
+  });
+  const left = document.createElement('div'); left.className='nav left'; left.innerHTML='&#10094;';
+  const right= document.createElement('div'); right.className='nav right'; right.innerHTML='&#10095;';
+  slider.append(left,right);
+
+  let current = 0;
+  const slides = ()=> slider.querySelectorAll('.slide');
+  const dotsEls= ()=> dots.querySelectorAll('.dot');
+  function goTo(n){
+    if (n===current) return;
+    const a=slides()[current], b=slides()[n];
+    b.style.transition='none'; b.style.left=(n>current?'100%':'-100%'); b.style.opacity='1'; void b.offsetWidth;
+    a.style.transition='left .45s ease, opacity .45s ease';
+    b.style.transition='left .45s ease, opacity .45s ease';
+    a.style.left=(n>current?'-100%':'100%'); a.style.opacity='1'; b.style.left='0';
+    slides()[current].classList.remove('active'); slides()[n].classList.add('active');
+    dotsEls()[current].classList.remove('active'); dotsEls()[n].classList.add('active');
+    current=n;
+  }
+  left.addEventListener('click', ()=> goTo((current-1+slides().length)%slides().length));
+  right.addEventListener('click',()=> goTo((current+1)%slides().length));
+  slider.addEventListener('touchstart', e=> startX=e.touches[0].clientX, {passive:true});
+  let startX=0;
+  slider.addEventListener('touchend', e=>{
+    const endX=e.changedTouches[0].clientX;
+    if (startX-endX>40) right.click();
+    if (endX-startX>40) left.click();
+  }, {passive:true});
+
+  wrap.append(slider, dots);
+  return wrap;
+}
+
+async function renderItemPage(id){
+  // find item across shops
+  let ad = null, shopObj = null;
+  for (const s of SHOPS){
+    if (isExpired(s.expiry)) continue;
+    const ref = doc(db, PAGE_KEY, "Shops", s.name, "items", id);
+    const snap = await getDoc(ref);
+    if (snap.exists()){
+      ad = snap.data(); ad.id = id; shopObj = s; break;
+    }
+  }
+  if (!ad){ toast('Item not found'); history.back(); return; }
+
+  sheetTitle.textContent = ad.name||'Item';
+  sheetCount.textContent = '';
+  sheetBody.innerHTML = '';
+  // Gallery
+  sheetBody.appendChild(buildSlider(ad.images||[]));
+  // Details
+  const meta = document.createElement('div');
+  meta.style.padding = '12px';
+  meta.innerHTML = `
+    <div class="item-meta">
+      <div>
+        <div class="item-name">${escapeHTML(ad.name||'Item')}</div>
+        <div class="item-price">${fmtPrice(ad.price)}</div>
+      </div>
+      <span class="pill">${(ad.images?.length||0)} photos</span>
+    </div>
+    <div class="item-desc">${escapeHTML(ad.desc||'')}</div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="callBtn">Call</button>
+      <button class="btn" id="waBtn">WhatsApp</button>
+      <button class="btn brand" id="viewShopBtn">View Shop</button>
+    </div>
+  `;
+  sheetBody.appendChild(meta);
+  showSheet();
+
+  // actions
+  const callBtn = meta.querySelector('#callBtn');
+  const waBtn   = meta.querySelector('#waBtn');
+  const viewBtn = meta.querySelector('#viewShopBtn');
+  callBtn.onclick = ()=> captureNumberThenProceed('call', { shop: ad.shop, itemTitle: ad.name, phone: shopObj?.phone||'' });
+  waBtn.onclick   = ()=> captureNumberThenProceed('wa',   { shop: ad.shop, itemTitle: ad.name, phone: shopObj?.phone||'' });
+  viewBtn.onclick = ()=> location.hash = routes.shopPage(ad.shop, ad.id);
+}
+
+/* ===== Shop Page (slide-in) ===== */
+async function renderShopPage(shopName, focusId=null){
+  const shop = SHOPS.find(s=> s.name===shopName);
+  if (!shop){ toast('Shop not found'); history.back(); return; }
+  currentShop = shop;
+
+  sheetTitle.textContent = shop.name;
+  sheetCount.textContent = '';
+  sheetBody.innerHTML = `
+    <div class="float-top">
+      <button class="fab" id="ham" title="Admin">☰</button>
+      <button class="fab" id="closeShop" title="Close">✕</button>
+    </div>
+    <div class="search" style="margin:8px 0 10px">
+      <input id="shopSearch" placeholder="Search in ${escapeHTML(shop.name)}..."/>
+    </div>
+    <div id="shopTabs" class="main-tabs" style="margin:0 0 10px;"></div>
+    <div id="shopItemsGrid" class="items-grid"></div>
+  `;
+  showSheet();
+  document.getElementById('closeShop').onclick = ()=> history.back();
+  document.getElementById('ham').onclick = ()=> openAdminMenu(shop.name);
+
+  await renderShopTabsAndItems(shop.name, focusId);
+}
+
+async function fetchShopItems(shopName){
+  const ck = CACHE.shopItems(shopName);
+  const cached = loadCache(ck);
+  if (cached) return cached;
+  const col = collection(db, PAGE_KEY, "Shops", shopName, "items");
+  const snap = await getDocs(col);
+  const arr = [];
+  snap.forEach(d=>{ const it = d.data(); it.id = d.id; arr.push(it); });
+  arr.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  saveCache(ck, arr);
+  return arr;
+}
+async function renderShopTabsAndItems(shopName, focusId=null){
+  const items = await fetchShopItems(shopName);
+  const byCat = {};
+  items.forEach(it=>{ const c = it.category||'Other'; (byCat[c]||(byCat[c]=[])).push(it); });
+
+  const shopTabs = document.getElementById('shopTabs');
+  const listEl = document.getElementById('shopItemsGrid');
+
+  shopTabs.innerHTML = "";
+  const cats = Object.keys(byCat).sort((a,b)=> a.localeCompare(b));
+  cats.forEach((c,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'main-tab'+(i===0?' active':''); btn.dataset.cat = c; btn.textContent = `${c} (${byCat[c].length})`;
+    btn.addEventListener('click', ()=>{
+      shopTabs.querySelectorAll('.main-tab').forEach(b=> b.classList.remove('active'));
+      btn.classList.add('active');
+      draw(byCat[c]);
+    });
+    shopTabs.appendChild(btn);
+  });
+
+  const draw = (arr)=>{
+    const q = (document.getElementById('shopSearch').value||'').toLowerCase();
+    listEl.innerHTML='';
+    arr.filter(ad=>(ad.name||'').toLowerCase().includes(q) || (ad.desc||'').toLowerCase().includes(q))
+       .forEach(ad=> listEl.appendChild(itemCard(ad)));
+    if (!listEl.children.length) listEl.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items.</p>`;
+  };
+
+  if (!cats.length){ listEl.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`; return; }
+  const firstCat = focusId ? Object.keys(byCat).find(cat => (byCat[cat]||[]).some(it=> it.id===focusId)) : cats[0];
+  shopTabs.querySelectorAll('.main-tab').forEach(b=> { if (b.dataset.cat===firstCat) b.classList.add('active'); });
+  draw(byCat[firstCat]);
+
+  // Search inside shop
+  document.getElementById('shopSearch').oninput = ()=>{
+    const activeCat = shopTabs.querySelector('.main-tab.active')?.dataset.cat || firstCat;
+    draw(byCat[activeCat]);
+  };
+
+  // If focus item specified, open its detail directly
+  if (focusId){
+    const all = byCat[firstCat].concat(...Object.values(byCat));
+    const found = all.find(x=> x.id===focusId);
+    if (found) location.hash = routes.itemPage(found.id);
+  }
+}
+
+/* ===== Actions: Number capture then call/wa ===== */
+function captureNumberThenProceed(kind, data){
+  // modal
+  const m = openModal(`
+    <div class="header">Your WhatsApp number</div>
+    <div class="body">
+      <input id="waNum" class="inp" placeholder="+233… or 0…" inputmode="tel" />
+      <div id="waErr" style="display:none;color:#b00020;font-size:13px">Enter a valid number</div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="back">Back</button>
+      <button class="btn brand" id="ok">Continue</button>
+    </div>
+  `);
+  const waNum = m.querySelector('#waNum');
+  const waErr = m.querySelector('#waErr');
+  waNum.value = userPhoneCache || '';
+  m.querySelector('#back').onclick = ()=> stepBackModal();
+  m.querySelector('#ok').onclick = async ()=>{
+    const norm = normalizeGhanaNumber(waNum.value);
+    if (!norm){ waErr.style.display='block'; return; }
+    waErr.style.display='none';
+    userPhoneCache = norm.e164;
+
+    // save user number (global + per shop)
+    await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
+    if (data.shop){
+      const custCol = collection(db, PAGE_KEY, "Shops", data.shop, "customers");
+      await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
+    }
+
+    stepBackModal();
+    const waNumShop = (data.phone||'').replace(/^\+/,'');
+    const msg = `Hello, I saw your item *${data.itemTitle||''}* on PickMe (Tek&gaget).`;
+    if (kind==='call'){
+      if (data.phone) window.location.href = `tel:${data.phone}`;
+    } else {
+      if (waNumShop) window.location.href = `https://wa.me/${waNumShop}?text=${encodeURIComponent(msg)}`;
+    }
+  };
+}
+
+/* ===== Admin Flow (per-shop) ===== */
+function openAdminMenu(shopName){
+  const m = openModal(`
+    <div class="header">Admin</div>
+    <div class="body">
+      <div class="mopt-grid">
+        <div class="mopt-card" id="enterCode"><h4>Enter Access Code</h4><p>Manage your shop</p></div>
+      </div>
+    </div>
+    <div class="footer"><button class="btn" id="close">Close</button></div>
+  `);
+  m.querySelector('#close').onclick = ()=> stepBackModal();
+  m.querySelector('#enterCode').onclick = ()=> openAccessCode(shopName);
+}
+function openAccessCode(shopName){
+  const expected = (SHOPS.find(s=>s.name===shopName)?.accessCode)||SHOP_ADMIN_DEFAULT_CODE;
+  const m = openModal(`
+    <div class="header">Access Code</div>
+    <div class="body"><input id="code" class="inp" placeholder="Enter code"/></div>
+    <div class="footer"><button class="btn" id="back">Back</button><button class="btn brand" id="ok">Continue</button></div>
+  `);
+  m.querySelector('#back').onclick = ()=> stepBackModal();
+  m.querySelector('#ok').onclick = ()=>{
+    const v = m.querySelector('#code').value.trim();
+    if (v!==expected){ toast('Invalid code'); return; }
+    stepBackModal();
+    openAdminOptions(shopName);
+  };
+}
+function openAdminOptions(shopName){
+  const m = openModal(`
+    <div class="header">Admin Options</div>
+    <div class="body">
+      <div class="mopt-grid">
+        <div class="mopt-card" id="optAdd"><h4>Add items</h4><p>Create new adverts</p></div>
+        <div class="mopt-card" id="optDelete"><h4>Delete items</h4><p>Remove existing adverts</p></div>
+      </div>
+    </div>
+    <div class="footer"><button class="btn" id="close">Close</button></div>
+  `);
+  m.querySelector('#close').onclick = ()=> stepBackModal();
+  m.querySelector('#optAdd').onclick = ()=> { stepBackModal(); chooseCategoryForAdd(shopName); };
+  m.querySelector('#optDelete').onclick = ()=> { stepBackModal(); openDeletePicker(shopName); };
+}
+
+/* === Add Items (with visible editable drafts) === */
+function chooseCategoryForAdd(shopName){
+  const m = openModal(`
+    <div class="header">Choose Category</div>
+    <div class="body"><div class="mopt-grid" id="grid"></div></div>
+    <div class="footer"><button class="btn" id="back">Back</button></div>
+  `);
+  m.querySelector('#back').onclick = ()=> stepBackModal();
+  const grid = m.querySelector('#grid');
+  CATEGORIES.forEach(({id})=>{
+    const card = document.createElement('div');
+    card.className='mopt-card';
+    card.innerHTML = `<h4>${escapeHTML(id)}</h4>`;
+    card.onclick = ()=>{ stepBackModal(); openDraftEditor(shopName, id); };
+    grid.appendChild(card);
+  });
+}
+
+function openDraftEditor(shopName, category){
+  const state = { entries:[newDraft(category)], submitting:false, shop: shopName };
+  const m = openModal(renderDraftModal(state));
+  wireDraftEditor(state,m);
+}
+function newDraft(cat){ return { id: makeId(), cat, name:'', price:'', desc:'', files:[] }; }
+
+function renderDraftModal(state){
+  const itemsHTML = state.entries.map((e,idx)=>`
+    <div class="addcard" data-idx="${idx}">
+      <div class="addrow">
+        <input class="inp name" placeholder="Item name" value="${escapeHTML(e.name)}"/>
+        <input class="inp price" placeholder="Price (numbers)" value="${escapeHTML(e.price)}"/>
+      </div>
+      <textarea class="inp desc" rows="2" placeholder="Description">${escapeHTML(e.desc)}</textarea>
+      <div class="thumbs">
+        ${e.files.map((f,i)=>`
+          <div class="thumb" data-i="${i}">
+            <img src="${URL.createObjectURL(f)}" alt="">
+            <button class="x" title="Remove">✕</button>
+          </div>`).join('')}
+      </div>
+      <div class="addrow3">
+        <input class="inp filepick" type="file" accept="image/*" multiple />
+        <button class="btn" data-act="addImgs">Add Images</button>
+        <button class="btn" data-act="clearImgs">Clear Images</button>
+      </div>
+      <div class="addrow">
+        <button class="btn" data-act="delCard">Remove Item</button>
+        <span class="pill">Images: ${e.files.length}</span>
+      </div>
+    </div>
+  `).join('');
+  return `
+    <div class="header">Add Items · ${escapeHTML(state.entries[0]?.cat||'')}</div>
+    <div class="body">
+      <div class="addlist">${itemsHTML}</div>
+      <div class="addrow" style="justify-content:space-between">
+        <button class="btn" id="back">Back</button>
+        <div>
+          <button class="btn" id="addMore">Add More</button>
+          <button class="btn brand" id="submit">${state.submitting?`<span class="progress"><span class="spinner"></span> Submitting…</span>`:'Submit'}</button>
+        </div>
+      </div>
+      <div class="pill">Tip: Previous entries stay visible and fully editable before submit.</div>
+    </div>
+  `;
+}
+function wireDraftEditor(state,m){
+  m.querySelector('#back').onclick = ()=> stepBackModal();
+  m.querySelector('#addMore').onclick = ()=>{
+    state.entries.push(newDraft(state.entries[0].cat));
+    m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+  };
+  m.querySelector('#submit').onclick = ()=> submitDrafts(state,m);
+
+  // bind per-card inputs
+  m.querySelectorAll('.addcard').forEach(card=>{
+    const idx = +card.dataset.idx;
+    card.querySelector('.name').oninput = e=> state.entries[idx].name = e.target.value;
+    card.querySelector('.price').oninput= e=> state.entries[idx].price = e.target.value.replace(/[^\d.]/g,'');
+    card.querySelector('.desc').oninput = e=> state.entries[idx].desc = e.target.value;
+
+    // existing thumbs remove
+    card.querySelectorAll('.thumb .x').forEach(x=>{
+      x.onclick = ()=>{
+        const i = +x.closest('.thumb').dataset.i;
+        state.entries[idx].files.splice(i,1);
+        m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+      };
+    });
+
+    // add images
+    const filePick = card.querySelector('.filepick');
+    card.querySelector('[data-act="addImgs"]').onclick = ()=> filePick.click();
+    filePick.onchange = ()=>{
+      const list = Array.from(filePick.files||[]);
+      const space = MAX_IMAGES - state.entries[idx].files.length;
+      state.entries[idx].files.push(...list.slice(0, space));
+      m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+    };
+
+    // clear images
+    card.querySelector('[data-act="clearImgs"]').onclick = ()=>{
+      state.entries[idx].files = [];
+      m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+    };
+
+    // delete card
+    card.querySelector('[data-act="delCard"]').onclick = ()=>{
+      state.entries.splice(idx,1);
+      if (state.entries.length===0) state.entries.push(newDraft(state.entries[0]?.cat||'Other'));
+      m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+    };
+  });
+}
+
+async function submitDrafts(state,m){
+  // Filter valid entries (require name + price + >=1 image)
+  const valid = state.entries.filter(e => e.name && e.price && e.files.length>0);
+  if (!valid.length){ toast('Nothing to submit'); return; }
+
+  state.submitting = true; m.innerHTML = renderDraftModal(state); wireDraftEditor(state,m);
+
+  // Upload to Storage and build payload
+  const payload = { type:"review", page:PAGE_KEY, shop: state.shop, items: [] };
+  for (const d of valid){
+    const adId = d.id;
+    const urls = [];
+    let idx=1;
+    for (const f of d.files){
+      const key = `${PAGE_KEY}/${state.shop}/${adId}/img_${idx}.jpg`;
+      const rf = sRef(st, key);
+      const snap = await uploadBytes(rf, f);
+      const url  = await getDownloadURL(sRef(st, snap.metadata.fullPath));
+      urls.push(url); idx++;
+    }
+    payload.items.push({ id: adId, category:d.cat, name:d.name, price:money(d.price), desc:d.desc, images:urls });
+  }
+
+  const linkId = await putShort(payload);
+  stepBackModal(); // close editor
+
+  const link = `${location.origin}${location.pathname}?review=${linkId}`;
+  const msg = `New Tek&gaget adverts from *${state.shop}*.\nOpen: ${link}`;
+  window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+
+/* === Delete Items === */
+async function openDeletePicker(shopName){
+  const m = openModal(`
+    <div class="header">Delete item</div>
+    <div class="body"><div id="list">Loading…</div></div>
+    <div class="footer"><button class="btn" id="back">Back</button></div>
+  `);
+  m.querySelector('#back').onclick = ()=> stepBackModal();
+  const list = m.querySelector('#list');
+  const items = await fetchShopItems(shopName);
+  if (!items.length){ list.textContent = 'No items to delete.'; return; }
+  list.innerHTML = '';
+  items.forEach(ad=>{
+    const blk = document.createElement('div');
+    blk.className='mopt-card';
+    blk.innerHTML = `<h4>${escapeHTML(ad.name||'Item')}</h4><p>${escapeHTML(ad.category||'')}</p><button class="btn">Delete</button>`;
+    blk.querySelector('button').onclick = ()=> deleteAd(shopName, ad.id);
+    list.appendChild(blk);
+  });
+}
+async function deleteAd(shopName, adId){
+  if (!confirm("Delete this item permanently?")) return;
+  try{ await deleteDoc(doc(db, PAGE_KEY, "Shops", shopName, "items", adId)); }catch(e){ console.warn('delete doc',e); }
+  try{
+    const folder = sRef(st, `${PAGE_KEY}/${shopName}/${adId}/`);
+    const listing = await listAll(folder);
+    await Promise.all(listing.items.map(obj => deleteObject(obj)));
+  }catch(e){ console.warn('delete images',e); }
+  toast('Deleted');
+  clearShopCaches(shopName);
+  renderShops(); // refresh home shops
+  // refresh current shop page if open
+  const {path, seg} = parseHash();
+  if (seg[1]==='shop' && decodeURIComponent(seg[2])===shopName) renderShopPage(shopName);
+}
+
+/* ===== Review Admin (locked) ===== */
+function renderAdminReviewPage(batchId){
+  // Show empty page and FORCE code before loading list
+  sheetTitle.textContent = 'Admin Review';
+  sheetCount.textContent = '';
+  sheetBody.innerHTML = `<div class="pill">Batch: ${escapeHTML(batchId||'—')}</div><div id="reviewHost" style="margin-top:10px"></div>`;
+  showSheet();
+
+  const m = openModal(`
+    <div class="header">PickMe Admin Access</div>
+    <div class="body"><input id="rc" class="inp" placeholder="Enter admin code"/></div>
+    <div class="footer"><button class="btn" id="close">Close</button><button class="btn brand" id="ok">Unlock</button></div>
+  `);
+  m.querySelector('#close').onclick = ()=> { closeAllModals(); location.hash = routes.homeCats; };
+  m.querySelector('#ok').onclick = async ()=>{
+    const v = m.querySelector('#rc').value.trim();
+    if (v!==GLOBAL_ADMIN_CODE){ toast('Incorrect admin code'); return; }
+    closeAllModals();
+    // load review payload from query ?review=...
+    const url = new URL(location.href);
+    const reviewId = url.searchParams.get('review');
+    const payload = await getShort(reviewId);
+    if (!payload || payload.type!=='review'){ toast('Invalid review link'); return; }
+    openReview(payload);
+  };
+}
+async function openReview(payload){
+  const host = document.getElementById('reviewHost');
+  host.innerHTML = '';
+  const states = []; // {id, approve:null|true|false, reason:string|null, data}
+
+  payload.items.forEach((it, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'mopt-card';
+
+    // slider
+    const holder = document.createElement('div'); holder.style.marginBottom='8px';
+    holder.appendChild(buildSlider(it.images||[]));
+    card.appendChild(holder);
+
+    const meta = document.createElement('div');
+    meta.innerHTML = `
+      <h4 style="margin:8px 0 4px">#${idx+1} ${escapeHTML(it.name)}</h4>
+      <div>${escapeHTML(it.category||'')}</div>
+      <div>${fmtPrice(it.price)}</div>
+    `;
+    card.appendChild(meta);
+
+    const row = document.createElement('div'); row.className='mopt-grid'; row.style.gridTemplateColumns='1fr 1fr';
+    // Approve
+    const approve = document.createElement('button'); approve.className='btn brand'; approve.textContent='Approve';
+    // Reject with reasons dropdown
+    const reject  = document.createElement('div'); reject.innerHTML = `
+      <div style="display:grid;gap:6px">
+        <select class="inp" id="reason">
+          <option value="">Reject reason</option>
+          <option>Inappropriate content</option>
+          <option>Wrong price</option>
+          <option>Poor image quality</option>
+          <option>Duplicate listing</option>
+          <option>Other</option>
+        </select>
+        <textarea class="inp" id="other" rows="2" placeholder="Write custom reason (if 'Other')"></textarea>
+        <button class="btn">Reject</button>
+      </div>
+    `;
+    row.appendChild(approve); row.appendChild(reject); card.appendChild(row);
+
+    const st = { id: it.id, approve:null, reason:null, data:it }; states.push(st);
+    approve.onclick = ()=>{ st.approve=true; st.reason=null; toast('Marked approved'); };
+    reject.querySelector('button').onclick = ()=>{
+      const val = reject.querySelector('#reason').value;
+      const other = reject.querySelector('#other').value.trim();
+      if (!val){ toast('Pick a reject reason'); return; }
+      if (val==='Other' && !other){ toast('Write your reason'); return; }
+      st.approve=false; st.reason = (val==='Other'?other:val);
+      toast('Marked rejected');
+    };
+
+    host.appendChild(card);
+  });
+
+  const done = document.createElement('button');
+  done.className='btn brand'; done.style.marginTop='10px'; done.textContent='Finalize Decisions';
+  done.onclick = async ()=>{
+    const approved = states.filter(s=>s.approve===true).map(s=>s.data);
+    const rejected = states.filter(s=>s.approve===false).map(s=>({ ...s.data, reason:s.reason||'Rejected' }));
+
+    // write approved items to shop
+    await Promise.all(approved.map(async it=>{
+      const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
+      await setDoc(ref, {
+        id: it.id, shop: payload.shop, category: it.category, name: it.name, price: it.price,
+        desc: it.desc, images: it.images||[], createdAt: serverTimestamp()
+      }, { merge:true });
+    }));
+
+    // store result payload
+    const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
+    const id2 = await putShort(result);
+
+    clearShopCaches(payload.shop);
+
+    const shopPhone = (SHOPS.find(s=>s.name===payload.shop)?.phone) || "";
+    const link = `${location.origin}${location.pathname}?result=${id2}`;
+    const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
+    if (shopPhone) window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
+    else alert("Result link:\n"+link);
+  };
+
+  host.appendChild(done);
+}
+
+/* ===== Result Page (shop owner) ===== */
+async function openResultFromQuery(){
+  const url = new URL(location.href);
+  const resultId = url.searchParams.get('result');
+  if (!resultId) return false;
+  const payload = await getShort(resultId);
+  if (!payload || payload.type!=='result'){ alert("Invalid result link."); return true; }
+
+  // Reuse item page layout
+  sheetTitle.textContent = "Submission results";
+  sheetCount.textContent = payload.shop||'';
+  sheetBody.innerHTML = '';
+
+  const secA = document.createElement('div');
+  secA.innerHTML = `<div class="pill" style="margin:10px 0">Approved</div>`;
+  const gridA = document.createElement('div'); gridA.className='items-grid';
+  (payload.approved||[]).forEach(ad=> gridA.appendChild(itemCard(ad)));
+  if (!(payload.approved||[]).length) gridA.innerHTML = "<p>No approved items.</p>";
+  secA.appendChild(gridA);
+
+  const secR = document.createElement('div'); secR.innerHTML = `<div class="pill" style="margin:10px 0">Rejected</div>`;
+  const gridR = document.createElement('div'); gridR.className='items-grid';
+  (payload.rejected||[]).forEach(ad=>{
+    const c = document.createElement('div'); c.className='item-card';
+    c.innerHTML = `
+      <div class="item-img"><img src="${(ad.images&&ad.images[0])||'https://via.placeholder.com/600x400?text=Image'}" alt=""></div>
+      <div class="item-body">
+        <div class="item-price">${fmtPrice(ad.price)}</div>
+        <div class="item-desc">${escapeHTML(ad.desc||'')}</div>
+        <div class="item-shop">Reason: ${escapeHTML(ad.reason||'')}</div>
+      </div>
+    `;
+    gridR.appendChild(c);
+  });
+  if (!(payload.rejected||[]).length) gridR.innerHTML = "<p>No rejected items.</p>";
+  secR.appendChild(gridR);
+
+  sheetBody.append(secA, secR);
+  showSheet();
+  return true;
+}
+
+/* ===== Links Collection Helpers ===== */
+async function getShort(id){
+  const snap = await getDoc(doc(linksCol, id));
+  return snap.exists() ? (snap.data()?.payload || null) : null;
+}
+async function putShort(payload){
+  const id = makeId();
+  await setDoc(doc(linksCol, id), { payload, createdAt: serverTimestamp() });
+  return id;
+}
+
+/* ===== Global Search (quick filter) ===== */
+globalSearch.addEventListener('input', ()=>{
+  const q = (globalSearch.value||'').toLowerCase();
+
+  // categories visible
+  if (categoriesView.classList.contains('show')){
+    [...categoriesGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+  }
+  // shops visible
+  if (shopsView.classList.contains('show')){
+    [...shopsGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+  }
+});
+
+/* ===== Tabs Switch ===== */
+tabs.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tabs.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+    const target = btn.dataset.view;
+    [categoriesView, shopsView].forEach(v=> v.classList.remove('show'));
+    document.getElementById(target).classList.add('show');
+    hideSheet();
+  });
+});
+
+/* ===== Navigators ===== */
+function openCategoryPage(cat){ location.hash = routes.catPage(cat); }
+function openShopPage(name, focus){ location.hash = routes.shopPage(name, focus); }
+
+/* ===== Back button on sheet ===== */
+backBtn.addEventListener('click', ()=> history.back());
+
+/* ===== Toast ===== */
+function toast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove('show'), 1600);
+}
+
+/* ===== Init ===== */
+async function renderCategories(){ const counts = await countByCategory().catch(()=>({})); renderCategoriesGrid(counts); }
+async function renderShops(){ const counts = await fetchShopCounts().catch(()=>{ const m={}; SHOPS.forEach(s=>m[s.name]=0); return m; }); renderShopsGrid(counts); }
+
+async function routerFirst(){
+  const url = new URL(location.href);
+  // results page takes precedence
+  if (await openResultFromQuery()) return;
+
+  // default homes
+  categoriesView.classList.add('show'); shopsView.classList.remove('show');
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await renderCategories();
+  await renderShops();
+  routerFirst();
+});
+
+/* Fallback quick draw (avoid blank) */
+const fb = {}; SHOPS.forEach(s=> fb[s.name]=0); renderShopsGrid(fb);
+</script>
+</body>
+</html>
+
