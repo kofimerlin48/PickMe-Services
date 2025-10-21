@@ -1340,68 +1340,94 @@ async function openReview(payload){
   container.style.marginTop='8px';
   const states = []; // {id, approve:boolean|null, reason:string|null, data}
 
-  payload.items.forEach((it, idx)=>{
-    const card = document.createElement('div'); card.className = 'mopt-card';
+  // NEW BLOCK (PASTE THIS INSTEAD)
+payload.items.forEach((it, idx) => {
+  const card = document.createElement('div');
+  card.className = 'mopt-card';
 
-    const holder = document.createElement('div'); holder.style.marginBottom='8px';
-    const slider = document.createElement('div'); slider.className='slider';
-    const dots = document.createElement('div'); dots.className='dots';
-    holder.append(slider, dots); card.appendChild(holder);
-    buildSlider(it.images||[], slider, dots);
+  const holder = document.createElement('div');
+  holder.style.marginBottom = '8px';
+  const slider = document.createElement('div');
+  slider.className = 'slider';
+  const dots = document.createElement('div');
+  dots.className = 'dots';
+  holder.append(slider, dots);
+  card.appendChild(holder);
+  buildSlider(it.images || [], slider, dots);
 
-    const meta = document.createElement('div');
-    meta.innerHTML = `
-      <h4 style="margin:8px 0 4px">#${idx+1} ${escapeHtml(it.name)}</h4>
-      <div>${escapeHtml(it.category||'')}</div>
-      <div>${fmtPrice(it.price)}</div>
-    `;
-    card.appendChild(meta);
+  const meta = document.createElement('div');
+  meta.innerHTML = `
+    <h4 style="margin:8px 0 4px">#${idx + 1} ${escapeHtml(it.name)}</h4>
+    <div>${escapeHtml(it.category || '')}</div>
+    <div>${fmtPrice(it.price)}</div>
+  `;
+  card.appendChild(meta);
 
-    const row = document.createElement('div'); row.className='row'; row.style.marginTop='8px';
-    const approve = document.createElement('button'); approve.className='btn-primary'; approve.textContent='Approve';
-    const reject  = document.createElement('button'); reject.className='btn-secondary'; reject.textContent='Reject';
-    row.append(approve, reject); card.appendChild(row);
+  // Default: approved (true)
+  const st = { id: it.id, approve: true, reason: null, data: it };
+  states.push(st);
 
-    const rejectBox = document.createElement('div'); rejectBox.style.display='none'; rejectBox.style.marginTop='8px';
-    rejectBox.innerHTML = `
-      <div class="row">
-        <select class="input" id="reasonSel">
-          <option value="">Select reason</option>
-          <option>Inappropriate content</option>
-          <option>Wrong price</option>
-          <option>Poor image quality</option>
-          <option>Duplicate listing</option>
-          <option>Other</option>
-        </select>
-        <input class="input" id="otherTxt" placeholder="Write custom reason (if Other)">
-      </div>
-    `;
-    card.appendChild(rejectBox);
+  // Single Toggle Button
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'btn-secondary';
+  toggleBtn.textContent = 'Reject'; // Default shows Reject (means currently approved)
+  toggleBtn.style.marginTop = '8px';
 
-    const st = { id: it.id, approve:null, reason:null, data:it }; states.push(st);
-    approve.onclick = ()=>{ st.approve=true; st.reason=null; approve.style.opacity='1'; reject.style.opacity='.55'; rejectBox.style.display='none'; };
-    reject.onclick  = ()=>{ st.approve=false; approve.style.opacity='.55'; reject.style.opacity='1'; rejectBox.style.display='block'; };
+  toggleBtn.onclick = () => {
+    st.approve = !st.approve;
+    if (st.approve) {
+      toggleBtn.textContent = 'Reject';
+      toggleBtn.className = 'btn-secondary';
+      st.reason = null;
+    } else {
+      toggleBtn.textContent = 'Approve';
+      toggleBtn.className = 'btn-primary';
+    }
+  };
 
-    container.appendChild(card);
+  // Reason field (only visible when rejected)
+  const rejectBox = document.createElement('div');
+  rejectBox.style.display = 'none';
+  rejectBox.style.marginTop = '8px';
+  rejectBox.innerHTML = `
+    <div class="row">
+      <select class="input reasonSel">
+        <option value="">Select reason</option>
+        <option>Inappropriate content</option>
+        <option>Wrong price</option>
+        <option>Poor image quality</option>
+        <option>Duplicate listing</option>
+        <option>Other</option>
+      </select>
+      <input class="input otherTxt" placeholder="Write custom reason (if Other)">
+    </div>
+  `;
 
-    rejectBox.querySelector('#reasonSel').addEventListener('change', e=>{
-      const v = e.target.value;
-      const otherField = rejectBox.querySelector('#otherTxt');
-      if (v === 'Other') {
-        otherField.style.display = 'block';
-        st.reason = otherField.value.trim() || 'Rejected';
-      } else {
-        otherField.style.display = 'none';
-        st.reason = v || 'Rejected';
-      }
-    });
-
-    rejectBox.querySelector('#otherTxt').addEventListener('input', e=>{
-      if (rejectBox.querySelector('#reasonSel').value === 'Other') {
-        st.reason = e.target.value.trim() || 'Rejected';
-      }
-    });
+  toggleBtn.addEventListener('click', () => {
+    rejectBox.style.display = st.approve ? 'none' : 'block';
   });
+
+  rejectBox.querySelector('.reasonSel').addEventListener('change', e => {
+    const val = e.target.value;
+    const otherTxt = rejectBox.querySelector('.otherTxt');
+    if (val === 'Other') {
+      otherTxt.style.display = 'block';
+      st.reason = otherTxt.value.trim() || 'Rejected';
+    } else {
+      otherTxt.style.display = 'none';
+      st.reason = val || 'Rejected';
+    }
+  });
+
+  rejectBox.querySelector('.otherTxt').addEventListener('input', e => {
+    st.reason = e.target.value.trim() || 'Rejected';
+  });
+
+  card.appendChild(toggleBtn);
+  card.appendChild(rejectBox);
+
+  container.appendChild(card);
+});
 
   const done = document.createElement('button');
   done.className = 'btn-primary';
