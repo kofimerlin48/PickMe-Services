@@ -1338,151 +1338,220 @@ async function openReview(payload){
 
   const container = document.createElement('div');
   container.style.marginTop='8px';
-  const states = []; // {id, approve:boolean|null, reason:string|null, data}
 
-  // NEW BLOCK (PASTE THIS INSTEAD)
-payload.items.forEach((it, idx) => {
-  const card = document.createElement('div');
-  card.className = 'mopt-card';
+  // Track states for each submitted item
+  const states = []; // {id, approve:boolean, reason:string|null, data}
 
-  const holder = document.createElement('div');
-  holder.style.marginBottom = '8px';
-  const slider = document.createElement('div');
-  slider.className = 'slider';
-  const dots = document.createElement('div');
-  dots.className = 'dots';
-  holder.append(slider, dots);
-  card.appendChild(holder);
-  buildSlider(it.images || [], slider, dots);
+  // -------- LIST UI WITH TOGGLE (Default = Approved) --------
+  payload.items.forEach((it, idx) => {
+    const card = document.createElement('div');
+    card.className = 'mopt-card';
 
-  const meta = document.createElement('div');
-  meta.innerHTML = `
-    <h4 style="margin:8px 0 4px">#${idx + 1} ${escapeHtml(it.name)}</h4>
-    <div>${escapeHtml(it.category || '')}</div>
-    <div>${fmtPrice(it.price)}</div>
-  `;
-  card.appendChild(meta);
+    // images slider
+    const holder = document.createElement('div');
+    holder.style.marginBottom = '8px';
+    const slider = document.createElement('div');
+    slider.className = 'slider';
+    const dots = document.createElement('div');
+    dots.className = 'dots';
+    holder.append(slider, dots);
+    card.appendChild(holder);
+    buildSlider(it.images || [], slider, dots);
 
-  // Default: approved (true)
-  const st = { id: it.id, approve: true, reason: null, data: it };
-  states.push(st);
+    // meta
+    const meta = document.createElement('div');
+    meta.innerHTML = `
+      <h4 style="margin:8px 0 4px">#${idx + 1} ${escapeHtml(it.name)}</h4>
+      <div>${escapeHtml(it.category || '')}</div>
+      <div>${fmtPrice(it.price)}</div>
+    `;
+    card.appendChild(meta);
 
-  // Single Toggle Button
-  const toggleBtn = document.createElement('button');
-  toggleBtn.className = 'btn-secondary';
-  toggleBtn.textContent = 'Reject'; // Default shows Reject (means currently approved)
-  toggleBtn.style.marginTop = '8px';
+    // Default approved
+    const st = { id: it.id, approve: true, reason: null, data: it };
+    states.push(st);
 
-  toggleBtn.onclick = () => {
-    st.approve = !st.approve;
-    if (st.approve) {
-      toggleBtn.textContent = 'Reject';
-      toggleBtn.className = 'btn-secondary';
-      st.reason = null;
-    } else {
-      toggleBtn.textContent = 'Approve';
-      toggleBtn.className = 'btn-primary';
-    }
-  };
+    // Single Toggle Button (default shows "Reject" meaning currently Approved)
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn-secondary';
+    toggleBtn.textContent = 'Reject';
+    toggleBtn.style.marginTop = '8px';
 
-  // Reason field (only visible when rejected)
-  const rejectBox = document.createElement('div');
-  rejectBox.style.display = 'none';
-  rejectBox.style.marginTop = '8px';
-  rejectBox.innerHTML = `
-    <div class="row">
-      <select class="input reasonSel">
-        <option value="">Select reason</option>
-        <option>Inappropriate content</option>
-        <option>Wrong price</option>
-        <option>Poor image quality</option>
-        <option>Duplicate listing</option>
-        <option>Other</option>
-      </select>
-      <input class="input otherTxt" placeholder="Write custom reason (if Other)">
-    </div>
-  `;
+    // Reason box (only visible when rejected)
+    const rejectBox = document.createElement('div');
+    rejectBox.style.display = 'none';
+    rejectBox.style.marginTop = '8px';
+    rejectBox.innerHTML = `
+      <div class="row">
+        <select class="input reasonSel">
+          <option value="">Select reason</option>
+          <option>Inappropriate content</option>
+          <option>Wrong price</option>
+          <option>Poor image quality</option>
+          <option>Duplicate listing</option>
+          <option>Other</option>
+        </select>
+        <input class="input otherTxt" placeholder="Write custom reason (if Other)">
+      </div>
+    `;
 
-  toggleBtn.addEventListener('click', () => {
-    rejectBox.style.display = st.approve ? 'none' : 'block';
+    toggleBtn.onclick = () => {
+      st.approve = !st.approve;
+      if (st.approve) {
+        toggleBtn.textContent = 'Reject';
+        toggleBtn.className = 'btn-secondary';
+        rejectBox.style.display = 'none';
+        st.reason = null;
+      } else {
+        toggleBtn.textContent = 'Approve';
+        toggleBtn.className = 'btn-primary';
+        rejectBox.style.display = 'block';
+      }
+    };
+
+    rejectBox.querySelector('.reasonSel').addEventListener('change', e => {
+      const val = e.target.value;
+      const otherTxt = rejectBox.querySelector('.otherTxt');
+      if (val === 'Other') {
+        otherTxt.style.display = 'block';
+        st.reason = otherTxt.value.trim() || 'Rejected';
+      } else {
+        otherTxt.style.display = val ? 'none' : 'none';
+        st.reason = val || 'Rejected';
+      }
+    });
+
+    rejectBox.querySelector('.otherTxt').addEventListener('input', e => {
+      if (!st.approve) {
+        st.reason = e.target.value.trim() || 'Rejected';
+      }
+    });
+
+    card.appendChild(toggleBtn);
+    card.appendChild(rejectBox);
+    container.appendChild(card);
   });
 
-  rejectBox.querySelector('.reasonSel').addEventListener('change', e => {
-    const val = e.target.value;
-    const otherTxt = rejectBox.querySelector('.otherTxt');
-    if (val === 'Other') {
-      otherTxt.style.display = 'block';
-      st.reason = otherTxt.value.trim() || 'Rejected';
-    } else {
-      otherTxt.style.display = 'none';
-      st.reason = val || 'Rejected';
-    }
-  });
-
-  rejectBox.querySelector('.otherTxt').addEventListener('input', e => {
-    st.reason = e.target.value.trim() || 'Rejected';
-  });
-
-  card.appendChild(toggleBtn);
-  card.appendChild(rejectBox);
-
-  container.appendChild(card);
-});
-
+  // -------- SUBMIT BUTTON --------
   const done = document.createElement('button');
   done.className = 'btn-primary';
   done.style.marginTop = '10px';
   done.textContent = 'Submit Review';
-  done.onclick = async ()=>{
-    // Separate approved and rejected
-    const approved = states.filter(s => s.approve === true).map(s => s.data);
-    const rejected = states
-      .filter(s => s.approve === false)
-      .map(s => ({ ...s.data, reason: s.reason || 'Rejected' }));
 
-    // ✅ Always allow submission (even if only approved)
-    // ✅ Save approved items to Firestore
-    for (const it of approved) {
-      const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
-      await setDoc(ref, {
-        id: it.id,
-        shop: payload.shop,
-        category: it.category,
-        name: it.name,
-        price: it.price,
-        desc: it.desc,
-        images: it.images || [],
-        createdAt: serverTimestamp()
-      }, { merge: true });
+  // Utility: turn a remote image URL into a data: URL so results can show after deletion
+  async function urlToDataURL(url){
+    try{
+      const res = await fetch(url, { cache: 'no-store' });
+      const blob = await res.blob();
+      return await new Promise((resolve,reject)=>{
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+    }catch(e){
+      console.warn('urlToDataURL failed for', url, e);
+      return null;
+    }
+  }
+
+  done.onclick = async ()=>{
+    // Collect decisions
+    const approved = states.filter(s=>s.approve === true).map(s=>s.data);
+    const rejectedStates = states.filter(s=>s.approve === false);
+
+    if (!approved.length && !rejectedStates.length){
+      alert("Please approve or reject at least one item before submitting.");
+      return;
     }
 
-    // ✅ Prepare result payload for shortlink
-    const result = { 
-      type: 'result', 
-      page: PAGE_KEY, 
-      shop: payload.shop, 
-      approved, 
-      rejected 
-    };
+    // Disable button to prevent double-click
+    done.disabled = true;
+    done.textContent = "Submitting…";
 
-    // ✅ Save shortlink
+    // ---------- SAVE APPROVED ITEMS (Firestore) ----------
+    let saveErrors = [];
+    if (approved.length){
+      for (const it of approved){
+        try{
+          // Validate essentials so Firestore write won't crash
+          const rec = {
+            id: it.id,
+            shop: payload.shop,
+            category: it.category || 'Other',
+            name: it.name || '',
+            price: Number(it.price || 0),
+            desc: it.desc || '',
+            images: Array.isArray(it.images) ? it.images : [],
+            createdAt: serverTimestamp()
+          };
+          const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
+          await setDoc(ref, rec, { merge: true });
+        }catch(e){
+          console.error('Save approved failed for', it.id, e);
+          saveErrors.push(it.id);
+        }
+      }
+    }
+
+    // ---------- PREP REJECTED: CAPTURE IMAGES AS DATA URLS, THEN DELETE FROM STORAGE ----------
+    const rejected = [];
+    if (rejectedStates.length){
+      for (const st of rejectedStates){
+        const it = st.data;
+        const imgs = Array.isArray(it.images) ? it.images : [];
+        // Turn each remote URL into a data URL so we can delete storage but still show in results
+        const localImages = [];
+        for (const u of imgs){
+          const d = await urlToDataURL(u);
+          if (d) localImages.push(d);
+        }
+
+        // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
+        try{
+          const folder = sRef(st$1, `${PAGE_KEY}/${payload.shop}/${it.id}/`); // (we'll fix st$1 below)
+        }catch(e){ /* placeholder */ }
+        // NOTE: We'll use the real storage ref variable 'st' (already declared at top)
+        try{
+          const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
+          const listing = await listAll(folder);
+          await Promise.all(listing.items.map(obj => deleteObject(obj)));
+        }catch(e){
+          console.warn('Delete rejected images failed for', it.id, e);
+        }
+
+        rejected.push({
+          ...it,
+          reason: st.reason || 'Rejected',
+          // attach embedded images so the results page can still display them
+          localImages
+        });
+      }
+    }
+
+    // ---------- MAKE RESULT SHORTLINK ----------
+    const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
     const id2 = await putShort(result);
 
-    // ✅ Clear relevant caches so new items show
+    // ---------- CLEAR CACHES SO NEW APPROVALS APPEAR ----------
     clearShopCaches(payload.shop);
 
-    // ✅ Notify shop owner
+    // ---------- WhatsApp notify shop owner ----------
     const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
     const link = `${location.origin}${location.pathname}?result=${id2}`;
     const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
-
     if (shopPhone) {
-      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
+      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
     } else {
-      alert("Review results:\n" + link);
+      alert("Result link:\n" + link);
     }
 
-    // ✅ Close panel afterwards
+    // If any approved item failed to save, let admin know (but we still proceed)
+    if (saveErrors.length){
+      alert("Some approved items failed to save: " + saveErrors.join(', '));
+    }
+
+    // Close panel
     closeDrawer();
     toast("Review submitted.");
   };
@@ -1509,6 +1578,7 @@ async function openResult(payload){
   const host = itemDetail.querySelector('.item-detail');
   host.innerHTML = '';
 
+  // ---- Approved ----
   const secA = document.createElement('div');
   secA.innerHTML = `<div class="section-title">Approved</div>`;
   const listA = document.createElement('div');
@@ -1517,16 +1587,19 @@ async function openResult(payload){
   if (!(payload.approved || []).length) listA.innerHTML = "<p>No approved items.</p>";
   secA.appendChild(listA);
 
+  // ---- Rejected (show embedded images if present) ----
   const secR = document.createElement('div');
   secR.style.marginTop = '10px';
   secR.innerHTML = `<div class="section-title">Rejected</div>`;
   const listR = document.createElement('div');
   listR.className = 'items-grid';
   (payload.rejected || []).forEach(ad=>{
+    const imgs = (ad.localImages && ad.localImages.length) ? ad.localImages : (ad.images || []);
+    const first = imgs[0] || 'https://via.placeholder.com/600x400?text=Image';
     const card = document.createElement('div');
     card.className='item-card';
     card.innerHTML = `
-      <div class="item-img"><img src="${(ad.images && ad.images[0]) || 'https://via.placeholder.com/600x400?text=Image'}" alt=""></div>
+      <div class="item-img"><img src="${first}" alt=""></div>
       <div class="item-body">
         <div class="item-price">${fmtPrice(ad.price)}</div>
         <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
