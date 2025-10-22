@@ -515,7 +515,7 @@ const CATEGORIES = [
 ];
 
 /* ===== Firestore paths =====
- Tek&gaget
+ Tech & Gadgets
    - Links/items/{id} -> { payload, createdAt }
    - Shops/{shopName}/items/{adId} -> ad doc
    - Shops/{shopName}/customers/{phoneE164}
@@ -650,34 +650,51 @@ async function urlToSmallPreviewDataURL(url){
     if (!res.ok) return null;
     const blob = await res.blob();
 
-    // Read blob as data URL (safe for canvas)
-    const dataUrl = await new Promise((resolve,reject)=>{
-      const fr = new FileReader();
-      fr.onload = () => resolve(fr.result);
-      fr.onerror = reject;
-      fr.readAsDataURL(blob);
-    });
-
-    // Draw to canvas and compress
-    const img = new Image();
-    img.src = dataUrl;
-    await new Promise((r, j)=>{ img.onload = r; img.onerror = j; });
-
-    const MAX_W = 480;
-    const scale = img.width > MAX_W ? (MAX_W / img.width) : 1;
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
+    // Use an object URL (fewer cross-origin issues than FileReader for remote images)
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+    await new Promise(r => img.onload = r);
 
     const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
+    const scale = Math.min(480 / img.width, 1);
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
 
-    // Quality ~0.7 keeps it small (typically <80KB)
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Clean up the temporary object URL
+    URL.revokeObjectURL(img.src);
+
+    // Compress to jpeg ~0.7 quality
     return canvas.toDataURL('image/jpeg', 0.7);
   }catch(e){
-    console.warn('urlToSmallPreviewDataURL failed', e);
+    console.warn('preview error', e);
     return null;
+  }
+}
+
+// Ensure the parent shop doc exists (some security rules require this for subcollection writes)
+async function ensureShopDoc(shopName){
+  try{
+    const ref = doc(db, PAGE_KEY, "Shops", shopName);
+    const snap = await getDoc(ref);
+    const meta = SHOPS.find(s=>s.name===shopName) || {};
+    if (!snap.exists()){
+      await setDoc(ref, {
+        name: shopName,
+        slogan: meta.slogan || "",
+        heroImage: meta.heroImage || "",
+        phone: meta.phone || "",
+        expiry: meta.expiry || "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }else{
+      await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
+    }
+  }catch(e){
+    console.warn('[ensureShopDoc]', e);
   }
 }
 
@@ -1111,7 +1128,7 @@ numberOk.addEventListener('click', async ()=>{
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
   }else{
     const waNum = shopPhone.replace(/^\+/,'');
-    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tek&gaget).`;
+    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tech & Gagets).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
   }
   closeNumberModal();
@@ -1308,7 +1325,7 @@ submitDraftsBtn.addEventListener('click', async ()=>{
   submitDraftsBtn.disabled = false; submitDraftsBtn.textContent = "Submit";
 
   const link = `${location.origin}${location.pathname}?review=${linkId}`;
-  const msg = `New Tek&gaget adverts from *${currentShopName}*.\nOpen: ${link}`;
+  const msg = `New Tech & Gadgets adverts from *${currentShopName}*.\nOpen: ${link}`;
   window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
 // ✅ After WhatsApp, show Choose Category modal again
@@ -1517,112 +1534,124 @@ async function openReview(payload){
   }
 
   done.onclick = async ()=>{
-    // Collect decisions
-    const approved = states.filter(s=>s.approve === true).map(s=>s.data);
-    const rejectedStates = states.filter(s=>s.approve === false);
+  // Collect decisions
+  const approved = states.filter(s=>s.approve === true).map(s=>s.data);
+  const rejectedStates = states.filter(s=>s.approve === false);
 
-    if (!approved.length && !rejectedStates.length){
-      alert("Please approve or reject at least one item before submitting.");
-      return;
+  if (!approved.length && !rejectedStates.length){
+    alert("Please approve or reject at least one item before submitting.");
+    return;
+  }
+
+  done.disabled = true;
+  done.textContent = "Submitting…";
+
+  // --- Make sure the parent shop doc exists (prevents "failed to save" on some rules) ---
+  await ensureShopDoc(payload.shop);
+
+  // ---------- SAVE APPROVED ITEMS (Firestore) ----------
+let saveErrors = [];
+
+
+
+for (const it of approved){
+  try{
+    const rec = {
+        id: String(it.id || "").trim(),
+        shop: String(payload.shop || "").trim(),
+        category: String(it.category || 'Other').trim(),
+        name: String(it.name || '').trim(),
+        price: Number(it.price || 0),
+        desc: String(it.desc || ''),
+        images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
+        createdAt: serverTimestamp()
+      };
+
+      // Basic sanity checks
+      if (!rec.id){ throw new Error('missing id'); }
+      if (!rec.name){ rec.name = 'Untitled'; }
+      if (!Array.isArray(rec.images)){ rec.images = []; }
+
+      const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", rec.id);
+      await setDoc(ref, rec, { merge: true });
+    }catch(e){
+      console.error('Save approved failed for', it?.id, e);
+      saveErrors.push(it?.id || '(unknown)');
+    }
+  }
+
+  // ---------- PREP REJECTED: MAKE SMALL PREVIEW THEN DELETE STORAGE ----------
+  const rejected = [];
+  for (const stRec of rejectedStates){
+    const it = stRec.data;
+    let previewDataUrl = null;
+    const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
+    if (firstImg){
+      previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
     }
 
-    done.disabled = true;
-    done.textContent = "Submitting…";
-
-    // ---------- SAVE APPROVED ITEMS (Firestore) ----------
-    let saveErrors = [];
-    for (const it of approved){
-      try{
-        const rec = {
-          id: it.id,
-          shop: payload.shop,
-          category: it.category || 'Other',
-          name: it.name || '',
-          price: Number(it.price || 0),
-          desc: it.desc || '',
-          images: Array.isArray(it.images) ? it.images : [],
-          createdAt: serverTimestamp()
-        };
-        const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
-        await setDoc(ref, rec, { merge: true });
-      }catch(e){
-        console.error('Save approved failed for', it.id, e);
-        saveErrors.push(it.id);
-      }
+    // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
+    try{
+      const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
+      const listing = await listAll(folder);
+      await Promise.all(listing.items.map(obj => deleteObject(obj)));
+    }catch(e){
+      console.warn('Delete rejected images failed for', it?.id, e);
     }
 
-    // ---------- PREP REJECTED: MAKE SMALL PREVIEW THEN DELETE STORAGE ----------
-    const rejected = [];
-    for (const stRec of rejectedStates){
-      const it = stRec.data;
-      let previewDataUrl = null;
-      const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
-      if (firstImg){
-        previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
-      }
+    rejected.push({
+      ...it,
+      reason: stRec.reason || 'Rejected',
+      // embed small preview so results page can still show the image
+      previewDataUrl: previewDataUrl || null
+    });
+  }
 
-      // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
-      try{
-        const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
-        const listing = await listAll(folder);
-        await Promise.all(listing.items.map(obj => deleteObject(obj)));
-      }catch(e){
-        console.warn('Delete rejected images failed for', it.id, e);
-      }
-
-      rejected.push({
-        ...it,
-        reason: stRec.reason || 'Rejected',
-        // embed small preview so results page can still show the image
-        previewDataUrl: previewDataUrl || null
-      });
-    }
-
-    // ---------- MAKE RESULT SHORTLINK (with TTL metadata) ----------
-    const result = {
-      type: 'result',
-      page: PAGE_KEY,
-      shop: payload.shop,
-      approved,
-      rejected,
-      createdAt: serverTimestamp(),
-      expiresInSec: 86400  // 24 hours (set Firestore TTL on createdAt or a separate expireAt if you prefer)
-    };
-    const id2 = await putShort(result);
-
-    // ---------- CLEAR CACHES THEN REFRESH SHOPS & CATEGORIES SILENTLY ----------
-    clearShopCaches(payload.shop);
-    await renderShops();
-    await renderCategories();
-
-    // ---------- WhatsApp notify shop owner ----------
-    const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
-    const link = `${location.origin}${location.pathname}?result=${id2}`;
-    const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
-    if (shopPhone) {
-      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
-    } else {
-      alert("Result link:\n" + link);
-    }
-
-    if (saveErrors.length){
-      alert("Some approved items failed to save: " + saveErrors.join(', '));
-    }
-
-    // ---------- AUTO-OPEN SHOP WITH THE APPROVED ITEM'S CATEGORY ----------
-    const firstApproved = approved[0] || null;
-    closeDrawer();
-    toast("Review submitted.");
-
-    if(firstApproved){
-      const shopObj = SHOPS.find(s=>s.name===payload.shop);
-      if (shopObj){
-        jumpToAdId = firstApproved.id;
-        currentCategory = firstApproved.category;
-        openShop(shopObj);
-      }
-    }
+  // ---------- MAKE RESULT SHORTLINK (with TTL metadata) ----------
+  const result = {
+    type: 'result',
+    page: PAGE_KEY,
+    shop: payload.shop,
+    approved,
+    rejected,
+    createdAt: serverTimestamp(),
+    expiresInSec: 86400  // 24 hours (works once you enable TTL policy on this collection)
   };
+  const id2 = await putShort(result);
+
+  // ---------- CLEAR CACHES THEN REFRESH SHOPS & CATEGORIES SILENTLY ----------
+  clearShopCaches(payload.shop);
+  await renderShops();
+  await renderCategories();
+
+  // ---------- WhatsApp notify shop owner ----------
+  const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
+  const link = `${location.origin}${location.pathname}?result=${id2}`;
+  const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
+  if (shopPhone) {
+    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
+  } else {
+    alert("Result link:\n" + link);
+  }
+
+  if (saveErrors.length){
+    alert("Some approved items failed to save: " + saveErrors.join(', '));
+  }
+
+  // ---------- AUTO-OPEN SHOP WITH THE APPROVED ITEM'S CATEGORY ----------
+  const firstApproved = approved[0] || null;
+  closeDrawer();
+  toast("Review submitted.");
+
+  if(firstApproved){
+    const shopObj = SHOPS.find(s=>s.name===payload.shop);
+    if (shopObj){
+      jumpToAdId = firstApproved.id;
+      currentCategory = firstApproved.category;
+      openShop(shopObj);
+    }
+  }
+};
 
   const containerHost = itemDetail.querySelector('.item-detail');
   containerHost.innerHTML = '';
