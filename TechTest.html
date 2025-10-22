@@ -642,6 +642,44 @@ function toast(msg){
   clearTimeout(toastEl._t);
   toastEl._t = setTimeout(()=> toastEl.classList.remove('show'), 1600);
 }
+  
+// Create a small JPEG preview (max width 480px) from a remote URL as data:URL
+async function urlToSmallPreviewDataURL(url){
+  try{
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+
+    // Read blob as data URL (safe for canvas)
+    const dataUrl = await new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+
+    // Draw to canvas and compress
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise((r, j)=>{ img.onload = r; img.onerror = j; });
+
+    const MAX_W = 480;
+    const scale = img.width > MAX_W ? (MAX_W / img.width) : 1;
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+
+    // Quality ~0.7 keeps it small (typically <80KB)
+    return canvas.toDataURL('image/jpeg', 0.7);
+  }catch(e){
+    console.warn('urlToSmallPreviewDataURL failed', e);
+    return null;
+  }
+}
 
 /* Ghana phone normalize */
 function normalizeGhanaNumber(input){
@@ -665,7 +703,20 @@ const CACHE = {
 };
 const saveCache = (k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
 const loadCache = (k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
-const clearShopCaches = (shop)=>{ localStorage.removeItem(CACHE.shopItems(shop)); localStorage.removeItem(CACHE.cats); localStorage.removeItem(CACHE.shops); };
+const clearShopCaches = (shop)=>{
+  // shop items cache
+  localStorage.removeItem(CACHE.shopItems(shop));
+  // global counts
+  localStorage.removeItem(CACHE.cats);
+  localStorage.removeItem(CACHE.shops);
+  // ALL category item caches
+  try{
+    const keys = Object.keys(localStorage);
+    keys.forEach(k=>{
+      if (k.startsWith('tk_cat_')) localStorage.removeItem(k);
+    });
+  }catch{}
+};
 
 /* ===== Categories & Items ===== */
 async function countByCategory(){
@@ -1465,7 +1516,6 @@ async function openReview(payload){
       return;
     }
 
-    // Disable button to prevent double-click
     done.disabled = true;
     done.textContent = "Submitting…";
 
@@ -1491,17 +1541,17 @@ async function openReview(payload){
       }
     }
 
-    // ---------- PREP REJECTED: CAPTURE IMAGES AS DATA URLS, THEN DELETE FROM STORAGE ----------
+    // ---------- PREP REJECTED: MAKE SMALL PREVIEW THEN DELETE STORAGE ----------
     const rejected = [];
     for (const stRec of rejectedStates){
       const it = stRec.data;
-      const imgs = Array.isArray(it.images) ? it.images : [];
-      const localImages = [];
-      for (const u of imgs){
-        const d = await urlToDataURL(u);
-        if (d) localImages.push(d);
+      let previewDataUrl = null;
+      const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
+      if (firstImg){
+        previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
       }
 
+      // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
       try{
         const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
         const listing = await listAll(folder);
@@ -1513,12 +1563,21 @@ async function openReview(payload){
       rejected.push({
         ...it,
         reason: stRec.reason || 'Rejected',
-        localImages
+        // embed small preview so results page can still show the image
+        previewDataUrl: previewDataUrl || null
       });
     }
 
-    // ---------- MAKE RESULT SHORTLINK ----------
-    const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
+    // ---------- MAKE RESULT SHORTLINK (with TTL metadata) ----------
+    const result = {
+      type: 'result',
+      page: PAGE_KEY,
+      shop: payload.shop,
+      approved,
+      rejected,
+      createdAt: serverTimestamp(),
+      expiresInSec: 86400  // 24 hours (set Firestore TTL on createdAt or a separate expireAt if you prefer)
+    };
     const id2 = await putShort(result);
 
     // ---------- CLEAR CACHES THEN REFRESH SHOPS & CATEGORIES SILENTLY ----------
@@ -1536,12 +1595,11 @@ async function openReview(payload){
       alert("Result link:\n" + link);
     }
 
-    // If any approved item failed to save, let admin know (but we still proceed)
     if (saveErrors.length){
       alert("Some approved items failed to save: " + saveErrors.join(', '));
     }
 
-    // ---------- AUTO-OPEN SHOP WITH CATEGORY SELECTED ----------
+    // ---------- AUTO-OPEN SHOP WITH THE APPROVED ITEM'S CATEGORY ----------
     const firstApproved = approved[0] || null;
     closeDrawer();
     toast("Review submitted.");
@@ -1587,14 +1645,17 @@ async function openResult(payload){
   if (!(payload.approved || []).length) listA.innerHTML = "<p>No approved items.</p>";
   secA.appendChild(listA);
 
-  // ---- Rejected (show embedded images if present) ----
+  // ---- Rejected (show embedded previews if present) ----
   const secR = document.createElement('div');
   secR.style.marginTop = '10px';
   secR.innerHTML = `<div class="section-title">Rejected</div>`;
   const listR = document.createElement('div');
   listR.className = 'items-grid';
   (payload.rejected || []).forEach(ad=>{
-    const imgs = (ad.localImages && ad.localImages.length) ? ad.localImages : (ad.images || []);
+    // prefer small embedded preview, then normal images, then placeholder
+    const imgs = (ad.previewDataUrl) ? [ad.previewDataUrl]
+               : (ad.localImages && ad.localImages.length) ? ad.localImages
+               : (ad.images || []);
     const first = imgs[0] || 'https://via.placeholder.com/600x400?text=Image';
     const card = document.createElement('div');
     card.className='item-card';
