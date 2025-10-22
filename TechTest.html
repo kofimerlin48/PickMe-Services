@@ -1546,44 +1546,48 @@ async function openReview(payload){
   done.disabled = true;
   done.textContent = "Submitting…";
 
-  // --- Make sure the parent shop doc exists (prevents 'invalid reference' errors) ---
-  if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()) {
-    alert("Cannot save: missing shop name in payload.");
-    done.disabled = false;
-    done.textContent = "Submit Review";
-    return;
-  }
+  // --- Ensure the parent shop doc exists BEFORE writing into subcollections ---
+if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()) {
+  alert("Cannot save: missing shop name in payload.");
+  done.disabled = false;
+  done.textContent = "Submit Review";
+  return;
+}
 
+const cleanShopName = payload.shop.trim();
+
+try {
+  // ✅ Creates or updates: Tech&Gadgets/Shops/{shopName}
+  await ensureShopDoc(cleanShopName);
+} catch (e) {
+  console.warn('[ensureShopDoc] failed', e);
+}
+
+let saveErrors = [];
+for (const it of approved) {
   try {
-    await ensureShopDoc(payload.shop.trim());
+    const rec = {
+      id: String(it.id || "").trim(),
+      shop: cleanShopName,
+      category: String(it.category || 'Other').trim(),
+      name: String(it.name || 'Untitled').trim(),
+      price: Number(it.price || 0),
+      desc: String(it.desc || ''),
+      images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
+      createdAt: serverTimestamp()
+    };
+
+    if (!rec.id) throw new Error("missing id");
+
+    // ✅ CORRECT path: Tech&Gadgets/Shops/{shopName}/items/{rec.id}
+    const ref = doc(db, PAGE_KEY, "Shops", cleanShopName, "items", rec.id);
+    await setDoc(ref, rec, { merge: true });
+
   } catch (e) {
-    console.warn('[ensureShopDoc] failed', e);
+    console.error('Save approved failed for', it?.id, e);
+    saveErrors.push(it?.id || '(unknown)');
   }
-
-  let saveErrors = [];
-  for (const it of approved) {
-    try {
-      const rec = {
-        id: String(it.id || "").trim(),
-        shop: String(payload.shop || "").trim(),
-        category: String(it.category || 'Other').trim(),
-        name: String(it.name || 'Untitled').trim(),
-        price: Number(it.price || 0),
-        desc: String(it.desc || ''),
-        images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
-        createdAt: serverTimestamp()
-      };
-
-      if (!rec.id) throw new Error("missing id");
-
-      const ref = doc(db, PAGE_KEY, "Shops", rec.shop, "items", rec.id);
-      await setDoc(ref, rec, { merge: true });
-
-    } catch (e) {
-      console.error('Save approved failed for', it?.id, e);
-      saveErrors.push(it?.id || '(unknown)');
-    }
-  }
+}
 
   // Convert rejected to include small previews & delete original storage
   const rejected = [];
