@@ -1471,70 +1471,60 @@ async function openReview(payload){
 
     // ---------- SAVE APPROVED ITEMS (Firestore) ----------
     let saveErrors = [];
-    if (approved.length){
-      for (const it of approved){
-        try{
-          // Validate essentials so Firestore write won't crash
-          const rec = {
-            id: it.id,
-            shop: payload.shop,
-            category: it.category || 'Other',
-            name: it.name || '',
-            price: Number(it.price || 0),
-            desc: it.desc || '',
-            images: Array.isArray(it.images) ? it.images : [],
-            createdAt: serverTimestamp()
-          };
-          const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
-          await setDoc(ref, rec, { merge: true });
-        }catch(e){
-          console.error('Save approved failed for', it.id, e);
-          saveErrors.push(it.id);
-        }
+    for (const it of approved){
+      try{
+        const rec = {
+          id: it.id,
+          shop: payload.shop,
+          category: it.category || 'Other',
+          name: it.name || '',
+          price: Number(it.price || 0),
+          desc: it.desc || '',
+          images: Array.isArray(it.images) ? it.images : [],
+          createdAt: serverTimestamp()
+        };
+        const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
+        await setDoc(ref, rec, { merge: true });
+      }catch(e){
+        console.error('Save approved failed for', it.id, e);
+        saveErrors.push(it.id);
       }
     }
 
     // ---------- PREP REJECTED: CAPTURE IMAGES AS DATA URLS, THEN DELETE FROM STORAGE ----------
     const rejected = [];
-    if (rejectedStates.length){
-      for (const st of rejectedStates){
-        const it = st.data;
-        const imgs = Array.isArray(it.images) ? it.images : [];
-        // Turn each remote URL into a data URL so we can delete storage but still show in results
-        const localImages = [];
-        for (const u of imgs){
-          const d = await urlToDataURL(u);
-          if (d) localImages.push(d);
-        }
-
-        // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
-        try{
-          const folder = sRef(st$1, `${PAGE_KEY}/${payload.shop}/${it.id}/`); // (we'll fix st$1 below)
-        }catch(e){ /* placeholder */ }
-        // NOTE: We'll use the real storage ref variable 'st' (already declared at top)
-        try{
-          const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
-          const listing = await listAll(folder);
-          await Promise.all(listing.items.map(obj => deleteObject(obj)));
-        }catch(e){
-          console.warn('Delete rejected images failed for', it.id, e);
-        }
-
-        rejected.push({
-          ...it,
-          reason: st.reason || 'Rejected',
-          // attach embedded images so the results page can still display them
-          localImages
-        });
+    for (const stRec of rejectedStates){
+      const it = stRec.data;
+      const imgs = Array.isArray(it.images) ? it.images : [];
+      const localImages = [];
+      for (const u of imgs){
+        const d = await urlToDataURL(u);
+        if (d) localImages.push(d);
       }
+
+      try{
+        const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
+        const listing = await listAll(folder);
+        await Promise.all(listing.items.map(obj => deleteObject(obj)));
+      }catch(e){
+        console.warn('Delete rejected images failed for', it.id, e);
+      }
+
+      rejected.push({
+        ...it,
+        reason: stRec.reason || 'Rejected',
+        localImages
+      });
     }
 
     // ---------- MAKE RESULT SHORTLINK ----------
     const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
     const id2 = await putShort(result);
 
-    // ---------- CLEAR CACHES SO NEW APPROVALS APPEAR ----------
+    // ---------- CLEAR CACHES THEN REFRESH SHOPS & CATEGORIES SILENTLY ----------
     clearShopCaches(payload.shop);
+    await renderShops();
+    await renderCategories();
 
     // ---------- WhatsApp notify shop owner ----------
     const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
@@ -1551,9 +1541,19 @@ async function openReview(payload){
       alert("Some approved items failed to save: " + saveErrors.join(', '));
     }
 
-    // Close panel
+    // ---------- AUTO-OPEN SHOP WITH CATEGORY SELECTED ----------
+    const firstApproved = approved[0] || null;
     closeDrawer();
     toast("Review submitted.");
+
+    if(firstApproved){
+      const shopObj = SHOPS.find(s=>s.name===payload.shop);
+      if (shopObj){
+        jumpToAdId = firstApproved.id;
+        currentCategory = firstApproved.category;
+        openShop(shopObj);
+      }
+    }
   };
 
   const containerHost = itemDetail.querySelector('.item-detail');
