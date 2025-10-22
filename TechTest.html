@@ -1552,33 +1552,61 @@ async function openReview(payload){
   // ---------- SAVE APPROVED ITEMS (Firestore) ----------
 let saveErrors = [];
 
+// Guard: payload.shop must exist
+if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()){
+  alert("Cannot save: missing shop name in payload.");
+  done.disabled = false;
+  done.textContent = "Submit Review";
+  return;
+}
 
+// Make sure parent shop doc exists (some rules require this for subcollection writes)
+try {
+  await ensureShopDoc(payload.shop.trim());
+} catch (e) {
+  console.warn('[ensureShopDoc] failed', e);
+}
 
+// Save each approved item under: Tech&Gadgets / Shops / {shop} / items / {itemId}
 for (const it of approved){
   try{
+    // Normalize & validate fields
     const rec = {
-        id: String(it.id || "").trim(),
-        shop: String(payload.shop || "").trim(),
-        category: String(it.category || 'Other').trim(),
-        name: String(it.name || '').trim(),
-        price: Number(it.price || 0),
-        desc: String(it.desc || ''),
-        images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
-        createdAt: serverTimestamp()
-      };
+      id: String(it.id || "").trim(),
+      shop: String(payload.shop || "").trim(),
+      category: String(it.category || 'Other').trim(),
+      name: String(it.name || 'Untitled').trim(),
+      price: Number(it.price || 0),
+      desc: String(it.desc || ''),
+      images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
+      createdAt: serverTimestamp()
+    };
 
-      // Basic sanity checks
-      if (!rec.id){ throw new Error('missing id'); }
-      if (!rec.name){ rec.name = 'Untitled'; }
-      if (!Array.isArray(rec.images)){ rec.images = []; }
-
-      const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", rec.id);
-      await setDoc(ref, rec, { merge: true });
-    }catch(e){
-      console.error('Save approved failed for', it?.id, e);
-      saveErrors.push(it?.id || '(unknown)');
+    if (!rec.id){
+      throw new Error("missing id");
     }
+
+    // Build doc ref and write
+    const ref = doc(db, PAGE_KEY, "Shops", rec.shop, "items", rec.id);
+    // Helpful debug in console:
+    console.log('[SAVE]', { path: `${PAGE_KEY}/Shops/${rec.shop}/items/${rec.id}`, rec });
+
+    await setDoc(ref, rec, { merge: true });
+
+    // Optional: read-after-write sanity check (kept lightweight)
+    // const check = await getDoc(ref);
+    // if (!check.exists()) throw new Error("write verified but doc not found");
+
+  }catch(e){
+    console.error('Save approved failed for', it?.id, e);
+    saveErrors.push(`${it?.id || '(unknown)'} → ${e?.message || e}`);
   }
+}
+
+// If any failed, show full error list (ids + reasons)
+if (saveErrors.length){
+  alert("Some approved items failed to save:\n\n" + saveErrors.join('\n'));
+}
 
   // ---------- PREP REJECTED: MAKE SMALL PREVIEW THEN DELETE STORAGE ----------
   const rejected = [];
