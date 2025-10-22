@@ -471,8 +471,8 @@ const firebaseConfig = {
   appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
 };
 const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const st  = getStorage(app);
+const db = getFirestore(app);
+const st = getStorage(app);
 
 /* ===== Constants ===== */
 const PAGE_KEY = "Tech&Gadgets";
@@ -480,6 +480,7 @@ const PICKME_WHATSAPP = "233534742142";
 const GLOBAL_ADMIN_CODE = "999888";
 const SHOP_ADMIN_DEFAULT_CODE = "123456";
 const MAX_IMAGES = 5;
+const SHOPS_SUB_COL = "shops";
 
 /* ===== Shops (hardcoded) ===== */
 const SHOPS = [
@@ -503,25 +504,19 @@ const SHOPS = [
 
 /* ===== Categories (global) ===== */
 const CATEGORIES = [
-  { id:"Phones", img:"https://via.placeholder.com/200?text=Phones" },
-  { id:"Computers & Laptops", img:"https://via.placeholder.com/200?text=Laptops" },
-  { id:"Printers & Scanners", img:"https://via.placeholder.com/200?text=Printers" },
-  { id:"Accessories", img:"https://via.placeholder.com/200?text=Accessories" },
-  { id:"Security & Surveillance", img:"https://via.placeholder.com/200?text=Security" },
-  { id:"Networking", img:"https://via.placeholder.com/200?text=Networking" },
-  { id:"Gaming", img:"https://via.placeholder.com/200?text=Gaming" },
-  { id:"Software", img:"https://via.placeholder.com/200?text=Software" },
-  { id:"Cameras & Photo", img:"https://via.placeholder.com/200?text=Cameras" }
+  { id: "Phones", img: "https://via.placeholder.com/200?text=Phones" },
+  { id: "Computers & Laptops", img: "https://via.placeholder.com/200?text=Laptops" },
+  { id: "Printers & Scanners", img: "https://via.placeholder.com/200?text=Printers" },
+  { id: "Accessories", img: "https://via.placeholder.com/200?text=Accessories" },
+  { id: "Security & Surveillance", img: "https://via.placeholder.com/200?text=Security" },
+  { id: "Networking", img: "https://via.placeholder.com/200?text=Networking" },
+  { id: "Gaming", img: "https://via.placeholder.com/200?text=Gaming" },
+  { id: "Software", img: "https://via.placeholder.com/200?text=Software" },
+  { id: "Cameras & Photo", img: "https://via.placeholder.com/200?text=Cameras" }
 ];
 
-/* ===== Firestore paths =====
- Tech & Gadgets
-   - Links/items/{id} -> { payload, createdAt }
-   - Shops/{shopName}/items/{adId} -> ad doc
-   - Shops/{shopName}/customers/{phoneE164}
-   - Numbers/items/{phoneE164}
-*/
-const linksCol   = collection(db, PAGE_KEY, "Links", "items");
+/* ===== Firestore paths ===== */
+const linksCol = collection(db, PAGE_KEY, "Links", "items");
 const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
 
 /* ===== DOM ===== */
@@ -529,11 +524,8 @@ const tabs = document.querySelectorAll('.main-tab');
 const categoriesView = document.getElementById('categoriesView');
 const shopsView = document.getElementById('shopsView');
 const categoriesGrid = document.getElementById('categoriesGrid');
-
 const shopsGrid = document.getElementById('shopsGrid');
 const globalSearch = document.getElementById('globalSearch');
-
-/* drawer */
 const drawer = document.getElementById('drawer');
 const drawerClose = document.getElementById('drawerClose');
 const shopBanner = document.getElementById('shopBanner');
@@ -544,43 +536,34 @@ const shopSloganEl = document.getElementById('shopSlogan');
 const shopGallery = document.getElementById('shopGallery');
 const shopTabs = document.getElementById('shopTabs');
 const shopItemsGrid = document.getElementById('shopItemsGrid');
-
-/* category page in drawer */
 const catPage = document.getElementById('catPage');
 const catPageTitle = document.getElementById('catPageTitle');
 const catPageSearch = document.getElementById('catPageSearch');
 const catPageGrid = document.getElementById('catPageGrid');
-
-/* item detail */
 const itemDetail = document.getElementById('itemDetail');
 const itemSlider = document.getElementById('itemSlider');
-const itemDots   = document.getElementById('itemDots');
-const detailTitle= document.getElementById('detailTitle');
-const detailPrice= document.getElementById('detailPrice');
+const itemDots = document.getElementById('itemDots');
+const detailTitle = document.getElementById('detailTitle');
+const detailPrice = document.getElementById('detailPrice');
 const detailDesc = document.getElementById('detailDesc');
 const detailPostedBy = document.getElementById('detailPostedBy');
 const callBtn = document.getElementById('callBtn');
-const waBtn   = document.getElementById('waBtn');
+const waBtn = document.getElementById('waBtn');
 const viewShopBtn = document.getElementById('viewShopBtn');
-
-/* modals */
 const codeModal = document.getElementById('codeModal');
 const codeInput = document.getElementById('codeInput');
 const codeOk = document.getElementById('codeOk');
 const codeCancel = document.getElementById('codeCancel');
 const codeClose = document.getElementById('codeClose');
-
 const adminOptionsModal = document.getElementById('adminOptionsModal');
 const optAdd = document.getElementById('optAdd');
 const optDelete = document.getElementById('optDelete');
 const adminOptClose = document.getElementById('adminOptClose');
 const adminOptCancel = document.getElementById('adminOptCancel');
-
 const catChooseModal = document.getElementById('catChooseModal');
 const catChooseGrid = document.getElementById('catChooseGrid');
 const catChooseClose = document.getElementById('catChooseClose');
 const catChooseCancel = document.getElementById('catChooseCancel');
-
 const draftModal = document.getElementById('draftModal');
 const draftClose = document.getElementById('draftClose');
 const draftTitle = document.getElementById('draftTitle');
@@ -594,26 +577,23 @@ const addMoreBtn = document.getElementById('addMoreBtn');
 const clearFormBtn = document.getElementById('clearFormBtn');
 const submitDraftsBtn = document.getElementById('submitDraftsBtn');
 const draftList = document.getElementById('draftList');
-
 const deleteModal = document.getElementById('deleteModal');
 const deleteClose = document.getElementById('deleteClose');
 const deleteCancel = document.getElementById('deleteCancel');
 const deleteList = document.getElementById('deleteList');
-
 const numberModal = document.getElementById('numberModal');
 const waNumberInput = document.getElementById('waNumberInput');
 const numberOk = document.getElementById('numberOk');
 const numberCancel = document.getElementById('numberCancel');
 const numberClose = document.getElementById('numberClose');
 const numberError = document.getElementById('numberError');
-
 const reviewCodeModal = document.getElementById('reviewCodeModal');
 const reviewCodeInput = document.getElementById('reviewCodeInput');
 const reviewCodeOk = document.getElementById('reviewCodeOk');
 const reviewCodeClose = document.getElementById('reviewCodeClose');
 const reviewCodeCancel = document.getElementById('reviewCodeCancel');
-
 const toastEl = document.getElementById('toast');
+const catBackBtn = document.getElementById('catBackBtn');
 
 /* ===== State ===== */
 let currentShop = null;
@@ -622,65 +602,72 @@ let jumpToAdId = null;
 let currentCategory = null;
 let pendingAction = null;
 let pendingContactFor = null;
-let drafts = [];      // {id, cat, name, price, desc, files[]}
+let drafts = []; // {id, cat, name, price, desc, files[]}
 let filesBuffer = []; // File[] (current add form)
 let userPhoneCache = null;
 let reviewPayloadPending = null;
 
 /* ===== Helpers ===== */
-const show = el => el.style.display = '';
-const hide = el => el.style.display = 'none';
-const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-const money = n => Number(n||0);
-const fmtPrice = n => `GH₵ ${Number(n||0).toFixed(2).replace(/\.00$/,'')}`;
-const isExpired = iso => iso ? (new Date() > new Date(iso+"T23:59:59")) : false;
-const makeId = () => (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase();
+const show = el => el && (el.style.display = '');
+const hide = el => el && (el.style.display = 'none');
+const escapeHtml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+const money = n => Number(n || 0);
+const fmtPrice = n => `GH₵ ${Number(n || 0).toFixed(2).replace(/\.00$/, '')}`;
+const isExpired = iso => iso ? (new Date() > new Date(iso + "T23:59:59")) : false;
+const makeId = () => (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase();
 
-function toast(msg){
-  toastEl.textContent = msg;
-  toastEl.classList.add('show');
-  clearTimeout(toastEl._t);
-  toastEl._t = setTimeout(()=> toastEl.classList.remove('show'), 1600);
+function toast(msg) {
+  if (toastEl) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 1600);
+  }
 }
-  
-// Create a small JPEG preview (max width 480px) from a remote URL as data:URL
-async function urlToSmallPreviewDataURL(url){
-  try{
+
+async function urlToSmallPreviewDataURL(url) {
+  try {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
     const blob = await res.blob();
-
-    // Use an object URL (fewer cross-origin issues than FileReader for remote images)
     const img = document.createElement('img');
     img.src = URL.createObjectURL(blob);
     await new Promise(r => img.onload = r);
-
     const canvas = document.createElement('canvas');
     const scale = Math.min(480 / img.width, 1);
     canvas.width = Math.max(1, Math.round(img.width * scale));
     canvas.height = Math.max(1, Math.round(img.height * scale));
-
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    // Clean up the temporary object URL
     URL.revokeObjectURL(img.src);
-
-    // Compress to jpeg ~0.7 quality
     return canvas.toDataURL('image/jpeg', 0.7);
-  }catch(e){
+  } catch (e) {
     console.warn('preview error', e);
     return null;
   }
 }
 
-// Ensure the parent shop doc exists (some security rules require this for subcollection writes)
-async function ensureShopDoc(shopName){
-  try{
-    const ref = doc(db, PAGE_KEY, "Shops", shopName);
+async function ensureShopsContainer() {
+  try {
+    const ref = doc(db, PAGE_KEY, "Shops");
     const snap = await getDoc(ref);
-    const meta = SHOPS.find(s=>s.name===shopName) || {};
-    if (!snap.exists()){
+    if (!snap.exists()) {
+      await setDoc(ref, { createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    } else {
+      await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
+    }
+  } catch (e) {
+    console.warn('[ensureShopsContainer]', e);
+  }
+}
+
+async function ensureShopDoc(shopName) {
+  await ensureShopsContainer();
+  try {
+    const ref = doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName);
+    const snap = await getDoc(ref);
+    const meta = SHOPS.find(s => s.name === shopName) || {};
+    if (!snap.exists()) {
       await setDoc(ref, {
         name: shopName,
         slogan: meta.slogan || "",
@@ -690,29 +677,27 @@ async function ensureShopDoc(shopName){
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
-    }else{
+    } else {
       await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
     }
-  }catch(e){
+  } catch (e) {
     console.warn('[ensureShopDoc]', e);
   }
 }
 
-/* Ghana phone normalize */
-function normalizeGhanaNumber(input){
-  let s = String(input||'').trim().replace(/[\s\-]/g,'');
-  if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
-  if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
-  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
-  if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
-  const d = s.replace(/\D/g,'');
-  if (d.startsWith('233')) return { e164:'+'+d, wa:d };
-  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
+function normalizeGhanaNumber(input) {
+  let s = String(input || '').trim().replace(/[\s\-]/g, '');
+  if (s.startsWith('+233')) return { e164: s, wa: s.slice(1) };
+  if (s.startsWith('233')) return { e164: '+' + s, wa: s };
+  if (/^0\d{9}$/.test(s)) return { e164: '+233' + s.slice(1), wa: '233' + s.slice(1) };
+  if (/^\d{9}$/.test(s)) return { e164: '+233' + s, wa: '233' + s };
+  const d = s.replace(/\D/g, '');
+  if (d.startsWith('233')) return { e164: '+' + d, wa: d };
+  if (d.length === 10 && d.startsWith('0')) return { e164: '+233' + d.slice(1), wa: '233' + d.slice(1) };
   return null;
 }
 
 /* ===== Cache keys ===== */
-/* New prefix ensures old 'tk_' caches don’t conflict after PAGE_KEY rename */
 const CACHE_PREFIX = "tg_v1_";
 const CACHE = {
   cats: `${CACHE_PREFIX}cats_counts`,
@@ -720,652 +705,693 @@ const CACHE = {
   shopItems: shop => `${CACHE_PREFIX}shop_${shop}_items`,
   catItems: cat => `${CACHE_PREFIX}cat_${cat}_items`
 };
-const saveCache = (k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
-const loadCache = (k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
-const clearShopCaches = (shop)=>{
-  // remove new caches for this shop + global
-  try{
+const saveCache = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const loadCache = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const clearShopCaches = (shop) => {
+  try {
     localStorage.removeItem(CACHE.shopItems(shop));
     localStorage.removeItem(CACHE.cats);
     localStorage.removeItem(CACHE.shops);
-    // remove all category caches for new prefix
-    Object.keys(localStorage).forEach(k=>{
+    Object.keys(localStorage).forEach(k => {
       if (k.startsWith(`${CACHE_PREFIX}cat_`)) localStorage.removeItem(k);
     });
-    // also purge any legacy 'tk_' caches so the UI can’t read stale data
-    Object.keys(localStorage).forEach(k=>{
-      if (k.startsWith('tk_shop_') || k.startsWith('tk_cat_') || k === 'tk_cats_counts' || k === 'tk_shops_counts'){
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('tk_shop_') || k.startsWith('tk_cat_') || k === 'tk_cats_counts' || k === 'tk_shops_counts') {
         localStorage.removeItem(k);
       }
     });
-  }catch{}
+  } catch {}
 };
 
 /* ===== Categories & Items ===== */
-async function countByCategory(){
+async function countByCategory() {
   const cached = loadCache(CACHE.cats);
   if (cached) return cached;
-
   const out = {};
-  await Promise.all(SHOPS.map(async sh=>{
+  await Promise.all(SHOPS.map(async sh => {
     if (isExpired(sh.expiry)) return;
-    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
     const snap = await getDocs(col);
-    snap.forEach(d=>{
-      const it = d.data(); const cat = it.category||"Other";
-      out[cat] = (out[cat]||0)+1;
+    snap.forEach(d => {
+      const it = d.data();
+      const cat = it.category || "Other";
+      out[cat] = (out[cat] || 0) + 1;
     });
   }));
   saveCache(CACHE.cats, out);
   return out;
 }
-function renderCategoriesGrid(counts){
-  categoriesGrid.innerHTML = "";
-  CATEGORIES.forEach(c=>{
-    const card = document.createElement('article');
-    card.className = "cat-card";
-    card.innerHTML = `
-      <div class="cat-thumb">${c.img?`<img src="${c.img}" alt="${escapeHtml(c.id)}">`:''}</div>
-      <div class="cat-info">
-        <div class="cat-title">${escapeHtml(c.id)}</div>
-        <div class="cat-sub">${counts[c.id]||0} adverts</div>
-      </div>
-      <div class="cat-arrow">&gt;</div>
-    `;
-    card.addEventListener('click', ()=> openCategory(c.id));
-    categoriesGrid.appendChild(card);
-  });
+
+function renderCategoriesGrid(counts) {
+  if (categoriesGrid) {
+    categoriesGrid.innerHTML = "";
+    CATEGORIES.forEach(c => {
+      const card = document.createElement('article');
+      card.className = "cat-card";
+      card.innerHTML = `
+        <div class="cat-thumb">${c.img ? `<img src="${c.img}" alt="${escapeHtml(c.id)}">` : ''}</div>
+        <div class="cat-info">
+          <div class="cat-title">${escapeHtml(c.id)}</div>
+          <div class="cat-sub">${counts[c.id] || 0} adverts</div>
+        </div>
+        <div class="cat-arrow">&gt;</div>
+      `;
+      card.addEventListener('click', () => openCategory(c.id));
+      categoriesGrid.appendChild(card);
+    });
+  }
 }
-async function fetchAllItemsInCategory(cat){
+
+async function fetchAllItemsInCategory(cat) {
   const cached = loadCache(CACHE.catItems(cat));
   if (cached) return cached;
-
   const items = [];
-  await Promise.all(SHOPS.map(async sh=>{
+  await Promise.all(SHOPS.map(async sh => {
     if (isExpired(sh.expiry)) return;
-    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
     const snap = await getDocs(col);
-    snap.forEach(d=>{ const it = d.data(); it.id = d.id; if ((it.category||'')===cat) items.push(it); });
+    snap.forEach(d => {
+      const it = d.data();
+      it.id = d.id;
+      if ((it.category || '') === cat) items.push(it);
+    });
   }));
-  items.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   saveCache(CACHE.catItems(cat), items);
   return items;
 }
-function renderItemCard(container, ad){
-  const card = document.createElement('div');
-  card.className = "item-card";
-  const firstImg = (ad.images && ad.images[0]) || "https://via.placeholder.com/600x400?text=Image";
-  card.innerHTML = `
-    <div class="item-img"><img src="${firstImg}" alt="${escapeHtml(ad.name||'Item')}"></div>
-    <div class="item-body">
-      <div class="item-price">${fmtPrice(ad.price)}</div>
-      <div class="item-desc">${escapeHtml(ad.desc||'')}</div>
-      <div class="item-shop">Posted by ${escapeHtml(ad.shop||'')}</div>
-    </div>
-  `;
-  card.addEventListener('click', ()=> openItemDetail(ad));
-  container.appendChild(card);
+
+function renderItemCard(container, ad) {
+  if (container) {
+    const card = document.createElement('div');
+    card.className = "item-card";
+    const firstImg = (ad.images && ad.images[0]) || "https://via.placeholder.com/600x400?text=Image";
+    card.innerHTML = `
+      <div class="item-img"><img src="${firstImg}" alt="${escapeHtml(ad.name || 'Item')}"></div>
+      <div class="item-body">
+        <div class="item-price">${fmtPrice(ad.price)}</div>
+        <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
+        <div class="item-shop">Posted by ${escapeHtml(ad.shop || '')}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => openItemDetail(ad));
+    container.appendChild(card);
+  }
 }
 
-/* ===== Category page opens inside drawer ===== */
-async function openCategory(cat){
+async function openCategory(cat) {
   currentCategory = cat;
-
   hide(shopBanner);
   hide(shopGallery);
   hide(itemDetail);
   show(catPage);
-
-  // Set title and search placeholder
-  catPageTitle.textContent = cat;
-  catPageTitle.style.fontSize = "20px";
-  catPageTitle.style.fontWeight = "800";
-  catPageTitle.style.textAlign = "center";
-  catPageSearch.placeholder = `Search in ${cat}…`;
-
-  // Clear previous items
-  catPageGrid.innerHTML = '';
-
-  // Open drawer
+  if (catPageTitle) catPageTitle.textContent = cat;
+  if (catPageTitle) catPageTitle.style.fontSize = "20px";
+  if (catPageTitle) catPageTitle.style.fontWeight = "800";
+  if (catPageTitle) catPageTitle.style.textAlign = "center";
+  if (catPageSearch) catPageSearch.placeholder = `Search in ${cat}…`;
+  if (catPageGrid) catPageGrid.innerHTML = '';
   openDrawer();
-
-  // ✅ Show back button only in category mode
-  catBackBtn.style.display = "block";
-
-  // ✅ Hide hamburger & close icon only for category view
-  hamburgerBtn.style.display = "none";
-  drawerClose.style.display = "none";
-
-  // Load items for the selected category
+  if (catBackBtn) catBackBtn.style.display = "block";
+  if (hamburgerBtn) hamburgerBtn.style.display = "none";
+  if (drawerClose) drawerClose.style.display = "none";
   const items = await fetchAllItemsInCategory(cat);
-
-  // Render items
   const draw = (list) => {
-    catPageGrid.innerHTML = "";
-    list.forEach(ad => renderItemCard(catPageGrid, ad));
-    if (!list.length) {
-      catPageGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Oops! No items here today.</p>`;
+    if (catPageGrid) {
+      catPageGrid.innerHTML = "";
+      list.forEach(ad => renderItemCard(catPageGrid, ad));
+      if (!list.length) {
+        catPageGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Oops! No items here today.</p>`;
+      }
     }
   };
-
   draw(items);
-
-  // Search filtering
-  catPageSearch.value = '';
-  catPageSearch.oninput = () => {
-    const q = (catPageSearch.value || '').toLowerCase();
-    const list = items.filter(ad =>
-      (ad.name || '').toLowerCase().includes(q) ||
-      (ad.desc || '').toLowerCase().includes(q) ||
-      (ad.shop || '').toLowerCase().includes(q)
-    );
-    draw(list);
-  };
+  if (catPageSearch) {
+    catPageSearch.value = '';
+    catPageSearch.oninput = () => {
+      const q = (catPageSearch.value || '').toLowerCase();
+      const list = items.filter(ad =>
+        (ad.name || '').toLowerCase().includes(q) ||
+        (ad.desc || '').toLowerCase().includes(q) ||
+        (ad.shop || '').toLowerCase().includes(q)
+      );
+      draw(list);
+    };
+  }
 }
 
-/* ===== Shops ===== */
-async function fetchShopCounts(){
+async function fetchShopCounts() {
   const cached = loadCache(CACHE.shops);
   if (cached) return cached;
   const map = {};
-  await Promise.all(SHOPS.map(async sh=>{
-    if (isExpired(sh.expiry)) { map[sh.name]=0; return; }
-    const col = collection(db, PAGE_KEY, "Shops", sh.name, "items");
+  await Promise.all(SHOPS.map(async sh => {
+    if (isExpired(sh.expiry)) { map[sh.name] = 0; return; }
+    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
     const snap = await getDocs(col);
     map[sh.name] = snap.size || 0;
   }));
   saveCache(CACHE.shops, map);
   return map;
 }
-function renderShopsGrid(countMap){
-  shopsGrid.innerHTML = "";
-  const list = SHOPS.filter(s=>!isExpired(s.expiry))
-    .sort((a,b)=> (countMap[b.name]||0)-(countMap[a.name]||0) || a.name.localeCompare(b.name));
-  list.forEach(shop=>{
-    const card = document.createElement('article');
-    card.className = "shop-card";
-    card.style.backgroundImage = `url('${shop.heroImage}')`;
-    const content = document.createElement('div');
-    content.className = "content";
-    content.innerHTML = `
-      <div>
-        <div class="shop-title">${escapeHtml(shop.name)}</div>
-        <div class="shop-slogan">${escapeHtml(shop.slogan||'')}</div>
-      </div>
-      <div class="shop-lower">
-        <p class="shop-meta">Items: ${countMap[shop.name]||0}</p>
-        <button class="btn-enter" type="button">Enter Shop</button>
-      </div>
-    `;
-    content.querySelector('.btn-enter').addEventListener('click', ()=> openShop(shop));
-    card.appendChild(content);
-    shopsGrid.appendChild(card);
-  });
-  if (!shopsGrid.children.length){
-    shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
+
+function renderShopsGrid(countMap) {
+  if (shopsGrid) {
+    shopsGrid.innerHTML = "";
+    const list = SHOPS.filter(s => !isExpired(s.expiry))
+      .sort((a, b) => (countMap[b.name] || 0) - (countMap[a.name] || 0) || a.name.localeCompare(b.name));
+    list.forEach(shop => {
+      const card = document.createElement('article');
+      card.className = "shop-card";
+      card.style.backgroundImage = `url('${shop.heroImage}')`;
+      const content = document.createElement('div');
+      content.className = "content";
+      content.innerHTML = `
+        <div>
+          <div class="shop-title">${escapeHtml(shop.name)}</div>
+          <div class="shop-slogan">${escapeHtml(shop.slogan || '')}</div>
+        </div>
+        <div class="shop-lower">
+          <p class="shop-meta">Items: ${countMap[shop.name] || 0}</p>
+          <button class="btn-enter" type="button">Enter Shop</button>
+        </div>
+      `;
+      content.querySelector('.btn-enter').addEventListener('click', () => openShop(shop));
+      card.appendChild(content);
+      shopsGrid.appendChild(card);
+    });
+    if (!shopsGrid.children.length) {
+      shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
+    }
   }
 }
 
-/* ===== Drawer ===== */
-const openDrawer = ()=>{
-  drawer.classList.add('show');
-  drawer.setAttribute('aria-hidden','false');
-  document.getElementById('shopTopActions').style.display='flex';
-};
-const closeDrawer = ()=>{
-  drawer.classList.remove('show');
-  drawer.setAttribute('aria-hidden','true');
-  document.getElementById('shopTopActions').style.display='none';
-  hide(shopBanner); hide(shopGallery); hide(itemDetail); hide(catPage);
-
-  // ✅ Hide BACK button when leaving category view
-  catBackBtn.style.display = "none";
-};
-drawerClose.addEventListener('click', closeDrawer);
-catBackBtn.addEventListener('click', () => closeDrawer());
-/* slider */
-function buildSlider(images, sliderEl, dotsEl){
-  sliderEl.innerHTML=''; dotsEl.innerHTML='';
-  if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
-  images.forEach((src,i)=>{
-    const img = document.createElement('img');
-    img.src = src; img.alt = `image-${i+1}`; img.className = 'slide'+(i===0?' active':'');
-    sliderEl.appendChild(img);
-    const dot = document.createElement('div'); dot.className = 'dot'+(i===0?' active':'');
-    dot.addEventListener('click', ()=> goTo(i)); dotsEl.appendChild(dot);
-  });
-  const left = document.createElement('div'); left.className='nav left'; left.innerHTML='&#10094;';
-  const right= document.createElement('div'); right.className='nav right'; right.innerHTML='&#10095;';
-  sliderEl.append(left,right);
-
-  let current = 0;
-  const slides = sliderEl.querySelectorAll('.slide');
-  const dots = dotsEl.querySelectorAll('.dot');
-
-  function setPos(prev,next,dir){
-    const a=slides[prev], b=slides[next];
-    b.style.transition='none'; b.style.left=(dir===1?'100%':'-100%'); b.style.opacity='1'; void b.offsetWidth;
-    a.style.transition='left .45s ease, opacity .45s ease';
-    b.style.transition='left .45s ease, opacity .45s ease';
-    a.style.left=(dir===1?'-100%':'100%'); a.style.opacity='1'; b.style.left='0';
+const openDrawer = () => {
+  if (drawer) {
+    drawer.classList.add('show');
+    drawer.setAttribute('aria-hidden', 'false');
+    if (shopTopActions) shopTopActions.style.display = 'flex';
   }
-  function goTo(n){
-    if (n===current) return;
-    const dir = n>current ? 1 : -1;
-    setPos(current,n,dir);
-    slides[current].classList.remove('active'); slides[n].classList.add('active');
-    dots[current].classList.remove('active'); dots[n].classList.add('active');
-    current=n;
+};
+
+const closeDrawer = () => {
+  if (drawer) {
+    drawer.classList.remove('show');
+    drawer.setAttribute('aria-hidden', 'true');
+    if (shopTopActions) shopTopActions.style.display = 'none';
+    hide(shopBanner);
+    hide(shopGallery);
+    hide(itemDetail);
+    hide(catPage);
+    if (catBackBtn) catBackBtn.style.display = "none";
   }
-  left.addEventListener('click', ()=> goTo((current-1+slides.length)%slides.length));
-  right.addEventListener('click',()=> goTo((current+1)%slides.length));
-  let startX=0;
-  sliderEl.addEventListener('touchstart', e=> startX=e.touches[0].clientX, {passive:true});
-  sliderEl.addEventListener('touchend', e=>{
-    const endX=e.changedTouches[0].clientX;
-    if (startX-endX>40) right.click();
-    if (endX-startX>40) left.click();
-  }, {passive:true});
+};
+
+if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+if (catBackBtn) catBackBtn.addEventListener('click', closeDrawer);
+
+function buildSlider(images, sliderEl, dotsEl) {
+  if (sliderEl && dotsEl) {
+    sliderEl.innerHTML = '';
+    dotsEl.innerHTML = '';
+    if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
+    images.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `image-${i + 1}`;
+      img.className = 'slide' + (i === 0 ? ' active' : '');
+      sliderEl.appendChild(img);
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+    const left = document.createElement('div');
+    left.className = 'nav left';
+    left.innerHTML = '&#10094;';
+    const right = document.createElement('div');
+    right.className = 'nav right';
+    right.innerHTML = '&#10095;';
+    sliderEl.append(left, right);
+
+    let current = 0;
+    const slides = sliderEl.querySelectorAll('.slide');
+    const dots = dotsEl.querySelectorAll('.dot');
+
+    function setPos(prev, next, dir) {
+      const a = slides[prev], b = slides[next];
+      b.style.transition = 'none';
+      b.style.left = (dir === 1 ? '100%' : '-100%');
+      b.style.opacity = '1';
+      void b.offsetWidth;
+      a.style.transition = 'left .45s ease, opacity .45s ease';
+      b.style.transition = 'left .45s ease, opacity .45s ease';
+      a.style.left = (dir === 1 ? '-100%' : '100%');
+      a.style.opacity = '1';
+      b.style.left = '0';
+    }
+
+    function goTo(n) {
+      if (n === current) return;
+      const dir = n > current ? 1 : -1;
+      setPos(current, n, dir);
+      slides[current].classList.remove('active');
+      slides[n].className.add('active');
+      dots[current].classList.remove('active');
+      dots[n].classList.add('active');
+      current = n;
+    }
+
+    left.addEventListener('click', () => goTo((current - 1 + slides.length) % slides.length));
+    right.addEventListener('click', () => goTo((current + 1) % slides.length));
+    let startX = 0;
+    sliderEl.addEventListener('touchstart', e => startX = e.touches[0].clientX, { passive: true });
+    sliderEl.addEventListener('touchend', e => {
+      const endX = e.changedTouches[0].clientX;
+      if (startX - endX > 40) right.click();
+      if (endX - startX > 40) left.click();
+    }, { passive: true });
+  }
 }
 
-/* item detail */
-function openItemDetail(ad){
-  hide(shopBanner); hide(shopGallery); hide(catPage); show(itemDetail);
-  buildSlider(ad.images||[], itemSlider, itemDots);
-  detailTitle.textContent = ad.name||'Item';
-  detailPrice.textContent = fmtPrice(ad.price);
-  detailPostedBy.textContent = "Posted by " + (ad.shop||'');
-  detailDesc.textContent = ad.desc||'';
+function openItemDetail(ad) {
+  hide(shopBanner);
+  hide(shopGallery);
+  hide(catPage);
+  show(itemDetail);
+  buildSlider(ad.images || [], itemSlider, itemDots);
+  if (detailTitle) detailTitle.textContent = ad.name || 'Item';
+  if (detailPrice) detailPrice.textContent = fmtPrice(ad.price);
+  if (detailPostedBy) detailPostedBy.textContent = "Posted by " + (ad.shop || '');
+  if (detailDesc) detailDesc.textContent = ad.desc || '';
   openDrawer();
-
-  callBtn.onclick = ()=> captureNumberThenProceed('call', ad);
-  waBtn.onclick   = ()=> captureNumberThenProceed('wa', ad);
-  viewShopBtn.onclick = ()=>{
+  if (callBtn) callBtn.onclick = () => captureNumberThenProceed('call', ad);
+  if (waBtn) waBtn.onclick = () => captureNumberThenProceed('wa', ad);
+  if (viewShopBtn) viewShopBtn.onclick = () => {
     jumpToAdId = ad.id || null;
-    const shopObj = SHOPS.find(s=>s.name===ad.shop);
+    const shopObj = SHOPS.find(s => s.name === ad.shop);
     if (shopObj) openShop(shopObj);
   };
 }
 
-/* shop gallery */
-async function openShop(shop){
+async function openShop(shop) {
   currentShop = shop;
   currentShopName = shop.name;
   jumpToAdId = jumpToAdId || null;
-
-  // hero banner
-  shopBanner.style.backgroundImage = `url('${shop.heroImage}')`;
-  shopNameEl.textContent = shop.name;
-  shopSloganEl.textContent = shop.slogan || '';
-
-  show(shopBanner); show(shopGallery); hide(itemDetail); hide(catPage);
-openDrawer();
-
-// ✅ Ensure hamburger and close icon are visible again for shop view
-hamburgerBtn.style.display = "grid";
-drawerClose.style.display = "grid";
-
-hamburgerBtn.onclick = ()=> promptShopCode();
-
+  if (shopBanner) shopBanner.style.backgroundImage = `url('${shop.heroImage}')`;
+  if (shopNameEl) shopNameEl.textContent = shop.name;
+  if (shopSloganEl) shopSloganEl.textContent = shop.slogan || '';
+  show(shopBanner);
+  show(shopGallery);
+  hide(itemDetail);
+  hide(catPage);
+  openDrawer();
+  if (hamburgerBtn) hamburgerBtn.style.display = "grid";
+  if (drawerClose) drawerClose.style.display = "grid";
+  if (hamburgerBtn) hamburgerBtn.onclick = () => promptShopCode();
   await renderShopTabsAndItems(shop, jumpToAdId);
   jumpToAdId = null;
 }
-async function renderShopTabsAndItems(shop, focusAdId=null){
+
+async function renderShopTabsAndItems(shop, focusAdId = null) {
   const items = await fetchShopItems(shop.name);
   const byCat = {};
-  items.forEach(it=>{
-    const c = it.category||'Other'; (byCat[c]||(byCat[c]=[])).push(it);
+  items.forEach(it => {
+    const c = it.category || 'Other';
+    (byCat[c] || (byCat[c] = [])).push(it);
   });
-
-  shopTabs.innerHTML = "";
-  const cats = Object.keys(byCat).sort((a,b)=> a.localeCompare(b));
-  cats.forEach((c,i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'main-tab'+(i===0?' active':''); btn.dataset.cat = c; btn.textContent = `${c} (${byCat[c].length})`;
-    btn.addEventListener('click', ()=>{
-      shopTabs.querySelectorAll('.main-tab').forEach(b=> b.classList.remove('active'));
-      btn.classList.add('active');
-      renderShopItems(byCat[c]);
+  if (shopTabs) {
+    shopTabs.innerHTML = "";
+    const cats = Object.keys(byCat).sort((a, b) => a.localeCompare(b));
+    cats.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'main-tab' + (i === 0 ? ' active' : '');
+      btn.dataset.cat = c;
+      btn.textContent = `${c} (${byCat[c].length})`;
+      btn.addEventListener('click', () => {
+        shopTabs.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderShopItems(byCat[c]);
+      });
+      shopTabs.appendChild(btn);
     });
-    shopTabs.appendChild(btn);
-  });
+    if (!cats.length) {
+      if (shopItemsGrid) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
+      return;
+    }
+    const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat] || []).some(it => it.id === focusAdId)) : cats[0];
+    shopTabs.querySelectorAll('.main-tab').forEach(b => b.dataset.cat === firstCat && b.classList.add('active'));
+    renderShopItems(byCat[firstCat], focusAdId);
+  }
+}
 
-  if (!cats.length){
-    shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
-    return;
-  }
-  const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat]||[]).some(it=> it.id===focusAdId)) : cats[0];
-  shopTabs.querySelectorAll('.main-tab').forEach(b=> b.dataset.cat===firstCat && b.classList.add('active'));
-  renderShopItems(byCat[firstCat], focusAdId);
-}
-function renderShopItems(list, focusAdId=null){
-  shopItemsGrid.innerHTML='';
-  list.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).forEach(ad=> renderItemCard(shopItemsGrid, ad));
-  if (!list.length) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</p>`;
-  if (focusAdId){
-    const ad = list.find(x=> x.id===focusAdId);
-    if (ad) openItemDetail(ad);
+function renderShopItems(list, focusAdId = null) {
+  if (shopItemsGrid) {
+    shopItemsGrid.innerHTML = '';
+    list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(ad => renderItemCard(shopItemsGrid, ad));
+    if (!list.length) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</p>`;
+    if (focusAdId) {
+      const ad = list.find(x => x.id === focusAdId);
+      if (ad) openItemDetail(ad);
+    }
   }
 }
-async function fetchShopItems(shopName){
+
+async function fetchShopItems(shopName) {
   const ck = CACHE.shopItems(shopName);
   const cached = loadCache(ck);
   if (cached) return cached;
-
-  const col = collection(db, PAGE_KEY, "Shops", shopName, "items");
+  const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName, "items");
   const snap = await getDocs(col);
   const arr = [];
-  snap.forEach(d=>{ const it = d.data(); it.id = d.id; arr.push(it); });
-  arr.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  snap.forEach(d => {
+    const it = d.data();
+    it.id = d.id;
+    arr.push(it);
+  });
+  arr.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   saveCache(ck, arr);
   return arr;
 }
 
-/* search (global quick filter) */
-globalSearch.addEventListener('input', ()=>{
-  const q = (globalSearch.value||'').trim().toLowerCase();
-
-  // categories view
-  if (categoriesView.classList.contains('show')){
-    [...categoriesGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+if (globalSearch) globalSearch.addEventListener('input', () => {
+  const q = (globalSearch.value || '').trim().toLowerCase();
+  if (categoriesView.classList.contains('show')) {
+    [...categoriesGrid.children].forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
   }
-  // shops view
-  if (shopsView.classList.contains('show')){
-    [...shopsGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+  if (shopsView.classList.contains('show')) {
+    [...shopsGrid.children].forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
   }
 });
 
-/* switch tabs */
-tabs.forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    tabs.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
-    btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+tabs.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabs.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     const target = btn.dataset.view;
-    [categoriesView, shopsView].forEach(v=> v.classList.remove('show'));
+    [categoriesView, shopsView].forEach(v => v.classList.remove('show'));
     document.getElementById(target).classList.add('show');
-    closeDrawer(); // leave drawer when switching
+    closeDrawer();
   });
 });
 
-/* ===== Modal helpers (single source of truth) ===== */
-function openModal(m){ m.classList.add('show'); }
-function closeModal(m){ m.classList.remove('show'); }
+function openModal(m) { if (m) m.classList.add('show'); }
+function closeModal(m) { if (m) m.classList.remove('show'); }
 
-/* ===== Number capture + proceed ===== */
-function openNumberModal(){ openModal(numberModal); }
-function closeNumberModal(){ closeModal(numberModal); }
-[numberClose, numberCancel].forEach(b=> b.addEventListener('click', closeNumberModal));
+function openNumberModal() { openModal(numberModal); }
+function closeNumberModal() { closeModal(numberModal); }
+[numberClose, numberCancel].forEach(b => b && b.addEventListener('click', closeNumberModal));
 
-async function captureNumberThenProceed(kind, ad){
+async function captureNumberThenProceed(kind, ad) {
   pendingAction = kind;
   pendingContactFor = {
     shopName: ad.shop,
-    phone: (SHOPS.find(s=>s.name===ad.shop)?.phone) || "",
+    phone: (SHOPS.find(s => s.name === ad.shop)?.phone) || "",
     itemTitle: ad.name
   };
-  waNumberInput.value = userPhoneCache || "";
-  numberError.style.display = 'none';
+  if (waNumberInput) waNumberInput.value = userPhoneCache || "";
+  if (numberError) numberError.style.display = 'none';
   openNumberModal();
 }
-numberOk.addEventListener('click', async ()=>{
+
+if (numberOk) numberOk.addEventListener('click', async () => {
   const norm = normalizeGhanaNumber(waNumberInput.value);
-  if (!norm){ numberError.textContent="Enter a valid WhatsApp number."; numberError.style.display='block'; return; }
-  numberError.style.display='none';
-  userPhoneCache = norm.e164;
-
-  // Global numbers collection (dedup)
-  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
-
-  // Per shop customers
-  const shopName = pendingContactFor?.shopName;
-  if (shopName){
-    const custCol = collection(db, PAGE_KEY, "Shops", shopName, "customers");
-    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
+  if (!norm) {
+    if (numberError) numberError.textContent = "Enter a valid WhatsApp number.";
+    if (numberError) numberError.style.display = 'block';
+    return;
   }
-
+  if (numberError) numberError.style.display = 'none';
+  userPhoneCache = norm.e164;
+  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g, '')), { whatsapp: norm.e164, timestamp: serverTimestamp() }, { merge: true });
+  const shopName = pendingContactFor?.shopName;
+  if (shopName) {
+    await ensureShopsContainer();
+    await ensureShopDoc(shopName);
+    const custCol = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName, "customers");
+    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g, '')), { whatsapp: norm.e164, timestamp: serverTimestamp() }, { merge: true });
+  }
   const shopPhone = pendingContactFor?.phone || "";
-  if (pendingAction === 'call'){
+  if (pendingAction === 'call') {
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
-  }else{
-    const waNum = shopPhone.replace(/^\+/,'');
-    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tech & Gagets).`;
+  } else {
+    const waNum = shopPhone.replace(/^\+/, '');
+    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle || ''}* on PickMe (Tech & Gagets).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
   }
   closeNumberModal();
 });
 
-/* ===== Admin: per-shop access ===== */
-function promptShopCode(){
-  codeInput.value = "";
+function promptShopCode() {
+  if (codeInput) codeInput.value = "";
   openModal(codeModal);
 }
-[codeClose, codeCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(codeModal)));
-codeOk.addEventListener('click', ()=>{
+
+[codeClose, codeCancel].forEach(b => b && b.addEventListener('click', () => closeModal(codeModal)));
+
+if (codeOk) codeOk.addEventListener('click', () => {
   const input = codeInput.value.trim();
   const expected = (currentShop?.accessCode) || SHOP_ADMIN_DEFAULT_CODE;
-  if (input && input === expected){
+  if (input && input === expected) {
     closeModal(codeModal);
     openModal(adminOptionsModal);
-  }else{
+  } else {
     alert("Incorrect code.");
   }
 });
-[adminOptClose, adminOptCancel].forEach(b=> b.addEventListener('click', ()=> closeModal(adminOptionsModal)));
 
-/* ===== Admin: add items (UI simplified as requested) ===== */
-optAdd.addEventListener('click', ()=>{
+[adminOptClose, adminOptCancel].forEach(b => b && b.addEventListener('click', () => closeModal(adminOptionsModal)));
+
+if (optAdd) optAdd.addEventListener('click', () => {
   closeModal(adminOptionsModal);
-  catChooseGrid.innerHTML = "";
-  CATEGORIES.forEach(({id})=>{
-    const div = document.createElement('div');
-    div.className = 'mopt-card';
-    div.innerHTML = `<h4>${escapeHtml(id)}</h4>`;
-    div.addEventListener('click', ()=> startAddFlow(id));
-    catChooseGrid.appendChild(div);
-  });
+  if (catChooseGrid) {
+    catChooseGrid.innerHTML = "";
+    CATEGORIES.forEach(({ id }) => {
+      const div = document.createElement('div');
+      div.className = 'mopt-card';
+      div.innerHTML = `<h4>${escapeHtml(id)}</h4>`;
+      div.addEventListener('click', () => startAddFlow(id));
+      catChooseGrid.appendChild(div);
+    });
+  }
   openModal(catChooseModal);
 });
-[catChooseClose, catChooseCancel].forEach(b => b.addEventListener('click', () => {
+
+[catChooseClose, catChooseCancel].forEach(b => b && b.addEventListener('click', () => {
   closeModal(catChooseModal);
-  openModal(adminOptionsModal); // ✅ Return to Add/Delete modal
+  openModal(adminOptionsModal);
 }));
 
 let currentAddCategory = null;
-function startAddFlow(category){
+function startAddFlow(category) {
   currentAddCategory = category;
   closeModal(catChooseModal);
   openDraftEditor();
 }
-function openDraftEditor(){
-  draftTitle.textContent = `Add items · ${currentAddCategory}`;
+
+function openDraftEditor() {
+  if (draftTitle) draftTitle.textContent = `Add items · ${currentAddCategory}`;
   resetForm();
-  renderDraftList(); // show existing drafts (editable)
+  renderDraftList();
   openModal(draftModal);
 }
-draftClose.addEventListener('click', () => {
-  closeModal(draftModal);
-  openModal(catChooseModal); // ✅ Return to Choose Category after exiting Draft
-});
-addImagesBtn.addEventListener('click', ()=> imgInput.click());
 
-function refreshThumbs(){
-  imgThumbs.innerHTML = "";
-  filesBuffer.forEach((file, idx)=>{
-    const url = URL.createObjectURL(file);
-    const t = document.createElement('div');
-    t.className='thumb';
-    t.innerHTML = `<img src="${url}" alt="img ${idx+1}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
-    t.querySelector('.trash').addEventListener('click', ()=>{
-      filesBuffer.splice(idx,1);
-      refreshThumbs();
+if (draftClose) draftClose.addEventListener('click', () => {
+  closeModal(draftModal);
+  openModal(catChooseModal);
+});
+
+if (addImagesBtn) addImagesBtn.addEventListener('click', () => imgInput.click());
+
+function refreshThumbs() {
+  if (imgThumbs) {
+    imgThumbs.innerHTML = "";
+    filesBuffer.forEach((file, idx) => {
+      const url = URL.createObjectURL(file);
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.innerHTML = `<img src="${url}" alt="img ${idx + 1}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
+      t.querySelector('.trash').addEventListener('click', () => {
+        filesBuffer.splice(idx, 1);
+        refreshThumbs();
+      });
+      imgThumbs.appendChild(t);
     });
-    imgThumbs.appendChild(t);
-  });
+  }
 }
-function resetForm(){
-  imgInput.value=''; filesBuffer=[]; refreshThumbs();
-  nameInput.value=''; priceInput.value=''; descInput.value='';
+
+function resetForm() {
+  if (imgInput) imgInput.value = '';
+  filesBuffer = [];
+  refreshThumbs();
+  if (nameInput) nameInput.value = '';
+  if (priceInput) priceInput.value = '';
+  if (descInput) descInput.value = '';
 }
-imgInput.addEventListener('change', ()=>{
-  const list = Array.from(imgInput.files||[]);
+
+if (imgInput) imgInput.addEventListener('change', () => {
+  const list = Array.from(imgInput.files || []);
   const wanted = Math.min(MAX_IMAGES - filesBuffer.length, list.length);
   filesBuffer.push(...list.slice(0, wanted));
   refreshThumbs();
 });
-clearFormBtn.addEventListener('click', resetForm);
 
-function pushDraftFromForm(){
+if (clearFormBtn) clearFormBtn.addEventListener('click', resetForm);
+
+function pushDraftFromForm() {
   const nm = nameInput.value.trim();
   const pr = money(priceInput.value);
   const ds = descInput.value.trim();
-  if (!nm){ alert("Enter name"); return false; }
-  if (!filesBuffer.length){ alert("Add at least 1 image"); return false; }
+  if (!nm) { alert("Enter name"); return false; }
+  if (!filesBuffer.length) { alert("Add at least 1 image"); return false; }
   const id = makeId();
-  drafts.push({ id, cat: currentAddCategory, name:nm, price:pr, desc:ds, files:[...filesBuffer] });
-  renderDraftList(); resetForm(); return true;
+  drafts.push({ id, cat: currentAddCategory, name: nm, price: pr, desc: ds, files: [...filesBuffer] });
+  renderDraftList();
+  resetForm();
+  return true;
 }
 
-/* Editable drafts list (each previous item stays visible & editable) */
-function renderDraftList(){
-  draftList.innerHTML = "";
-  drafts.forEach((d, i)=>{
-    const wrap = document.createElement('div');
-    wrap.className = 'mopt-card';
-    wrap.style.borderStyle = 'dashed';
-    wrap.innerHTML = `
-      <h4 style="margin:0 0 6px">#${i+1} · ${escapeHtml(d.cat)}</h4>
-      <div class="row">
-        <input class="input d-name" placeholder="Name" value="${escapeHtml(d.name)}" />
-        <input class="input d-price" placeholder="Price" value="${escapeHtml(d.price)}" />
-      </div>
-      <textarea class="input d-desc" rows="2" placeholder="Description">${escapeHtml(d.desc||'')}</textarea>
-      <div class="thumb-row d-thumbs"></div>
-      <div class="row">
-        <button class="btn-primary d-addimg" type="button">Add images</button>
-        <button class="btn-secondary d-clearimg" type="button">Clear images</button>
-        <button class="btn-secondary d-remove" type="button">Remove item</button>
-      </div>
-    `;
-    const nameEl = wrap.querySelector('.d-name');
-    const priceEl= wrap.querySelector('.d-price');
-    const descEl = wrap.querySelector('.d-desc');
-    const thumbs = wrap.querySelector('.d-thumbs');
+function renderDraftList() {
+  if (draftList) {
+    draftList.innerHTML = "";
+    drafts.forEach((d, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'mopt-card';
+      wrap.style.borderStyle = 'dashed';
+      wrap.innerHTML = `
+        <h4 style="margin:0 0 6px">#${i + 1} · ${escapeHtml(d.cat)}</h4>
+        <div class="row">
+          <input class="input d-name" placeholder="Name" value="${escapeHtml(d.name)}" />
+          <input class="input d-price" placeholder="Price" value="${escapeHtml(d.price)}" />
+        </div>
+        <textarea class="input d-desc" rows="2" placeholder="Description">${escapeHtml(d.desc || '')}</textarea>
+        <div class="thumb-row d-thumbs"></div>
+        <div class="row">
+          <button class="btn-primary d-addimg" type="button">Add images</button>
+          <button class="btn-secondary d-clearimg" type="button">Clear images</button>
+          <button class="btn-secondary d-remove" type="button">Remove item</button>
+        </div>
+      `;
+      const nameEl = wrap.querySelector('.d-name');
+      const priceEl = wrap.querySelector('.d-price');
+      const descEl = wrap.querySelector('.d-desc');
+      const thumbs = wrap.querySelector('.d-thumbs');
 
-    function drawThumbs(){
-      thumbs.innerHTML='';
-      d.files.forEach((f,idx)=>{
-        const u = URL.createObjectURL(f);
-        const t = document.createElement('div'); t.className='thumb';
-        t.innerHTML = `<img src="${u}" alt=""><button class="trash" title="Remove">&times;</button>`;
-        t.querySelector('.trash').onclick = ()=>{ d.files.splice(idx,1); drawThumbs(); };
-        thumbs.appendChild(t);
-      });
-    }
-    drawThumbs();
-
-    nameEl.oninput = e=> d.name = e.target.value;
-    priceEl.oninput= e=> d.price = e.target.value.replace(/[^\d.]/g,'');
-    descEl.oninput = e=> d.desc  = e.target.value;
-
-    // hidden file input per draft
-    const hid = document.createElement('input');
-    hid.type='file'; hid.accept='image/*'; hid.multiple=true; hid.style.display='none';
-    wrap.appendChild(hid);
-    wrap.querySelector('.d-addimg').onclick = ()=> hid.click();
-    hid.onchange = ()=>{
-      const list = Array.from(hid.files||[]);
-      const space = MAX_IMAGES - d.files.length;
-      d.files.push(...list.slice(0, space));
+      function drawThumbs() {
+        thumbs.innerHTML = '';
+        d.files.forEach((f, idx) => {
+          const u = URL.createObjectURL(f);
+          const t = document.createElement('div');
+          t.className = 'thumb';
+          t.innerHTML = `<img src="${u}" alt=""><button class="trash" title="Remove">&times;</button>`;
+          t.querySelector('.trash').onclick = () => { d.files.splice(idx, 1); drawThumbs(); };
+          thumbs.appendChild(t);
+        });
+      }
       drawThumbs();
-    };
-    wrap.querySelector('.d-clearimg').onclick = ()=>{ d.files=[]; drawThumbs(); };
-    wrap.querySelector('.d-remove').onclick = ()=>{ drafts.splice(i,1); renderDraftList(); };
 
-    draftList.appendChild(wrap);
-  });
+      nameEl.oninput = e => d.name = e.target.value;
+      priceEl.oninput = e => d.price = e.target.value.replace(/[^\d.]/g, '');
+      descEl.oninput = e => d.desc = e.target.value;
+
+      const hid = document.createElement('input');
+      hid.type = 'file';
+      hid.accept = 'image/*';
+      hid.multiple = true;
+      hid.style.display = 'none';
+      wrap.appendChild(hid);
+      wrap.querySelector('.d-addimg').onclick = () => hid.click();
+      hid.onchange = () => {
+        const list = Array.from(hid.files || []);
+        const space = MAX_IMAGES - d.files.length;
+        d.files.push(...list.slice(0, space));
+        drawThumbs();
+      };
+      wrap.querySelector('.d-clearimg').onclick = () => { d.files = []; drawThumbs(); };
+      wrap.querySelector('.d-remove').onclick = () => { drafts.splice(i, 1); renderDraftList(); };
+      draftList.appendChild(wrap);
+    });
+  }
 }
 
-addMoreBtn.addEventListener('click', ()=>{ pushDraftFromForm(); });
+if (addMoreBtn) addMoreBtn.addEventListener('click', () => { pushDraftFromForm(); });
 
-/* Submitting drafts */
-submitDraftsBtn.addEventListener('click', async ()=>{
-  if (!drafts.length){
+if (submitDraftsBtn) submitDraftsBtn.addEventListener('click', async () => {
+  if (!drafts.length) {
     const nm = nameInput.value.trim();
     if (nm) {
       const ok = pushDraftFromForm();
       if (!ok) return;
     }
   }
-
-  const valid = drafts.filter(d => d.name && d.files && d.files.length>0);
-  if (!valid.length){ alert("Nothing to submit."); return; }
-
+  const valid = drafts.filter(d => d.name && d.files && d.files.length > 0);
+  if (!valid.length) { alert("Nothing to submit."); return; }
   submitDraftsBtn.disabled = true;
   submitDraftsBtn.textContent = "Submitting…";
   toast("Submitting…");
-
-  const payload = { type:"review", page:PAGE_KEY, shop: currentShopName, items: [] };
-
-  for (const d of valid){
+  const payload = { type: "review", page: PAGE_KEY, shop: currentShopName, items: [] };
+  for (const d of valid) {
     const adId = d.id;
-    const uploads = d.files.slice(0, MAX_IMAGES).map((f, idx)=>{
-      const key = `${PAGE_KEY}/${currentShopName}/${adId}/img_${idx+1}.jpg`;
+    const uploads = d.files.slice(0, MAX_IMAGES).map((f, idx) => {
+      const key = `${PAGE_KEY}/${currentShopName}/${adId}/img_${idx + 1}.jpg`;
       const rf = sRef(st, key);
       return uploadBytes(rf, f).then(snap => getDownloadURL(sRef(st, snap.metadata.fullPath)));
     });
     const urls = await Promise.all(uploads);
-    payload.items.push({ id: adId, category:d.cat, name:d.name, price:money(d.price), desc:d.desc, images:urls });
+    payload.items.push({ id: adId, category: d.cat, name: d.name, price: money(d.price), desc: d.desc, images: urls });
   }
-
   const linkId = await putShort(payload);
-
-  // reset form & drafts
   closeModal(draftModal);
-  drafts=[]; resetForm(); draftList.innerHTML="";
-  submitDraftsBtn.disabled = false; submitDraftsBtn.textContent = "Submit";
-
+  drafts = [];
+  resetForm();
+  draftList.innerHTML = "";
+  submitDraftsBtn.disabled = false;
+  submitDraftsBtn.textContent = "Submit";
   const link = `${location.origin}${location.pathname}?review=${linkId}`;
   const msg = `New Tech & Gadgets adverts from *${currentShopName}*.\nOpen: ${link}`;
   window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
-
-// ✅ After WhatsApp, show Choose Category modal again
-setTimeout(() => {
-  openModal(catChooseModal);
-}, 500);
+  setTimeout(() => openModal(catChooseModal), 500);
 });
 
-/* ===== Admin: delete items ===== */
-optDelete.addEventListener('click', async ()=>{
+if (optDelete) optDelete.addEventListener('click', async () => {
   closeModal(adminOptionsModal);
   deleteList.innerHTML = "<p>Loading items…</p>";
   openModal(deleteModal);
   const items = await fetchShopItems(currentShopName);
   deleteList.innerHTML = "";
-  if (!items.length){ deleteList.innerHTML = "<p>No items to delete.</p>"; return; }
-  items.forEach(ad=>{
-    const blk = document.createElement('div'); blk.className='mopt-card';
+  if (!items.length) { deleteList.innerHTML = "<p>No items to delete.</p>"; return; }
+  items.forEach(ad => {
+    const blk = document.createElement('div');
+    blk.className = 'mopt-card';
     blk.innerHTML = `
-      <h4>${escapeHtml(ad.name||'Item')}</h4>
-      <p>${escapeHtml(ad.category||'')}</p>
+      <h4>${escapeHtml(ad.name || 'Item')}</h4>
+      <p>${escapeHtml(ad.category || '')}</p>
       <button class="btn-secondary">Delete</button>
     `;
-    blk.querySelector('button').addEventListener('click', ()=> deleteAd(ad));
+    blk.querySelector('button').addEventListener('click', () => deleteAd(ad));
     deleteList.appendChild(blk);
   });
 });
-[deleteClose, deleteCancel].forEach(b => b.addEventListener('click', () => {
+
+[deleteClose, deleteCancel].forEach(b => b && b.addEventListener('click', () => {
   closeModal(deleteModal);
-  openModal(adminOptionsModal); // ✅ Return to Add/Delete
+  openModal(adminOptionsModal);
 }));
 
-async function deleteAd(ad){
+async function deleteAd(ad) {
   if (!confirm("Delete this item permanently?")) return;
-  try{ await deleteDoc(doc(db, PAGE_KEY, "Shops", currentShopName, "items", ad.id)); }catch(e){ console.warn('delete doc',e); }
-  try{
+  try {
+    await deleteDoc(doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, currentShopName, "items", ad.id));
+  } catch (e) {
+    console.warn('delete doc', e);
+  }
+  try {
     const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
     const listing = await listAll(folder);
     await Promise.all(listing.items.map(obj => deleteObject(obj)));
-  }catch(e){ console.warn('delete images',e); }
+  } catch (e) {
+    console.warn('delete images', e);
+  }
   alert("Deleted.");
   closeModal(deleteModal);
   clearShopCaches(currentShopName);
@@ -1373,59 +1399,56 @@ async function deleteAd(ad){
   if (currentShop) openShop(currentShop);
 }
 
-/* ===== Short links for review flow ===== */
-async function getShort(id){
+async function getShort(id) {
   const snap = await getDoc(doc(linksCol, id));
   return snap.exists() ? (snap.data()?.payload || null) : null;
 }
-async function putShort(payload){
+
+async function putShort(payload) {
   const id = makeId();
   await setDoc(doc(linksCol, id), {
     payload,
     createdAt: serverTimestamp(),
-    expiresInSec: 86400 // 24 hours (use Firestore TTL on createdAt or an expireAt field if configured)
+    expiresInSec: 86400
   });
   return id;
 }
 
-/* ===== Review flow (PickMe admin) ===== */
-function promptReviewCode(){
+function promptReviewCode() {
   openModal(reviewCodeModal);
 }
-[reviewCodeClose, reviewCodeCancel].forEach(b=> b.addEventListener('click', ()=>{
+
+[reviewCodeClose, reviewCodeCancel].forEach(b => b && b.addEventListener('click', () => {
   reviewPayloadPending = null;
   closeModal(reviewCodeModal);
   closeDrawer();
-  categoriesView.classList.add('show'); shopsView.classList.remove('show');
+  categoriesView.classList.add('show');
+  shopsView.classList.remove('show');
   document.body.classList.add('ready');
 }));
 
-reviewCodeOk.addEventListener('click', ()=>{
-  if (reviewCodeInput.value.trim() !== GLOBAL_ADMIN_CODE){ alert('Incorrect admin code.'); return; }
+if (reviewCodeOk) reviewCodeOk.addEventListener('click', () => {
+  if (reviewCodeInput.value.trim() !== GLOBAL_ADMIN_CODE) { alert('Incorrect admin code.'); return; }
   closeModal(reviewCodeModal);
   if (reviewPayloadPending) openReview(reviewPayloadPending);
 });
 
-async function openReview(payload){
-  hide(shopBanner); show(itemDetail); hide(shopGallery); hide(catPage);
+async function openReview(payload) {
+  hide(shopBanner);
+  show(itemDetail);
+  hide(shopGallery);
+  hide(catPage);
   buildSlider([], itemSlider, itemDots);
-  detailTitle.textContent = "Review panel";
-  detailPrice.textContent = "";
-  detailPostedBy.textContent = payload.shop||"";
-  detailDesc.textContent = "";
-
+  if (detailTitle) detailTitle.textContent = "Review panel";
+  if (detailPrice) detailPrice.textContent = "";
+  if (detailPostedBy) detailPostedBy.textContent = payload.shop || "";
+  if (detailDesc) detailDesc.textContent = "";
   const container = document.createElement('div');
-  container.style.marginTop='8px';
-
-  // Track states for each submitted item
-  const states = []; // {id, approve:boolean, reason:string|null, data}
-
-  // -------- LIST UI WITH TOGGLE (Default = Approved) --------
+  container.style.marginTop = '8px';
+  const states = [];
   payload.items.forEach((it, idx) => {
     const card = document.createElement('div');
     card.className = 'mopt-card';
-
-    // images slider
     const holder = document.createElement('div');
     holder.style.marginBottom = '8px';
     const slider = document.createElement('div');
@@ -1435,8 +1458,6 @@ async function openReview(payload){
     holder.append(slider, dots);
     card.appendChild(holder);
     buildSlider(it.images || [], slider, dots);
-
-    // meta
     const meta = document.createElement('div');
     meta.innerHTML = `
       <h4 style="margin:8px 0 4px">#${idx + 1} ${escapeHtml(it.name)}</h4>
@@ -1444,18 +1465,12 @@ async function openReview(payload){
       <div>${fmtPrice(it.price)}</div>
     `;
     card.appendChild(meta);
-
-    // Default approved
     const st = { id: it.id, approve: true, reason: null, data: it };
     states.push(st);
-
-    // Single Toggle Button (default shows "Reject" meaning currently Approved)
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'btn-secondary';
     toggleBtn.textContent = 'Reject';
     toggleBtn.style.marginTop = '8px';
-
-    // Reason box (only visible when rejected)
     const rejectBox = document.createElement('div');
     rejectBox.style.display = 'none';
     rejectBox.style.marginTop = '8px';
@@ -1472,7 +1487,6 @@ async function openReview(payload){
         <input class="input otherTxt" placeholder="Write custom reason (if Other)">
       </div>
     `;
-
     toggleBtn.onclick = () => {
       st.approve = !st.approve;
       if (st.approve) {
@@ -1486,7 +1500,6 @@ async function openReview(payload){
         rejectBox.style.display = 'block';
       }
     };
-
     rejectBox.querySelector('.reasonSel').addEventListener('change', e => {
       const val = e.target.value;
       const otherTxt = rejectBox.querySelector('.otherTxt');
@@ -1498,252 +1511,208 @@ async function openReview(payload){
         st.reason = val || 'Rejected';
       }
     });
-
     rejectBox.querySelector('.otherTxt').addEventListener('input', e => {
       if (!st.approve) {
         st.reason = e.target.value.trim() || 'Rejected';
       }
     });
-
     card.appendChild(toggleBtn);
     card.appendChild(rejectBox);
     container.appendChild(card);
   });
-
-  // -------- SUBMIT BUTTON --------
   const done = document.createElement('button');
   done.className = 'btn-primary';
   done.style.marginTop = '10px';
   done.textContent = 'Submit Review';
-
-  // Utility: turn a remote image URL into a data: URL so results can show after deletion
-  async function urlToDataURL(url){
-    try{
+  async function urlToDataURL(url) {
+    try {
       const res = await fetch(url, { cache: 'no-store' });
       const blob = await res.blob();
-      return await new Promise((resolve,reject)=>{
+      return await new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
         fr.onerror = reject;
         fr.readAsDataURL(blob);
       });
-    }catch(e){
+    } catch (e) {
       console.warn('urlToDataURL failed for', url, e);
       return null;
     }
   }
-
-  done.onclick = async ()=>{
-  // Collect decisions
-  const approved = states.filter(s=>s.approve === true).map(s=>s.data);
-  const rejectedStates = states.filter(s=>s.approve === false);
-
-  if (!approved.length && !rejectedStates.length){
-    alert("Please approve or reject at least one item before submitting.");
-    return;
-  }
-
-  done.disabled = true;
-  done.textContent = "Submitting…";
-
-  // --- Ensure the parent shop doc exists BEFORE writing into subcollections ---
-if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()) {
-  alert("Cannot save: missing shop name in payload.");
-  done.disabled = false;
-  done.textContent = "Submit Review";
-  return;
-}
-
-const cleanShopName = payload.shop.trim();
-
-try {
-  // ✅ Creates or updates: Tech&Gadgets/Shops/{shopName}
-  await ensureShopDoc(cleanShopName);
-} catch (e) {
-  console.warn('[ensureShopDoc] failed', e);
-}
-
-let saveErrors = [];
-for (const it of approved) {
-  try {
-    const rec = {
-      id: String(it.id || "").trim(),
-      shop: cleanShopName,
-      category: String(it.category || 'Other').trim(),
-      name: String(it.name || 'Untitled').trim(),
-      price: Number(it.price || 0),
-      desc: String(it.desc || ''),
-      images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
-      createdAt: serverTimestamp()
-    };
-
-    if (!rec.id) throw new Error("missing id");
-
-    // ✅ CORRECT path: Tech&Gadgets/Shops/{shopName}/items/{rec.id}
-    const ref = doc(db, PAGE_KEY, "Shops", cleanShopName, "items", rec.id);
-    await setDoc(ref, rec, { merge: true });
-
-  } catch (e) {
-    console.error('Save approved failed for', it?.id, e);
-    saveErrors.push(it?.id || '(unknown)');
-  }
-}
-
-  // Convert rejected to include small previews & delete original storage
-  const rejected = [];
-  for (const stRec of rejectedStates) {
-    const it = stRec.data;
-    let previewDataUrl = null;
-    const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
-    if (firstImg) {
-      previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
+  done.onclick = async () => {
+    const approved = states.filter(s => s.approve === true).map(s => s.data);
+    const rejectedStates = states.filter(s => s.approve === false);
+    if (!approved.length && !rejectedStates.length) {
+      alert("Please approve or reject at least one item before submitting.");
+      return;
     }
-
+    done.disabled = true;
+    done.textContent = "Submitting…";
+    const cleanShopName = payload.shop.trim();
     try {
-      const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
-      const listing = await listAll(folder);
-      await Promise.all(listing.items.map(obj => deleteObject(obj)));
+      await ensureShopsContainer();
+      await ensureShopDoc(cleanShopName);
     } catch (e) {
-      console.warn('Delete rejected images failed for', it?.id, e);
+      console.warn('[ensureShopDoc] failed', e);
     }
-
-    rejected.push({
-      ...it,
-      reason: stRec.reason || 'Rejected',
-      previewDataUrl: previewDataUrl || null
-    });
-  }
-
-  // Create result link in Links/items/
-  const result = {
-    type: 'result',
-    page: PAGE_KEY,
-    shop: payload.shop,
-    approved,
-    rejected,
-    createdAt: serverTimestamp(),
-    expiresInSec: 86400
+    let saveErrors = [];
+    for (const it of approved) {
+      try {
+        const rec = {
+          id: String(it.id || "").trim(),
+          shop: cleanShopName,
+          category: String(it.category || 'Other').trim(),
+          name: String(it.name || 'Untitled').trim(),
+          price: Number(it.price || 0),
+          desc: String(it.desc || ''),
+          images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
+          createdAt: serverTimestamp()
+        };
+        if (!rec.id) throw new Error("missing id");
+        const ref = doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, cleanShopName, "items", rec.id);
+        await setDoc(ref, rec, { merge: true });
+      } catch (e) {
+        console.error('Save approved failed for', it?.id, e);
+        saveErrors.push(it?.id || '(unknown)');
+      }
+    }
+    const rejected = [];
+    for (const stRec of rejectedStates) {
+      const it = stRec.data;
+      let previewDataUrl = null;
+      const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
+      if (firstImg) {
+        previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
+      }
+      try {
+        const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
+        const listing = await listAll(folder);
+        await Promise.all(listing.items.map(obj => deleteObject(obj)));
+      } catch (e) {
+        console.warn('Delete rejected failed for', it?.id, e);
+      }
+      rejected.push({
+        ...it,
+        reason: stRec.reason || 'Rejected',
+        previewDataUrl: previewDataUrl || null
+      });
+    }
+    const result = {
+      type: 'result',
+      page: PAGE_KEY,
+      shop: payload.shop,
+      approved,
+      rejected,
+      createdAt: serverTimestamp(),
+      expiresInSec: 86400
+    };
+    const resultId = await putShort(result);
+    clearShopCaches(payload.shop);
+    await renderShops();
+    await renderCategories();
+    const shopPhone = (SHOPS.find(s => s.name === payload.shop)?.phone) || "";
+    const link = `${location.origin}${location.pathname}?result=${resultId}`;
+    const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
+    if (shopPhone) {
+      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
+    } else {
+      alert("Result link:\n" + link);
+    }
+    if (saveErrors.length) {
+      alert("Some approved items failed to save: " + saveErrors.join(', '));
+    }
+    const firstApproved = approved[0] || null;
+    closeDrawer();
+    toast("Review submitted.");
+    if (firstApproved) {
+      const shopObj = SHOPS.find(s => s.name === payload.shop);
+      if (shopObj) {
+        jumpToAdId = firstApproved.id;
+        currentCategory = firstApproved.category;
+        openShop(shopObj);
+      }
+    }
+    done.disabled = false;
+    done.textContent = "Submit Review";
   };
-  const resultId = await putShort(result);
-
-  // Clear caches and re-render
-  clearShopCaches(payload.shop);
-  await renderShops();
-  await renderCategories();
-
-  // Notify via WhatsApp
-  const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
-  const link = `${location.origin}${location.pathname}?result=${resultId}`;
-  const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
-  if (shopPhone) {
-    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
-  } else {
-    alert("Result link:\n" + link);
-  }
-
-  if (saveErrors.length) {
-    alert("Some approved items failed to save: " + saveErrors.join(', '));
-  }
-
-  const firstApproved = approved[0] || null;
-  closeDrawer();
-  toast("Review submitted.");
-
-  if (firstApproved) {
-    const shopObj = SHOPS.find(s => s.name === payload.shop);
-    if (shopObj) {
-      jumpToAdId = firstApproved.id;
-      currentCategory = firstApproved.category;
-      openShop(shopObj);
-    }
-  }
-
-  done.disabled = false;
-  done.textContent = "Submit Review";
-};
-
   const containerHost = itemDetail.querySelector('.item-detail');
-  containerHost.innerHTML = '';
-  const title = document.createElement('div');
-  title.className = 'section-title';
-  title.textContent = `Review · ${payload.shop}`;
-  containerHost.append(title, container, done);
-
+  if (containerHost) {
+    containerHost.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.textContent = `Review · ${payload.shop}`;
+    containerHost.append(title, container, done);
+  }
   openDrawer();
 }
 
-/* ===== Result view (shop owner) ===== */
-async function openResult(payload){
-  hide(shopBanner); show(itemDetail); hide(shopGallery); hide(catPage);
-  itemSlider.innerHTML=''; itemDots.innerHTML='';
-  detailTitle.textContent = "Submission results";
-  detailPrice.textContent = "";
-  detailPostedBy.textContent = payload.shop || "";
-  detailDesc.textContent = "";
-
+async function openResult(payload) {
+  hide(shopBanner);
+  show(itemDetail);
+  hide(shopGallery);
+  hide(catPage);
+  if (itemSlider) itemSlider.innerHTML = '';
+  if (itemDots) itemDots.innerHTML = '';
+  if (detailTitle) detailTitle.textContent = "Submission results";
+  if (detailPrice) detailPrice.textContent = "";
+  if (detailPostedBy) detailPostedBy.textContent = payload.shop || "";
+  if (detailDesc) detailDesc.textContent = "";
   const host = itemDetail.querySelector('.item-detail');
-  host.innerHTML = '';
-
-  // ---- Approved ----
-  const secA = document.createElement('div');
-  secA.innerHTML = `<div class="section-title">Approved</div>`;
-  const listA = document.createElement('div');
-  listA.className = 'items-grid';
-  (payload.approved || []).forEach(ad=> renderItemCard(listA, ad));
-  if (!(payload.approved || []).length) listA.innerHTML = "<p>No approved items.</p>";
-  secA.appendChild(listA);
-
-  // ---- Rejected (show embedded previews if present) ----
-  const secR = document.createElement('div');
-  secR.style.marginTop = '10px';
-  secR.innerHTML = `<div class="section-title">Rejected</div>`;
-  const listR = document.createElement('div');
-  listR.className = 'items-grid';
-  (payload.rejected || []).forEach(ad=>{
-    // prefer small embedded preview, then normal images, then placeholder
-    const imgs = (ad.previewDataUrl) ? [ad.previewDataUrl]
-               : (ad.localImages && ad.localImages.length) ? ad.localImages
-               : (ad.images || []);
-    const first = imgs[0] || 'https://via.placeholder.com/600x400?text=Image';
-    const card = document.createElement('div');
-    card.className='item-card';
-    card.innerHTML = `
-      <div class="item-img"><img src="${first}" alt=""></div>
-      <div class="item-body">
-        <div class="item-price">${fmtPrice(ad.price)}</div>
-        <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
-        <div class="item-shop">Reason: ${escapeHtml(ad.reason || '')}</div>
-      </div>
-    `;
-    listR.appendChild(card);
-  });
-  if (!(payload.rejected || []).length) listR.innerHTML = "<p>No rejected items.</p>";
-  secR.appendChild(listR);
-
-  const done = document.createElement('button');
-  done.className = 'btn-primary';
-  done.style.marginTop = '10px';
-  done.textContent = 'Done';
-  done.onclick = ()=> closeDrawer();
-
-  host.append(secA, secR, done);
+  if (host) {
+    host.innerHTML = '';
+    const secA = document.createElement('div');
+    secA.innerHTML = `<div class="section-title">Approved</div>`;
+    const listA = document.createElement('div');
+    listA.className = 'items-grid';
+    (payload.approved || []).forEach(ad => renderItemCard(listA, ad));
+    if (!(payload.approved || []).length) listA.innerHTML = "<p>No approved items.</p>";
+    secA.appendChild(listA);
+    const secR = document.createElement('div');
+    secR.style.marginTop = '10px';
+    secR.innerHTML = `<div class="section-title">Rejected</div>`;
+    const listR = document.createElement('div');
+    listR.className = 'items-grid';
+    (payload.rejected || []).forEach(ad => {
+      const imgs = (ad.previewDataUrl) ? [ad.previewDataUrl]
+        : (ad.localImages && ad.localImages.length) ? ad.localImages
+        : (ad.images || []);
+      const first = imgs[0] || 'https://via.placeholder.com/600x400?text=Image';
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-img"><img src="${first}" alt=""></div>
+        <div class="item-body">
+          <div class="item-price">${fmtPrice(ad.price)}</div>
+          <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
+          <div class="item-shop">Reason: ${escapeHtml(ad.reason || '')}</div>
+        </div>
+      `;
+      listR.appendChild(card);
+    });
+    if (!(payload.rejected || []).length) listR.innerHTML = "<p>No rejected items.</p>";
+    secR.appendChild(listR);
+    const done = document.createElement('button');
+    done.className = 'btn-primary';
+    done.style.marginTop = '10px';
+    done.textContent = 'Done';
+    done.onclick = () => closeDrawer();
+    host.append(secA, secR, done);
+  }
   openDrawer();
 }
 
-/* ===== Router ===== */
-async function router(){
+async function router() {
   const url = new URL(location.href);
   const reviewId = url.searchParams.get('review');
   const resultId = url.searchParams.get('result');
-
   document.body.classList.remove('ready');
   document.body.classList.add('hide-initial');
-
-  try{
-    if (reviewId){
+  try {
+    if (reviewId) {
       const payload = await getShort(reviewId);
-      if (!payload || payload.type!=='review'){ alert("Invalid review link."); }
-      else{
+      if (!payload || payload.type !== 'review') {
+        alert("Invalid review link.");
+      } else {
         reviewPayloadPending = payload;
         promptReviewCode();
         document.body.classList.remove('hide-initial');
@@ -1751,46 +1720,69 @@ async function router(){
         return;
       }
     }
-    if (resultId){
+    if (resultId) {
       const payload = await getShort(resultId);
-      if (!payload || payload.type!=='result'){ alert("Invalid result link."); }
-      else{
+      if (!payload || payload.type !== 'result') {
+        alert("Invalid result link.");
+      } else {
         await openResult(payload);
         document.body.classList.remove('hide-initial');
         document.body.classList.add('ready');
         return;
       }
     }
-
-    // Default home
     categoriesView.classList.add('show');
     shopsView.classList.remove('show');
     document.querySelector('.main-tab[data-view="categoriesView"]').classList.add('active');
-    document.querySelector('.main-tab[data-view="categoriesView"]').setAttribute('aria-pressed','true');
+    document.querySelector('.main-tab[data-view="categoriesView"]').setAttribute('aria-pressed', 'true');
     document.querySelector('.main-tab[data-view="shopsView"]').classList.remove('active');
-    document.querySelector('.main-tab[data-view="shopsView"]').setAttribute('aria-pressed','false');
+    document.querySelector('.main-tab[data-view="shopsView"]').setAttribute('aria-pressed', 'false');
     document.body.classList.remove('hide-initial');
     document.body.classList.add('ready');
-  } catch(e){
+  } catch (e) {
     console.error('[router]', e);
     document.body.classList.remove('hide-initial');
     document.body.classList.add('ready');
   }
 }
 
-/* ===== Init ===== */
-async function renderCategories(){ const counts = await countByCategory().catch(()=>({})); renderCategoriesGrid(counts); }
-async function renderShops(){ const counts = await fetchShopCounts().catch(()=>{ const m={}; SHOPS.forEach(s=>m[s.name]=0); return m; }); renderShopsGrid(counts); }
+async function renderCategories() {
+  try {
+    const counts = await countByCategory();
+    renderCategoriesGrid(counts);
+  } catch (e) {
+    console.warn('renderCategories failed', e);
+    renderCategoriesGrid({});
+  }
+}
 
-document.addEventListener('DOMContentLoaded', async ()=>{
-  await renderCategories();
-  await renderShops();
-  router();
+async function renderShops() {
+  try {
+    const counts = await fetchShopCounts();
+    renderShopsGrid(counts);
+  } catch (e) {
+    console.warn('renderShops failed', e);
+    const fb = {};
+    SHOPS.forEach(s => fb[s.name] = 0);
+    renderShopsGrid(fb);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await Promise.all([renderCategories(), renderShops()]);
+    await router();
+  } catch (e) {
+    console.error('init failed', e);
+    document.body.classList.remove('hide-initial');
+    document.body.classList.add('ready');
+  }
 });
 
-/* Immediate fallback draw for shops (avoid empty screen on slow network) */
-const fb = {}; SHOPS.forEach(s=> fb[s.name]=0); renderShopsGrid(fb);
-
+// Fallback to show shops if network is slow
+const fb = {};
+SHOPS.forEach(s => fb[s.name] = 0);
+renderShopsGrid(fb);
 </script>
 
 <!-- ===================== FOOTER ===================== -->
