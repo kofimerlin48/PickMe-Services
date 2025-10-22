@@ -1546,96 +1546,71 @@ async function openReview(payload){
   done.disabled = true;
   done.textContent = "Submitting…";
 
-  // --- Make sure the parent shop doc exists (prevents "failed to save" on some rules) ---
-  await ensureShopDoc(payload.shop);
-
-  // ---------- SAVE APPROVED ITEMS (Firestore) ----------
-let saveErrors = [];
-
-// Guard: payload.shop must exist
-if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()){
-  alert("Cannot save: missing shop name in payload.");
-  done.disabled = false;
-  done.textContent = "Submit Review";
-  return;
-}
-
-// Make sure parent shop doc exists (some rules require this for subcollection writes)
-try {
-  await ensureShopDoc(payload.shop.trim());
-} catch (e) {
-  console.warn('[ensureShopDoc] failed', e);
-}
-
-// Save each approved item under: Tech&Gadgets / Shops / {shop} / items / {itemId}
-for (const it of approved){
-  try{
-    // Normalize & validate fields
-    const rec = {
-      id: String(it.id || "").trim(),
-      shop: String(payload.shop || "").trim(),
-      category: String(it.category || 'Other').trim(),
-      name: String(it.name || 'Untitled').trim(),
-      price: Number(it.price || 0),
-      desc: String(it.desc || ''),
-      images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
-      createdAt: serverTimestamp()
-    };
-
-    if (!rec.id){
-      throw new Error("missing id");
-    }
-
-    // Build doc ref and write
-    const ref = doc(db, PAGE_KEY, "Shops", rec.shop, "items", rec.id);
-    // Helpful debug in console:
-    console.log('[SAVE]', { path: `${PAGE_KEY}/Shops/${rec.shop}/items/${rec.id}`, rec });
-
-    await setDoc(ref, rec, { merge: true });
-
-    // Optional: read-after-write sanity check (kept lightweight)
-    // const check = await getDoc(ref);
-    // if (!check.exists()) throw new Error("write verified but doc not found");
-
-  }catch(e){
-    console.error('Save approved failed for', it?.id, e);
-    saveErrors.push(`${it?.id || '(unknown)'} → ${e?.message || e}`);
+  // --- Make sure the parent shop doc exists (prevents 'invalid reference' errors) ---
+  if (!payload || !payload.shop || typeof payload.shop !== 'string' || !payload.shop.trim()) {
+    alert("Cannot save: missing shop name in payload.");
+    done.disabled = false;
+    done.textContent = "Submit Review";
+    return;
   }
-}
 
-// If any failed, show full error list (ids + reasons)
-if (saveErrors.length){
-  alert("Some approved items failed to save:\n\n" + saveErrors.join('\n'));
-}
+  try {
+    await ensureShopDoc(payload.shop.trim());
+  } catch (e) {
+    console.warn('[ensureShopDoc] failed', e);
+  }
 
-  // ---------- PREP REJECTED: MAKE SMALL PREVIEW THEN DELETE STORAGE ----------
+  let saveErrors = [];
+  for (const it of approved) {
+    try {
+      const rec = {
+        id: String(it.id || "").trim(),
+        shop: String(payload.shop || "").trim(),
+        category: String(it.category || 'Other').trim(),
+        name: String(it.name || 'Untitled').trim(),
+        price: Number(it.price || 0),
+        desc: String(it.desc || ''),
+        images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
+        createdAt: serverTimestamp()
+      };
+
+      if (!rec.id) throw new Error("missing id");
+
+      const ref = doc(db, PAGE_KEY, "Shops", rec.shop, "items", rec.id);
+      await setDoc(ref, rec, { merge: true });
+
+    } catch (e) {
+      console.error('Save approved failed for', it?.id, e);
+      saveErrors.push(it?.id || '(unknown)');
+    }
+  }
+
+  // Convert rejected to include small previews & delete original storage
   const rejected = [];
-  for (const stRec of rejectedStates){
+  for (const stRec of rejectedStates) {
     const it = stRec.data;
     let previewDataUrl = null;
     const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
-    if (firstImg){
+    if (firstImg) {
       previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
     }
 
-    // Delete storage folder: PAGE_KEY/payload.shop/it.id/*
-    try{
+    try {
       const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
       const listing = await listAll(folder);
       await Promise.all(listing.items.map(obj => deleteObject(obj)));
-    }catch(e){
+    } catch (e) {
       console.warn('Delete rejected images failed for', it?.id, e);
     }
 
     rejected.push({
       ...it,
       reason: stRec.reason || 'Rejected',
-      // embed small preview so results page can still show the image
       previewDataUrl: previewDataUrl || null
     });
   }
 
-  // ---------- MAKE RESULT SHORTLINK (with TTL metadata) ----------
+  // Create result link in Links/items/
   const result = {
     type: 'result',
     page: PAGE_KEY,
@@ -1643,42 +1618,44 @@ if (saveErrors.length){
     approved,
     rejected,
     createdAt: serverTimestamp(),
-    expiresInSec: 86400  // 24 hours (works once you enable TTL policy on this collection)
+    expiresInSec: 86400
   };
-  const id2 = await putShort(result);
+  const resultId = await putShort(result);
 
-  // ---------- CLEAR CACHES THEN REFRESH SHOPS & CATEGORIES SILENTLY ----------
+  // Clear caches and re-render
   clearShopCaches(payload.shop);
   await renderShops();
   await renderCategories();
 
-  // ---------- WhatsApp notify shop owner ----------
+  // Notify via WhatsApp
   const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
-  const link = `${location.origin}${location.pathname}?result=${id2}`;
+  const link = `${location.origin}${location.pathname}?result=${resultId}`;
   const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
   if (shopPhone) {
-    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
+    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
   } else {
     alert("Result link:\n" + link);
   }
 
-  if (saveErrors.length){
+  if (saveErrors.length) {
     alert("Some approved items failed to save: " + saveErrors.join(', '));
   }
 
-  // ---------- AUTO-OPEN SHOP WITH THE APPROVED ITEM'S CATEGORY ----------
   const firstApproved = approved[0] || null;
   closeDrawer();
   toast("Review submitted.");
 
-  if(firstApproved){
-    const shopObj = SHOPS.find(s=>s.name===payload.shop);
-    if (shopObj){
+  if (firstApproved) {
+    const shopObj = SHOPS.find(s => s.name === payload.shop);
+    if (shopObj) {
       jumpToAdId = firstApproved.id;
       currentCategory = firstApproved.category;
       openShop(shopObj);
     }
   }
+
+  done.disabled = false;
+  done.textContent = "Submit Review";
 };
 
   const containerHost = itemDetail.querySelector('.item-detail');
