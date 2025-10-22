@@ -1434,22 +1434,15 @@ payload.items.forEach((it, idx) => {
   done.style.marginTop = '10px';
   done.textContent = 'Submit Review';
   done.onclick = async ()=>{
-  // Collect approved and rejected
-  const approved = states.filter(s=>s.approve === true).map(s=>s.data);
-  const rejected = states.filter(s=>s.approve === false).map(s=>({
-    ...s.data,
-    reason: s.reason || 'Rejected'
-  }));
+    // Separate approved and rejected
+    const approved = states.filter(s => s.approve === true).map(s => s.data);
+    const rejected = states
+      .filter(s => s.approve === false)
+      .map(s => ({ ...s.data, reason: s.reason || 'Rejected' }));
 
-  // ✅ If nothing was approved or rejected (admin clicked submit without selecting), alert
-  if (!approved.length && !rejected.length) {
-    alert("Please approve or reject at least one item before submitting.");
-    return;
-  }
-
-  // ✅ Save approved items into Firestore
-  if (approved.length) {
-    await Promise.all(approved.map(async it=>{
+    // ✅ Always allow submission (even if only approved)
+    // ✅ Save approved items to Firestore
+    for (const it of approved) {
       const ref = doc(db, PAGE_KEY, "Shops", payload.shop, "items", it.id);
       await setDoc(ref, {
         id: it.id,
@@ -1461,32 +1454,38 @@ payload.items.forEach((it, idx) => {
         images: it.images || [],
         createdAt: serverTimestamp()
       }, { merge: true });
-    }));
-  }
+    }
 
-  // ✅ Prepare result payload (both approved + rejected)
-  const result = { type:'result', page:PAGE_KEY, shop:payload.shop, approved, rejected };
+    // ✅ Prepare result payload for shortlink
+    const result = { 
+      type: 'result', 
+      page: PAGE_KEY, 
+      shop: payload.shop, 
+      approved, 
+      rejected 
+    };
 
-  // ✅ Generate shortlink
-  const id2 = await putShort(result);
+    // ✅ Save shortlink
+    const id2 = await putShort(result);
 
-  // ✅ Clear shop cache so new approved items show immediately in gallery & categories
-  clearShopCaches(payload.shop);
+    // ✅ Clear relevant caches so new items show
+    clearShopCaches(payload.shop);
 
-  // ✅ WhatsApp notify shop owner
-  const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
-  const link = `${location.origin}${location.pathname}?result=${id2}`;
-  const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
-  if (shopPhone) {
-    window.location.href = `https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
-  } else {
-    alert("Result link:\n" + link);
-  }
+    // ✅ Notify shop owner
+    const shopPhone = (SHOPS.find(s=>s.name === payload.shop)?.phone) || "";
+    const link = `${location.origin}${location.pathname}?result=${id2}`;
+    const msg = `Your Tek&gaget adverts were reviewed.\nOpen results: ${link}`;
 
-  // ✅ Close review drawer
-  closeDrawer();
-  toast("Review submitted.");
-};
+    if (shopPhone) {
+      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
+    } else {
+      alert("Review results:\n" + link);
+    }
+
+    // ✅ Close panel afterwards
+    closeDrawer();
+    toast("Review submitted.");
+  };
 
   const containerHost = itemDetail.querySelector('.item-detail');
   containerHost.innerHTML = '';
