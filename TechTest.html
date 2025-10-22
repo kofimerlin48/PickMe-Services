@@ -695,25 +695,31 @@ function normalizeGhanaNumber(input){
 }
 
 /* ===== Cache keys ===== */
+/* New prefix ensures old 'tk_' caches don’t conflict after PAGE_KEY rename */
+const CACHE_PREFIX = "tg_v1_";
 const CACHE = {
-  cats: "tk_cats_counts",
-  shops: "tk_shops_counts",
-  shopItems: shop => `tk_shop_${shop}_items`,
-  catItems: cat => `tk_cat_${cat}_items`
+  cats: `${CACHE_PREFIX}cats_counts`,
+  shops: `${CACHE_PREFIX}shops_counts`,
+  shopItems: shop => `${CACHE_PREFIX}shop_${shop}_items`,
+  catItems: cat => `${CACHE_PREFIX}cat_${cat}_items`
 };
 const saveCache = (k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
 const loadCache = (k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
 const clearShopCaches = (shop)=>{
-  // shop items cache
-  localStorage.removeItem(CACHE.shopItems(shop));
-  // global counts
-  localStorage.removeItem(CACHE.cats);
-  localStorage.removeItem(CACHE.shops);
-  // ALL category item caches
+  // remove new caches for this shop + global
   try{
-    const keys = Object.keys(localStorage);
-    keys.forEach(k=>{
-      if (k.startsWith('tk_cat_')) localStorage.removeItem(k);
+    localStorage.removeItem(CACHE.shopItems(shop));
+    localStorage.removeItem(CACHE.cats);
+    localStorage.removeItem(CACHE.shops);
+    // remove all category caches for new prefix
+    Object.keys(localStorage).forEach(k=>{
+      if (k.startsWith(`${CACHE_PREFIX}cat_`)) localStorage.removeItem(k);
+    });
+    // also purge any legacy 'tk_' caches so the UI can’t read stale data
+    Object.keys(localStorage).forEach(k=>{
+      if (k.startsWith('tk_shop_') || k.startsWith('tk_cat_') || k === 'tk_cats_counts' || k === 'tk_shops_counts'){
+        localStorage.removeItem(k);
+      }
     });
   }catch{}
 };
@@ -1357,7 +1363,11 @@ async function getShort(id){
 }
 async function putShort(payload){
   const id = makeId();
-  await setDoc(doc(linksCol, id), { payload, createdAt: serverTimestamp() });
+  await setDoc(doc(linksCol, id), {
+    payload,
+    createdAt: serverTimestamp(),
+    expiresInSec: 86400 // 24 hours (use Firestore TTL on createdAt or an expireAt field if configured)
+  });
   return id;
 }
 
