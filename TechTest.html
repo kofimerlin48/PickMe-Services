@@ -97,7 +97,7 @@ body{
 .item-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .item-body{ padding:10px; display:flex; flex-direction:column; gap:6px; }
 .item-price{ font-weight:900; color:#111; }
-.item-desc{ font-size:12px; color:#444; line-height:1.3; max-height:32px; overflow:hidden; }
+.item-name{ font-size:14px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .item-shop{ font-size:11px; color:#777; }
 
 /* shops grid (hero cards) */
@@ -140,8 +140,8 @@ body{
 .section-title{ font-weight:900; margin:6px 0 12px; }
 
 /* slider */
-.slider{ position:relative; height:260px; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#f2f2f2; }
-.slide{ position:absolute; top:0; left:100%; width:100%; height:100%; object-fit:cover; opacity:0; transition:left .45s ease, opacity .45s ease; }
+.slider{ position:relative; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#f2f2f2; }
+.slide{ position:absolute; top:0; left:100%; width:100%; height:100%; object-fit:contain; opacity:0; transition:left .45s ease, opacity .45s ease; }
 .slide.active{ left:0; opacity:1; }
 .slider .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:24px; color:#fff; background:rgba(0,0,0,.38); padding:6px 10px; border-radius:50%; cursor:pointer; user-select:none; }
 .slider .nav.left{ left:10px; }
@@ -197,6 +197,13 @@ body{
 
 /* footer */
 .footer-wrap{ position:fixed; bottom:0; left:0; right:0; z-index:9999; }
+
+/* shop tabs */
+.shop-tabs{ display:flex; gap:8px; overflow:auto hidden; padding:8px 0; margin:0 0 10px; }
+.shop-tab{ padding:8px 12px; border-radius:999px; background:#eee; cursor:pointer; user-select:none; font-weight:600; font-size:14px; white-space:nowrap; position:relative; }
+.shop-tab.active{ background:var(--theme); color:#fff; }
+.shop-tab .count{ background:#fff; color:var(--ink); font-size:12px; padding:2px 6px; border-radius:999px; margin-left:4px; display:inline-block; min-width:20px; text-align:center; }
+.shop-tab.active .count{ background:rgba(255,255,255,.3); color:#fff; }
 </style>
 </head>
 
@@ -223,15 +230,22 @@ body{
 
 <!-- ===================== TOP TABS ===================== -->
 <nav class="main-tabs" aria-label="Main sections">
-  <button class="main-tab active" data-view="categoriesView" aria-pressed="true">Categories</button>
+  <button class="main-tab active" data-view="allItemsView" aria-pressed="true">All Items</button>
+  <button class="main-tab" data-view="categoriesView" aria-pressed="false">Categories</button>
   <button class="main-tab" data-view="shopsView" aria-pressed="false">Shops</button>
 </nav>
 
+<!-- ===================== ALL ITEMS VIEW ===================== -->
+<section id="allItemsView" class="view show" aria-label="All Items">
+  <div class="container">
+    <div id="allItemsGrid" class="items-grid" aria-live="polite"></div>
+  </div>
+</section>
+
 <!-- ===================== CATEGORIES VIEW ===================== -->
-<section id="categoriesView" class="view show" aria-label="Categories">
+<section id="categoriesView" class="view" aria-label="Categories">
   <div class="container">
     <div id="categoriesGrid" class="categories-grid" aria-live="polite"></div>
-
     <!-- Legacy inline block kept but unused; we now show categories inside drawer -->
     <div id="categoryItemsWrap" style="display:none;margin-top:14px;">
       <div id="categoryItemsTitle" class="section-title"></div>
@@ -252,10 +266,9 @@ body{
 
 <!-- ===================== DRAWER (ITEM / CATEGORY / SHOP) ===================== -->
 <aside id="drawer" aria-hidden="true" aria-label="Details drawer">
-  <button id="catBackBtn" aria-label="Back"
-  style="position:fixed;top:12px;left:12px;padding:8px 16px;border:none;border-radius:6px;background:#000;color:#fff;font-weight:700;font-size:14px;display:none;z-index:10002;">
-  BACK
-</button>
+  <button id="catBackBtn" aria-label="Back" style="position:fixed;top:12px;left:12px;padding:8px 16px;border:none;border-radius:6px;background:#000;color:#fff;font-weight:700;font-size:14px;display:none;z-index:10002;">
+    BACK
+  </button>
   <button id="drawerClose" aria-label="Close details">&times;</button>
 
   <!-- shop header -->
@@ -293,7 +306,7 @@ body{
     <!-- Shop gallery -->
     <div id="shopGallery" style="display:none;">
       <div class="section-title">Items</div>
-      <div id="shopTabs" class="main-tabs" style="margin:0 0 10px;"></div>
+      <div id="shopTabs" class="shop-tabs"></div>
       <div id="shopItemsGrid" class="items-grid"></div>
     </div>
 
@@ -370,23 +383,18 @@ body{
     </div>
     <div class="modal-body">
       <div id="draftHint" class="lbl" style="font-weight:700">Upload up to 5 images</div>
-
-      <!-- Hidden real input; we show only an "Add Images" button -->
       <input id="imgInput" type="file" accept="image/*" multiple class="input" aria-label="Upload images" style="display:none">
       <div class="row" style="margin-bottom:6px">
         <button id="addImagesBtn" class="btn-primary" type="button">Add images</button>
       </div>
       <div id="imgThumbs" class="thumb-row"></div>
-
       <div class="lbl">Name</div>
       <input id="nameInput" class="input" placeholder="e.g., iPhone 13 Pro Max 128GB">
       <div class="lbl">Price (GH₵)</div>
       <input id="priceInput" class="input" type="number" min="0" step="1" placeholder="e.g., 4500">
       <div class="lbl">Description / Specs</div>
       <textarea id="descInput" class="input" rows="4" placeholder="Key specs, condition, warranty…"></textarea>
-
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
-      <!-- All drafts stay visible & editable here -->
       <div id="draftList"></div>
     </div>
     <div class="modal-footer">
@@ -523,8 +531,10 @@ const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
 const tabs = document.querySelectorAll('.main-tab');
 const categoriesView = document.getElementById('categoriesView');
 const shopsView = document.getElementById('shopsView');
+const allItemsView = document.getElementById('allItemsView');
 const categoriesGrid = document.getElementById('categoriesGrid');
 const shopsGrid = document.getElementById('shopsGrid');
+const allItemsGrid = document.getElementById('allItemsGrid');
 const globalSearch = document.getElementById('globalSearch');
 const drawer = document.getElementById('drawer');
 const drawerClose = document.getElementById('drawerClose');
@@ -703,7 +713,8 @@ const CACHE = {
   cats: `${CACHE_PREFIX}cats_counts`,
   shops: `${CACHE_PREFIX}shops_counts`,
   shopItems: shop => `${CACHE_PREFIX}shop_${shop}_items`,
-  catItems: cat => `${CACHE_PREFIX}cat_${cat}_items`
+  catItems: cat => `${CACHE_PREFIX}cat_${cat}_items`,
+  allItems: `${CACHE_PREFIX}all_items`
 };
 const saveCache = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const loadCache = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -712,6 +723,7 @@ const clearShopCaches = (shop) => {
     localStorage.removeItem(CACHE.shopItems(shop));
     localStorage.removeItem(CACHE.cats);
     localStorage.removeItem(CACHE.shops);
+    localStorage.removeItem(CACHE.allItems);
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith(`${CACHE_PREFIX}cat_`)) localStorage.removeItem(k);
     });
@@ -726,25 +738,39 @@ const clearShopCaches = (shop) => {
 /* ===== Categories & Items ===== */
 async function countByCategory() {
   const cached = loadCache(CACHE.cats);
-  if (cached) return cached;
+  if (cached) {
+    console.log('Using cached category counts:', cached);
+    return cached;
+  }
   const out = {};
-  await Promise.all(SHOPS.map(async sh => {
-    if (isExpired(sh.expiry)) return;
-    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-    const snap = await getDocs(col);
-    snap.forEach(d => {
-      const it = d.data();
-      const cat = it.category || "Other";
-      out[cat] = (out[cat] || 0) + 1;
-    });
-  }));
-  saveCache(CACHE.cats, out);
-  return out;
+  try {
+    await Promise.all(SHOPS.map(async sh => {
+      if (isExpired(sh.expiry)) return;
+      const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+      const snap = await getDocs(col);
+      console.log(`Fetched ${snap.size} items for shop ${sh.name}`);
+      snap.forEach(d => {
+        const it = d.data();
+        const cat = it.category || "Other";
+        out[cat] = (out[cat] || 0) + 1;
+      });
+    }));
+    console.log('Category counts:', out);
+    saveCache(CACHE.cats, out);
+    return out;
+  } catch (e) {
+    console.error('countByCategory failed:', e);
+    return out;
+  }
 }
 
 function renderCategoriesGrid(counts) {
   if (categoriesGrid) {
     categoriesGrid.innerHTML = "";
+    if (!CATEGORIES.length) {
+      categoriesGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No categories available.</p>`;
+      return;
+    }
     CATEGORIES.forEach(c => {
       const card = document.createElement('article');
       card.className = "cat-card";
@@ -781,7 +807,7 @@ async function fetchAllItemsInCategory(cat) {
   return items;
 }
 
-function renderItemCard(container, ad) {
+function renderItemCard(container, ad, inShop = false) {
   if (container) {
     const card = document.createElement('div');
     card.className = "item-card";
@@ -790,8 +816,8 @@ function renderItemCard(container, ad) {
       <div class="item-img"><img src="${firstImg}" alt="${escapeHtml(ad.name || 'Item')}"></div>
       <div class="item-body">
         <div class="item-price">${fmtPrice(ad.price)}</div>
-        <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
-        <div class="item-shop">Posted by ${escapeHtml(ad.shop || '')}</div>
+        <div class="item-name">${escapeHtml(ad.name || '')}</div>
+        ${inShop ? '' : `<div class="item-shop">Posted by ${escapeHtml(ad.shop || '')}</div>`}
       </div>
     `;
     card.addEventListener('click', () => openItemDetail(ad));
@@ -842,16 +868,26 @@ async function openCategory(cat) {
 
 async function fetchShopCounts() {
   const cached = loadCache(CACHE.shops);
-  if (cached) return cached;
+  if (cached) {
+    console.log('Using cached shop counts:', cached);
+    return cached;
+  }
   const map = {};
-  await Promise.all(SHOPS.map(async sh => {
-    if (isExpired(sh.expiry)) { map[sh.name] = 0; return; }
-    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-    const snap = await getDocs(col);
-    map[sh.name] = snap.size || 0;
-  }));
-  saveCache(CACHE.shops, map);
-  return map;
+  try {
+    await Promise.all(SHOPS.map(async sh => {
+      if (isExpired(sh.expiry)) { map[sh.name] = 0; return; }
+      const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+      const snap = await getDocs(col);
+      map[sh.name] = snap.size || 0;
+      console.log(`Shop ${sh.name} has ${snap.size} items`);
+    }));
+    console.log('Shop counts:', map);
+    saveCache(CACHE.shops, map);
+    return map;
+  } catch (e) {
+    console.error('fetchShopCounts failed:', e);
+    return map;
+  }
 }
 
 function renderShopsGrid(countMap) {
@@ -859,6 +895,10 @@ function renderShopsGrid(countMap) {
     shopsGrid.innerHTML = "";
     const list = SHOPS.filter(s => !isExpired(s.expiry))
       .sort((a, b) => (countMap[b.name] || 0) - (countMap[a.name] || 0) || a.name.localeCompare(b.name));
+    if (!list.length) {
+      shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
+      return;
+    }
     list.forEach(shop => {
       const card = document.createElement('article');
       card.className = "shop-card";
@@ -879,9 +919,37 @@ function renderShopsGrid(countMap) {
       card.appendChild(content);
       shopsGrid.appendChild(card);
     });
-    if (!shopsGrid.children.length) {
-      shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
+  }
+}
+
+async function fetchAllItems() {
+  const cached = loadCache(CACHE.allItems);
+  if (cached) return cached;
+  const items = [];
+  await Promise.all(SHOPS.map(async sh => {
+    if (isExpired(sh.expiry)) return;
+    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+    const snap = await getDocs(col);
+    snap.forEach(d => {
+      const it = d.data();
+      it.id = d.id;
+      it.shop = sh.name;
+      items.push(it);
+    });
+  }));
+  items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  saveCache(CACHE.allItems, items);
+  return items;
+}
+
+function renderAllItemsGrid(items) {
+  if (allItemsGrid) {
+    allItemsGrid.innerHTML = "";
+    if (!items.length) {
+      allItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items available.</p>`;
+      return;
     }
+    items.forEach(ad => renderItemCard(allItemsGrid, ad));
   }
 }
 
@@ -914,12 +982,32 @@ function buildSlider(images, sliderEl, dotsEl) {
     sliderEl.innerHTML = '';
     dotsEl.innerHTML = '';
     if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
+    const slidesContainer = document.createElement('div');
+    slidesContainer.style.display = 'flex';
+    slidesContainer.style.transition = 'transform 0.45s ease';
+    slidesContainer.style.width = `${images.length * 100}%`;
     images.forEach((src, i) => {
+      const slide = document.createElement('div');
+      slide.style.width = `${100 / images.length}%`;
+      slide.style.height = '100%';
       const img = document.createElement('img');
       img.src = src;
       img.alt = `image-${i + 1}`;
-      img.className = 'slide' + (i === 0 ? ' active' : '');
-      sliderEl.appendChild(img);
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      slide.appendChild(img);
+      slidesContainer.appendChild(slide);
+    });
+    // Clone for infinite
+    const firstClone = slidesContainer.children[0].cloneNode(true);
+    const lastClone = slidesContainer.children[images.length - 1].cloneNode(true);
+    slidesContainer.appendChild(firstClone);
+    slidesContainer.insertBefore(lastClone, slidesContainer.children[0]);
+    slidesContainer.style.width = `${(images.length + 2) * 100}%`;
+    slidesContainer.style.transform = `translateX(-${100 / (images.length + 2)}%)`;
+    sliderEl.appendChild(slidesContainer);
+    images.forEach((_, i) => {
       const dot = document.createElement('div');
       dot.className = 'dot' + (i === 0 ? ' active' : '');
       dot.addEventListener('click', () => goTo(i));
@@ -934,42 +1022,74 @@ function buildSlider(images, sliderEl, dotsEl) {
     sliderEl.append(left, right);
 
     let current = 0;
-    const slides = sliderEl.querySelectorAll('.slide');
+    const total = images.length;
     const dots = dotsEl.querySelectorAll('.dot');
+    let isTransitioning = false;
 
-    function setPos(prev, next, dir) {
-      const a = slides[prev], b = slides[next];
-      b.style.transition = 'none';
-      b.style.left = (dir === 1 ? '100%' : '-100%');
-      b.style.opacity = '1';
-      void b.offsetWidth;
-      a.style.transition = 'left .45s ease, opacity .45s ease';
-      b.style.transition = 'left .45s ease, opacity .45s ease';
-      a.style.left = (dir === 1 ? '-100%' : '100%');
-      a.style.opacity = '1';
-      b.style.left = '0';
+    function updateDots() {
+      dots.forEach(d => d.classList.remove('active'));
+      dots[current].classList.add('active');
+    }
+
+    function moveTo(index, animate = true) {
+      if (isTransitioning) return;
+      isTransitioning = true;
+      const pos = -(index + 1) * (100 / (total + 2));
+      slidesContainer.style.transition = animate ? 'transform 0.45s ease' : 'none';
+      slidesContainer.style.transform = `translateX(${pos}%)`;
+      setTimeout(() => {
+        isTransitioning = false;
+        if (index < 0) {
+          current = total - 1;
+          moveTo(current, false);
+        } else if (index >= total) {
+          current = 0;
+          moveTo(current, false);
+        } else {
+          current = index;
+        }
+        updateDots();
+      }, animate ? 450 : 0);
     }
 
     function goTo(n) {
-      if (n === current) return;
-      const dir = n > current ? 1 : -1;
-      setPos(current, n, dir);
-      slides[current].classList.remove('active');
-      slides[n].className.add('active');
-      dots[current].classList.remove('active');
-      dots[n].classList.add('active');
-      current = n;
+      moveTo(n);
     }
 
-    left.addEventListener('click', () => goTo((current - 1 + slides.length) % slides.length));
-    right.addEventListener('click', () => goTo((current + 1) % slides.length));
+    left.addEventListener('click', () => moveTo(current - 1));
+    right.addEventListener('click', () => moveTo(current + 1));
+
     let startX = 0;
-    sliderEl.addEventListener('touchstart', e => startX = e.touches[0].clientX, { passive: true });
-    sliderEl.addEventListener('touchend', e => {
-      const endX = e.changedTouches[0].clientX;
-      if (startX - endX > 40) right.click();
-      if (endX - startX > 40) left.click();
+    let dist = 0;
+    sliderEl.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      dist = 0;
     }, { passive: true });
+    sliderEl.addEventListener('touchmove', e => {
+      dist = e.touches[0].clientX - startX;
+    }, { passive: true });
+    sliderEl.addEventListener('touchend', () => {
+      if (Math.abs(dist) > 40) {
+        if (dist > 0) left.click();
+        else right.click();
+      }
+    }, { passive: true });
+    updateDots();
+    // Preload and set height dynamically
+    let maxHeight = 0;
+    const imgs = slidesContainer.querySelectorAll('img');
+    let loaded = 0;
+    imgs.forEach(img => {
+      img.onload = () => {
+        loaded++;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        const h = ratio * sliderEl.clientWidth;
+        if (h > maxHeight) maxHeight = h;
+        if (loaded === imgs.length) {
+          sliderEl.style.height = `${maxHeight}px`;
+        }
+      };
+    });
   }
 }
 
@@ -1019,27 +1139,28 @@ async function renderShopTabsAndItems(shop, focusAdId = null) {
     const c = it.category || 'Other';
     (byCat[c] || (byCat[c] = [])).push(it);
   });
+  const catList = Object.keys(byCat).map(c => ({ cat: c, count: byCat[c].length }));
+  catList.sort((a, b) => b.count - a.count || a.cat.localeCompare(b.cat));
   if (shopTabs) {
     shopTabs.innerHTML = "";
-    const cats = Object.keys(byCat).sort((a, b) => a.localeCompare(b));
-    cats.forEach((c, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'main-tab' + (i === 0 ? ' active' : '');
-      btn.dataset.cat = c;
-      btn.textContent = `${c} (${byCat[c].length})`;
-      btn.addEventListener('click', () => {
-        shopTabs.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderShopItems(byCat[c]);
+    catList.forEach((entry, i) => {
+      const div = document.createElement('div');
+      div.className = 'shop-tab' + (i === 0 ? ' active' : '');
+      div.dataset.cat = entry.cat;
+      div.innerHTML = `${escapeHtml(entry.cat)} <span class="count">${entry.count}</span>`;
+      div.addEventListener('click', () => {
+        shopTabs.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
+        div.classList.add('active');
+        renderShopItems(byCat[entry.cat]);
       });
-      shopTabs.appendChild(btn);
+      shopTabs.appendChild(div);
     });
-    if (!cats.length) {
+    if (!catList.length) {
       if (shopItemsGrid) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
       return;
     }
-    const firstCat = focusAdId ? Object.keys(byCat).find(cat => (byCat[cat] || []).some(it => it.id === focusAdId)) : cats[0];
-    shopTabs.querySelectorAll('.main-tab').forEach(b => b.dataset.cat === firstCat && b.classList.add('active'));
+    const firstCat = focusAdId ? catList.find(e => (byCat[e.cat] || []).some(it => it.id === focusAdId))?.cat : catList[0].cat;
+    shopTabs.querySelectorAll('.shop-tab').forEach(b => b.dataset.cat === firstCat && b.classList.add('active'));
     renderShopItems(byCat[firstCat], focusAdId);
   }
 }
@@ -1047,7 +1168,7 @@ async function renderShopTabsAndItems(shop, focusAdId = null) {
 function renderShopItems(list, focusAdId = null) {
   if (shopItemsGrid) {
     shopItemsGrid.innerHTML = '';
-    list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(ad => renderItemCard(shopItemsGrid, ad));
+    list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(ad => renderItemCard(shopItemsGrid, ad, true));
     if (!list.length) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</p>`;
     if (focusAdId) {
       const ad = list.find(x => x.id === focusAdId);
@@ -1081,6 +1202,27 @@ if (globalSearch) globalSearch.addEventListener('input', () => {
   if (shopsView.classList.contains('show')) {
     [...shopsGrid.children].forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
   }
+  if (allItemsView && allItemsView.classList.contains('show')) {
+    const cachedItems = loadCache(CACHE.allItems) || [];
+    const filtered = cachedItems.filter(ad =>
+      (ad.name || '').toLowerCase().includes(q) ||
+      (ad.desc || '').toLowerCase().includes(q) ||
+      (ad.shop || '').toLowerCase().includes(q) ||
+      (ad.category || '').toLowerCase().includes(q)
+    );
+    renderAllItemsGrid(filtered);
+    fetchAllItems().then(freshItems => {
+      const freshFiltered = freshItems.filter(ad =>
+        (ad.name || '').toLowerCase().includes(q) ||
+        (ad.desc || '').toLowerCase().includes(q) ||
+        (ad.shop || '').toLowerCase().includes(q) ||
+        (ad.category || '').toLowerCase().includes(q)
+      );
+      if (JSON.stringify(freshFiltered) !== JSON.stringify(filtered)) {
+        renderAllItemsGrid(freshFiltered);
+      }
+    }).catch(e => console.warn('Failed to update all items search', e));
+  }
 });
 
 tabs.forEach(btn => {
@@ -1089,9 +1231,24 @@ tabs.forEach(btn => {
     btn.classList.add('active');
     btn.setAttribute('aria-pressed', 'true');
     const target = btn.dataset.view;
-    [categoriesView, shopsView].forEach(v => v.classList.remove('show'));
-    document.getElementById(target).classList.add('show');
+    const views = [categoriesView, shopsView, allItemsView].filter(v => v); // Filter out null/undefined
+    views.forEach(v => v.classList.remove('show'));
+    const targetView = document.getElementById(target);
+    if (targetView) {
+      targetView.classList.add('show');
+    } else {
+      console.warn(`View with ID ${target} not found`);
+    }
     closeDrawer();
+    if (target === 'allItemsView' && targetView) {
+      const cachedItems = loadCache(CACHE.allItems) || [];
+      renderAllItemsGrid(cachedItems);
+      fetchAllItems().then(freshItems => {
+        if (JSON.stringify(freshItems) !== JSON.stringify(cachedItems)) {
+          renderAllItemsGrid(freshItems);
+        }
+      }).catch(e => console.warn('Failed to update all items', e));
+    }
   });
 });
 
@@ -1136,7 +1293,7 @@ if (numberOk) numberOk.addEventListener('click', async () => {
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
   } else {
     const waNum = shopPhone.replace(/^\+/, '');
-    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle || ''}* on PickMe (Tech & Gagets).`;
+    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle || ''}* on PickMe (Tech & Gadgets).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
   }
   closeNumberModal();
@@ -1424,6 +1581,7 @@ function promptReviewCode() {
   closeDrawer();
   categoriesView.classList.add('show');
   shopsView.classList.remove('show');
+  if (allItemsView) allItemsView.classList.remove('show');
   document.body.classList.add('ready');
 }));
 
@@ -1524,21 +1682,6 @@ async function openReview(payload) {
   done.className = 'btn-primary';
   done.style.marginTop = '10px';
   done.textContent = 'Submit Review';
-  async function urlToDataURL(url) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      const blob = await res.blob();
-      return await new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = reject;
-        fr.readAsDataURL(blob);
-      });
-    } catch (e) {
-      console.warn('urlToDataURL failed for', url, e);
-      return null;
-    }
-  }
   done.onclick = async () => {
     const approved = states.filter(s => s.approve === true).map(s => s.data);
     const rejectedStates = states.filter(s => s.approve === false);
@@ -1608,8 +1751,15 @@ async function openReview(payload) {
     };
     const resultId = await putShort(result);
     clearShopCaches(payload.shop);
-    await renderShops();
-    await renderCategories();
+    await Promise.all([
+      renderShops(),
+      renderCategories(),
+      fetchAllItems().then(items => {
+        if (allItemsView.classList.contains('show')) {
+          renderAllItemsGrid(items);
+        }
+      })
+    ]);
     const shopPhone = (SHOPS.find(s => s.name === payload.shop)?.phone) || "";
     const link = `${location.origin}${location.pathname}?result=${resultId}`;
     const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
@@ -1635,142 +1785,88 @@ async function openReview(payload) {
     done.disabled = false;
     done.textContent = "Submit Review";
   };
-  const containerHost = itemDetail.querySelector('.item-detail');
-  if (containerHost) {
-    containerHost.innerHTML = '';
-    const title = document.createElement('div');
-    title.className = 'section-title';
-    title.textContent = `Review · ${payload.shop}`;
-    containerHost.append(title, container, done);
-  }
+  container.appendChild(done);
+  if (itemDetail) itemDetail.appendChild(container);
   openDrawer();
-}
-
-async function openResult(payload) {
-  hide(shopBanner);
-  show(itemDetail);
-  hide(shopGallery);
-  hide(catPage);
-  if (itemSlider) itemSlider.innerHTML = '';
-  if (itemDots) itemDots.innerHTML = '';
-  if (detailTitle) detailTitle.textContent = "Submission results";
-  if (detailPrice) detailPrice.textContent = "";
-  if (detailPostedBy) detailPostedBy.textContent = payload.shop || "";
-  if (detailDesc) detailDesc.textContent = "";
-  const host = itemDetail.querySelector('.item-detail');
-  if (host) {
-    host.innerHTML = '';
-    const secA = document.createElement('div');
-    secA.innerHTML = `<div class="section-title">Approved</div>`;
-    const listA = document.createElement('div');
-    listA.className = 'items-grid';
-    (payload.approved || []).forEach(ad => renderItemCard(listA, ad));
-    if (!(payload.approved || []).length) listA.innerHTML = "<p>No approved items.</p>";
-    secA.appendChild(listA);
-    const secR = document.createElement('div');
-    secR.style.marginTop = '10px';
-    secR.innerHTML = `<div class="section-title">Rejected</div>`;
-    const listR = document.createElement('div');
-    listR.className = 'items-grid';
-    (payload.rejected || []).forEach(ad => {
-      const imgs = (ad.previewDataUrl) ? [ad.previewDataUrl]
-        : (ad.localImages && ad.localImages.length) ? ad.localImages
-        : (ad.images || []);
-      const first = imgs[0] || 'https://via.placeholder.com/600x400?text=Image';
-      const card = document.createElement('div');
-      card.className = 'item-card';
-      card.innerHTML = `
-        <div class="item-img"><img src="${first}" alt=""></div>
-        <div class="item-body">
-          <div class="item-price">${fmtPrice(ad.price)}</div>
-          <div class="item-desc">${escapeHtml(ad.desc || '')}</div>
-          <div class="item-shop">Reason: ${escapeHtml(ad.reason || '')}</div>
-        </div>
-      `;
-      listR.appendChild(card);
-    });
-    if (!(payload.rejected || []).length) listR.innerHTML = "<p>No rejected items.</p>";
-    secR.appendChild(listR);
-    const done = document.createElement('button');
-    done.className = 'btn-primary';
-    done.style.marginTop = '10px';
-    done.textContent = 'Done';
-    done.onclick = () => closeDrawer();
-    host.append(secA, secR, done);
-  }
-  openDrawer();
-}
-
-async function router() {
-  const url = new URL(location.href);
-  const reviewId = url.searchParams.get('review');
-  const resultId = url.searchParams.get('result');
-  document.body.classList.remove('ready');
-  document.body.classList.add('hide-initial');
-  try {
-    if (reviewId) {
-      const payload = await getShort(reviewId);
-      if (!payload || payload.type !== 'review') {
-        alert("Invalid review link.");
-      } else {
-        reviewPayloadPending = payload;
-        promptReviewCode();
-        document.body.classList.remove('hide-initial');
-        document.body.classList.add('ready');
-        return;
-      }
-    }
-    if (resultId) {
-      const payload = await getShort(resultId);
-      if (!payload || payload.type !== 'result') {
-        alert("Invalid result link.");
-      } else {
-        await openResult(payload);
-        document.body.classList.remove('hide-initial');
-        document.body.classList.add('ready');
-        return;
-      }
-    }
-    categoriesView.classList.add('show');
-    shopsView.classList.remove('show');
-    document.querySelector('.main-tab[data-view="categoriesView"]').classList.add('active');
-    document.querySelector('.main-tab[data-view="categoriesView"]').setAttribute('aria-pressed', 'true');
-    document.querySelector('.main-tab[data-view="shopsView"]').classList.remove('active');
-    document.querySelector('.main-tab[data-view="shopsView"]').setAttribute('aria-pressed', 'false');
-    document.body.classList.remove('hide-initial');
-    document.body.classList.add('ready');
-  } catch (e) {
-    console.error('[router]', e);
-    document.body.classList.remove('hide-initial');
-    document.body.classList.add('ready');
-  }
 }
 
 async function renderCategories() {
-  try {
-    const counts = await countByCategory();
-    renderCategoriesGrid(counts);
-  } catch (e) {
-    console.warn('renderCategories failed', e);
-    renderCategoriesGrid({});
-  }
+  const counts = await countByCategory();
+  renderCategoriesGrid(counts);
 }
 
 async function renderShops() {
-  try {
-    const counts = await fetchShopCounts();
-    renderShopsGrid(counts);
-  } catch (e) {
-    console.warn('renderShops failed', e);
-    const fb = {};
-    SHOPS.forEach(s => fb[s.name] = 0);
-    renderShopsGrid(fb);
+  const counts = await fetchShopCounts();
+  renderShopsGrid(counts);
+}
+
+async function router() {
+  // Clear cache to ensure fresh data
+  localStorage.clear();
+  console.log('Cache cleared');
+  const params = new URLSearchParams(location.search);
+  const reviewId = params.get('review');
+  const resultId = params.get('result');
+  if (reviewId) {
+    const payload = await getShort(reviewId);
+    if (payload && payload.type === 'review') {
+      reviewPayloadPending = payload;
+      promptReviewCode();
+      return;
+    }
   }
+  if (resultId) {
+    const payload = await getShort(resultId);
+    if (payload && payload.type === 'result') {
+      const approved = payload.approved || [];
+      const rejected = payload.rejected || [];
+      const msg = [];
+      if (approved.length) {
+        msg.push(`Approved items (${approved.length}):`);
+        approved.forEach((it, i) => msg.push(`${i + 1}. ${it.name} (${it.category})`));
+      }
+      if (rejected.length) {
+        msg.push(`\nRejected items (${rejected.length}):`);
+        rejected.forEach((it, i) => msg.push(`${i + 1}. ${it.name} (${it.reason})`));
+      }
+      if (msg.length) {
+        alert(msg.join('\n'));
+      }
+      history.replaceState(state, '', location.pathname);
+    }
+  }
+  document.body.classList.add('ready');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    await Promise.all([renderCategories(), renderShops()]);
+    // Render from cache immediately
+    const cachedCats = loadCache(CACHE.cats) || {};
+    renderCategoriesGrid(cachedCats);
+    const cachedShops = loadCache(CACHE.shops) || SHOPS.reduce((acc, s) => ({ ...acc, [s.name]: 0 }), {});
+    renderShopsGrid(cachedShops);
+    const cachedItems = loadCache(CACHE.allItems) || [];
+    renderAllItemsGrid(cachedItems);
+    // Update in background
+    await Promise.all([
+      countByCategory().then(counts => {
+        if (JSON.stringify(counts) !== JSON.stringify(cachedCats)) {
+          renderCategoriesGrid(counts);
+        }
+      }),
+      fetchShopCounts().then(counts => {
+        if (JSON.stringify(counts) !== JSON.stringify(cachedShops)) {
+          renderShopsGrid(counts);
+        }
+      }),
+      fetchAllItems().then(items => {
+        if (JSON.stringify(items) !== JSON.stringify(cachedItems)) {
+          if (allItemsView && allItemsView.classList.contains('show')) {
+            renderAllItemsGrid(items);
+          }
+        }
+      })
+    ]);
     await router();
   } catch (e) {
     console.error('init failed', e);
@@ -1779,10 +1875,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Fallback to show shops if network is slow
-const fb = {};
-SHOPS.forEach(s => fb[s.name] = 0);
-renderShopsGrid(fb);
 </script>
 
 <!-- ===================== FOOTER ===================== -->
