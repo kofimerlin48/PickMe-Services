@@ -5,64 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Tech & Gadgets - PickMe Services</title>
 
-<!-- ===================== HEADER (Injected) ===================== -->
-<script>
-/* Robust header loader — runs after DOM is ready so #header-placeholder exists */
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const res = await fetch('header.html', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to load header');
-    let html = await res.text();
-    const pageTitle = "Tech & Gadgets";
-    html = html.replace(
-      /<h1[^>]*>.*?<\/h1>/i,
-      `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">${pageTitle}</h1>`
-    );
-    const host = document.getElementById('header-placeholder');
-    if (host) {
-      host.innerHTML = html;
+<!-- Performance hints -->
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+<meta name="color-scheme" content="light only"/>
 
-      // Re-run any scripts within the injected header
-      host.querySelectorAll('script').forEach(s0 => {
-        const s1 = document.createElement('script');
-        if (s0.src) s1.src = s0.src;
-        else s1.textContent = s0.textContent;
-        document.body.appendChild(s1);
-      });
-      host.removeAttribute('aria-hidden');
-    }
-  } catch (e) {
-    console.error('[header]', e);
-  }
-});
-</script>
-
-<!-- ===================== STYLES ===================== -->
 <style>
 :root{
   --theme:#c12872;
   --ink:#222;
   --muted:#666;
-  --bg:#f9f9f9;
+  --bg:#fafafa;
   --card:#fff;
+  --ring:rgba(193,40,114,.1);
+  --ok:#2e7d32;
+  --info:#1976d2;
+  --wa:#25d366;
 }
 
 /* base */
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-:focus,:focus-visible,button:focus,input:focus,textarea:focus{ outline:none!important; box-shadow:none!important; }
 html,body{ height:100%; }
 body{
   margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background:var(--bg); color:var(--ink); padding-top:100px; overflow-x:hidden;
+  background:var(--bg); color:var(--ink); padding-top:98px; overflow-x:hidden;
 }
 
-/* header + search */
+/* instant paint / no FOUC */
+body.hide-initial *{ visibility:hidden!important; }
+body.ready *{ visibility:visible!important; }
+
+/* header placeholder (injected later; keep height reserved to avoid layout shift) */
+#header-placeholder{ position:fixed; top:0; left:0; right:0; height:98px; z-index:1000; background:#fff; border-bottom:1px solid #eee; }
+
+/* page header + search */
 .page-header{ text-align:center; margin:0 16px 8px; }
 .page-header p{ margin:6px 0 0; color:#000; font-weight:700; font-size:15px; }
 .search-bar{ display:flex; justify-content:center; margin:10px 16px 6px; }
 .search-bar input{
-  width:100%; max-width:640px; padding:12px 14px; border:1px solid #ddd; border-radius:12px; background:#fff; font-size:16px;
+  width:100%; max-width:720px; padding:12px 14px; border:1px solid #ddd; border-radius:12px; background:#fff; font-size:16px;
 }
+.search-bar input:focus{ border-color:var(--theme); box-shadow:0 0 0 4px var(--ring); }
 .search-bar input::placeholder{ color:#999; }
 
 /* top tabs */
@@ -70,63 +54,69 @@ body{
 .main-tab{ padding:10px 14px; border:1px solid #eee; border-radius:999px; background:#fff; cursor:pointer; user-select:none; font-weight:800; font-size:14px; white-space:nowrap; }
 .main-tab.active{ color:#fff; background:var(--theme); border-color:var(--theme); }
 
-/* containers */
+/* containers/views */
 .view{ display:none; }
 .view.show{ display:block; }
-.container{ padding:16px 16px 120px; }
+.container{ padding:16px 16px 116px; }
 
-/* categories list */
-.categories-grid{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;
-}
+/* grid cards */
+.categories-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.cards-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; padding-top:6px; }
+.items-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
+
+/* category card (thumbs are lazy to avoid load bar stalling) */
 .cat-card{
   display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06); cursor:pointer;
 }
-.cat-thumb{ width:42px; height:42px; border-radius:10px; background:#f2f2f2; overflow:hidden; display:grid; place-items:center; flex-shrink:0; }
-.cat-thumb img{ width:100%; height:100%; object-fit:cover; }
+.cat-thumb{
+  width:44px; height:44px; border-radius:10px; background:#f2f2f2; overflow:hidden; display:grid; place-items:center; flex-shrink:0;
+}
+.cat-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 .cat-info{ flex:1; min-width:0; }
 .cat-title{ font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cat-sub{ font-size:12px; color:#555; }
 .cat-arrow{ font-size:18px; color:#999; margin-left:4px; }
 
-/* items grid */
-.items-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
-.item-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #eee; display:flex; flex-direction:column; min-height:240px; }
+/* item card (precise height to content) */
+.item-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #eee; display:flex; flex-direction:column; }
 .item-img{ position:relative; width:100%; padding-top:66%; background:#f2f2f2; overflow:hidden; }
-.item-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.item-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
 .item-body{ padding:10px; display:flex; flex-direction:column; gap:6px; }
 .item-price{ font-weight:900; color:#111; }
 .item-name{ font-size:14px; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .item-shop{ font-size:11px; color:#777; }
+.item-share{ position:absolute; right:8px; bottom:8px; background:rgba(0,0,0,.5); color:#fff; border:none; border-radius:999px; padding:6px 8px; font-size:12px; cursor:pointer; }
 
-/* shops grid (hero cards) */
-.cards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; padding-top:6px; }
+/* shop hero card */
 .shop-card{
-  position:relative; height:250px; border-radius:15px; overflow:hidden; background:#ddd center/cover no-repeat;
+  position:relative; height:250px; border-radius:16px; overflow:hidden; background:#ddd center/cover no-repeat;
   box-shadow:0 3px 10px rgba(0,0,0,.08); display:flex; align-items:flex-end; transition:transform .18s ease;
 }
-.shop-card:hover{ transform:translateY(-4px); }
-.shop-card::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.75) 100%); }
-.shop-card .content{ position:relative; z-index:1; color:#fff; width:100%; padding:15px; display:flex; flex-direction:column; justify-content:space-between; }
-.shop-title{ font-weight:900; font-size:20px; margin:0 0 4px; }
-.shop-slogan{ font-size:13px; opacity:.95; margin:0 0 4px; }
+.shop-card:hover{ transform:translateY(-3px); }
+.shop-card::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.78) 100%); }
+.shop-card .content{ position:relative; z-index:1; color:#fff; width:100%; padding:15px; display:flex; flex-direction:column; gap:10px; }
+.shop-title{ font-weight:900; font-size:20px; margin:0; }
+.shop-slogan{ font-size:13px; opacity:.95; margin:0; }
 .shop-lower{ display:flex; align-items:center; justify-content:space-between; }
 .shop-meta{ font-size:12px; opacity:.92; }
 .btn-enter{ background:var(--theme); color:#fff; border:0; border-radius:10px; padding:8px 12px; font-weight:800; cursor:pointer; }
+.shop-share{ position:absolute; top:10px; right:10px; background:rgba(0,0,0,.55); color:#fff; border:0; border-radius:999px; padding:8px 10px; cursor:pointer; z-index:2; }
 
-/* drawer */
+/* Drawer (slide-in pages) */
 #drawer{
-  position:fixed; top:0; right:-100%; width:100%; max-width:1100px; height:100%;
+  position:fixed; top:0; right:-100%; width:100%; max-width:1120px; height:100%;
   background:#fff; z-index:9999; overflow-y:auto; transition:right .42s ease; box-shadow:-5px 0 16px rgba(0,0,0,.18);
   padding-bottom:140px;
 }
 #drawer.show{ right:0; }
 #drawerClose{
   position:fixed; top:16px; right:-60px; width:42px; height:42px; border-radius:50%;
-  background:#111; color:#fff; border:0; font-size:24px; display:grid; place-items:center; z-index:10000; transition:right .42s ease;
+  background:#111; color:#fff; border:0; font-size:24px; display:grid; place-items:center; z-index:10002; transition:right .42s ease;
 }
 #drawer.show #drawerClose{ right:16px; }
+
+/* Banner (shop) */
 .banner{
   position:relative; height:35vh; display:grid; place-items:center; text-align:center; color:#fff;
   background:#333 center/cover no-repeat;
@@ -136,13 +126,25 @@ body{
 .banner-text h2{ margin:0 0 6px; font-size:15px; font-weight:700; }
 .banner-text h1{ margin:0 0 6px; font-size:26px; }
 .banner-text p{ margin:0; font-size:13px; opacity:.95; }
-.drawer-content{ max-width:1100px; margin:0 auto; padding:18px; }
+
+/* inside-drawer actions */
+.shop-top-actions{ position:fixed; top:12px; left:12px; z-index:10002; display:none; gap:8px; }
+.action-round{ background:#000; color:#fff; border:0; border-radius:50%; width:40px; height:40px; display:grid; place-items:center; cursor:pointer; font-size:22px; }
+.drawer-content{ max-width:1120px; margin:0 auto; padding:18px; }
 .section-title{ font-weight:900; margin:6px 0 12px; }
 
-/* slider */
-.slider{ position:relative; overflow:hidden; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#f2f2f2; }
-.slide{ position:absolute; top:0; left:100%; width:100%; height:100%; object-fit:contain; opacity:0; transition:left .45s ease, opacity .45s ease; }
-.slide.active{ left:0; opacity:1; }
+/* Slider / carousel (centered with blurred backfill) */
+.item-visual{
+  position:relative; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); background:#111;
+}
+.item-visual .bg{
+  position:absolute; inset:0; filter:blur(24px); transform:scale(1.1);
+  background-position:center; background-size:cover; opacity:.35;
+}
+.slider{ position:relative; height:320px; overflow:hidden; }
+.slider-track{ display:flex; width:100%; height:100%; transition:transform .45s ease; }
+.slide{ flex:0 0 100%; height:100%; display:grid; place-items:center; }
+.slide img{ max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; display:block; }
 .slider .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:24px; color:#fff; background:rgba(0,0,0,.38); padding:6px 10px; border-radius:50%; cursor:pointer; user-select:none; }
 .slider .nav.left{ left:10px; }
 .slider .nav.right{ right:10px; }
@@ -157,122 +159,104 @@ body{
 .detail-meta{ font-size:12px; color:#666; }
 .detail-desc{ font-size:14px; white-space:pre-wrap; color:#333; }
 .actions-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
-.btn-primary{ background:var(--theme); color:#fff; border:0; border-radius:10px; padding:12px 18px; cursor:pointer; font-size:15px; font-weight:800; }
-.btn-secondary{ background:#3a3a3a; color:#fff; border:0; border-radius:10px; padding:12px 18px; cursor:pointer; font-size:15px; }
+.btn{ border:0; border-radius:10px; padding:12px 18px; cursor:pointer; font-size:15px; font-weight:800; color:#fff; }
+.btn-theme{ background:var(--theme); }
+.btn-dark{ background:#3a3a3a; }
+.btn-call{ background:var(--info); }
+.btn-wa{ background:var(--wa); }
 
-/* inside-drawer top actions */
-.shop-top-actions{ position:fixed; top:12px; left:12px; z-index:10002; display:none; gap:8px; }
-.action-round{ background:#000; color:#fff; border:0; border-radius:50%; width:40px; height:40px; display:grid; place-items:center; cursor:pointer; font-size:22px; }
+/* shop tabs (sorted by item count) */
+.shop-tabs{ display:flex; gap:8px; overflow:auto hidden; padding:8px 0; margin:0 0 10px; }
+.shop-tab{ padding:8px 12px; border-radius:999px; background:#eee; cursor:pointer; user-select:none; font-weight:700; font-size:14px; white-space:nowrap; position:relative; }
+.shop-tab.active{ background:var(--theme); color:#fff; }
+.shop-tab .count{ background:#fff; color:var(--ink); font-size:12px; padding:2px 6px; border-radius:999px; margin-left:6px; display:inline-block; min-width:20px; text-align:center; }
+.shop-tab.active .count{ background:rgba(255,255,255,.28); color:#fff; }
 
-/* modal base */
-.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:10001; }
+/* modal */
+.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:10010; }
 .modal.show{ display:flex; }
-.modal-card{ width:95%; max-width:700px; max-height:90vh; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:flex; flex-direction:column; }
+.modal-card{ width:95%; max-width:720px; max-height:90vh; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:flex; flex-direction:column; }
 .modal-header,.modal-footer{ padding:14px 16px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .modal-footer{ border-top:1px solid #eee; border-bottom:none; justify-content:flex-end; }
 .modal-body{ padding:16px; overflow:auto; }
+.close-x{ background:#000; color:#fff; border:none; border-radius:50%; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; }
+
+/* inputs */
+.input{ width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:14px; }
+.input:focus{ border-color:var(--theme); box-shadow:0 0 0 3px var(--ring); }
+.lbl{ font-size:12px; color:#555; margin:6px 0 4px; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* thumbs / uploader */
+.thumb-row{ display:flex; gap:8px; overflow-x:auto; }
+.thumb{ position:relative; width:92px; height:92px; border-radius:10px; background:#f2f2f2; overflow:hidden; flex-shrink:0; }
+.thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.thumb .trash{ position:absolute; top:4px; right:4px; width:22px; height:22px; border:0; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; display:grid; place-items:center; }
 
 /* admin option cards */
 .mopt-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
 .mopt-card{ border:1px solid #eee; border-radius:12px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,.06); display:flex; flex-direction:column; gap:6px; cursor:pointer; }
 .mopt-card h4{ margin:0; font-size:14px; }
 .mopt-card p{ margin:0; font-size:12px; color:#555; }
-.close-x{ background:#000; color:#fff; border:none; border-radius:50%; width:32px; height:32px; display:grid; place-items:center; cursor:pointer; }
 
-/* inputs */
-.input{ width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:14px; }
-.input:focus{ border-color:var(--theme); box-shadow:0 0 0 3px rgba(193,40,114,.08); }
-.lbl{ font-size:12px; color:#555; margin:6px 0 4px; }
-.row{ display:flex; gap:10px; flex-wrap:wrap; }
-
-/* thumbs */
-.thumb-row{ display:flex; gap:8px; overflow-x:auto; }
-.thumb{ position:relative; width:90px; height:90px; border-radius:10px; background:#f2f2f2; overflow:hidden; flex-shrink:0; }
-.thumb img{ width:100%; height:100%; object-fit:cover; }
-.thumb .trash{ position:absolute; top:4px; right:4px; width:22px; height:22px; border:0; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; display:grid; place-items:center; }
-
-/* simple toast/progress */
+/* toast/progress */
 .toast{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:10px 14px; border-radius:999px; opacity:0; transition:opacity .2s; z-index:10050; }
 .toast.show{ opacity:1; }
 
-/* footer */
-.footer-wrap{ position:fixed; bottom:0; left:0; right:0; z-index:9999; }
-
-/* shop tabs */
-.shop-tabs{ display:flex; gap:8px; overflow:auto hidden; padding:8px 0; margin:0 0 10px; }
-.shop-tab{ padding:8px 12px; border-radius:999px; background:#eee; cursor:pointer; user-select:none; font-weight:600; font-size:14px; white-space:nowrap; position:relative; }
-.shop-tab.active{ background:var(--theme); color:#fff; }
-.shop-tab .count{ background:#fff; color:var(--ink); font-size:12px; padding:2px 6px; border-radius:999px; margin-left:4px; display:inline-block; min-width:20px; text-align:center; }
-.shop-tab.active .count{ background:rgba(255,255,255,.3); color:#fff; }
+/* footer iframe reserve height */
+.footer-wrap{ position:fixed; bottom:0; left:0; right:0; z-index:50; }
 </style>
 </head>
-
-<body>
-<!-- HEADER HOST (must be in <body>, not <head>) -->
+<body class="hide-initial">
 <div id="header-placeholder" aria-hidden="true"></div>
 
-<!-- FOUC control -->
-<style>
-  body.hide-initial *{ visibility:hidden!important; }
-  body.ready *{ visibility:visible!important; }
-</style>
-<script> document.documentElement.style.background="#fff"; document.body.classList.add("hide-initial"); </script>
-
-<!-- ===================== PAGE HEADER + SEARCH ===================== -->
-<header class="page-header">
+<header class="page-header" aria-hidden="true">
   <h1 class="sr-only" style="position:absolute;left:-9999px">Tech &amp; Gadgets</h1>
   <p>Find tech & gadget shops around you, browse categories, and contact sellers directly</p>
 </header>
 
-<div class="search-bar">
+<div class="search-bar" aria-hidden="true">
   <input id="globalSearch" type="search" placeholder="Search items, shops, models, keywords…" aria-label="Search">
 </div>
 
-<!-- ===================== TOP TABS ===================== -->
-<nav class="main-tabs" aria-label="Main sections">
+<nav class="main-tabs" aria-label="Main sections" aria-hidden="true">
   <button class="main-tab active" data-view="allItemsView" aria-pressed="true">All Items</button>
   <button class="main-tab" data-view="categoriesView" aria-pressed="false">Categories</button>
   <button class="main-tab" data-view="shopsView" aria-pressed="false">Shops</button>
 </nav>
 
-<!-- ===================== ALL ITEMS VIEW ===================== -->
 <section id="allItemsView" class="view show" aria-label="All Items">
   <div class="container">
-    <div id="allItemsGrid" class="items-grid" aria-live="polite"></div>
-  </div>
-</section>
-
-<!-- ===================== CATEGORIES VIEW ===================== -->
-<section id="categoriesView" class="view" aria-label="Categories">
-  <div class="container">
-    <div id="categoriesGrid" class="categories-grid" aria-live="polite"></div>
-    <!-- Legacy inline block kept but unused; we now show categories inside drawer -->
-    <div id="categoryItemsWrap" style="display:none;margin-top:14px;">
-      <div id="categoryItemsTitle" class="section-title"></div>
-      <div class="search-bar" style="margin:6px 0 12px;">
-        <input id="categorySearch" class="input" type="search" placeholder="Search within this category…" aria-label="Category search">
-      </div>
-      <div id="categoryItemsGrid" class="items-grid" aria-live="polite"></div>
+    <div id="allItemsGrid" class="items-grid" aria-live="polite">
+      <!-- instant skeleton to avoid "flash": -->
+      <div style="grid-column:1/-1;text-align:center;color:#666;" id="allItemsStatus">Items loading…</div>
     </div>
   </div>
 </section>
 
-<!-- ===================== SHOPS VIEW ===================== -->
-<section id="shopsView" class="view" aria-label="Shops">
+<section id="categoriesView" class="view" aria-label="Categories">
   <div class="container">
-    <div id="shopsGrid" class="cards-grid" aria-live="polite"></div>
+    <div id="categoriesGrid" class="categories-grid" aria-live="polite">
+      <!-- filled instantly from cache or static list -->
+    </div>
   </div>
 </section>
 
-<!-- ===================== DRAWER (ITEM / CATEGORY / SHOP) ===================== -->
+<section id="shopsView" class="view" aria-label="Shops">
+  <div class="container">
+    <div id="shopsGrid" class="cards-grid" aria-live="polite">
+      <!-- placeholder: -->
+      <div style="grid-column:1/-1;text-align:center;color:#666;" id="shopsStatus">Loading shops…</div>
+    </div>
+  </div>
+</section>
+
+<!-- Drawer -->
 <aside id="drawer" aria-hidden="true" aria-label="Details drawer">
-  <button id="catBackBtn" aria-label="Back" style="position:fixed;top:12px;left:12px;padding:8px 16px;border:none;border-radius:6px;background:#000;color:#fff;font-weight:700;font-size:14px;display:none;z-index:10002;">
-    BACK
-  </button>
   <button id="drawerClose" aria-label="Close details">&times;</button>
 
-  <!-- shop header -->
   <section id="shopBanner" class="banner" style="display:none;">
+    <button class="shop-share" id="shopShareBtn" title="Share shop">Share</button>
     <div class="banner-text">
       <h2>Welcome to</h2>
       <h1 id="shopName"></h1>
@@ -280,49 +264,73 @@ body{
     </div>
   </section>
 
-  <!-- inside-drawer actions (restore hamburger left + close at right) -->
   <div id="shopTopActions" class="shop-top-actions">
     <button id="hamburgerBtn" class="action-round" aria-label="Admin">&#9776;</button>
   </div>
 
   <div class="drawer-content">
-    <!-- Item detail -->
+
+    <!-- Category slide-in page -->
+    <div id="catPage" style="display:none;">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span id="catPageTitle"></span>
+        <button id="catCloseBtn" class="close-x" aria-label="Close">&times;</button>
+      </div>
+      <div class="search-bar" style="margin:6px 0 12px;">
+        <input id="catPageSearch" class="input" type="search" placeholder="Search within this category…" aria-label="Category search">
+      </div>
+      <div id="catPageGrid" class="items-grid" aria-live="polite">
+        <div style="grid-column:1/-1;text-align:center;color:#666;" id="catPageStatus">Items loading…</div>
+      </div>
+    </div>
+
+    <!-- Item detail page -->
     <div id="itemDetail" style="display:none;">
-      <div id="itemSlider" class="slider"></div>
-      <div id="itemDots" class="dots"></div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Item</span>
+        <button id="itemCloseBtn" class="close-x" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="item-visual" id="itemVisual" aria-hidden="true">
+        <div class="bg" id="itemBlurBg"></div>
+        <div id="itemSlider" class="slider">
+          <div class="slider-track" id="itemTrack"></div>
+          <div class="nav left" id="itemPrev">&#10094;</div>
+          <div class="nav right" id="itemNext">&#10095;</div>
+        </div>
+        <div id="itemDots" class="dots"></div>
+      </div>
+
       <div class="item-detail">
         <div id="detailTitle" class="detail-title"></div>
         <div id="detailPrice" class="detail-price"></div>
         <div id="detailPostedBy" class="detail-meta"></div>
         <div id="detailDesc" class="detail-desc"></div>
         <div class="actions-row">
-          <button id="callBtn" class="btn-primary">Call</button>
-          <button id="waBtn" class="btn-secondary">WhatsApp</button>
-          <button id="viewShopBtn" class="btn-primary">View Shop</button>
+          <button id="callBtn" class="btn btn-call">Call</button>
+          <button id="waBtn"   class="btn btn-wa">WhatsApp</button>
+          <button id="viewShopBtn" class="btn btn-theme">View Shop</button>
+          <button id="itemShareBtn" class="btn btn-dark">Share</button>
         </div>
       </div>
     </div>
 
-    <!-- Shop gallery -->
+    <!-- Shop page -->
     <div id="shopGallery" style="display:none;">
-      <div class="section-title">Items</div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Items</span>
+        <button id="shopCloseBtn" class="close-x" aria-label="Close">&times;</button>
+      </div>
       <div id="shopTabs" class="shop-tabs"></div>
-      <div id="shopItemsGrid" class="items-grid"></div>
+      <div id="shopItemsGrid" class="items-grid">
+        <div style="grid-column:1/-1;text-align:center;color:#666;" id="shopItemsStatus">Loading items…</div>
+      </div>
     </div>
 
-    <!-- Category page within drawer -->
-    <div id="catPage" style="display:none;">
-      <div class="section-title" id="catPageTitle"></div>
-      <div class="search-bar" style="margin:6px 0 12px;">
-        <input id="catPageSearch" class="input" type="search" placeholder="Search within this category…" aria-label="Category search">
-      </div>
-      <div id="catPageGrid" class="items-grid" aria-live="polite"></div>
-    </div>
   </div>
 </aside>
 
-<!-- ===================== MODALS ===================== -->
-<!-- per-shop access code -->
+<!-- Modals -->
 <div id="codeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -330,16 +338,16 @@ body{
       <button id="codeClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <input id="codeInput" class="input" placeholder="Access code" aria-label="Access code">
+      <div id="shopExpiryNotice" style="display:none;background:#fff3cd;border:1px solid #ffe08a;padding:10px;border-radius:10px;margin-bottom:10px;font-size:13px;"></div>
+      <input id="codeInput" class="input" placeholder="Access code" aria-label="Access code" autocomplete="off">
     </div>
     <div class="modal-footer">
-      <button id="codeCancel" class="btn-secondary">Back</button>
-      <button id="codeOk" class="btn-primary">OK</button>
+      <button id="codeCancel" class="btn btn-dark">Back</button>
+      <button id="codeOk" class="btn btn-theme">OK</button>
     </div>
   </div>
 </div>
 
-<!-- admin options -->
 <div id="adminOptionsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -348,17 +356,16 @@ body{
     </div>
     <div class="modal-body">
       <div class="mopt-grid">
-        <div id="optAdd" class="mopt-card"><h4>Add item</h4></div>
-        <div id="optDelete" class="mopt-card"><h4>Delete item</h4></div>
+        <div id="optAdd" class="mopt-card"><h4>Add item</h4><p>Add multiple items (max 50) before submit.</p></div>
+        <div id="optDelete" class="mopt-card"><h4>Delete item(s)</h4><p>Bulk delete by category or selection.</p></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button id="adminOptCancel" class="btn-secondary">Close</button>
+      <button id="adminOptCancel" class="btn btn-dark">Close</button>
     </div>
   </div>
 </div>
 
-<!-- choose category -->
 <div id="catChooseModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="catChooseTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -366,15 +373,15 @@ body{
       <button id="catChooseClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div id="catChooseQuota" style="font-weight:700;margin-bottom:8px;"></div>
       <div id="catChooseGrid" class="mopt-grid"></div>
     </div>
     <div class="modal-footer">
-      <button id="catChooseCancel" class="btn-secondary">Back</button>
+      <button id="catChooseCancel" class="btn btn-dark">Back</button>
     </div>
   </div>
 </div>
 
-<!-- draft editor -->
 <div id="draftModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="draftTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -382,46 +389,64 @@ body{
       <button id="draftClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <div id="draftHint" class="lbl" style="font-weight:700">Upload up to 5 images</div>
-      <input id="imgInput" type="file" accept="image/*" multiple class="input" aria-label="Upload images" style="display:none">
-      <div class="row" style="margin-bottom:6px">
-        <button id="addImagesBtn" class="btn-primary" type="button">Add images</button>
+      <div id="draftList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+      <div id="newItemForm" style="margin-top:8px;border:1px dashed #ddd;border-radius:12px;padding:12px;background:#fff;">
+        <div class="lbl" style="font-weight:700">Add item images</div>
+        <input id="imgInput" type="file" accept="image/*" multiple class="input" aria-label="Upload images" style="display:none">
+        <div class="row" style="margin-bottom:6px">
+          <button id="addImagesBtn" class="btn btn-theme" type="button">Add item images</button>
+        </div>
+        <div id="imgThumbs" class="thumb-row"></div>
+
+        <div class="lbl">Item name</div>
+        <input id="nameInput" class="input" placeholder="">
+        <div class="lbl">Price (GH₵)</div>
+        <input id="priceInput" class="input" type="number" min="0" step="1" placeholder="">
+        <div class="lbl">Description</div>
+        <textarea id="descInput" class="input" rows="4" placeholder=""></textarea>
       </div>
-      <div id="imgThumbs" class="thumb-row"></div>
-      <div class="lbl">Name</div>
-      <input id="nameInput" class="input" placeholder="e.g., iPhone 13 Pro Max 128GB">
-      <div class="lbl">Price (GH₵)</div>
-      <input id="priceInput" class="input" type="number" min="0" step="1" placeholder="e.g., 4500">
-      <div class="lbl">Description / Specs</div>
-      <textarea id="descInput" class="input" rows="4" placeholder="Key specs, condition, warranty…"></textarea>
-      <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
-      <div id="draftList"></div>
     </div>
     <div class="modal-footer">
-      <button id="clearFormBtn" class="btn-secondary">Clear form</button>
-      <button id="addMoreBtn" class="btn-secondary">Add more</button>
-      <button id="submitDraftsBtn" class="btn-primary">Submit</button>
+      <button id="clearFormBtn" class="btn btn-dark" style="display:none">Clear form</button>
+      <button id="addMoreBtn" class="btn btn-dark" disabled>Add more</button>
+      <button id="submitDraftsBtn" class="btn btn-theme" disabled>Submit</button>
     </div>
   </div>
 </div>
 
-<!-- delete picker -->
+<!-- Delete flow -->
 <div id="deleteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
   <div class="modal-card">
     <div class="modal-header">
-      <span id="deleteTitle">Delete item</span>
+      <span id="deleteTitle">Delete items</span>
       <button id="deleteClose" class="close-x" aria-label="Close">&times;</button>
     </div>
-    <div class="modal-body">
-      <div id="deleteList"></div>
+    <div class="modal-body" id="deleteBody">
+      <!-- Step 1: choose category with items -->
+      <div id="delStepCat">
+        <div class="lbl" style="font-weight:700">Select a category</div>
+        <div id="delCatGrid" class="mopt-grid"></div>
+      </div>
+      <!-- Step 2: select items -->
+      <div id="delStepItems" style="display:none">
+        <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div id="delSelCount" style="font-weight:800;">0 selected</div>
+          <div>
+            <button id="delBackToCats" class="btn btn-dark" type="button">Back</button>
+          </div>
+        </div>
+        <div id="delItemsGrid" class="items-grid"></div>
+      </div>
     </div>
     <div class="modal-footer">
-      <button id="deleteCancel" class="btn-secondary">Back</button>
+      <button id="deleteCancel" class="btn btn-dark">Close</button>
+      <button id="deleteDoBtn" class="btn btn-theme">Delete all items</button>
     </div>
   </div>
 </div>
 
-<!-- number capture -->
+<!-- Number capture -->
 <div id="numberModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="numberTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -433,13 +458,13 @@ body{
       <div id="numberError" style="display:none;color:#b00020;font-size:13px;margin-top:6px"></div>
     </div>
     <div class="modal-footer">
-      <button id="numberCancel" class="btn-secondary">Back</button>
-      <button id="numberOk" class="btn-primary">Continue</button>
+      <button id="numberCancel" class="btn btn-dark">Back</button>
+      <button id="numberOk" class="btn btn-theme">Continue</button>
     </div>
   </div>
 </div>
 
-<!-- review admin -->
+<!-- Review (admin) -->
 <div id="reviewCodeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
   <div class="modal-card">
     <div class="modal-header">
@@ -447,29 +472,55 @@ body{
       <button id="reviewCodeClose" class="close-x" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <input id="reviewCodeInput" class="input" placeholder="Enter admin code" aria-label="Admin code">
+      <input id="reviewCodeInput" class="input" placeholder="Enter admin code" aria-label="Admin code" autocomplete="off">
     </div>
     <div class="modal-footer">
-      <button id="reviewCodeCancel" class="btn-secondary">Back</button>
-      <button id="reviewCodeOk" class="btn-primary">OK</button>
+      <button id="reviewCodeCancel" class="btn btn-dark">Back</button>
+      <button id="reviewCodeOk" class="btn btn-theme">OK</button>
     </div>
   </div>
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<!-- ===================== LOGIC (Firebase + App) ===================== -->
+<!-- Footer -->
+<div class="footer-wrap" role="contentinfo" aria-label="Footer">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no" title="Footer"></iframe>
+</div>
+
+<script>
+/* Inject header AFTER DOM is interactive; keep instant paint via reserved bar */
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const host = document.getElementById('header-placeholder');
+    const res = await fetch('header.html', { cache: 'no-store' });
+    if (!res.ok) throw 0;
+    let html = await res.text();
+    const pageTitle = "Tech & Gadgets";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">${pageTitle}</h1>`);
+    host.innerHTML = html;
+    host.removeAttribute('aria-hidden');
+    host.querySelectorAll('script').forEach(s0 => {
+      const s1 = document.createElement('script');
+      if (s0.src) s1.src = s0.src;
+      else s1.textContent = s0.textContent;
+      document.body.appendChild(s1);
+    });
+  } catch(e) { /* silent */ }
+});
+</script>
+
 <script type="module">
-/* Firebase (v10) */
+/* ===================== Firebase ===================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp
+  getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, query, where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-/* ===== Firebase Config ===== */
+/* Config */
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
   authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -479,66 +530,59 @@ const firebaseConfig = {
   appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const st = getStorage(app);
+const db  = getFirestore(app);
+const st  = getStorage(app);
 
-/* ===== Constants ===== */
+/* ===================== Constants / Config ===================== */
 const PAGE_KEY = "Tech&Gadgets";
 const PICKME_WHATSAPP = "233534742142";
 const GLOBAL_ADMIN_CODE = "999888";
 const SHOP_ADMIN_DEFAULT_CODE = "123456";
 const MAX_IMAGES = 5;
+const MAX_BULK_ITEMS = 50;            // per submission limit
+const SHOP_ITEMS_LIMIT_CAP = 500;     // total items allowed per shop
 const SHOPS_SUB_COL = "shops";
 
-/* ===== Shops (hardcoded) ===== */
+/* Shops (hardcoded) */
 const SHOPS = [
-  {
-    name: "Trick Eye Store",
-    slogan: "Phones, laptops & accessories",
-    heroImage: "https://via.placeholder.com/1200x700?text=Trick+Eye+Store",
-    phone: "233530477395",
-    accessCode: "123456",
-    expiry: "2026-12-31"
-  },
-  {
-    name: "DigiHub",
-    slogan: "All things electronics",
-    heroImage: "https://via.placeholder.com/1200x700?text=DigiHub",
-    phone: "233540576548",
-    accessCode: "123456",
-    expiry: "2026-10-31"
-  }
+  { name:"Trick Eye Store", slogan:"Phones, laptops & accessories", heroImage:"https://via.placeholder.com/1200x700?text=Trick+Eye+Store", phone:"233530477395", accessCode:"123456", expiry:"2026-12-31" },
+  { name:"DigiHub",        slogan:"All things electronics",         heroImage:"https://via.placeholder.com/1200x700?text=DigiHub",        phone:"233540576548", accessCode:"123456", expiry:"2026-10-31" }
 ];
 
-/* ===== Categories (global) ===== */
+/* Categories */
 const CATEGORIES = [
-  { id: "Phones", img: "https://via.placeholder.com/200?text=Phones" },
-  { id: "Computers & Laptops", img: "https://via.placeholder.com/200?text=Laptops" },
-  { id: "Printers & Scanners", img: "https://via.placeholder.com/200?text=Printers" },
-  { id: "Accessories", img: "https://via.placeholder.com/200?text=Accessories" },
-  { id: "Security & Surveillance", img: "https://via.placeholder.com/200?text=Security" },
-  { id: "Networking", img: "https://via.placeholder.com/200?text=Networking" },
-  { id: "Gaming", img: "https://via.placeholder.com/200?text=Gaming" },
-  { id: "Software", img: "https://via.placeholder.com/200?text=Software" },
-  { id: "Cameras & Photo", img: "https://via.placeholder.com/200?text=Cameras" }
+  { id:"Phones", img:"https://via.placeholder.com/200?text=Phones" },
+  { id:"Computers & Laptops", img:"https://via.placeholder.com/200?text=Laptops" },
+  { id:"Printers & Scanners", img:"https://via.placeholder.com/200?text=Printers" },
+  { id:"Accessories", img:"https://via.placeholder.com/200?text=Accessories" },
+  { id:"Security & Surveillance", img:"https://via.placeholder.com/200?text=Security" },
+  { id:"Networking", img:"https://via.placeholder.com/200?text=Networking" },
+  { id:"Gaming", img:"https://via.placeholder.com/200?text=Gaming" },
+  { id:"Software", img:"https://via.placeholder.com/200?text=Software" },
+  { id:"Cameras & Photo", img:"https://via.placeholder.com/200?text=Cameras" }
 ];
 
-/* ===== Firestore paths ===== */
-const linksCol = collection(db, PAGE_KEY, "Links", "items");
+/* Firestore collections */
+const linksCol   = collection(db, PAGE_KEY, "Links", "items");
 const globalNums = collection(db, PAGE_KEY, "Numbers", "items");
 
-/* ===== DOM ===== */
+/* ===================== DOM ===================== */
 const tabs = document.querySelectorAll('.main-tab');
+const allItemsView = document.getElementById('allItemsView');
 const categoriesView = document.getElementById('categoriesView');
 const shopsView = document.getElementById('shopsView');
-const allItemsView = document.getElementById('allItemsView');
+const allItemsGrid = document.getElementById('allItemsGrid');
+const allItemsStatus = document.getElementById('allItemsStatus');
 const categoriesGrid = document.getElementById('categoriesGrid');
 const shopsGrid = document.getElementById('shopsGrid');
-const allItemsGrid = document.getElementById('allItemsGrid');
+const shopsStatus = document.getElementById('shopsStatus');
 const globalSearch = document.getElementById('globalSearch');
+
+/* Drawer + Pages */
 const drawer = document.getElementById('drawer');
 const drawerClose = document.getElementById('drawerClose');
 const shopBanner = document.getElementById('shopBanner');
+const shopShareBtn = document.getElementById('shopShareBtn');
 const shopTopActions = document.getElementById('shopTopActions');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const shopNameEl = document.getElementById('shopName');
@@ -546,1341 +590,1264 @@ const shopSloganEl = document.getElementById('shopSlogan');
 const shopGallery = document.getElementById('shopGallery');
 const shopTabs = document.getElementById('shopTabs');
 const shopItemsGrid = document.getElementById('shopItemsGrid');
+const shopItemsStatus = document.getElementById('shopItemsStatus');
+const shopCloseBtn = document.getElementById('shopCloseBtn');
+
 const catPage = document.getElementById('catPage');
 const catPageTitle = document.getElementById('catPageTitle');
 const catPageSearch = document.getElementById('catPageSearch');
 const catPageGrid = document.getElementById('catPageGrid');
+const catPageStatus = document.getElementById('catPageStatus');
+const catCloseBtn = document.getElementById('catCloseBtn');
+
+/* Item detail */
 const itemDetail = document.getElementById('itemDetail');
+const itemCloseBtn = document.getElementById('itemCloseBtn');
+const itemVisual = document.getElementById('itemVisual');
+const itemBlurBg = document.getElementById('itemBlurBg');
 const itemSlider = document.getElementById('itemSlider');
+const itemTrack = document.getElementById('itemTrack');
+const itemPrev = document.getElementById('itemPrev');
+const itemNext = document.getElementById('itemNext');
 const itemDots = document.getElementById('itemDots');
-const detailTitle = document.getElementById('detailTitle');
-const detailPrice = document.getElementById('detailPrice');
+const itemShareBtn = document.getElementById('itemShareBtn');
+
+const detailTitle= document.getElementById('detailTitle');
+const detailPrice= document.getElementById('detailPrice');
 const detailDesc = document.getElementById('detailDesc');
 const detailPostedBy = document.getElementById('detailPostedBy');
 const callBtn = document.getElementById('callBtn');
-const waBtn = document.getElementById('waBtn');
+const waBtn   = document.getElementById('waBtn');
 const viewShopBtn = document.getElementById('viewShopBtn');
+
+/* Modals */
 const codeModal = document.getElementById('codeModal');
 const codeInput = document.getElementById('codeInput');
 const codeOk = document.getElementById('codeOk');
 const codeCancel = document.getElementById('codeCancel');
 const codeClose = document.getElementById('codeClose');
+const shopExpiryNotice = document.getElementById('shopExpiryNotice');
+
 const adminOptionsModal = document.getElementById('adminOptionsModal');
 const optAdd = document.getElementById('optAdd');
 const optDelete = document.getElementById('optDelete');
 const adminOptClose = document.getElementById('adminOptClose');
 const adminOptCancel = document.getElementById('adminOptCancel');
+
 const catChooseModal = document.getElementById('catChooseModal');
+const catChooseTitle = document.getElementById('catChooseTitle');
+const catChooseQuota = document.getElementById('catChooseQuota');
 const catChooseGrid = document.getElementById('catChooseGrid');
 const catChooseClose = document.getElementById('catChooseClose');
 const catChooseCancel = document.getElementById('catChooseCancel');
+
 const draftModal = document.getElementById('draftModal');
-const draftClose = document.getElementById('draftClose');
 const draftTitle = document.getElementById('draftTitle');
+const draftClose = document.getElementById('draftClose');
 const imgInput = document.getElementById('imgInput');
-const imgThumbs = document.getElementById('imgThumbs');
 const addImagesBtn = document.getElementById('addImagesBtn');
+const imgThumbs = document.getElementById('imgThumbs');
 const nameInput = document.getElementById('nameInput');
 const priceInput = document.getElementById('priceInput');
 const descInput = document.getElementById('descInput');
-const addMoreBtn = document.getElementById('addMoreBtn');
 const clearFormBtn = document.getElementById('clearFormBtn');
+const addMoreBtn = document.getElementById('addMoreBtn');
 const submitDraftsBtn = document.getElementById('submitDraftsBtn');
 const draftList = document.getElementById('draftList');
+const newItemForm = document.getElementById('newItemForm');
+
 const deleteModal = document.getElementById('deleteModal');
 const deleteClose = document.getElementById('deleteClose');
 const deleteCancel = document.getElementById('deleteCancel');
-const deleteList = document.getElementById('deleteList');
+const deleteBody = document.getElementById('deleteBody');
+const delStepCat = document.getElementById('delStepCat');
+const delCatGrid = document.getElementById('delCatGrid');
+const delStepItems = document.getElementById('delStepItems');
+const delItemsGrid = document.getElementById('delItemsGrid');
+const delSelCount = document.getElementById('delSelCount');
+const delBackToCats = document.getElementById('delBackToCats');
+const deleteDoBtn = document.getElementById('deleteDoBtn');
+
 const numberModal = document.getElementById('numberModal');
 const waNumberInput = document.getElementById('waNumberInput');
 const numberOk = document.getElementById('numberOk');
 const numberCancel = document.getElementById('numberCancel');
 const numberClose = document.getElementById('numberClose');
 const numberError = document.getElementById('numberError');
+
 const reviewCodeModal = document.getElementById('reviewCodeModal');
 const reviewCodeInput = document.getElementById('reviewCodeInput');
 const reviewCodeOk = document.getElementById('reviewCodeOk');
 const reviewCodeClose = document.getElementById('reviewCodeClose');
 const reviewCodeCancel = document.getElementById('reviewCodeCancel');
-const toastEl = document.getElementById('toast');
-const catBackBtn = document.getElementById('catBackBtn');
 
-/* ===== State ===== */
+const toastEl = document.getElementById('toast');
+
+/* ===================== State ===================== */
 let currentShop = null;
 let currentShopName = null;
 let jumpToAdId = null;
 let currentCategory = null;
+let lastPageStack = []; // for custom back handling
 let pendingAction = null;
 let pendingContactFor = null;
-let drafts = []; // {id, cat, name, price, desc, files[]}
-let filesBuffer = []; // File[] (current add form)
+let drafts = [];      // [{id,cat,name,price,desc,files:File[]}]
+let filesBuffer = []; // current new form images
 let userPhoneCache = null;
 let reviewPayloadPending = null;
+let currentShopItemsCache = []; // for delete/select
+let selectedDeleteSet = new Set();
 
-/* ===== Helpers ===== */
+/* ===================== Helpers ===================== */
 const show = el => el && (el.style.display = '');
 const hide = el => el && (el.style.display = 'none');
-const escapeHtml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-const money = n => Number(n || 0);
-const fmtPrice = n => `GH₵ ${Number(n || 0).toFixed(2).replace(/\.00$/, '')}`;
-const isExpired = iso => iso ? (new Date() > new Date(iso + "T23:59:59")) : false;
-const makeId = () => (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase();
+const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+const money = n => Number(n||0);
+const fmtPrice = n => `GH₵ ${Number(n||0).toFixed(2).replace(/\.00$/,'')}`;
+const isExpired = iso => iso ? (new Date() > new Date(iso+"T23:59:59")) : false;
+const makeId = () => (Date.now().toString(36)+Math.random().toString(36).slice(2,8)).toLowerCase();
 
-function toast(msg) {
-  if (toastEl) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 1600);
-  }
+function toast(msg, ms=1600){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=> toastEl.classList.remove('show'), ms);
 }
 
-async function urlToSmallPreviewDataURL(url) {
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(blob);
-    await new Promise(r => img.onload = r);
-    const canvas = document.createElement('canvas');
-    const scale = Math.min(480 / img.width, 1);
-    canvas.width = Math.max(1, Math.round(img.width * scale));
-    canvas.height = Math.max(1, Math.round(img.height * scale));
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    URL.revokeObjectURL(img.src);
-    return canvas.toDataURL('image/jpeg', 0.7);
-  } catch (e) {
-    console.warn('preview error', e);
-    return null;
-  }
+function daysLeft(iso){
+  if (!iso) return null;
+  const end = new Date(iso+"T23:59:59");
+  const now = new Date();
+  const d = Math.ceil((end - now)/86400000);
+  return d;
 }
 
-async function ensureShopsContainer() {
-  try {
-    const ref = doc(db, PAGE_KEY, "Shops");
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, { createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-    } else {
-      await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
-    }
-  } catch (e) {
-    console.warn('[ensureShopsContainer]', e);
-  }
-}
-
-async function ensureShopDoc(shopName) {
-  await ensureShopsContainer();
-  try {
-    const ref = doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName);
-    const snap = await getDoc(ref);
-    const meta = SHOPS.find(s => s.name === shopName) || {};
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        name: shopName,
-        slogan: meta.slogan || "",
-        heroImage: meta.heroImage || "",
-        phone: meta.phone || "",
-        expiry: meta.expiry || "",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-    } else {
-      await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
-    }
-  } catch (e) {
-    console.warn('[ensureShopDoc]', e);
-  }
-}
-
-function normalizeGhanaNumber(input) {
-  let s = String(input || '').trim().replace(/[\s\-]/g, '');
-  if (s.startsWith('+233')) return { e164: s, wa: s.slice(1) };
-  if (s.startsWith('233')) return { e164: '+' + s, wa: s };
-  if (/^0\d{9}$/.test(s)) return { e164: '+233' + s.slice(1), wa: '233' + s.slice(1) };
-  if (/^\d{9}$/.test(s)) return { e164: '+233' + s, wa: '233' + s };
-  const d = s.replace(/\D/g, '');
-  if (d.startsWith('233')) return { e164: '+' + d, wa: d };
-  if (d.length === 10 && d.startsWith('0')) return { e164: '+233' + d.slice(1), wa: '233' + d.slice(1) };
+/* Ghana phone normalize */
+function normalizeGhanaNumber(input){
+  let s = String(input||'').trim().replace(/[\s\-]/g,'');
+  if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
+  if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
+  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
+  if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
+  const d = s.replace(/\D/g,'');
+  if (d.startsWith('233')) return { e164:'+'+d, wa:d };
+  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
   return null;
 }
 
-/* ===== Cache keys ===== */
-const CACHE_PREFIX = "tg_v1_";
-const CACHE = {
-  cats: `${CACHE_PREFIX}cats_counts`,
-  shops: `${CACHE_PREFIX}shops_counts`,
-  shopItems: shop => `${CACHE_PREFIX}shop_${shop}_items`,
-  catItems: cat => `${CACHE_PREFIX}cat_${cat}_items`,
-  allItems: `${CACHE_PREFIX}all_items`
+/* Cache */
+const CACHE_PREFIX="tg2_";
+const CACHE={
+  cats:`${CACHE_PREFIX}cats_counts`,
+  shops:`${CACHE_PREFIX}shops_counts`,
+  all:`${CACHE_PREFIX}all_items`,
+  shopItems:(shop)=>`${CACHE_PREFIX}shop_${shop}_items`,
+  catItems:(cat)=>`${CACHE_PREFIX}cat_${cat}_items`,
+  shareShop:(shop)=>`${CACHE_PREFIX}slnk_shop_${shop}`,
+  shareItem:(id)=>`${CACHE_PREFIX}slnk_item_${id}`
 };
-const saveCache = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-const loadCache = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-const clearShopCaches = (shop) => {
-  try {
-    localStorage.removeItem(CACHE.shopItems(shop));
-    localStorage.removeItem(CACHE.cats);
-    localStorage.removeItem(CACHE.shops);
-    localStorage.removeItem(CACHE.allItems);
-    Object.keys(localStorage).forEach(k => {
-      if (k.startsWith(`${CACHE_PREFIX}cat_`)) localStorage.removeItem(k);
-    });
-    Object.keys(localStorage).forEach(k => {
-      if (k.startsWith('tk_shop_') || k.startsWith('tk_cat_') || k === 'tk_cats_counts' || k === 'tk_shops_counts') {
-        localStorage.removeItem(k);
-      }
-    });
-  } catch {}
-};
+const saveCache=(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} };
+const loadCache=(k)=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
+const removeCache=(k)=>{ try{ localStorage.removeItem(k); }catch{} };
 
-/* ===== Categories & Items ===== */
-async function countByCategory() {
-  const cached = loadCache(CACHE.cats);
-  if (cached) {
-    console.log('Using cached category counts:', cached);
-    return cached;
+/* History helpers (device back to follow in-page flow) */
+function pushState(tag, data={}){
+  lastPageStack.push(tag);
+  history.pushState({tag, ...data}, '', `#${tag}`);
+}
+window.addEventListener('popstate', ()=>{
+  const tag = lastPageStack.pop();
+  if (!tag){ location.href='homepage.html'; return; }
+  if (drawer.classList.contains('show')){
+    // Close inner-most first:
+    if (itemDetail.style.display!=='none'){ hide(itemDetail); show(catPage); return; }
+    if (catPage.style.display!=='none'){ hide(catPage); closeDrawer(); return; }
+    if (shopGallery.style.display!=='none'){ hide(shopGallery); closeDrawer(); return; }
+    closeDrawer(); return;
   }
-  const out = {};
-  try {
-    await Promise.all(SHOPS.map(async sh => {
-      if (isExpired(sh.expiry)) return;
-      const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-      const snap = await getDocs(col);
-      console.log(`Fetched ${snap.size} items for shop ${sh.name}`);
-      snap.forEach(d => {
-        const it = d.data();
-        const cat = it.category || "Other";
-        out[cat] = (out[cat] || 0) + 1;
-      });
-    }));
-    console.log('Category counts:', out);
-    saveCache(CACHE.cats, out);
-    return out;
-  } catch (e) {
-    console.error('countByCategory failed:', e);
-    return out;
-  }
+});
+
+/* Drawer */
+function openDrawer(){
+  drawer.classList.add('show');
+  drawer.setAttribute('aria-hidden','false');
+  // ensure close visible
+  drawerClose.style.display='grid';
+}
+function closeDrawer(){
+  drawer.classList.remove('show');
+  drawer.setAttribute('aria-hidden','true');
+  hide(shopBanner); hide(shopGallery); hide(itemDetail); hide(catPage);
+  shopTopActions.style.display='none';
 }
 
-function renderCategoriesGrid(counts) {
-  if (categoriesGrid) {
-    categoriesGrid.innerHTML = "";
-    if (!CATEGORIES.length) {
-      categoriesGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No categories available.</p>`;
-      return;
-    }
-    CATEGORIES.forEach(c => {
-      const card = document.createElement('article');
-      card.className = "cat-card";
-      card.innerHTML = `
-        <div class="cat-thumb">${c.img ? `<img src="${c.img}" alt="${escapeHtml(c.id)}">` : ''}</div>
-        <div class="cat-info">
-          <div class="cat-title">${escapeHtml(c.id)}</div>
-          <div class="cat-sub">${counts[c.id] || 0} adverts</div>
-        </div>
-        <div class="cat-arrow">&gt;</div>
-      `;
-      card.addEventListener('click', () => openCategory(c.id));
-      categoriesGrid.appendChild(card);
-    });
-  }
+/* Short link store */
+async function getShort(id){
+  const snap = await getDoc(doc(linksCol, id));
+  return snap.exists() ? (snap.data()?.payload || null) : null;
+}
+async function putShort(payload){
+  const id = makeId();
+  await setDoc(doc(linksCol, id), { payload, createdAt: serverTimestamp() });
+  return id;
 }
 
-async function fetchAllItemsInCategory(cat) {
-  const cached = loadCache(CACHE.catItems(cat));
-  if (cached) return cached;
-  const items = [];
-  await Promise.all(SHOPS.map(async sh => {
-    if (isExpired(sh.expiry)) return;
-    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-    const snap = await getDocs(col);
-    snap.forEach(d => {
-      const it = d.data();
-      it.id = d.id;
-      if ((it.category || '') === cat) items.push(it);
-    });
-  }));
-  items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  saveCache(CACHE.catItems(cat), items);
-  return items;
-}
-
-function renderItemCard(container, ad, inShop = false) {
-  if (container) {
-    const card = document.createElement('div');
-    card.className = "item-card";
-    const firstImg = (ad.images && ad.images[0]) || "https://via.placeholder.com/600x400?text=Image";
-    card.innerHTML = `
-      <div class="item-img"><img src="${firstImg}" alt="${escapeHtml(ad.name || 'Item')}"></div>
-      <div class="item-body">
-        <div class="item-price">${fmtPrice(ad.price)}</div>
-        <div class="item-name">${escapeHtml(ad.name || '')}</div>
-        ${inShop ? '' : `<div class="item-shop">Posted by ${escapeHtml(ad.shop || '')}</div>`}
-      </div>
-    `;
-    card.addEventListener('click', () => openItemDetail(ad));
-    container.appendChild(card);
-  }
-}
-
-async function openCategory(cat) {
-  currentCategory = cat;
-  hide(shopBanner);
-  hide(shopGallery);
-  hide(itemDetail);
-  show(catPage);
-  if (catPageTitle) catPageTitle.textContent = cat;
-  if (catPageTitle) catPageTitle.style.fontSize = "20px";
-  if (catPageTitle) catPageTitle.style.fontWeight = "800";
-  if (catPageTitle) catPageTitle.style.textAlign = "center";
-  if (catPageSearch) catPageSearch.placeholder = `Search in ${cat}…`;
-  if (catPageGrid) catPageGrid.innerHTML = '';
-  openDrawer();
-  if (catBackBtn) catBackBtn.style.display = "block";
-  if (hamburgerBtn) hamburgerBtn.style.display = "none";
-  if (drawerClose) drawerClose.style.display = "none";
-  const items = await fetchAllItemsInCategory(cat);
-  const draw = (list) => {
-    if (catPageGrid) {
-      catPageGrid.innerHTML = "";
-      list.forEach(ad => renderItemCard(catPageGrid, ad));
-      if (!list.length) {
-        catPageGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">Oops! No items here today.</p>`;
-      }
-    }
-  };
-  draw(items);
-  if (catPageSearch) {
-    catPageSearch.value = '';
-    catPageSearch.oninput = () => {
-      const q = (catPageSearch.value || '').toLowerCase();
-      const list = items.filter(ad =>
-        (ad.name || '').toLowerCase().includes(q) ||
-        (ad.desc || '').toLowerCase().includes(q) ||
-        (ad.shop || '').toLowerCase().includes(q)
-      );
-      draw(list);
-    };
-  }
-}
-
-async function fetchShopCounts() {
-  const cached = loadCache(CACHE.shops);
-  if (cached) {
-    console.log('Using cached shop counts:', cached);
-    return cached;
-  }
-  const map = {};
-  try {
-    await Promise.all(SHOPS.map(async sh => {
-      if (isExpired(sh.expiry)) { map[sh.name] = 0; return; }
-      const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-      const snap = await getDocs(col);
-      map[sh.name] = snap.size || 0;
-      console.log(`Shop ${sh.name} has ${snap.size} items`);
-    }));
-    console.log('Shop counts:', map);
-    saveCache(CACHE.shops, map);
-    return map;
-  } catch (e) {
-    console.error('fetchShopCounts failed:', e);
-    return map;
-  }
-}
-
-function renderShopsGrid(countMap) {
-  if (shopsGrid) {
-    shopsGrid.innerHTML = "";
-    const list = SHOPS.filter(s => !isExpired(s.expiry))
-      .sort((a, b) => (countMap[b.name] || 0) - (countMap[a.name] || 0) || a.name.localeCompare(b.name));
-    if (!list.length) {
-      shopsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No shops available.</p>`;
-      return;
-    }
-    list.forEach(shop => {
-      const card = document.createElement('article');
-      card.className = "shop-card";
-      card.style.backgroundImage = `url('${shop.heroImage}')`;
-      const content = document.createElement('div');
-      content.className = "content";
-      content.innerHTML = `
-        <div>
-          <div class="shop-title">${escapeHtml(shop.name)}</div>
-          <div class="shop-slogan">${escapeHtml(shop.slogan || '')}</div>
-        </div>
-        <div class="shop-lower">
-          <p class="shop-meta">Items: ${countMap[shop.name] || 0}</p>
-          <button class="btn-enter" type="button">Enter Shop</button>
-        </div>
-      `;
-      content.querySelector('.btn-enter').addEventListener('click', () => openShop(shop));
-      card.appendChild(content);
-      shopsGrid.appendChild(card);
-    });
-  }
-}
-
-async function fetchAllItems() {
-  const cached = loadCache(CACHE.allItems);
-  if (cached) return cached;
-  const items = [];
-  await Promise.all(SHOPS.map(async sh => {
-    if (isExpired(sh.expiry)) return;
-    const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
-    const snap = await getDocs(col);
-    snap.forEach(d => {
-      const it = d.data();
-      it.id = d.id;
-      it.shop = sh.name;
-      items.push(it);
-    });
-  }));
-  items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  saveCache(CACHE.allItems, items);
-  return items;
-}
-
-function renderAllItemsGrid(items) {
-  if (allItemsGrid) {
-    allItemsGrid.innerHTML = "";
-    if (!items.length) {
-      allItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items available.</p>`;
-      return;
-    }
-    items.forEach(ad => renderItemCard(allItemsGrid, ad));
-  }
-}
-
-const openDrawer = () => {
-  if (drawer) {
-    drawer.classList.add('show');
-    drawer.setAttribute('aria-hidden', 'false');
-    if (shopTopActions) shopTopActions.style.display = 'flex';
-  }
-};
-
-const closeDrawer = () => {
-  if (drawer) {
-    drawer.classList.remove('show');
-    drawer.setAttribute('aria-hidden', 'true');
-    if (shopTopActions) shopTopActions.style.display = 'none';
-    hide(shopBanner);
-    hide(shopGallery);
-    hide(itemDetail);
-    hide(catPage);
-    if (catBackBtn) catBackBtn.style.display = "none";
-  }
-};
-
-if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
-if (catBackBtn) catBackBtn.addEventListener('click', closeDrawer);
-
-function buildSlider(images, sliderEl, dotsEl) {
-  if (sliderEl && dotsEl) {
-    sliderEl.innerHTML = '';
-    dotsEl.innerHTML = '';
-    if (!images || !images.length) images = ["https://via.placeholder.com/1000x600?text=Image"];
-    const slidesContainer = document.createElement('div');
-    slidesContainer.style.display = 'flex';
-    slidesContainer.style.transition = 'transform 0.45s ease';
-    slidesContainer.style.width = `${images.length * 100}%`;
-    images.forEach((src, i) => {
-      const slide = document.createElement('div');
-      slide.style.width = `${100 / images.length}%`;
-      slide.style.height = '100%';
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = `image-${i + 1}`;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      slide.appendChild(img);
-      slidesContainer.appendChild(slide);
-    });
-    // Clone for infinite
-    const firstClone = slidesContainer.children[0].cloneNode(true);
-    const lastClone = slidesContainer.children[images.length - 1].cloneNode(true);
-    slidesContainer.appendChild(firstClone);
-    slidesContainer.insertBefore(lastClone, slidesContainer.children[0]);
-    slidesContainer.style.width = `${(images.length + 2) * 100}%`;
-    slidesContainer.style.transform = `translateX(-${100 / (images.length + 2)}%)`;
-    sliderEl.appendChild(slidesContainer);
-    images.forEach((_, i) => {
-      const dot = document.createElement('div');
-      dot.className = 'dot' + (i === 0 ? ' active' : '');
-      dot.addEventListener('click', () => goTo(i));
-      dotsEl.appendChild(dot);
-    });
-    const left = document.createElement('div');
-    left.className = 'nav left';
-    left.innerHTML = '&#10094;';
-    const right = document.createElement('div');
-    right.className = 'nav right';
-    right.innerHTML = '&#10095;';
-    sliderEl.append(left, right);
-
-    let current = 0;
-    const total = images.length;
-    const dots = dotsEl.querySelectorAll('.dot');
-    let isTransitioning = false;
-
-    function updateDots() {
-      dots.forEach(d => d.classList.remove('active'));
-      dots[current].classList.add('active');
-    }
-
-    function moveTo(index, animate = true) {
-      if (isTransitioning) return;
-      isTransitioning = true;
-      const pos = -(index + 1) * (100 / (total + 2));
-      slidesContainer.style.transition = animate ? 'transform 0.45s ease' : 'none';
-      slidesContainer.style.transform = `translateX(${pos}%)`;
-      setTimeout(() => {
-        isTransitioning = false;
-        if (index < 0) {
-          current = total - 1;
-          moveTo(current, false);
-        } else if (index >= total) {
-          current = 0;
-          moveTo(current, false);
-        } else {
-          current = index;
-        }
-        updateDots();
-      }, animate ? 450 : 0);
-    }
-
-    function goTo(n) {
-      moveTo(n);
-    }
-
-    left.addEventListener('click', () => moveTo(current - 1));
-    right.addEventListener('click', () => moveTo(current + 1));
-
-    let startX = 0;
-    let dist = 0;
-    sliderEl.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      dist = 0;
-    }, { passive: true });
-    sliderEl.addEventListener('touchmove', e => {
-      dist = e.touches[0].clientX - startX;
-    }, { passive: true });
-    sliderEl.addEventListener('touchend', () => {
-      if (Math.abs(dist) > 40) {
-        if (dist > 0) left.click();
-        else right.click();
-      }
-    }, { passive: true });
-    updateDots();
-    // Preload and set height dynamically
-    let maxHeight = 0;
-    const imgs = slidesContainer.querySelectorAll('img');
-    let loaded = 0;
-    imgs.forEach(img => {
-      img.onload = () => {
-        loaded++;
-        const ratio = img.naturalHeight / img.naturalWidth;
-        const h = ratio * sliderEl.clientWidth;
-        if (h > maxHeight) maxHeight = h;
-        if (loaded === imgs.length) {
-          sliderEl.style.height = `${maxHeight}px`;
-        }
-      };
-    });
-  }
-}
-
-function openItemDetail(ad) {
-  hide(shopBanner);
-  hide(shopGallery);
-  hide(catPage);
-  show(itemDetail);
-  buildSlider(ad.images || [], itemSlider, itemDots);
-  if (detailTitle) detailTitle.textContent = ad.name || 'Item';
-  if (detailPrice) detailPrice.textContent = fmtPrice(ad.price);
-  if (detailPostedBy) detailPostedBy.textContent = "Posted by " + (ad.shop || '');
-  if (detailDesc) detailDesc.textContent = ad.desc || '';
-  openDrawer();
-  if (callBtn) callBtn.onclick = () => captureNumberThenProceed('call', ad);
-  if (waBtn) waBtn.onclick = () => captureNumberThenProceed('wa', ad);
-  if (viewShopBtn) viewShopBtn.onclick = () => {
-    jumpToAdId = ad.id || null;
-    const shopObj = SHOPS.find(s => s.name === ad.shop);
-    if (shopObj) openShop(shopObj);
-  };
-}
-
-async function openShop(shop) {
-  currentShop = shop;
-  currentShopName = shop.name;
-  jumpToAdId = jumpToAdId || null;
-  if (shopBanner) shopBanner.style.backgroundImage = `url('${shop.heroImage}')`;
-  if (shopNameEl) shopNameEl.textContent = shop.name;
-  if (shopSloganEl) shopSloganEl.textContent = shop.slogan || '';
-  show(shopBanner);
-  show(shopGallery);
-  hide(itemDetail);
-  hide(catPage);
-  openDrawer();
-  if (hamburgerBtn) hamburgerBtn.style.display = "grid";
-  if (drawerClose) drawerClose.style.display = "grid";
-  if (hamburgerBtn) hamburgerBtn.onclick = () => promptShopCode();
-  await renderShopTabsAndItems(shop, jumpToAdId);
-  jumpToAdId = null;
-}
-
-async function renderShopTabsAndItems(shop, focusAdId = null) {
-  const items = await fetchShopItems(shop.name);
-  const byCat = {};
-  items.forEach(it => {
-    const c = it.category || 'Other';
-    (byCat[c] || (byCat[c] = [])).push(it);
-  });
-  const catList = Object.keys(byCat).map(c => ({ cat: c, count: byCat[c].length }));
-  catList.sort((a, b) => b.count - a.count || a.cat.localeCompare(b.cat));
-  if (shopTabs) {
-    shopTabs.innerHTML = "";
-    catList.forEach((entry, i) => {
-      const div = document.createElement('div');
-      div.className = 'shop-tab' + (i === 0 ? ' active' : '');
-      div.dataset.cat = entry.cat;
-      div.innerHTML = `${escapeHtml(entry.cat)} <span class="count">${entry.count}</span>`;
-      div.addEventListener('click', () => {
-        shopTabs.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
-        div.classList.add('active');
-        renderShopItems(byCat[entry.cat]);
-      });
-      shopTabs.appendChild(div);
-    });
-    if (!catList.length) {
-      if (shopItemsGrid) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</p>`;
-      return;
-    }
-    const firstCat = focusAdId ? catList.find(e => (byCat[e.cat] || []).some(it => it.id === focusAdId))?.cat : catList[0].cat;
-    shopTabs.querySelectorAll('.shop-tab').forEach(b => b.dataset.cat === firstCat && b.classList.add('active'));
-    renderShopItems(byCat[firstCat], focusAdId);
-  }
-}
-
-function renderShopItems(list, focusAdId = null) {
-  if (shopItemsGrid) {
-    shopItemsGrid.innerHTML = '';
-    list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(ad => renderItemCard(shopItemsGrid, ad, true));
-    if (!list.length) shopItemsGrid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</p>`;
-    if (focusAdId) {
-      const ad = list.find(x => x.id === focusAdId);
-      if (ad) openItemDetail(ad);
-    }
-  }
-}
-
-async function fetchShopItems(shopName) {
-  const ck = CACHE.shopItems(shopName);
+/* Share URLs (cached) */
+async function ensureShopShortLink(shopName){
+  const ck = CACHE.shareShop(shopName);
   const cached = loadCache(ck);
   if (cached) return cached;
-  const col = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName, "items");
-  const snap = await getDocs(col);
-  const arr = [];
-  snap.forEach(d => {
-    const it = d.data();
-    it.id = d.id;
-    arr.push(it);
-  });
-  arr.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  const payload = { type:"shop", page:PAGE_KEY, shop: shopName };
+  const id = await putShort(payload);
+  const url = `${location.origin}${location.pathname}?shop=${encodeURIComponent(shopName)}&s=${id}`;
+  saveCache(ck, url); return url;
+}
+async function ensureItemShortLink(ad){
+  const ck = CACHE.shareItem(ad.id);
+  const cached = loadCache(ck);
+  if (cached) return cached;
+  const payload = { type:"item", page:PAGE_KEY, shop: ad.shop, itemId: ad.id, category: ad.category||"" };
+  const id = await putShort(payload);
+  const url = `${location.origin}${location.pathname}?shop=${encodeURIComponent(ad.shop)}&item=${encodeURIComponent(ad.id)}&c=${encodeURIComponent(ad.category||'')}&i=${id}`;
+  saveCache(ck, url); return url;
+}
+
+/* ===================== Data loaders ===================== */
+async function fetchShopItems(shopName){
+  const ck=CACHE.shopItems(shopName);
+  const cached = loadCache(ck);
+  if (cached) return cached;
+  const colRef = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName, "items");
+  const snap = await getDocs(colRef);
+  const arr=[];
+  snap.forEach(d=>{ const it=d.data(); it.id=d.id; if (!it.shop) it.shop=shopName; arr.push(it); });
+  arr.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   saveCache(ck, arr);
   return arr;
 }
-
-if (globalSearch) globalSearch.addEventListener('input', () => {
-  const q = (globalSearch.value || '').trim().toLowerCase();
-  if (categoriesView.classList.contains('show')) {
-    [...categoriesGrid.children].forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
-  }
-  if (shopsView.classList.contains('show')) {
-    [...shopsGrid.children].forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
-  }
-  if (allItemsView && allItemsView.classList.contains('show')) {
-    const cachedItems = loadCache(CACHE.allItems) || [];
-    const filtered = cachedItems.filter(ad =>
-      (ad.name || '').toLowerCase().includes(q) ||
-      (ad.desc || '').toLowerCase().includes(q) ||
-      (ad.shop || '').toLowerCase().includes(q) ||
-      (ad.category || '').toLowerCase().includes(q)
-    );
-    renderAllItemsGrid(filtered);
-    fetchAllItems().then(freshItems => {
-      const freshFiltered = freshItems.filter(ad =>
-        (ad.name || '').toLowerCase().includes(q) ||
-        (ad.desc || '').toLowerCase().includes(q) ||
-        (ad.shop || '').toLowerCase().includes(q) ||
-        (ad.category || '').toLowerCase().includes(q)
-      );
-      if (JSON.stringify(freshFiltered) !== JSON.stringify(filtered)) {
-        renderAllItemsGrid(freshFiltered);
-      }
-    }).catch(e => console.warn('Failed to update all items search', e));
-  }
-});
-
-tabs.forEach(btn => {
-  btn.addEventListener('click', () => {
-    tabs.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
-    const target = btn.dataset.view;
-    const views = [categoriesView, shopsView, allItemsView].filter(v => v); // Filter out null/undefined
-    views.forEach(v => v.classList.remove('show'));
-    const targetView = document.getElementById(target);
-    if (targetView) {
-      targetView.classList.add('show');
-    } else {
-      console.warn(`View with ID ${target} not found`);
-    }
-    closeDrawer();
-    if (target === 'allItemsView' && targetView) {
-      const cachedItems = loadCache(CACHE.allItems) || [];
-      renderAllItemsGrid(cachedItems);
-      fetchAllItems().then(freshItems => {
-        if (JSON.stringify(freshItems) !== JSON.stringify(cachedItems)) {
-          renderAllItemsGrid(freshItems);
-        }
-      }).catch(e => console.warn('Failed to update all items', e));
-    }
-  });
-});
-
-function openModal(m) { if (m) m.classList.add('show'); }
-function closeModal(m) { if (m) m.classList.remove('show'); }
-
-function openNumberModal() { openModal(numberModal); }
-function closeNumberModal() { closeModal(numberModal); }
-[numberClose, numberCancel].forEach(b => b && b.addEventListener('click', closeNumberModal));
-
-async function captureNumberThenProceed(kind, ad) {
-  pendingAction = kind;
-  pendingContactFor = {
-    shopName: ad.shop,
-    phone: (SHOPS.find(s => s.name === ad.shop)?.phone) || "",
-    itemTitle: ad.name
-  };
-  if (waNumberInput) waNumberInput.value = userPhoneCache || "";
-  if (numberError) numberError.style.display = 'none';
-  openNumberModal();
+async function fetchAllItems(){
+  const cached = loadCache(CACHE.all);
+  if (cached) return cached;
+  const items=[];
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) return;
+    const colRef = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+    const snap=await getDocs(colRef);
+    snap.forEach(d=>{ const it=d.data(); it.id=d.id; it.shop=sh.name; items.push(it); });
+  }));
+  items.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  saveCache(CACHE.all, items);
+  return items;
+}
+async function countByCategory(){
+  const cached = loadCache(CACHE.cats);
+  if (cached) return cached;
+  const out={};
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) return;
+    const colRef = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+    const snap=await getDocs(colRef);
+    snap.forEach(d=>{
+      const it=d.data(); const cat=it.category||"Other";
+      out[cat]=(out[cat]||0)+1;
+    });
+  }));
+  saveCache(CACHE.cats, out);
+  return out;
+}
+async function fetchShopCounts(){
+  const cached = loadCache(CACHE.shops);
+  if (cached) return cached;
+  const map={};
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)){ map[sh.name]=0; return; }
+    const colRef = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+    const snap=await getDocs(colRef);
+    map[sh.name]=snap.size||0;
+  }));
+  saveCache(CACHE.shops, map);
+  return map;
 }
 
-if (numberOk) numberOk.addEventListener('click', async () => {
-  const norm = normalizeGhanaNumber(waNumberInput.value);
-  if (!norm) {
-    if (numberError) numberError.textContent = "Enter a valid WhatsApp number.";
-    if (numberError) numberError.style.display = 'block';
+/* ===================== Renderers ===================== */
+function renderItemCard(container, ad, inShop=false){
+  const card=document.createElement('div');
+  card.className='item-card';
+  const img = (ad.images&&ad.images[0]) || 'https://via.placeholder.com/600x400?text=Image';
+  card.innerHTML=`
+    <div class="item-img">
+      <img src="${img}" loading="lazy" decoding="async" alt="${escapeHtml(ad.name||'Item')}">
+      <button class="item-share" title="Share">Share</button>
+    </div>
+    <div class="item-body">
+      <div class="item-price">${fmtPrice(ad.price)}</div>
+      <div class="item-name">${escapeHtml(ad.name||'')}</div>
+      ${inShop ? '' : `<div class="item-shop">Posted by ${escapeHtml(ad.shop||'')}</div>`}
+    </div>
+  `;
+  card.addEventListener('click', (e)=>{
+    const isShare = e.target && e.target.classList.contains('item-share');
+    if (isShare){ e.stopPropagation(); shareItem(ad); return; }
+    openItemDetail(ad);
+  });
+  container.appendChild(card);
+}
+function renderAllItemsGrid(items){
+  allItemsGrid.innerHTML='';
+  if (!items.length){
+    const msg=document.createElement('div');
+    msg.style.gridColumn='1 / -1'; msg.style.textAlign='center'; msg.style.color='#666';
+    msg.textContent='No items available.';
+    allItemsGrid.appendChild(msg);
     return;
   }
-  if (numberError) numberError.style.display = 'none';
+  items.forEach(ad=> renderItemCard(allItemsGrid, ad));
+}
+function renderCategoriesGrid(counts){
+  categoriesGrid.innerHTML='';
+  // sort categories by count desc then name
+  const list = [...CATEGORIES].sort((a,b)=>(counts[b.id]||0)-(counts[a.id]||0) || a.id.localeCompare(b.id));
+  list.forEach(c=>{
+    const card=document.createElement('article');
+    card.className='cat-card';
+    const img = c.img || '';
+    card.innerHTML=`
+      <div class="cat-thumb">
+        <img alt="${escapeHtml(c.id)}" loading="lazy" decoding="async" data-src="${img}">
+      </div>
+      <div class="cat-info">
+        <div class="cat-title">${escapeHtml(c.id)}</div>
+        <div class="cat-sub">${counts[c.id]||0} adverts</div>
+      </div>
+      <div class="cat-arrow">&gt;</div>
+    `;
+    // lazy set src after paint to avoid load-bar stall
+    requestAnimationFrame(()=>{
+      const im=card.querySelector('img'); if (im && im.dataset.src) im.src=im.dataset.src;
+    });
+    card.addEventListener('click', ()=> openCategory(c.id));
+    categoriesGrid.appendChild(card);
+  });
+}
+function renderShopsGrid(countMap){
+  shopsGrid.innerHTML='';
+  const list = SHOPS.filter(s=>!isExpired(s.expiry))
+    .sort((a,b)=>(countMap[b.name]||0)-(countMap[a.name]||0) || a.name.localeCompare(b.name));
+  if (!list.length){
+    const msg=document.createElement('div');
+    msg.style.gridColumn='1 / -1'; msg.style.textAlign='center'; msg.style.color='#666';
+    msg.textContent='No shops available.';
+    shopsGrid.appendChild(msg);
+    return;
+  }
+  list.forEach(shop=>{
+    const card=document.createElement('article');
+    card.className='shop-card';
+    card.style.backgroundImage=`url('${shop.heroImage}')`;
+    const shareBtn = document.createElement('button');
+    shareBtn.className='shop-share'; shareBtn.textContent='Share';
+    shareBtn.addEventListener('click', (e)=>{ e.stopPropagation(); shareShop(shop); });
+    const content=document.createElement('div');
+    content.className='content';
+    content.innerHTML=`
+      <div>
+        <div class="shop-title">${escapeHtml(shop.name)}</div>
+        <div class="shop-slogan">${escapeHtml(shop.slogan||'')}</div>
+      </div>
+      <div class="shop-lower">
+        <p class="shop-meta">Items: ${countMap[shop.name]||0}</p>
+        <button class="btn-enter" type="button">Enter Shop</button>
+      </div>
+    `;
+    content.querySelector('.btn-enter').addEventListener('click', ()=> openShop(shop));
+    card.appendChild(shareBtn);
+    card.appendChild(content);
+    shopsGrid.appendChild(card);
+  });
+}
+
+/* ===================== Category / Shop / Item openers ===================== */
+async function openCategory(cat){
+  currentCategory=cat;
+  // page prep
+  hide(shopBanner); hide(shopGallery); hide(itemDetail); show(catPage);
+  catPageTitle.textContent = `${cat}`;
+  catPageSearch.value='';
+  catPageGrid.innerHTML=''; show(catPageStatus); catPageStatus.textContent='Items loading…';
+  openDrawer();
+  shopTopActions.style.display='none'; // hamburger must NOT show on category page
+  pushState('cat:'+cat);
+  const items = await fetchItemsInCategory(cat);
+  drawCatItems(items);
+  // search within
+  catPageSearch.oninput = ()=>{
+    const q=(catPageSearch.value||'').toLowerCase();
+    const list=items.filter(ad=>
+      (ad.name||'').toLowerCase().includes(q) ||
+      (ad.desc||'').toLowerCase().includes(q) ||
+      (ad.shop||'').toLowerCase().includes(q)
+    );
+    drawCatItems(list);
+  };
+}
+async function fetchItemsInCategory(cat){
+  const ck=CACHE.catItems(cat);
+  const cached=loadCache(ck);
+  if (cached) return cached;
+  const items=[];
+  await Promise.all(SHOPS.map(async sh=>{
+    if (isExpired(sh.expiry)) return;
+    const colRef=collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, sh.name, "items");
+    const snap=await getDocs(colRef);
+    snap.forEach(d=>{
+      const it=d.data(); it.id=d.id; it.shop = it.shop || sh.name;
+      if ((it.category||'')===cat) items.push(it);
+    });
+  }));
+  items.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  saveCache(ck, items);
+  return items;
+}
+function drawCatItems(items){
+  catPageGrid.innerHTML='';
+  if (!items.length){
+    catPageStatus.textContent='No items available.';
+    show(catPageStatus); return;
+  }
+  hide(catPageStatus);
+  items.forEach(ad=> renderItemCard(catPageGrid, ad));
+}
+
+async function openShop(shop){
+  currentShop=shop; currentShopName=shop.name; jumpToAdId = jumpToAdId || null;
+  shopBanner.style.backgroundImage=`url('${shop.heroImage}')`;
+  shopNameEl.textContent=shop.name;
+  shopSloganEl.textContent=shop.slogan||'';
+  show(shopBanner); show(shopGallery); hide(itemDetail); hide(catPage);
+  openDrawer();
+  shopTopActions.style.display='flex'; // hamburger visible only on shop page
+  pushState('shop:'+shop.name);
+  // expiry hint inside access code modal (only when 7 days or less)
+  const dleft = daysLeft(shop.expiry);
+  if (dleft!==null && dleft<=7){
+    shopExpiryNotice.innerHTML = `<strong>${dleft} day${dleft===1?'':'s'}</strong> left for your shop to expire. <a href="#" id="renewLink">Click here to renew your subscription</a>.`;
+  } else {
+    shopExpiryNotice.style.display='none';
+  }
+  hamburgerBtn.onclick = ()=> promptShopCode();
+  shopShareBtn.onclick = ()=> shareShop(shop);
+  await renderShopTabsAndItems(shop, jumpToAdId);
+  jumpToAdId=null;
+}
+async function renderShopTabsAndItems(shop, focusAdId=null){
+  const items = await fetchShopItems(shop.name);
+  const byCat={};
+  items.forEach(it=>{
+    const c=it.category||'Other'; (byCat[c]||(byCat[c]=[])).push(it);
+  });
+  // sort categories by count desc
+  const catList = Object.keys(byCat).map(c=>({cat:c, count:byCat[c].length}))
+                   .sort((a,b)=> b.count-a.count || a.cat.localeCompare(b.cat));
+  shopTabs.innerHTML='';
+  if (!catList.length){
+    shopItemsGrid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:#666;">No items yet.</div>`;
+    return;
+  }
+  catList.forEach((entry,i)=>{
+    const el=document.createElement('button');
+    el.className='shop-tab'+(i===0?' active':''); el.dataset.cat=entry.cat;
+    el.innerHTML = `${escapeHtml(entry.cat)} <span class="count">${entry.count}</span>`;
+    el.addEventListener('click', ()=>{
+      shopTabs.querySelectorAll('.shop-tab').forEach(b=> b.classList.remove('active'));
+      el.classList.add('active');
+      renderShopItems(byCat[entry.cat]);
+    });
+    shopTabs.appendChild(el);
+  });
+  const firstCat = focusAdId ? (catList.find(x=>(byCat[x.cat]||[]).some(it=>it.id===focusAdId))?.cat || catList[0].cat) : catList[0].cat;
+  shopTabs.querySelectorAll('.shop-tab').forEach(b=> b.dataset.cat===firstCat && b.classList.add('active'));
+  renderShopItems(byCat[firstCat], focusAdId);
+}
+function renderShopItems(list, focusAdId=null){
+  shopItemsGrid.innerHTML='';
+  if (!list.length){
+    shopItemsGrid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:#666;">No items in this category.</div>`;
+    return;
+  }
+  list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).forEach(ad=> renderItemCard(shopItemsGrid, ad, true));
+  if (focusAdId){
+    const ad = list.find(x=> x.id===focusAdId);
+    if (ad) openItemDetail(ad);
+  }
+}
+
+function buildSlider(images){
+  // prepare blurred bg from first
+  const first = (images && images[0]) || 'https://via.placeholder.com/1200x800?text=Image';
+  itemBlurBg.style.backgroundImage = `url('${first}')`;
+  itemTrack.innerHTML=''; itemDots.innerHTML='';
+  if (!images || !images.length) images=[first];
+  images.forEach((src,i)=>{
+    const s = document.createElement('div'); s.className='slide';
+    const img = document.createElement('img'); img.src=src; img.alt=`image-${i+1}`; img.loading='lazy'; img.decoding='async';
+    s.appendChild(img); itemTrack.appendChild(s);
+    const dot=document.createElement('div'); dot.className='dot'+(i===0?' active':'');
+    dot.addEventListener('click', ()=> goTo(i));
+    itemDots.appendChild(dot);
+  });
+  let idx=0;
+  function update(){ itemTrack.style.transform=`translateX(-${idx*100}%)`; itemDots.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===idx)); }
+  function goTo(i){ idx=(i+images.length)%images.length; update(); }
+  itemPrev.onclick = ()=> goTo(idx-1);
+  itemNext.onclick = ()=> goTo(idx+1);
+  update();
+}
+
+function openItemDetail(ad){
+  hide(shopBanner); hide(shopGallery); hide(catPage); show(itemDetail);
+  buildSlider(ad.images||[]);
+  detailTitle.textContent=ad.name||'Item';
+  detailPrice.textContent=fmtPrice(ad.price);
+  detailPostedBy.textContent = `Posted by ${ad.shop||''} • ${ad.category||''}`;
+  detailDesc.textContent=ad.desc||'';
+  openDrawer();
+  pushState('item:'+ad.id);
+  callBtn.onclick = ()=> captureNumberThenProceed('call', ad);
+  waBtn.onclick   = async ()=>{
+    const link = await ensureItemShortLink(ad);
+    const msg = `Hello, I'm interested in *${ad.name}* – ${fmtPrice(ad.price)} from ${ad.shop}. ${link}`;
+    const shopPhone = (SHOPS.find(s=>s.name===ad.shop)?.phone)||"";
+    if (shopPhone) location.href=`https://wa.me/${shopPhone.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
+  };
+  viewShopBtn.onclick = ()=>{
+    jumpToAdId = ad.id || null;
+    const shopObj = SHOPS.find(s=> s.name===ad.shop);
+    if (shopObj) openShop(shopObj);
+  };
+  itemShareBtn.onclick = ()=> shareItem(ad);
+}
+
+/* ===================== Share ===================== */
+async function shareItem(ad){
+  const url = await ensureItemShortLink(ad);
+  const text = `${ad.name} • ${fmtPrice(ad.price)} • ${ad.shop}\n${url}`;
+  location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+async function shareShop(shop){
+  const url = await ensureShopShortLink(shop.name);
+  const text = `${shop.name} — ${shop.slogan}\n${url}`;
+  location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+/* ===================== Number capture flow ===================== */
+function openModal(m){ m.classList.add('show'); }
+function closeModal(m){ m.classList.remove('show'); }
+
+function openNumberModal(){ openModal(numberModal); }
+function closeNumberModal(){ closeModal(numberModal); }
+[numberClose, numberCancel].forEach(b=> b&&b.addEventListener('click', closeNumberModal));
+numberOk.addEventListener('click', async ()=>{
+  const norm = normalizeGhanaNumber(waNumberInput.value);
+  if (!norm){ numberError.textContent="Enter a valid WhatsApp number."; numberError.style.display='block'; return; }
+  numberError.style.display='none';
   userPhoneCache = norm.e164;
-  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g, '')), { whatsapp: norm.e164, timestamp: serverTimestamp() }, { merge: true });
+  await setDoc(doc(globalNums, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
   const shopName = pendingContactFor?.shopName;
-  if (shopName) {
-    await ensureShopsContainer();
-    await ensureShopDoc(shopName);
+  if (shopName){
     const custCol = collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName, "customers");
-    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g, '')), { whatsapp: norm.e164, timestamp: serverTimestamp() }, { merge: true });
+    await setDoc(doc(custCol, norm.e164.replace(/[^\d+]/g,'')), { whatsapp:norm.e164, timestamp: serverTimestamp() }, { merge:true });
   }
   const shopPhone = pendingContactFor?.phone || "";
-  if (pendingAction === 'call') {
+  if (pendingAction === 'call'){
     if (shopPhone) window.location.href = `tel:${shopPhone}`;
-  } else {
-    const waNum = shopPhone.replace(/^\+/, '');
-    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle || ''}* on PickMe (Tech & Gadgets).`;
+  }else{
+    const waNum = shopPhone.replace(/^\+/,'');
+    const msg = `Hello, I saw your item *${pendingContactFor?.itemTitle||''}* on PickMe (Tech & Gadgets).`;
     if (waNum) window.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
   }
   closeNumberModal();
 });
 
-function promptShopCode() {
-  if (codeInput) codeInput.value = "";
+/* ===================== Admin access / menus ===================== */
+function promptShopCode(){
+  codeInput.value="";
+  // expiry banner if needed (display controlled in openShop)
+  const dleft = daysLeft(currentShop?.expiry);
+  if (dleft!==null && dleft<=7){
+    shopExpiryNotice.style.display='block';
+  } else shopExpiryNotice.style.display='none';
   openModal(codeModal);
 }
-
-[codeClose, codeCancel].forEach(b => b && b.addEventListener('click', () => closeModal(codeModal)));
-
-if (codeOk) codeOk.addEventListener('click', () => {
+[codeClose, codeCancel].forEach(b=> b&&b.addEventListener('click', ()=> closeModal(codeModal)));
+codeOk.addEventListener('click', ()=>{
   const input = codeInput.value.trim();
   const expected = (currentShop?.accessCode) || SHOP_ADMIN_DEFAULT_CODE;
-  if (input && input === expected) {
+  if (input && input===expected){
     closeModal(codeModal);
     openModal(adminOptionsModal);
-  } else {
+  }else{
     alert("Incorrect code.");
   }
 });
+[adminOptClose, adminOptCancel].forEach(b=> b&&b.addEventListener('click', ()=> closeModal(adminOptionsModal)));
 
-[adminOptClose, adminOptCancel].forEach(b => b && b.addEventListener('click', () => closeModal(adminOptionsModal)));
-
-if (optAdd) optAdd.addEventListener('click', () => {
+/* ===================== Drafts (Add Items) ===================== */
+let currentAddCategory = null;
+optAdd.addEventListener('click', ()=>{
   closeModal(adminOptionsModal);
-  if (catChooseGrid) {
-    catChooseGrid.innerHTML = "";
-    CATEGORIES.forEach(({ id }) => {
-      const div = document.createElement('div');
-      div.className = 'mopt-card';
-      div.innerHTML = `<h4>${escapeHtml(id)}</h4>`;
-      div.addEventListener('click', () => startAddFlow(id));
+  // show categories and quota
+  catChooseGrid.innerHTML='';
+  catChooseQuota.textContent='Calculating quota…';
+  openModal(catChooseModal);
+  (async ()=>{
+    const items = await fetchShopItems(currentShopName);
+    const total = items.length;
+    catChooseQuota.textContent = `Total items added ${total}/${SHOP_ITEMS_LIMIT_CAP}`;
+    // only show categories (all allowed)
+    CATEGORIES.forEach(({id})=>{
+      const div=document.createElement('div');
+      div.className='mopt-card';
+      div.innerHTML=`<h4>${escapeHtml(id)}</h4>`;
+      div.addEventListener('click', ()=> startAddFlow(id, total));
       catChooseGrid.appendChild(div);
     });
-  }
-  openModal(catChooseModal);
+  })();
 });
-
-[catChooseClose, catChooseCancel].forEach(b => b && b.addEventListener('click', () => {
+[catChooseClose, catChooseCancel].forEach(b=> b&&b.addEventListener('click', ()=>{
   closeModal(catChooseModal);
   openModal(adminOptionsModal);
 }));
 
-let currentAddCategory = null;
-function startAddFlow(category) {
+function startAddFlow(category, currentTotal){
   currentAddCategory = category;
+  drafts=[]; filesBuffer=[];
+  draftTitle.textContent = `Add items · ${currentAddCategory}`;
+  clearFormUI();
+  updateFormButtons();
   closeModal(catChooseModal);
-  openDraftEditor();
-}
-
-function openDraftEditor() {
-  if (draftTitle) draftTitle.textContent = `Add items · ${currentAddCategory}`;
-  resetForm();
-  renderDraftList();
   openModal(draftModal);
 }
 
-if (draftClose) draftClose.addEventListener('click', () => {
-  closeModal(draftModal);
-  openModal(catChooseModal);
+function clearFormUI(){
+  imgInput.value=''; imgThumbs.innerHTML='';
+  nameInput.value=''; priceInput.value=''; descInput.value='';
+}
+
+addImagesBtn.addEventListener('click', ()=> imgInput.click());
+imgInput.addEventListener('change', ()=>{
+  const list = Array.from(imgInput.files||[]);
+  const space = MAX_IMAGES - filesBuffer.length;
+  filesBuffer.push(...list.slice(0, space));
+  drawNewThumbs();
+  updateFormButtons();
+});
+function drawNewThumbs(){
+  imgThumbs.innerHTML='';
+  filesBuffer.forEach((file,idx)=>{
+    const url=URL.createObjectURL(file);
+    const t=document.createElement('div');
+    t.className='thumb';
+    t.innerHTML=`<img src="${url}" alt=""><button class="trash" title="Remove">&times;</button>`;
+    t.querySelector('.trash').onclick=()=>{ filesBuffer.splice(idx,1); drawNewThumbs(); updateFormButtons(); };
+    imgThumbs.appendChild(t);
+  });
+  addImagesBtn.style.display = filesBuffer.length>=MAX_IMAGES ? 'none' : '';
+}
+function updateFormButtons(){
+  const allFilled = nameInput.value.trim() && priceInput.value.trim() && descInput.value.trim() && filesBuffer.length>0;
+  addMoreBtn.disabled = !allFilled || drafts.length>=MAX_BULK_ITEMS-1;
+  submitDraftsBtn.disabled = (!allFilled && drafts.length===0);
+  clearFormBtn.style.display = drafts.length>=1 ? '' : 'none';
+}
+[nameInput, priceInput, descInput].forEach(el=> el.addEventListener('input', updateFormButtons));
+
+clearFormBtn.addEventListener('click', ()=>{
+  filesBuffer=[]; clearFormUI(); drawNewThumbs(); updateFormButtons();
 });
 
-if (addImagesBtn) addImagesBtn.addEventListener('click', () => imgInput.click());
-
-function refreshThumbs() {
-  if (imgThumbs) {
-    imgThumbs.innerHTML = "";
-    filesBuffer.forEach((file, idx) => {
-      const url = URL.createObjectURL(file);
-      const t = document.createElement('div');
-      t.className = 'thumb';
-      t.innerHTML = `<img src="${url}" alt="img ${idx + 1}"><button class="trash" title="Remove" aria-label="Remove">&times;</button>`;
-      t.querySelector('.trash').addEventListener('click', () => {
-        filesBuffer.splice(idx, 1);
-        refreshThumbs();
+function renderDraftList(){
+  draftList.innerHTML='';
+  drafts.forEach((d, i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='mopt-card';
+    wrap.style.borderStyle='dashed';
+    wrap.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h4 style="margin:0">#${i+1} · ${escapeHtml(d.cat)}</h4>
+        <button class="btn btn-dark d-remove" type="button">Delete</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input class="input d-name" placeholder="Item name" value="${escapeHtml(d.name)}"/>
+        <input class="input d-price" type="number" min="0" step="1" placeholder="Price" value="${escapeHtml(d.price)}"/>
+      </div>
+      <textarea class="input d-desc" rows="2" placeholder="Description">${escapeHtml(d.desc||'')}</textarea>
+      <div class="thumb-row d-thumbs" style="margin-top:6px"></div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn btn-theme d-addimg" type="button">Add images</button>
+        <button class="btn btn-dark d-clearimg" type="button">Clear images</button>
+      </div>
+    `;
+    const thumbs=wrap.querySelector('.d-thumbs');
+    function draw(){
+      thumbs.innerHTML='';
+      d.files.forEach((f,idx)=>{
+        const u=URL.createObjectURL(f);
+        const t=document.createElement('div');
+        t.className='thumb';
+        t.innerHTML=`<img src="${u}" alt=""><button class="trash" title="Remove">&times;</button>`;
+        t.querySelector('.trash').onclick=()=>{ d.files.splice(idx,1); draw(); };
+        thumbs.appendChild(t);
       });
-      imgThumbs.appendChild(t);
-    });
-  }
+    }
+    draw();
+    wrap.querySelector('.d-name').oninput = e=> d.name = e.target.value;
+    wrap.querySelector('.d-price').oninput= e=> d.price= e.target.value;
+    wrap.querySelector('.d-desc').oninput = e=> d.desc = e.target.value;
+
+    const hid=document.createElement('input');
+    hid.type='file'; hid.accept='image/*'; hid.multiple=true; hid.style.display='none';
+    wrap.appendChild(hid);
+    wrap.querySelector('.d-addimg').onclick=()=> hid.click();
+    hid.onchange=()=>{
+      const list=Array.from(hid.files||[]);
+      const space=MAX_IMAGES - d.files.length;
+      d.files.push(...list.slice(0,space));
+      draw();
+    };
+    wrap.querySelector('.d-clearimg').onclick=()=>{ d.files=[]; draw(); };
+    wrap.querySelector('.d-remove').onclick=()=>{ drafts.splice(i,1); renderDraftList(); updateFormButtons(); };
+
+    draftList.appendChild(wrap);
+  });
 }
 
-function resetForm() {
-  if (imgInput) imgInput.value = '';
-  filesBuffer = [];
-  refreshThumbs();
-  if (nameInput) nameInput.value = '';
-  if (priceInput) priceInput.value = '';
-  if (descInput) descInput.value = '';
-}
-
-if (imgInput) imgInput.addEventListener('change', () => {
-  const list = Array.from(imgInput.files || []);
-  const wanted = Math.min(MAX_IMAGES - filesBuffer.length, list.length);
-  filesBuffer.push(...list.slice(0, wanted));
-  refreshThumbs();
-});
-
-if (clearFormBtn) clearFormBtn.addEventListener('click', resetForm);
-
-function pushDraftFromForm() {
-  const nm = nameInput.value.trim();
-  const pr = money(priceInput.value);
-  const ds = descInput.value.trim();
-  if (!nm) { alert("Enter name"); return false; }
-  if (!filesBuffer.length) { alert("Add at least 1 image"); return false; }
-  const id = makeId();
-  drafts.push({ id, cat: currentAddCategory, name: nm, price: pr, desc: ds, files: [...filesBuffer] });
-  renderDraftList();
-  resetForm();
+function tryPushDraftFromForm(){
+  const nm=nameInput.value.trim();
+  const pr=priceInput.value.trim();
+  const ds=descInput.value.trim();
+  if (!nm || !pr || !ds || !filesBuffer.length) return false;
+  const id=makeId();
+  drafts.push({ id, cat: currentAddCategory, name:nm, price:money(pr), desc:ds, files:[...filesBuffer] });
+  filesBuffer=[]; clearFormUI(); drawNewThumbs(); renderDraftList(); updateFormButtons();
   return true;
 }
 
-function renderDraftList() {
-  if (draftList) {
-    draftList.innerHTML = "";
-    drafts.forEach((d, i) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'mopt-card';
-      wrap.style.borderStyle = 'dashed';
-      wrap.innerHTML = `
-        <h4 style="margin:0 0 6px">#${i + 1} · ${escapeHtml(d.cat)}</h4>
-        <div class="row">
-          <input class="input d-name" placeholder="Name" value="${escapeHtml(d.name)}" />
-          <input class="input d-price" placeholder="Price" value="${escapeHtml(d.price)}" />
-        </div>
-        <textarea class="input d-desc" rows="2" placeholder="Description">${escapeHtml(d.desc || '')}</textarea>
-        <div class="thumb-row d-thumbs"></div>
-        <div class="row">
-          <button class="btn-primary d-addimg" type="button">Add images</button>
-          <button class="btn-secondary d-clearimg" type="button">Clear images</button>
-          <button class="btn-secondary d-remove" type="button">Remove item</button>
-        </div>
-      `;
-      const nameEl = wrap.querySelector('.d-name');
-      const priceEl = wrap.querySelector('.d-price');
-      const descEl = wrap.querySelector('.d-desc');
-      const thumbs = wrap.querySelector('.d-thumbs');
+addMoreBtn.addEventListener('click', ()=>{
+  if (drafts.length >= MAX_BULK_ITEMS-1){ toast(`You can add only ${MAX_BULK_ITEMS} items per list.`); return; }
+  if (!tryPushDraftFromForm()){ toast('Complete all fields to add item.'); return; }
+});
 
-      function drawThumbs() {
-        thumbs.innerHTML = '';
-        d.files.forEach((f, idx) => {
-          const u = URL.createObjectURL(f);
-          const t = document.createElement('div');
-          t.className = 'thumb';
-          t.innerHTML = `<img src="${u}" alt=""><button class="trash" title="Remove">&times;</button>`;
-          t.querySelector('.trash').onclick = () => { d.files.splice(idx, 1); drawThumbs(); };
-          thumbs.appendChild(t);
-        });
-      }
-      drawThumbs();
-
-      nameEl.oninput = e => d.name = e.target.value;
-      priceEl.oninput = e => d.price = e.target.value.replace(/[^\d.]/g, '');
-      descEl.oninput = e => d.desc = e.target.value;
-
-      const hid = document.createElement('input');
-      hid.type = 'file';
-      hid.accept = 'image/*';
-      hid.multiple = true;
-      hid.style.display = 'none';
-      wrap.appendChild(hid);
-      wrap.querySelector('.d-addimg').onclick = () => hid.click();
-      hid.onchange = () => {
-        const list = Array.from(hid.files || []);
-        const space = MAX_IMAGES - d.files.length;
-        d.files.push(...list.slice(0, space));
-        drawThumbs();
-      };
-      wrap.querySelector('.d-clearimg').onclick = () => { d.files = []; drawThumbs(); };
-      wrap.querySelector('.d-remove').onclick = () => { drafts.splice(i, 1); renderDraftList(); };
-      draftList.appendChild(wrap);
-    });
+submitDraftsBtn.addEventListener('click', async ()=>{
+  // ensure last form either added or empty; do not include empty
+  const hasFormData = nameInput.value.trim() || priceInput.value.trim() || descInput.value.trim() || filesBuffer.length>0;
+  if (hasFormData){
+    const ok = tryPushDraftFromForm();
+    if (!ok){ toast('Please complete all fields including images.'); return; }
   }
-}
+  if (!drafts.length){ toast('Nothing to submit.'); return; }
+  if (drafts.length > MAX_BULK_ITEMS){ toast(`Max ${MAX_BULK_ITEMS} items per submission.`); return; }
 
-if (addMoreBtn) addMoreBtn.addEventListener('click', () => { pushDraftFromForm(); });
+  submitDraftsBtn.disabled=true; submitDraftsBtn.textContent='Submitting…';
+  addMoreBtn.disabled=true;
+  toast('Uploading… Please wait', 3000);
 
-if (submitDraftsBtn) submitDraftsBtn.addEventListener('click', async () => {
-  if (!drafts.length) {
-    const nm = nameInput.value.trim();
-    if (nm) {
-      const ok = pushDraftFromForm();
-      if (!ok) return;
-    }
-  }
-  const valid = drafts.filter(d => d.name && d.files && d.files.length > 0);
-  if (!valid.length) { alert("Nothing to submit."); return; }
-  submitDraftsBtn.disabled = true;
-  submitDraftsBtn.textContent = "Submitting…";
-  toast("Submitting…");
-  const payload = { type: "review", page: PAGE_KEY, shop: currentShopName, items: [] };
-  for (const d of valid) {
-    const adId = d.id;
-    const uploads = d.files.slice(0, MAX_IMAGES).map((f, idx) => {
-      const key = `${PAGE_KEY}/${currentShopName}/${adId}/img_${idx + 1}.jpg`;
+  const payload = { type:"review", page:PAGE_KEY, shop: currentShopName, items: [] };
+
+  // parallelize uploads per item
+  for (const d of drafts){
+    const uploads = d.files.slice(0,MAX_IMAGES).map((f, idx)=>{
+      const key = `${PAGE_KEY}/${currentShopName}/${d.id}/img_${idx+1}.jpg`;
       const rf = sRef(st, key);
-      return uploadBytes(rf, f).then(snap => getDownloadURL(sRef(st, snap.metadata.fullPath)));
+      return uploadBytes(rf, f).then(snap=> getDownloadURL(sRef(st, snap.metadata.fullPath)));
     });
     const urls = await Promise.all(uploads);
-    payload.items.push({ id: adId, category: d.cat, name: d.name, price: money(d.price), desc: d.desc, images: urls });
+    payload.items.push({ id:d.id, category:d.cat, name:d.name, price:d.price, desc:d.desc, images:urls, shop: currentShopName });
   }
+
   const linkId = await putShort(payload);
   closeModal(draftModal);
-  drafts = [];
-  resetForm();
-  draftList.innerHTML = "";
-  submitDraftsBtn.disabled = false;
-  submitDraftsBtn.textContent = "Submit";
+  drafts=[]; renderDraftList(); updateFormButtons();
+  submitDraftsBtn.disabled=false; submitDraftsBtn.textContent='Submit';
+
   const link = `${location.origin}${location.pathname}?review=${linkId}`;
   const msg = `New Tech & Gadgets adverts from *${currentShopName}*.\nOpen: ${link}`;
-  window.location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
-  setTimeout(() => openModal(catChooseModal), 500);
+  location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
 });
 
-if (optDelete) optDelete.addEventListener('click', async () => {
+/* ===================== Delete flow (bulk) ===================== */
+optDelete.addEventListener('click', async ()=>{
   closeModal(adminOptionsModal);
-  deleteList.innerHTML = "<p>Loading items…</p>";
+  delStepCat.style.display=''; delStepItems.style.display='none';
+  delCatGrid.innerHTML='Loading…';
+  selectedDeleteSet.clear(); delSelCount.textContent='0 selected';
   openModal(deleteModal);
+
   const items = await fetchShopItems(currentShopName);
-  deleteList.innerHTML = "";
-  if (!items.length) { deleteList.innerHTML = "<p>No items to delete.</p>"; return; }
-  items.forEach(ad => {
-    const blk = document.createElement('div');
-    blk.className = 'mopt-card';
-    blk.innerHTML = `
-      <h4>${escapeHtml(ad.name || 'Item')}</h4>
-      <p>${escapeHtml(ad.category || '')}</p>
-      <button class="btn-secondary">Delete</button>
+  currentShopItemsCache = items;
+  const byCat={};
+  items.forEach(it=>{ const c=it.category||'Other'; (byCat[c]||(byCat[c]=[])).push(it); });
+  const cats = Object.keys(byCat).map(c=>({cat:c,count:byCat[c].length})).filter(x=>x.count>0)
+               .sort((a,b)=> b.count-a.count || a.cat.localeCompare(b.cat));
+  delCatGrid.innerHTML='';
+  cats.forEach(entry=>{
+    const div=document.createElement('div');
+    div.className='mopt-card';
+    div.innerHTML=`<h4>${escapeHtml(entry.cat)}</h4><p>${entry.count} item(s)</p>`;
+    div.addEventListener('click', ()=>{
+      delStepCat.style.display='none'; delStepItems.style.display='';
+      populateDeleteItems(byCat[entry.cat], entry.cat);
+    });
+    delCatGrid.appendChild(div);
+  });
+});
+function populateDeleteItems(list, cat){
+  delItemsGrid.innerHTML='';
+  deleteDoBtn.textContent='Delete all items';
+  deleteDoBtn.dataset.mode='all';
+  deleteDoBtn.dataset.cat=cat;
+  selectedDeleteSet.clear(); delSelCount.textContent='0 selected';
+
+  list.forEach(ad=>{
+    const card=document.createElement('div'); card.className='item-card'; card.style.position='relative';
+    const img=(ad.images&&ad.images[0])||'https://via.placeholder.com/600x400?text=Image';
+    card.innerHTML=`
+      <div class="item-img"><img src="${img}" loading="lazy" decoding="async" alt=""></div>
+      <div class="item-body">
+        <div class="item-price">${fmtPrice(ad.price)}</div>
+        <div class="item-name">${escapeHtml(ad.name||'')}</div>
+      </div>
+      <label style="position:absolute;top:8px;right:8px;background:#fff;padding:4px 6px;border-radius:8px;border:1px solid #ddd;font-size:12px;display:flex;gap:6px;align-items:center;">
+        <input type="checkbox" class="delChk"> Select
+      </label>
     `;
-    blk.querySelector('button').addEventListener('click', () => deleteAd(ad));
-    deleteList.appendChild(blk);
+    const chk = card.querySelector('.delChk');
+    chk.addEventListener('change', ()=>{
+      if (chk.checked) selectedDeleteSet.add(ad.id); else selectedDeleteSet.delete(ad.id);
+      const n=selectedDeleteSet.size;
+      delSelCount.textContent = `${n} selected`;
+      if (n===0){ deleteDoBtn.textContent='Delete all items'; deleteDoBtn.dataset.mode='all'; }
+      else if (n===1){ deleteDoBtn.textContent='Delete selected item'; deleteDoBtn.dataset.mode='some'; }
+      else { deleteDoBtn.textContent='Delete selected items'; deleteDoBtn.dataset.mode='some'; }
+    });
+    delItemsGrid.appendChild(card);
   });
+}
+delBackToCats.addEventListener('click', ()=>{
+  delStepItems.style.display='none';
+  delStepCat.style.display='';
+  selectedDeleteSet.clear(); delSelCount.textContent='0 selected';
 });
-
-[deleteClose, deleteCancel].forEach(b => b && b.addEventListener('click', () => {
-  closeModal(deleteModal);
-  openModal(adminOptionsModal);
-}));
-
-async function deleteAd(ad) {
-  if (!confirm("Delete this item permanently?")) return;
-  try {
-    await deleteDoc(doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, currentShopName, "items", ad.id));
-  } catch (e) {
-    console.warn('delete doc', e);
+[deleteClose, deleteCancel].forEach(b=> b&&b.addEventListener('click', ()=> closeModal(deleteModal)));
+deleteDoBtn.addEventListener('click', async ()=>{
+  const mode = deleteDoBtn.dataset.mode||'all';
+  const cat = deleteDoBtn.dataset.cat||'';
+  if (mode==='all'){
+    if (!confirm('Are you sure you want to delete all the items in this category?')) return;
+    await bulkDelete(cat, null);
+  }else{
+    const n=selectedDeleteSet.size;
+    if (n===0) return;
+    if (!confirm(`Are you sure you want to delete ${n} item${n===1?'':'s'} from this category?`)) return;
+    await bulkDelete(cat, new Set(selectedDeleteSet));
   }
-  try {
-    const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
-    const listing = await listAll(folder);
-    await Promise.all(listing.items.map(obj => deleteObject(obj)));
-  } catch (e) {
-    console.warn('delete images', e);
-  }
-  alert("Deleted.");
+  toast('Deleted successfully.');
   closeModal(deleteModal);
+  // refresh views
   clearShopCaches(currentShopName);
-  renderShops();
+  await renderShops();
   if (currentShop) openShop(currentShop);
+});
+async function bulkDelete(cat, idSet){
+  const items = currentShopItemsCache.filter(x=> (x.category||'Other')===cat && (!idSet || idSet.has(x.id)));
+  await Promise.all(items.map(async ad=>{
+    try{
+      await deleteDoc(doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, currentShopName, "items", ad.id));
+    }catch(e){}
+    try{
+      const folder = sRef(st, `${PAGE_KEY}/${currentShopName}/${ad.id}/`);
+      const listing = await listAll(folder);
+      await Promise.all(listing.items.map(o=> deleteObject(o)));
+    }catch(e){}
+  }));
 }
 
-async function getShort(id) {
-  const snap = await getDoc(doc(linksCol, id));
-  return snap.exists() ? (snap.data()?.payload || null) : null;
+/* ===================== ROUTER / INIT ===================== */
+async function router(){
+  const url = new URL(location.href);
+  const reviewId = url.searchParams.get('review');
+  const resultId = url.searchParams.get('result');
+  const shopQ = url.searchParams.get('shop');
+  const itemQ = url.searchParams.get('item');
+  const catQ  = url.searchParams.get('c');
+
+  if (reviewId){
+    const payload=await getShort(reviewId);
+    if (!payload || payload.type!=='review'){ alert('Invalid review link.'); return; }
+    reviewPayloadPending = payload;
+    openModal(reviewCodeModal);
+    return;
+  }
+  if (resultId){
+    const payload=await getShort(resultId);
+    if (!payload || payload.type!=='result'){ alert('Invalid result link.'); return; }
+    openResult(payload);
+    return;
+  }
+  if (shopQ){
+    const shopObj = SHOPS.find(s=> s.name===shopQ);
+    if (shopObj){
+      await openShop(shopObj);
+      if (itemQ){
+        // ensure correct category tab, then open item
+        const items = await fetchShopItems(shopQ);
+        const ad = items.find(a=> a.id===itemQ);
+        if (ad){
+          jumpToAdId = ad.id;
+          await renderShopTabsAndItems(shopObj, jumpToAdId);
+        }
+      }
+    }
+    return;
+  }
 }
 
-async function putShort(payload) {
-  const id = makeId();
-  await setDoc(doc(linksCol, id), {
-    payload,
-    createdAt: serverTimestamp(),
-    expiresInSec: 86400
+/* First paint: draw skeletons synchronously, then data */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // instant category tiles (zero-count first; will update)
+  renderCategoriesGrid({});
+  // shops placeholder
+  if (shopsStatus) shopsStatus.textContent='Loading shops…';
+
+  // all-items: try cache, then fetch
+  const cachedAll = loadCache(CACHE.all)||[];
+  if (cachedAll.length){ renderAllItemsGrid(cachedAll); if (allItemsStatus) allItemsStatus.remove(); }
+
+  // async updates
+  const [catCounts, shopCounts, allItems] = await Promise.all([
+    countByCategory().catch(()=> ({})),
+    fetchShopCounts().catch(()=> ({})),
+    fetchAllItems().catch(()=> [])
+  ]);
+  renderCategoriesGrid(catCounts);
+  renderShopsGrid(shopCounts);
+  if (!cachedAll.length){
+    if (allItems.length){ renderAllItemsGrid(allItems); if (allItemsStatus) allItemsStatus.remove(); }
+    else { if (allItemsStatus) allItemsStatus.textContent='No items available.'; }
+  }
+
+  // tab switching
+  tabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tabs.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+      const target=btn.dataset.view;
+      [allItemsView, categoriesView, shopsView].forEach(v=> v.classList.remove('show'));
+      document.getElementById(target).classList.add('show');
+      closeDrawer();
+    });
   });
-  return id;
-}
 
-function promptReviewCode() {
-  openModal(reviewCodeModal);
-}
+  // search
+  globalSearch.addEventListener('input', ()=>{
+    const q=(globalSearch.value||'').toLowerCase();
+    if (allItemsView.classList.contains('show')){
+      const base = loadCache(CACHE.all)||[];
+      const filt = base.filter(ad=>
+        (ad.name||'').toLowerCase().includes(q) ||
+        (ad.desc||'').toLowerCase().includes(q) ||
+        (ad.shop||'').toLowerCase().includes(q) ||
+        (ad.category||'').toLowerCase().includes(q)
+      );
+      renderAllItemsGrid(filt);
+    }
+    if (categoriesView.classList.contains('show')){
+      [...categoriesGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+    }
+    if (shopsView.classList.contains('show')){
+      [...shopsGrid.children].forEach(c=> c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
+    }
+  });
 
-[reviewCodeClose, reviewCodeCancel].forEach(b => b && b.addEventListener('click', () => {
-  reviewPayloadPending = null;
-  closeModal(reviewCodeModal);
-  closeDrawer();
-  categoriesView.classList.add('show');
-  shopsView.classList.remove('show');
-  if (allItemsView) allItemsView.classList.remove('show');
-  document.body.classList.add('ready');
-}));
+  // close buttons (individual pages)
+  drawerClose.addEventListener('click', closeDrawer);
+  catCloseBtn.addEventListener('click', ()=>{ hide(catPage); closeDrawer(); });
+  itemCloseBtn.addEventListener('click', ()=>{
+    // If opened from category page, go back there; else if from shop, go back to shop gallery
+    if (currentCategory){ hide(itemDetail); show(catPage); }
+    else if (currentShop){ hide(itemDetail); show(shopGallery); }
+    else { closeDrawer(); }
+  });
+  shopCloseBtn.addEventListener('click', ()=>{ hide(shopGallery); closeDrawer(); });
 
-if (reviewCodeOk) reviewCodeOk.addEventListener('click', () => {
-  if (reviewCodeInput.value.trim() !== GLOBAL_ADMIN_CODE) { alert('Incorrect admin code.'); return; }
-  closeModal(reviewCodeModal);
-  if (reviewPayloadPending) openReview(reviewPayloadPending);
+  bodyReady();
+
+  await router();
 });
 
-async function openReview(payload) {
-  hide(shopBanner);
-  show(itemDetail);
-  hide(shopGallery);
-  hide(catPage);
-  buildSlider([], itemSlider, itemDots);
-  if (detailTitle) detailTitle.textContent = "Review panel";
-  if (detailPrice) detailPrice.textContent = "";
-  if (detailPostedBy) detailPostedBy.textContent = payload.shop || "";
-  if (detailDesc) detailDesc.textContent = "";
-  const container = document.createElement('div');
-  container.style.marginTop = '8px';
-  const states = [];
-  payload.items.forEach((it, idx) => {
+/* signal ready for instant paint */
+function bodyReady(){
+  document.body.classList.remove('hide-initial');
+  document.body.classList.add('ready');
+}
+
+/* ===================== Review / Result ===================== */
+const reviewPanel = document.createElement('div');
+reviewPanel.id = 'reviewPanel';
+reviewPanel.style.display = 'none';
+reviewPanel.innerHTML = `
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+    <span id="reviewTitle">Review Pending Items</span>
+    <button id="reviewCloseBtn" class="close-x" aria-label="Close">&times;</button>
+  </div>
+  <div id="reviewItems" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <div class="modal-footer" style="margin-top:12px;">
+    <button id="submitReviewBtn" class="btn btn-theme">Submit Review</button>
+  </div>
+`;
+drawerContent.appendChild(reviewPanel);
+
+const resultPanel = document.createElement('div');
+resultPanel.id = 'resultPanel';
+resultPanel.style.display = 'none';
+resultPanel.innerHTML = `
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+    <span id="resultTitle">Review Results</span>
+    <button id="resultCloseBtn" class="close-x" aria-label="Close">&times;</button>
+  </div>
+  <nav class="shop-tabs" aria-label="Result tabs">
+    <button class="shop-tab active" data-view="approvedTab" aria-pressed="true">Approved</button>
+    <button class="shop-tab" data-view="rejectedTab" aria-pressed="false">Rejected</button>
+  </nav>
+  <div id="approvedTab" class="view show" aria-live="polite"></div>
+  <div id="rejectedTab" class="view" aria-live="polite"></div>
+  <div class="modal-footer" style="margin-top:12px;">
+    <button id="doneBtn" class="btn btn-theme">Done</button>
+  </div>
+`;
+drawerContent.appendChild(resultPanel);
+
+const reviewCloseBtn = document.getElementById('reviewCloseBtn');
+const submitReviewBtn = document.getElementById('submitReviewBtn');
+const resultCloseBtn = document.getElementById('resultCloseBtn');
+const doneBtn = document.getElementById('doneBtn');
+const approvedTab = document.getElementById('approvedTab');
+const rejectedTab = document.getElementById('rejectedTab');
+
+function clearShopCaches(shopName) {
+  removeCache(CACHE.shopItems(shopName));
+  removeCache(CACHE.all);
+  removeCache(CACHE.cats);
+  removeCache(CACHE.shops);
+}
+
+async function openReviewPanel() {
+  hide(shopBanner); hide(shopGallery); hide(itemDetail); hide(catPage); show(reviewPanel);
+  openDrawer();
+  shopTopActions.style.display = 'none';
+  pushState('review');
+  reviewItems.innerHTML = '';
+  if (reviewPayloadPending && reviewPayloadPending.items) {
+    reviewPayloadPending.items.forEach((item, i) => {
+      const card = document.createElement('div');
+      card.className = 'mopt-card';
+      card.innerHTML = `
+        <h4>${escapeHtml(item.name)}</h4>
+        <p style="margin:4px 0;font-size:12px;color:#555;">
+          ${fmtPrice(item.price)} • ${escapeHtml(item.category)} • ${escapeHtml(item.shop)}
+        </p>
+        <div class="thumb-row" style="margin:6px 0">
+          ${item.images.map((img, j) => `
+            <div class="thumb"><img src="${img}" alt="Image ${j+1}" loading="lazy"></div>
+          `).join('')}
+        </div>
+        <div class="row">
+          <button class="btn btn-ok" data-action="approve" data-index="${i}">Approve</button>
+          <button class="btn btn-dark" data-action="reject" data-index="${i}">Reject</button>
+        </div>
+        <div class="reject-reason" style="display:none;margin-top:8px;">
+          <div class="lbl">Reason for rejection</div>
+          <select class="input" data-index="${i}">
+            <option value="">Select reason</option>
+            <option value="Inappropriate content">Inappropriate content</option>
+            <option value="Low quality images">Low quality images</option>
+            <option value="Incorrect category">Incorrect category</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea class="input reason-other" placeholder="Specify reason" style="display:none;margin-top:6px;"></textarea>
+        </div>
+      `;
+      reviewItems.appendChild(card);
+    });
+    reviewItems.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const index = Number(btn.dataset.index);
+        const card = btn.closest('.mopt-card');
+        const select = card.querySelector('select');
+        if (btn.dataset.action === 'approve') {
+          reviewPayloadPending.items[index].status = 'approved';
+          card.querySelector('.reject-reason').style.display = 'none';
+        } else {
+          reviewPayloadPending.items[index].status = 'rejected';
+          card.querySelector('.reject-reason').style.display = 'block';
+        }
+      });
+    });
+    reviewItems.querySelectorAll('select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const index = Number(sel.dataset.index);
+        const reasonOther = sel.closest('.mopt-card').querySelector('.reason-other');
+        reviewPayloadPending.items[index].rejectReason = sel.value;
+        reasonOther.style.display = sel.value === 'Other' ? 'block' : 'none';
+        if (sel.value === 'Other') reasonOther.value = '';
+      });
+    });
+    reviewItems.querySelectorAll('.reason-other').forEach(textarea => {
+      textarea.addEventListener('input', () => {
+        const index = Number(textarea.closest('.mopt-card').querySelector('select').dataset.index);
+        reviewPayloadPending.items[index].rejectReason = textarea.value;
+      });
+    });
+  } else {
+    reviewItems.innerHTML = '<p style="text-align:center;color:#666;">No items to review.</p>';
+  }
+}
+
+reviewCloseBtn.addEventListener('click', () => {
+  hide(reviewPanel);
+  closeDrawer();
+});
+
+submitReviewBtn.addEventListener('click', async () => {
+  if (!reviewPayloadPending || !reviewPayloadPending.items) {
+    toast('No items to submit.');
+    return;
+  }
+  const approved = reviewPayloadPending.items.filter(x => x.status === 'approved');
+  const rejected = reviewPayloadPending.items.filter(x => x.status === 'rejected');
+  for (const item of approved) {
+    const ref = doc(collection(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, item.shop, "items"));
+    await setDoc(ref, {
+      name: item.name,
+      price: item.price,
+      desc: item.desc,
+      category: item.category,
+      images: item.images,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      shortLink: await ensureItemShortLink({ id: ref.id, shop: item.shop, category: item.category })
+    });
+    clearShopCaches(item.shop);
+  }
+  const resultPayload = { type: "result", page: PAGE_KEY, shop: reviewPayloadPending.shop, approved, rejected };
+  const resultId = await putShort(resultPayload);
+  reviewPayloadPending = null;
+  hide(reviewPanel);
+  show(resultPanel);
+  approvedTab.innerHTML = approved.length ? '' : '<p style="text-align:center;color:#666;">No items approved.</p>';
+  approved.forEach(item => renderItemCard(approvedTab, item, true));
+  rejectedTab.innerHTML = rejected.length ? '' : '<p style="text-align:center;color:#666;">No items rejected.</p>';
+  rejected.forEach(item => {
     const card = document.createElement('div');
     card.className = 'mopt-card';
-    const holder = document.createElement('div');
-    holder.style.marginBottom = '8px';
-    const slider = document.createElement('div');
-    slider.className = 'slider';
-    const dots = document.createElement('div');
-    dots.className = 'dots';
-    holder.append(slider, dots);
-    card.appendChild(holder);
-    buildSlider(it.images || [], slider, dots);
-    const meta = document.createElement('div');
-    meta.innerHTML = `
-      <h4 style="margin:8px 0 4px">#${idx + 1} ${escapeHtml(it.name)}</h4>
-      <div>${escapeHtml(it.category || '')}</div>
-      <div>${fmtPrice(it.price)}</div>
-    `;
-    card.appendChild(meta);
-    const st = { id: it.id, approve: true, reason: null, data: it };
-    states.push(st);
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'btn-secondary';
-    toggleBtn.textContent = 'Reject';
-    toggleBtn.style.marginTop = '8px';
-    const rejectBox = document.createElement('div');
-    rejectBox.style.display = 'none';
-    rejectBox.style.marginTop = '8px';
-    rejectBox.innerHTML = `
-      <div class="row">
-        <select class="input reasonSel">
-          <option value="">Select reason</option>
-          <option>Inappropriate content</option>
-          <option>Wrong price</option>
-          <option>Poor image quality</option>
-          <option>Duplicate listing</option>
-          <option>Other</option>
-        </select>
-        <input class="input otherTxt" placeholder="Write custom reason (if Other)">
+    card.innerHTML = `
+      <h4>${escapeHtml(item.name)}</h4>
+      <p style="margin:4px 0;font-size:12px;color:#555;">
+        ${fmtPrice(item.price)} • ${escapeHtml(item.category)} • ${escapeHtml(item.shop)}
+      </p>
+      <p style="margin:4px 0;font-size:12px;color:#b00020;">Rejected: ${escapeHtml(item.rejectReason || 'Not specified')}</p>
+      <div class="thumb-row" style="margin:6px 0">
+        ${item.images.map((img, j) => `
+          <div class="thumb"><img src="${img}" alt="Image ${j+1}" loading="lazy"></div>
+        `).join('')}
       </div>
     `;
-    toggleBtn.onclick = () => {
-      st.approve = !st.approve;
-      if (st.approve) {
-        toggleBtn.textContent = 'Reject';
-        toggleBtn.className = 'btn-secondary';
-        rejectBox.style.display = 'none';
-        st.reason = null;
-      } else {
-        toggleBtn.textContent = 'Approve';
-        toggleBtn.className = 'btn-primary';
-        rejectBox.style.display = 'block';
-      }
-    };
-    rejectBox.querySelector('.reasonSel').addEventListener('change', e => {
-      const val = e.target.value;
-      const otherTxt = rejectBox.querySelector('.otherTxt');
-      if (val === 'Other') {
-        otherTxt.style.display = 'block';
-        st.reason = otherTxt.value.trim() || 'Rejected';
-      } else {
-        otherTxt.style.display = val ? 'none' : 'none';
-        st.reason = val || 'Rejected';
-      }
-    });
-    rejectBox.querySelector('.otherTxt').addEventListener('input', e => {
-      if (!st.approve) {
-        st.reason = e.target.value.trim() || 'Rejected';
-      }
-    });
-    card.appendChild(toggleBtn);
-    card.appendChild(rejectBox);
-    container.appendChild(card);
+    rejectedTab.appendChild(card);
   });
-  const done = document.createElement('button');
-  done.className = 'btn-primary';
-  done.style.marginTop = '10px';
-  done.textContent = 'Submit Review';
-  done.onclick = async () => {
-    const approved = states.filter(s => s.approve === true).map(s => s.data);
-    const rejectedStates = states.filter(s => s.approve === false);
-    if (!approved.length && !rejectedStates.length) {
-      alert("Please approve or reject at least one item before submitting.");
-      return;
+  document.querySelectorAll('.shop-tab').forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+    if (btn.dataset.view === 'approvedTab') {
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
     }
-    done.disabled = true;
-    done.textContent = "Submitting…";
-    const cleanShopName = payload.shop.trim();
-    try {
-      await ensureShopsContainer();
-      await ensureShopDoc(cleanShopName);
-    } catch (e) {
-      console.warn('[ensureShopDoc] failed', e);
-    }
-    let saveErrors = [];
-    for (const it of approved) {
-      try {
-        const rec = {
-          id: String(it.id || "").trim(),
-          shop: cleanShopName,
-          category: String(it.category || 'Other').trim(),
-          name: String(it.name || 'Untitled').trim(),
-          price: Number(it.price || 0),
-          desc: String(it.desc || ''),
-          images: Array.isArray(it.images) ? it.images.filter(Boolean) : [],
-          createdAt: serverTimestamp()
-        };
-        if (!rec.id) throw new Error("missing id");
-        const ref = doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, cleanShopName, "items", rec.id);
-        await setDoc(ref, rec, { merge: true });
-      } catch (e) {
-        console.error('Save approved failed for', it?.id, e);
-        saveErrors.push(it?.id || '(unknown)');
-      }
-    }
-    const rejected = [];
-    for (const stRec of rejectedStates) {
-      const it = stRec.data;
-      let previewDataUrl = null;
-      const firstImg = (Array.isArray(it.images) && it.images.length) ? it.images[0] : null;
-      if (firstImg) {
-        previewDataUrl = await urlToSmallPreviewDataURL(firstImg);
-      }
-      try {
-        const folder = sRef(st, `${PAGE_KEY}/${payload.shop}/${it.id}/`);
-        const listing = await listAll(folder);
-        await Promise.all(listing.items.map(obj => deleteObject(obj)));
-      } catch (e) {
-        console.warn('Delete rejected failed for', it?.id, e);
-      }
-      rejected.push({
-        ...it,
-        reason: stRec.reason || 'Rejected',
-        previewDataUrl: previewDataUrl || null
-      });
-    }
-    const result = {
-      type: 'result',
-      page: PAGE_KEY,
-      shop: payload.shop,
-      approved,
-      rejected,
-      createdAt: serverTimestamp(),
-      expiresInSec: 86400
-    };
-    const resultId = await putShort(result);
-    clearShopCaches(payload.shop);
-    await Promise.all([
-      renderShops(),
-      renderCategories(),
-      fetchAllItems().then(items => {
-        if (allItemsView.classList.contains('show')) {
-          renderAllItemsGrid(items);
-        }
-      })
-    ]);
-    const shopPhone = (SHOPS.find(s => s.name === payload.shop)?.phone) || "";
-    const link = `${location.origin}${location.pathname}?result=${resultId}`;
-    const msg = `Your Tech & Gadgets adverts were reviewed.\nOpen results: ${link}`;
-    if (shopPhone) {
-      window.location.href = `https://wa.me/${shopPhone.replace(/^\+/, '')}?text=${encodeURIComponent(msg)}`;
-    } else {
-      alert("Result link:\n" + link);
-    }
-    if (saveErrors.length) {
-      alert("Some approved items failed to save: " + saveErrors.join(', '));
-    }
-    const firstApproved = approved[0] || null;
-    closeDrawer();
-    toast("Review submitted.");
-    if (firstApproved) {
-      const shopObj = SHOPS.find(s => s.name === payload.shop);
-      if (shopObj) {
-        jumpToAdId = firstApproved.id;
-        currentCategory = firstApproved.category;
-        openShop(shopObj);
-      }
-    }
-    done.disabled = false;
-    done.textContent = "Submit Review";
-  };
-  container.appendChild(done);
-  if (itemDetail) itemDetail.appendChild(container);
-  openDrawer();
-}
+  });
+  approvedTab.classList.add('show');
+  rejectedTab.classList.remove('show');
+  pushState('result');
+  const msg = `Review completed for *${resultPayload.shop}*. ${approved.length} approved, ${rejected.length} rejected.\n${location.origin}${location.pathname}?result=${resultId}`;
+  location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+});
 
-async function renderCategories() {
-  const counts = await countByCategory();
-  renderCategoriesGrid(counts);
-}
+resultCloseBtn.addEventListener('click', () => {
+  hide(resultPanel);
+  closeDrawer();
+});
 
-async function renderShops() {
-  const counts = await fetchShopCounts();
-  renderShopsGrid(counts);
-}
+doneBtn.addEventListener('click', () => {
+  hide(resultPanel);
+  closeDrawer();
+  if (currentShop) openShop(currentShop);
+});
 
-async function router() {
-  // Clear cache to ensure fresh data
-  localStorage.clear();
-  console.log('Cache cleared');
-  const params = new URLSearchParams(location.search);
-  const reviewId = params.get('review');
-  const resultId = params.get('result');
-  if (reviewId) {
-    const payload = await getShort(reviewId);
-    if (payload && payload.type === 'review') {
-      reviewPayloadPending = payload;
-      promptReviewCode();
-      return;
-    }
-  }
-  if (resultId) {
-    const payload = await getShort(resultId);
-    if (payload && payload.type === 'result') {
-      const approved = payload.approved || [];
-      const rejected = payload.rejected || [];
-      const msg = [];
-      if (approved.length) {
-        msg.push(`Approved items (${approved.length}):`);
-        approved.forEach((it, i) => msg.push(`${i + 1}. ${it.name} (${it.category})`));
-      }
-      if (rejected.length) {
-        msg.push(`\nRejected items (${rejected.length}):`);
-        rejected.forEach((it, i) => msg.push(`${i + 1}. ${it.name} (${it.reason})`));
-      }
-      if (msg.length) {
-        alert(msg.join('\n'));
-      }
-      history.replaceState(state, '', location.pathname);
-    }
-  }
-  document.body.classList.add('ready');
-}
+document.querySelectorAll('.shop-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.shop-tab').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+    [approvedTab, rejectedTab].forEach(v => v.classList.remove('show'));
+    document.getElementById(btn.dataset.view).classList.add('show');
+  });
+});
 
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    // Render from cache immediately
-    const cachedCats = loadCache(CACHE.cats) || {};
-    renderCategoriesGrid(cachedCats);
-    const cachedShops = loadCache(CACHE.shops) || SHOPS.reduce((acc, s) => ({ ...acc, [s.name]: 0 }), {});
-    renderShopsGrid(cachedShops);
-    const cachedItems = loadCache(CACHE.allItems) || [];
-    renderAllItemsGrid(cachedItems);
-    // Update in background
-    await Promise.all([
-      countByCategory().then(counts => {
-        if (JSON.stringify(counts) !== JSON.stringify(cachedCats)) {
-          renderCategoriesGrid(counts);
-        }
-      }),
-      fetchShopCounts().then(counts => {
-        if (JSON.stringify(counts) !== JSON.stringify(cachedShops)) {
-          renderShopsGrid(counts);
-        }
-      }),
-      fetchAllItems().then(items => {
-        if (JSON.stringify(items) !== JSON.stringify(cachedItems)) {
-          if (allItemsView && allItemsView.classList.contains('show')) {
-            renderAllItemsGrid(items);
-          }
-        }
-      })
-    ]);
-    await router();
-  } catch (e) {
-    console.error('init failed', e);
-    document.body.classList.remove('hide-initial');
-    document.body.classList.add('ready');
+reviewCodeOk.addEventListener('click', () => {
+  if (reviewCodeInput.value.trim() === GLOBAL_ADMIN_CODE) {
+    closeModal(reviewCodeModal);
+    openReviewPanel();
+  } else {
+    toast('Invalid admin code.');
   }
 });
 
+[reviewCodeClose, reviewCodeCancel].forEach(b => b && b.addEventListener('click', () => closeModal(reviewCodeModal)));
+
+/* ===================== Additional Event Listeners ===================== */
+if (shopExpiryNotice) {
+  shopExpiryNotice.addEventListener('click', (e) => {
+    if (e.target.id === 'renewLink') {
+      e.preventDefault();
+      const msg = `Please renew subscription for *${currentShopName}*. Expiring in ${daysLeft(currentShop.expiry)} day(s).`;
+      location.href = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    }
+  });
+}
+
+/* ===================== Initialization ===================== */
+async function ensureShopDoc(shopName) {
+  const ref = doc(db, PAGE_KEY, "Shops", SHOPS_SUB_COL, shopName);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { createdAt: serverTimestamp() });
+  }
+}
+
+async function init() {
+  await Promise.all(SHOPS.map(s => ensureShopDoc(s.name)));
+  if (!reviewPayloadPending) {
+    const [catCounts, shopCounts, allItems] = await Promise.all([
+      countByCategory().catch(() => ({})),
+      fetchShopCounts().catch(() => ({})),
+      fetchAllItems().catch(() => [])
+    ]);
+    renderCategoriesGrid(catCounts);
+    renderShopsGrid(shopCounts);
+    renderAllItemsGrid(allItems);
+  }
+}
+
+init().catch(e => console.error('Initialization failed', e));
 </script>
-
-<!-- ===================== FOOTER ===================== -->
-<div class="footer-wrap" role="contentinfo" aria-label="Footer">
-  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no" title="Footer"></iframe>
-</div>
-
 </body>
 </html>
