@@ -95,7 +95,7 @@ body {
 #prevBtn { left:20px; }
 #nextBtn { right:20px; }
 
-/* Remove blue highlight on click/tap for buttons, links, and all clickable elements */
+/* Remove blue highlight on click/tap for buttons, links and all clickable elements */
 * {
   -webkit-tap-highlight-color: transparent; /* Chrome, Safari, Mobile */
   outline: none !important; /* Remove focus outline */
