@@ -132,20 +132,20 @@ body {
 
   /* Top text visible */
   .advert-text {
-    top: 40px;                 /* move down a bit for desktop bar */
+    top: 100px;                 /* move down a bit for desktop bar */
     font-size: 20px;
   }
 
   /* Bigger flyer */
   #flyer {
-    width: min(70vw, 650px);   /* was 480px on mobile */
+    width: min(90vw, 800px);   /* was 480px on mobile */
     top: 50%;
-    max-height: 70vh;
+    max-height: 90vh;
   }
 
   /* Move buttons up so they never hide */
   .button-container {
-    bottom: 40px;              /* was 60px */
+    bottom: 100px;              /* was 60px */
   }
 
   /* Buttons larger on desktop */
