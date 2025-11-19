@@ -132,20 +132,20 @@ body {
 
   /* Top text visible */
   .advert-text {
-    top: 200px;                 /* move down a bit for desktop bar */
+    top: 200px;                 /* desktop top text position */
     font-size: 20px;
   }
 
   /* Bigger flyer */
   #flyer {
-    width: min(90vw, 800px);   /* was 480px on mobile */
+    width: min(90vw, 800px);   /* bigger on desktop */
     top: 50%;
     max-height: 90vh;
   }
 
   /* Move buttons up so they never hide */
   .button-container {
-    bottom: 180px;              /* was 60px */
+    bottom: 180px;              /* desktop button position */
   }
 
   /* Buttons larger on desktop */
@@ -161,4 +161,131 @@ body {
     font-size: 40px;
     padding: 18px;
   }
+}
+
+/* ========================================
+   ADD-ADVERT MODAL
+   ======================================== */
+
+.advert-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10; /* above flyer/buttons/text */
+}
+
+.advert-modal.hidden {
+  display: none;
+}
+
+.advert-modal-content {
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #111;
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px 18px 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+}
+
+.advert-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.advert-modal-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.advert-modal-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.advert-modal .hint {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.advert-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.advert-modal label {
+  font-size: 14px;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.advert-modal input,
+.advert-modal select,
+.advert-modal textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #181818;
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.advert-modal textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.advert-modal .inline-row {
+  display: flex;
+  gap: 10px;
+}
+
+.advert-modal .inline-row > div {
+  flex: 1;
+}
+
+.advert-modal .form-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#adSubmitBtn {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#adCancelBtn {
+  background: #444;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#adFormStatus {
+  font-size: 13px;
+  min-height: 18px;
 }
