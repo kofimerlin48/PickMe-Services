@@ -1,3 +1,6 @@
+// =========================
+//  FIREBASE IMPORTS
+// =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, getDocs
@@ -19,9 +22,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// =========================
+// ==========================
 //  UI ELEMENTS
-// =========================
+// ==========================
 const flyerEl = document.getElementById("flyer");
 const flyerBg = document.getElementById("flyerBg");
 const contactBtn = document.getElementById("contactBtn");
@@ -33,55 +36,60 @@ const buttonContainer = contactBtn.parentElement;
 let flyers = [];
 let currentIndex = 0;
 
-
-// =========================
-//  LOAD FROM FIRESTORE
-// =========================
+// ==========================
+//  LOAD ADVERTS FROM FIRESTORE
+// ==========================
 async function loadAdverts() {
-
-  console.log("🔍 Trying to read: Adverts / items / AdvertsList");
-
   try {
-    const colRef = collection(db, "Adverts", "items", "AdvertsList");
-    const snap = await getDocs(colRef);
-
-    console.log("📦 Firestore docs found:", snap.size);
+    console.log("Reading: Adverts / items / AdvertsList");
+    const snap = await getDocs(
+      collection(db, "Adverts", "items", "AdvertsList")
+    );
 
     flyers = [];
-
     snap.forEach(doc => {
-      console.log("📄 Loaded advert:", doc.id, doc.data());
-      flyers.push(doc.data());
+      const data = doc.data();
+      console.log("Loaded advert:", data.id || doc.id, data);
+      flyers.push(data);
     });
 
-    // remove expired adverts
+    console.log("Total adverts from Firestore:", flyers.length);
+
+    // Remove expired
+    const now = new Date();
     flyers = flyers.filter(f => {
       if (!f.expiry) return true;
-      const d = new Date(f.expiry);
-      return !isNaN(d) && new Date() <= d;
+      const expiry = new Date(f.expiry);
+      return now <= expiry;
     });
 
-    console.log("📌 Remaining after expiry filter:", flyers.length);
+    console.log("Remaining after expiry filter:", flyers.length);
 
     if (flyers.length === 0) {
-      console.warn("⚠️ NO ADVERTS TO DISPLAY");
       flyerEl.style.display = "none";
       buttonContainer.style.display = "none";
       flyerBg.style.background = "#000";
       return;
     }
 
-    showFlyer(0);
+    // 🔁 RANDOM ORDER (for all users)
+    flyers = flyers
+      .map(f => ({ f, r: Math.random() }))
+      .sort((a, b) => a.r - b.r)
+      .map(x => x.f);
+
+    // 🔁 RANDOM START INDEX (different devices see different first flyer)
+    currentIndex = Math.floor(Math.random() * flyers.length);
+    showFlyer(currentIndex);
 
   } catch (err) {
-    console.error("❌ ERROR loading adverts:", err);
+    console.error("Error loading adverts:", err);
   }
 }
 
-
-// =========================
-//  DISPLAY FLYER
-// =========================
+// ==========================
+//  SHOW A SINGLE ADVERT
+// ==========================
 function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
@@ -93,20 +101,18 @@ function showFlyer(i) {
     flyerEl.src = flyer.image;
     flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-    // contact button logic
+    // BUTTON LOGIC
     if (flyer.buttonText && flyer.buttonLink) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-
     } else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
       contactBtn.onclick = () => {
-        const msg = `Hi ${flyer.host}, I saw your advert: ${flyer.event}`;
+        const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}* on PickMe Services and I want to make enquiries.`;
         window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
       };
-
     } else {
       contactBtn.style.display = "none";
     }
@@ -115,14 +121,12 @@ function showFlyer(i) {
       flyerEl.style.opacity = 1;
       buttonContainer.style.opacity = 1;
     };
-
   }, 200);
 }
 
-
-// =========================
+// ==========================
 //  BUTTON CONTROLS
-// =========================
+// ==========================
 prevBtn.onclick = () => {
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
@@ -135,8 +139,7 @@ nextBtn.onclick = () => {
 
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
-
-// =========================
+// ==========================
 //  START
-// =========================
+// ==========================
 loadAdverts();
