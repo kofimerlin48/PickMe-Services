@@ -22,7 +22,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// UI ELEMENTS
+// ==========================
+//  UI ELEMENTS
+// ==========================
 const flyerEl = document.getElementById("flyer");
 const flyerBg = document.getElementById("flyerBg");
 const contactBtn = document.getElementById("contactBtn");
@@ -35,25 +37,25 @@ let flyers = [];
 let currentIndex = 0;
 
 // ==========================
-//  LOAD ADVERTS
+//  LOAD ADVERTS FROM FIRESTORE
 // ==========================
 async function loadAdverts() {
   try {
-    const snap = await getDocs(
-      collection(db, "Adverts", "items", "AdvertsList")
-    );
+    // ⭐ CORRECT PATH FOR YOUR FIRESTORE STRUCTURE
+    const advertsCollection = collection(db, "Adverts", "items", "AdvertsList");
 
+    const snap = await getDocs(advertsCollection);
     flyers = [];
 
     snap.forEach(doc => flyers.push(doc.data()));
 
-    // filter expiry
+    // remove expired
     flyers = flyers.filter(f => {
       if (!f.expiry) return true;
-      return new Date() <= new Date(f.expiry);
+      const expiry = new Date(f.expiry);
+      return new Date() <= expiry;
     });
 
-    // shuffle
     flyers = flyers.sort(() => Math.random() - 0.5);
 
     if (flyers.length > 0) {
@@ -83,21 +85,20 @@ function showFlyer(i) {
     flyerEl.src = flyer.image;
     flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-    // Logic for buttons
     if (flyer.buttonText && flyer.buttonLink) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-
-    } else if (flyer.whatsapp) {
+    } 
+    else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
       contactBtn.onclick = () => {
         const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}*`;
         window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
       };
-
-    } else {
+    } 
+    else {
       contactBtn.style.display = "none";
     }
 
@@ -106,14 +107,17 @@ function showFlyer(i) {
       buttonContainer.style.opacity = 1;
     };
 
-  }, 300);
+  }, 200);
 }
 
-// BUTTONS
+// ==========================
+//  BUTTON CONTROLS
+// ==========================
 prevBtn.onclick = () => {
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
 };
+
 nextBtn.onclick = () => {
   currentIndex = (currentIndex + 1) % flyers.length;
   showFlyer(currentIndex);
@@ -121,5 +125,7 @@ nextBtn.onclick = () => {
 
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
-// START
+// ==========================
+//  START
+// ==========================
 loadAdverts();
