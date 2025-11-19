@@ -1,16 +1,22 @@
-body {
+html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+/* Center the phone frame on the screen */
+body {
   display: flex;
   justify-content: center;
+  align-items: center;
   background: #000;
 }
 
-/* Phone frame */
+/* Phone frame – exactly one screen high, no scrolling */
 .mobile-wrapper {
   width: 82%;
   max-width: 425px;
-  height: 100vh;              /* full height so flyer fits */
+  height: 100vh;          /* full viewport height */
   position: relative;
   overflow: hidden;
   background: #000;
@@ -22,7 +28,7 @@ body {
   text-align: center;
   font-size: 16px;
   position: absolute;
-  top: 40px;                  /* similar to old one */
+  top: 24px;
   width: 100%;
   z-index: 4;
 }
@@ -45,14 +51,14 @@ body {
   z-index: 1;
 }
 
-/* Main flyer – like old, but kept inside screen */
+/* Main flyer – centred on the screen */
 #flyer {
   position: absolute;
-  top: 80px;                  /* below the “Click HERE…” text */
   left: 50%;
-  transform: translateX(-50%);
-  width: 98%;
-  max-height: 70vh;           /* prevents it going off-screen */
+  top: 50%;
+  transform: translate(-50%, -50%);   /* PERFECT centre */
+  width: 94%;
+  max-height: 60vh;                   /* leaves space for top text + buttons */
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
@@ -61,10 +67,10 @@ body {
   transition: opacity 0.8s ease;
 }
 
-/* Buttons – similar style, but no negative bottom */
+/* Buttons fixed at the bottom, always visible */
 .button-container {
   position: absolute;
-  bottom: 20px;
+  bottom: 24px;
   width: 100%;
   display: flex;
   flex-direction: column;
