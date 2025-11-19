@@ -1,31 +1,38 @@
 body {
   margin: 0;
   padding: 0;
-  background: #000;
   display: flex;
   justify-content: center;
-}
-
-.mobile-wrapper {
-  width: 100%;
-  max-width: 430px;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
   background: #000;
 }
 
-/* Text at top */
+/* Phone frame */
+.mobile-wrapper {
+  width: 82%;
+  max-width: 425px;
+  height: 100vh;              /* full height so flyer fits */
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Top text */
 .advert-text {
   color: #fff;
   text-align: center;
   font-size: 16px;
-  padding-top: 20px;
-  z-index: 10;
-  position: relative;
+  position: absolute;
+  top: 40px;                  /* similar to old one */
+  width: 100%;
+  z-index: 4;
 }
 
-/* Background blur */
+.advert-text a {
+  color: #ffd700;
+  text-decoration: underline;
+}
+
+/* Blurred background */
 #flyerBg {
   position: absolute;
   top: 0; left: 0;
@@ -33,65 +40,73 @@ body {
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(30px) brightness(0.6);
+  filter: blur(40px) brightness(0.7);
+  transform: scale(1.2);
   z-index: 1;
 }
 
-/* MAIN FLYER */
+/* Main flyer – like old, but kept inside screen */
 #flyer {
   position: absolute;
-  top: 60px;
+  top: 80px;                  /* below the “Click HERE…” text */
   left: 50%;
   transform: translateX(-50%);
-  width: 95%;
-  height: auto;
-  max-height: 70vh;
+  width: 98%;
+  max-height: 70vh;           /* prevents it going off-screen */
   object-fit: contain;
-  border-radius: 14px;
-  z-index: 3;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 2;
   opacity: 0;
-  transition: opacity .6s;
+  transition: opacity 0.8s ease;
 }
 
-/* BUTTONS */
+/* Buttons – similar style, but no negative bottom */
 .button-container {
   position: absolute;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  z-index: 5;
+  align-items: center;
+  gap: 12px;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.8s ease;
 }
 
-#contactBtn, #closeAdBtn {
-  padding: 14px 20px;
-  font-size: 16px;
-  border-radius: 8px;
+#contactBtn,
+#closeAdBtn {
+  padding: 18px 36px;
+  font-size: 18px;
   border: none;
-  color: white;
+  border-radius: 8px;
+  color: #fff;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-#contactBtn { background: #0abf30; }
-#closeAdBtn { background: #ff3b5c; }
+#contactBtn { background: #28a745; }
+#closeAdBtn { background: #ff4d6d; }
 
-/* ARROWS */
-#prevBtn, #nextBtn {
+/* Navigation arrows */
+#prevBtn,
+#nextBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 40px;
-  color: white;
-  z-index: 6;
+  z-index: 3;
+  font-size: 36px;
+  color: #fff;
   cursor: pointer;
+  user-select: none;
 }
 
-#prevBtn { left: 10px; }
-#nextBtn { right: 10px; }
+#prevBtn { left: 20px; }
+#nextBtn { right: 20px; }
 
-/* Disable blue tap highlight */
+/* Remove blue tap highlight */
 * {
   -webkit-tap-highlight-color: transparent;
+  outline: none !important;
 }
