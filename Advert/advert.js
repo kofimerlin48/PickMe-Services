@@ -41,7 +41,7 @@ let currentIndex = 0;
 // ==========================
 async function loadAdverts() {
   try {
-    const snap = await getDocs(collection(db, "Adverts", "items"));
+    const snap = await getDocs(collection(db, "items", "Adverts", "items"));
     flyers = [];
 
     snap.forEach(doc => {
