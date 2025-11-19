@@ -18,7 +18,6 @@ const firebaseConfig = {
   appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -41,29 +40,16 @@ let currentIndex = 0;
 // ==========================
 async function loadAdverts() {
   try {
-    console.log("Reading: Adverts / items / AdvertsList");
     const snap = await getDocs(
       collection(db, "Adverts", "items", "AdvertsList")
     );
 
     flyers = [];
-    snap.forEach(doc => {
-      const data = doc.data();
-      console.log("Loaded advert:", data.id || doc.id, data);
-      flyers.push(data);
-    });
+    snap.forEach(doc => flyers.push(doc.data()));
 
-    console.log("Total adverts from Firestore:", flyers.length);
-
-    // Remove expired
+    // Filter expired
     const now = new Date();
-    flyers = flyers.filter(f => {
-      if (!f.expiry) return true;
-      const expiry = new Date(f.expiry);
-      return now <= expiry;
-    });
-
-    console.log("Remaining after expiry filter:", flyers.length);
+    flyers = flyers.filter(f => !f.expiry || new Date(f.expiry) >= now);
 
     if (flyers.length === 0) {
       flyerEl.style.display = "none";
@@ -72,14 +58,15 @@ async function loadAdverts() {
       return;
     }
 
-    // 🔁 RANDOM ORDER (for all users)
+    // RANDOMIZE ORDER
     flyers = flyers
       .map(f => ({ f, r: Math.random() }))
       .sort((a, b) => a.r - b.r)
       .map(x => x.f);
 
-    // 🔁 RANDOM START INDEX (different devices see different first flyer)
+    // RANDOM FIRST FLYER
     currentIndex = Math.floor(Math.random() * flyers.length);
+
     showFlyer(currentIndex);
 
   } catch (err) {
@@ -106,13 +93,16 @@ function showFlyer(i) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
+
     } else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
       contactBtn.onclick = () => {
         const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}* on PickMe Services and I want to make enquiries.`;
-        window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
+        const link = `https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`;
+        window.open(link, "_blank");
       };
+
     } else {
       contactBtn.style.display = "none";
     }
