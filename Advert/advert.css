@@ -132,7 +132,7 @@ body {
 
   /* Top text visible */
   .advert-text {
-    top: 100px;                 /* move down a bit for desktop bar */
+    top: 200px;                 /* move down a bit for desktop bar */
     font-size: 20px;
   }
 
@@ -145,7 +145,7 @@ body {
 
   /* Move buttons up so they never hide */
   .button-container {
-    bottom: 100px;              /* was 60px */
+    bottom: 180px;              /* was 60px */
   }
 
   /* Buttons larger on desktop */
