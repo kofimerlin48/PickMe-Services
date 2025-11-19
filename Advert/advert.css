@@ -7,26 +7,27 @@ html, body {
   background: #000;
 }
 
+/* Center main frame vertically */
 body {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* MAIN CONTAINER */
+/* MAIN WRAPPER: always full screen, phone or desktop */
 .mobile-wrapper {
-  width: 100%;
-  max-width: 450px;
-  height: 100vh;
-  background: #000;
+  width: 100vw;           /* fill full width on desktop & phone */
+  max-width: 100vw;
+  height: 100vh;          /* full height */
   position: relative;
   overflow: hidden;
+  background: #000;
 }
 
-/* TOP TEXT — LOWERED */
+/* TOP TEXT – moved further DOWN so it never hides */
 .advert-text {
   position: absolute;
-  top: 38px;               /* ↓ moved down */
+  top: 70px;              /* was 38px – now clearly visible */
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -42,7 +43,7 @@ body {
   text-decoration: underline;
 }
 
-/* BACKGROUND BLUR */
+/* BLURRED BACKGROUND – covers entire screen */
 #flyerBg {
   position: absolute;
   inset: 0;
@@ -53,16 +54,18 @@ body {
   z-index: 1;
 }
 
-/* MAIN IMAGE — MOVED UP */
+/* MAIN FLYER */
 #flyer {
   position: absolute;
-  top: 46%;                /* ↑ moved UP a bit */
+  top: 46%;                             /* centred vertically */
   left: 50%;
   transform: translate(-50%, -50%);
-  
-  width: 94%;
-  max-height: 68vh;        /* slightly reduced to give more bottom space */
-  
+
+  /* On phones: almost full width.
+     On desktop: capped so it’s big but not tiny. */
+  width: min(94vw, 480px);
+  max-height: 68vh;
+
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -71,10 +74,10 @@ body {
   transition: opacity 0.7s ease;
 }
 
-/* BUTTONS — MOVED UP */
+/* BUTTONS – always inside view */
 .button-container {
   position: absolute;
-  bottom: 60px;           /* ↑ moved UP */
+  bottom: 60px;           /* high enough to avoid hiding behind phone navbar */
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -100,7 +103,7 @@ body {
 #contactBtn { background: #28a745; }
 #closeAdBtn { background: #ff4d6d; }
 
-/* ARROWS with round background */
+/* ARROWS with round dark background so they are visible on any flyer */
 #prevBtn,
 #nextBtn {
   position: absolute;
@@ -112,7 +115,6 @@ body {
   cursor: pointer;
   user-select: none;
 
-  /* NEW rounded background */
   background: rgba(0, 0, 0, 0.4);
   padding: 14px;
   border-radius: 50%;
