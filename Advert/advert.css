@@ -1,4 +1,4 @@
-/* RESET */
+/* Make the page full-height and black */
 html, body {
   margin: 0;
   padding: 0;
@@ -6,31 +6,31 @@ html, body {
   background: #000;
 }
 
-/* Center everything + prevent scroll issues */
+/* Center the phone frame horizontally, keep it fixed on screen */
 body {
   display: flex;
   justify-content: center;
-  align-items: center;
-  overflow: hidden;  /* No scroll */
+  align-items: stretch;
+  overflow: hidden; /* no scrolling for this screen */
 }
 
-/* MAIN PHONE WRAPPER */
+/* Phone wrapper – one full screen high */
 .mobile-wrapper {
-  width: 100%;
-  max-width: 480px;          /* Larger width for desktop */
-  height: 100vh;             /* Always full screen */
+  width: 82%;
+  max-width: 425px;
+  height: 100vh;      /* full viewport height */
   position: relative;
   overflow: hidden;
   background: #000;
 }
 
-/* TOP TEXT */
+/* Top instruction text */
 .advert-text {
   color: #fff;
   text-align: center;
   font-size: 16px;
   position: absolute;
-  top: 20px;
+  top: 24px;          /* lower so it never hides at the very edge */
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -43,43 +43,42 @@ body {
   text-decoration: underline;
 }
 
-/* BLURRED BACKGROUND */
+/* Blurred background – must cover entire frame */
 #flyerBg {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(40px) brightness(0.6);
-  transform: scale(1.4);      /* Ensures no gaps anywhere */
+  filter: blur(40px) brightness(0.7);
+  transform: scale(1.3);   /* makes sure there are no black gaps */
   z-index: 1;
 }
 
-/* FLYER IMAGE */
+/* Main flyer – big and centred */
 #flyer {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -48%);  /* Perfect center */
-  
-  width: 90%;
-  max-height: 72vh;      /* Adjusted so top text + buttons always fit */
-  
+  transform: translate(-50%, -50%);   
+
+  width: 94%;
+  max-height: 68vh;   /* leaves room for top text + bottom buttons */
   object-fit: contain;
-  border-radius: 14px;
+
+  border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  
   z-index: 2;
+
   opacity: 0;
-  transition: opacity 0.7s ease;
+  transition: opacity 0.8s ease;
 }
 
-/* BUTTON SECTION */
+/* Buttons fixed at bottom – always fully visible */
 .button-container {
   position: absolute;
-  bottom: 20px;
+  bottom: 22px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -87,7 +86,7 @@ body {
   gap: 12px;
   z-index: 3;
   opacity: 0;
-  transition: opacity 0.7s ease;
+  transition: opacity 0.8s ease;
 }
 
 #contactBtn,
@@ -98,21 +97,22 @@ body {
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
-  width: 80%;                /* Stretch button beautifully */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  width: 80%;
   max-width: 300px;
 }
 
 #contactBtn { background: #28a745; }
 #closeAdBtn { background: #ff4d6d; }
 
-/* NAVIGATION ARROWS */
+/* Navigation arrows at mid-height */
 #prevBtn,
 #nextBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 3;
-  font-size: 40px;
+  font-size: 36px;
   color: #fff;
   cursor: pointer;
   user-select: none;
@@ -121,7 +121,7 @@ body {
 #prevBtn { left: 10px; }
 #nextBtn { right: 10px; }
 
-/* Remove tap highlight */
+/* Remove tap highlight on mobile */
 * {
   -webkit-tap-highlight-color: transparent;
   outline: none !important;
