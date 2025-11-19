@@ -23,7 +23,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ==========================
-//  UI ELEMENTS
+//  UI ELEMENTS (MAIN PAGE)
 // ==========================
 const flyerEl = document.getElementById("flyer");
 const flyerBg = document.getElementById("flyerBg");
@@ -41,15 +41,19 @@ let currentIndex = 0;
 // ==========================
 async function loadAdverts() {
   try {
+    console.log("Reading: Adverts / items / AdvertsList");
     const snap = await getDocs(
       collection(db, "Adverts", "items", "AdvertsList")
     );
 
     flyers = [];
-
     snap.forEach(doc => {
-      flyers.push(doc.data());
+      const data = doc.data();
+      console.log("Loaded advert:", data.id || doc.id, data);
+      flyers.push(data);
     });
+
+    console.log("Total adverts from Firestore:", flyers.length);
 
     // Remove expired
     const now = new Date();
@@ -59,6 +63,8 @@ async function loadAdverts() {
       return now <= expiry;
     });
 
+    console.log("Remaining after expiry filter:", flyers.length);
+
     if (flyers.length === 0) {
       flyerEl.style.display = "none";
       buttonContainer.style.display = "none";
@@ -66,13 +72,13 @@ async function loadAdverts() {
       return;
     }
 
-    // Random order for all users
+    // RANDOM ORDER (for all users)
     flyers = flyers
       .map(f => ({ f, r: Math.random() }))
       .sort((a, b) => a.r - b.r)
       .map(x => x.f);
 
-    // Random start index (each device sees different first flyer)
+    // RANDOM START INDEX (each device sees different first flyer)
     currentIndex = Math.floor(Math.random() * flyers.length);
     showFlyer(currentIndex);
 
@@ -134,21 +140,89 @@ nextBtn.onclick = () => {
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
 // ==========================
-//  SWIPE CONTROLS
+//  ADD-ADVERT MODAL LOGIC
 // ==========================
-let startX = 0;
+const advertLink = document.getElementById("advertLink");
+const advertModal = document.getElementById("advertModal");
+const adModalCloseBtn = document.getElementById("adModalCloseBtn");
+const adCancelBtn = document.getElementById("adCancelBtn");
+const advertForm = document.getElementById("advertForm");
+const adSubmitBtn = document.getElementById("adSubmitBtn");
+const adFormStatus = document.getElementById("adFormStatus");
 
-flyerEl.addEventListener("touchstart", e => {
-  startX = e.touches[0].clientX;
-});
+function openAdvertModal() {
+  if (!advertModal) return;
+  advertModal.classList.remove("hidden");
+}
 
-flyerEl.addEventListener("touchend", e => {
-  const endX = e.changedTouches[0].clientX;
-  const diff = endX - startX;
+function closeAdvertModal() {
+  if (!advertModal) return;
+  advertModal.classList.add("hidden");
+  if (adFormStatus) adFormStatus.textContent = "";
+}
 
-  if (diff > 50) prevBtn.onclick();
-  else if (diff < -50) nextBtn.onclick();
-});
+if (advertLink) {
+  advertLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    openAdvertModal();
+  });
+}
+
+if (adModalCloseBtn) {
+  adModalCloseBtn.addEventListener("click", () => {
+    closeAdvertModal();
+  });
+}
+
+if (adCancelBtn) {
+  adCancelBtn.addEventListener("click", () => {
+    closeAdvertModal();
+  });
+}
+
+// Close when clicking outside the modal content
+if (advertModal) {
+  advertModal.addEventListener("click", (e) => {
+    if (e.target === advertModal) {
+      closeAdvertModal();
+    }
+  });
+}
+
+// Simple form handler for now (no Firebase write yet)
+if (advertForm) {
+  advertForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!adSubmitBtn || !adFormStatus) return;
+
+    adSubmitBtn.disabled = true;
+    adSubmitBtn.textContent = "Submitting...";
+    adFormStatus.textContent = "";
+
+    const formData = new FormData(advertForm);
+    const title = (formData.get("title") || "").toString().trim();
+    const host = (formData.get("host") || "").toString().trim();
+
+    if (!title || !host) {
+      adFormStatus.textContent = "Please fill all required fields (*) before submitting.";
+      adSubmitBtn.disabled = false;
+      adSubmitBtn.textContent = "Submit advert request";
+      return;
+    }
+
+    // For now, just simulate success so nothing breaks.
+    // Later we will plug this into Firebase Storage + Firestore + payment.
+    console.log("Advert request (preview only):", Object.fromEntries(formData.entries()));
+    adFormStatus.textContent = "Request captured. Backend connection (payment + admin) will be wired next.";
+    advertForm.reset();
+
+    setTimeout(() => {
+      adSubmitBtn.disabled = false;
+      adSubmitBtn.textContent = "Submit advert request";
+      // keep modal open so user can read the message
+    }, 600);
+  });
+}
 
 // ==========================
 //  START
