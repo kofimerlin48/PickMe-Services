@@ -14,20 +14,19 @@ body {
   align-items: center;
 }
 
-/* MAIN WRAPPER: always full screen, phone or desktop */
+/* MAIN WRAPPER */
 .mobile-wrapper {
-  width: 100vw;           /* fill full width on desktop & phone */
-  max-width: 100vw;
-  height: 100vh;          /* full height */
+  width: 100vw;
+  height: 100vh;
   position: relative;
   overflow: hidden;
   background: #000;
 }
 
-/* TOP TEXT – moved further DOWN so it never hides */
+/* TOP TEXT */
 .advert-text {
   position: absolute;
-  top: 70px;              /* was 38px – now clearly visible */
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -43,7 +42,7 @@ body {
   text-decoration: underline;
 }
 
-/* BLURRED BACKGROUND – covers entire screen */
+/* BLURRED BACKGROUND */
 #flyerBg {
   position: absolute;
   inset: 0;
@@ -57,15 +56,11 @@ body {
 /* MAIN FLYER */
 #flyer {
   position: absolute;
-  top: 46%;                             /* centred vertically */
+  top: 46%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  /* On phones: almost full width.
-     On desktop: capped so it’s big but not tiny. */
   width: min(94vw, 480px);
   max-height: 68vh;
-
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -74,10 +69,10 @@ body {
   transition: opacity 0.7s ease;
 }
 
-/* BUTTONS – always inside view */
+/* BUTTONS */
 .button-container {
   position: absolute;
-  bottom: 60px;           /* high enough to avoid hiding behind phone navbar */
+  bottom: 60px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -103,17 +98,17 @@ body {
 #contactBtn { background: #28a745; }
 #closeAdBtn { background: #ff4d6d; }
 
-/* ARROWS with round dark background so they are visible on any flyer */
+/* ARROWS */
 #prevBtn,
 #nextBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 4;
   font-size: 30px;
   color: #fff;
   cursor: pointer;
   user-select: none;
+  z-index: 4;
 
   background: rgba(0, 0, 0, 0.4);
   padding: 14px;
@@ -123,8 +118,47 @@ body {
 #prevBtn { left: 16px; }
 #nextBtn { right: 16px; }
 
-/* No tap highlight */
 * {
   -webkit-tap-highlight-color: transparent;
   outline: none !important;
+}
+
+
+/* ========================================
+   DESKTOP FIX (ONLY COMPUTERS & TABLETS)
+   ======================================== */
+
+@media (min-width: 768px) {
+
+  /* Top text visible */
+  .advert-text {
+    top: 40px;                 /* move down a bit for desktop bar */
+    font-size: 20px;
+  }
+
+  /* Bigger flyer */
+  #flyer {
+    width: min(70vw, 650px);   /* was 480px on mobile */
+    top: 50%;
+    max-height: 70vh;
+  }
+
+  /* Move buttons up so they never hide */
+  .button-container {
+    bottom: 40px;              /* was 60px */
+  }
+
+  /* Buttons larger on desktop */
+  #contactBtn,
+  #closeAdBtn {
+    font-size: 20px;
+    max-width: 350px;
+  }
+
+  /* Bigger arrows */
+  #prevBtn,
+  #nextBtn {
+    font-size: 40px;
+    padding: 18px;
+  }
 }
