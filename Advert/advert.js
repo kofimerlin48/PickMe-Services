@@ -105,5 +105,5 @@ if (activeFlyers.length > 0) {
   flyerBg.style.background = "#000";
 }
 
-closeAdBtn.onclick = () => { window.location.href = 'homepage.html'; };
+closeAdBtn.onclick = () => { window.location.href = '/homepage.html'; };
 advertLink.onclick = () => { window.location.href = '#'; };
