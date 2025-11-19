@@ -1,9 +1,6 @@
-// =========================
-//  FIREBASE IMPORTS
-// =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getFirestore, collection, getDocs 
+import {
+  getFirestore, collection, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // =========================
@@ -22,9 +19,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ==========================
+// =========================
 //  UI ELEMENTS
-// ==========================
+// =========================
 const flyerEl = document.getElementById("flyer");
 const flyerBg = document.getElementById("flyerBg");
 const contactBtn = document.getElementById("contactBtn");
@@ -36,44 +33,55 @@ const buttonContainer = contactBtn.parentElement;
 let flyers = [];
 let currentIndex = 0;
 
-// ==========================
-//  LOAD ADVERTS FROM FIRESTORE
-// ==========================
-async function loadAdverts() {
-  try {
-    // ⭐ CORRECT PATH FOR YOUR FIRESTORE STRUCTURE
-    const advertsCollection = collection(db, "Adverts", "items", "AdvertsList");
 
-    const snap = await getDocs(advertsCollection);
+// =========================
+//  LOAD FROM FIRESTORE
+// =========================
+async function loadAdverts() {
+
+  console.log("🔍 Trying to read: Adverts / items / AdvertsList");
+
+  try {
+    const colRef = collection(db, "Adverts", "items", "AdvertsList");
+    const snap = await getDocs(colRef);
+
+    console.log("📦 Firestore docs found:", snap.size);
+
     flyers = [];
 
-    snap.forEach(doc => flyers.push(doc.data()));
-
-    // remove expired
-    flyers = flyers.filter(f => {
-      if (!f.expiry) return true;
-      const expiry = new Date(f.expiry);
-      return new Date() <= expiry;
+    snap.forEach(doc => {
+      console.log("📄 Loaded advert:", doc.id, doc.data());
+      flyers.push(doc.data());
     });
 
-    flyers = flyers.sort(() => Math.random() - 0.5);
+    // remove expired adverts
+    flyers = flyers.filter(f => {
+      if (!f.expiry) return true;
+      const d = new Date(f.expiry);
+      return !isNaN(d) && new Date() <= d;
+    });
 
-    if (flyers.length > 0) {
-      showFlyer(0);
-    } else {
+    console.log("📌 Remaining after expiry filter:", flyers.length);
+
+    if (flyers.length === 0) {
+      console.warn("⚠️ NO ADVERTS TO DISPLAY");
       flyerEl.style.display = "none";
       buttonContainer.style.display = "none";
       flyerBg.style.background = "#000";
+      return;
     }
 
+    showFlyer(0);
+
   } catch (err) {
-    console.error("Error loading adverts:", err);
+    console.error("❌ ERROR loading adverts:", err);
   }
 }
 
-// ==========================
-//  SHOW A SINGLE ADVERT
-// ==========================
+
+// =========================
+//  DISPLAY FLYER
+// =========================
 function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
@@ -85,20 +93,21 @@ function showFlyer(i) {
     flyerEl.src = flyer.image;
     flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
+    // contact button logic
     if (flyer.buttonText && flyer.buttonLink) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-    } 
-    else if (flyer.whatsapp) {
+
+    } else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
       contactBtn.onclick = () => {
-        const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}*`;
+        const msg = `Hi ${flyer.host}, I saw your advert: ${flyer.event}`;
         window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
       };
-    } 
-    else {
+
+    } else {
       contactBtn.style.display = "none";
     }
 
@@ -110,9 +119,10 @@ function showFlyer(i) {
   }, 200);
 }
 
-// ==========================
+
+// =========================
 //  BUTTON CONTROLS
-// ==========================
+// =========================
 prevBtn.onclick = () => {
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
@@ -125,7 +135,8 @@ nextBtn.onclick = () => {
 
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
-// ==========================
+
+// =========================
 //  START
-// ==========================
+// =========================
 loadAdverts();
