@@ -35,26 +35,21 @@ const buttonContainer = contactBtn.parentElement;
 
 let flyers = [];
 let currentIndex = 0;
-let startX = 0;   // for swipe
 
 // ==========================
 //  LOAD ADVERTS FROM FIRESTORE
 // ==========================
 async function loadAdverts() {
   try {
-    console.log("Reading: Adverts / items / AdvertsList");
     const snap = await getDocs(
       collection(db, "Adverts", "items", "AdvertsList")
     );
 
     flyers = [];
-    snap.forEach(doc => {
-      const data = doc.data();
-      console.log("Loaded advert:", data.id || doc.id, data);
-      flyers.push(data);
-    });
 
-    console.log("Total adverts from Firestore:", flyers.length);
+    snap.forEach(doc => {
+      flyers.push(doc.data());
+    });
 
     // Remove expired
     const now = new Date();
@@ -64,8 +59,6 @@ async function loadAdverts() {
       return now <= expiry;
     });
 
-    console.log("Remaining after expiry filter:", flyers.length);
-
     if (flyers.length === 0) {
       flyerEl.style.display = "none";
       buttonContainer.style.display = "none";
@@ -73,12 +66,13 @@ async function loadAdverts() {
       return;
     }
 
-    // 🔁 Random order + random start (like before)
+    // Random order for all users
     flyers = flyers
       .map(f => ({ f, r: Math.random() }))
       .sort((a, b) => a.r - b.r)
       .map(x => x.f);
 
+    // Random start index (each device sees different first flyer)
     currentIndex = Math.floor(Math.random() * flyers.length);
     showFlyer(currentIndex);
 
@@ -106,7 +100,6 @@ function showFlyer(i) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-
     } else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
@@ -114,7 +107,6 @@ function showFlyer(i) {
         const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}* on PickMe Services and I want to make enquiries.`;
         window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
       };
-
     } else {
       contactBtn.style.display = "none";
     }
@@ -130,13 +122,11 @@ function showFlyer(i) {
 //  BUTTON CONTROLS
 // ==========================
 prevBtn.onclick = () => {
-  if (!flyers.length) return;
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
 };
 
 nextBtn.onclick = () => {
-  if (!flyers.length) return;
   currentIndex = (currentIndex + 1) % flyers.length;
   showFlyer(currentIndex);
 };
@@ -144,25 +134,20 @@ nextBtn.onclick = () => {
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
 // ==========================
-//  SWIPE CONTROLS (like the old page)
+//  SWIPE CONTROLS
 // ==========================
+let startX = 0;
+
 flyerEl.addEventListener("touchstart", e => {
-  if (!e.touches || !e.touches.length) return;
   startX = e.touches[0].clientX;
 });
 
 flyerEl.addEventListener("touchend", e => {
-  if (!e.changedTouches || !e.changedTouches.length) return;
   const endX = e.changedTouches[0].clientX;
   const diff = endX - startX;
 
-  if (diff > 50) {
-    // swipe right → previous
-    prevBtn.onclick();
-  } else if (diff < -50) {
-    // swipe left → next
-    nextBtn.onclick();
-  }
+  if (diff > 50) prevBtn.onclick();
+  else if (diff < -50) nextBtn.onclick();
 });
 
 // ==========================
