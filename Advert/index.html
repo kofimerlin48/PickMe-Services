@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta 
-    name="viewport" 
+  <meta
+    name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
   >
-  
+
   <title>PickMe Services Ad Page</title>
 
   <!-- CSS path inside Advert folder -->
@@ -16,7 +16,9 @@
 <body>
   <div class="mobile-wrapper">
     <div class="advert-text">
-      Click <a href="#" id="advertLink">HERE</a> to add your advert
+      Click
+      <a href="#" id="advertLink">HERE</a>
+      to add your advert
     </div>
 
     <div id="flyerBg"></div>
@@ -31,7 +33,98 @@
     <div id="nextBtn">&#10095;</div>
   </div>
 
-  <!-- CORRECTED: Point to /Advert/advert.js -->
+  <!-- ADD-ADVERT MODAL -->
+  <div id="advertModal" class="advert-modal hidden">
+    <div class="advert-modal-content">
+      <div class="advert-modal-header">
+        <h2>Add Your Advert</h2>
+        <button type="button" class="advert-modal-close" id="adModalCloseBtn">&times;</button>
+      </div>
+
+      <p class="hint">
+        Fill this form to request an advert on PickMe. We’ll contact you or send a payment prompt after submission.
+      </p>
+
+      <form id="advertForm">
+        <label>
+          Advert title *
+          <input type="text" name="title" required>
+        </label>
+
+        <label>
+          Host / Business name *
+          <input type="text" name="host" required>
+        </label>
+
+        <div class="inline-row">
+          <div>
+            <label>
+              Has event date?
+              <select name="hasEventDate">
+                <option value="no" selected>No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>
+              Event date
+              <input type="date" name="eventDate">
+            </label>
+          </div>
+        </div>
+
+        <div class="inline-row">
+          <div>
+            <label>
+              Subscription plan *
+              <select name="plan" required>
+                <option value="">Select plan</option>
+                <option value="1m">1 month</option>
+                <option value="3m">3 months</option>
+                <option value="6m">6 months</option>
+                <option value="12m">12 months</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>
+              Visibility level *
+              <select name="visibility" required>
+                <option value="">Select</option>
+                <option value="high">High visibility</option>
+                <option value="medium">Medium visibility</option>
+                <option value="low">Low visibility</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <label>
+          WhatsApp / Phone number *
+          <input type="tel" name="whatsapp" placeholder="2335xxxxxxx" required>
+        </label>
+
+        <label>
+          Flyer image (PNG / JPG) *
+          <input type="file" name="flyer" accept="image/*" required>
+        </label>
+
+        <label>
+          Extra notes (optional)
+          <textarea name="notes" placeholder="Any extra info for the admin..."></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" id="adSubmitBtn">Submit advert request</button>
+          <button type="button" id="adCancelBtn">Cancel</button>
+          <div id="adFormStatus"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JS: same folder, as module (Firebase imports) -->
   <script type="module" src="/Advert/advert.js"></script>
 </body>
 </html>
