@@ -1,103 +1,103 @@
-/* Make the page full-height and black */
+/* REMOVE SCROLLING COMPLETELY */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   background: #000;
+  overflow: hidden; /* NO SCROLLING */
 }
 
-/* Center the phone frame horizontally, keep it fixed on screen */
+/* Center the whole phone frame */
 body {
   display: flex;
   justify-content: center;
-  align-items: stretch;
-  overflow: hidden; /* no scrolling for this screen */
+  align-items: center;
 }
 
-/* Phone wrapper – one full screen high */
+/* 100% FULL SCREEN AREA */
 .mobile-wrapper {
-  width: 82%;
-  max-width: 425px;
-  height: 100vh;      /* full viewport height */
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  max-width: 450px;
+  height: 100vh;        /* ALWAYS FULL SCREEN */
+  overflow: hidden;     
   background: #000;
 }
 
-/* Top instruction text */
+/* TOP TEXT */
 .advert-text {
-  color: #fff;
-  text-align: center;
-  font-size: 16px;
   position: absolute;
-  top: 24px;          /* lower so it never hides at the very edge */
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  z-index: 4;
-  padding: 0 10px;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+  z-index: 5;   /* MUST stay above everything */
+  padding: 5px 20px;
 }
 
+/* LINK STYLE */
 .advert-text a {
   color: #ffd700;
   text-decoration: underline;
 }
 
-/* Blurred background – must cover entire frame */
+/* BLURRED BACKGROUND — cover entire screen */
 #flyerBg {
   position: absolute;
-  top: 0; left: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(40px) brightness(0.7);
-  transform: scale(1.3);   /* makes sure there are no black gaps */
+  filter: blur(45px) brightness(0.6);
+  transform: scale(1.4);   /* ensures NO black edges */
   z-index: 1;
 }
 
-/* Main flyer – big and centred */
+/* MAIN FLYER IMAGE */
 #flyer {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);   
+  transform: translate(-50%, -50%);
 
-  width: 94%;
-  max-height: 68vh;   /* leaves room for top text + bottom buttons */
+  width: 94%;             /* large */
+  max-height: 70vh;        /* fills space but keeps buttons visible */
   object-fit: contain;
 
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  z-index: 2;
-
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 3;
   opacity: 0;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.7s ease;
 }
 
-/* Buttons fixed at bottom – always fully visible */
+/* BUTTONS ALWAYS INSIDE SCREEN */
 .button-container {
   position: absolute;
-  bottom: 22px;
+  bottom: 20px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  z-index: 3;
+  z-index: 4;
   opacity: 0;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.7s ease;
 }
 
 #contactBtn,
 #closeAdBtn {
   padding: 16px 32px;
-  font-size: 17px;
   border: none;
   border-radius: 8px;
+  font-size: 18px;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   width: 80%;
   max-width: 300px;
 }
@@ -105,23 +105,23 @@ body {
 #contactBtn { background: #28a745; }
 #closeAdBtn { background: #ff4d6d; }
 
-/* Navigation arrows at mid-height */
+/* LEFT & RIGHT ARROWS */
 #prevBtn,
 #nextBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 3;
-  font-size: 36px;
+  font-size: 38px;
   color: #fff;
+  z-index: 4;
   cursor: pointer;
   user-select: none;
 }
 
-#prevBtn { left: 10px; }
-#nextBtn { right: 10px; }
+#prevBtn { left: 12px; }
+#nextBtn { right: 12px; }
 
-/* Remove tap highlight on mobile */
+/* Remove tap highlight */
 * {
   -webkit-tap-highlight-color: transparent;
   outline: none !important;
