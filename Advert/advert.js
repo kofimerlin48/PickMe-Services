@@ -22,9 +22,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ==========================
-//  UI ELEMENTS
-// ==========================
+// UI ELEMENTS
 const flyerEl = document.getElementById("flyer");
 const flyerBg = document.getElementById("flyerBg");
 const contactBtn = document.getElementById("contactBtn");
@@ -37,25 +35,25 @@ let flyers = [];
 let currentIndex = 0;
 
 // ==========================
-//  LOAD ADVERTS FROM FIRESTORE
+//  LOAD ADVERTS
 // ==========================
 async function loadAdverts() {
   try {
-    const snap = await getDocs(collection(db, "Adverts", "items", "AdvertsList"));
+    const snap = await getDocs(
+      collection(db, "Adverts", "items", "AdvertsList")
+    );
+
     flyers = [];
 
-    snap.forEach(doc => {
-      flyers.push(doc.data());
-    });
+    snap.forEach(doc => flyers.push(doc.data()));
 
-    // remove expired
+    // filter expiry
     flyers = flyers.filter(f => {
       if (!f.expiry) return true;
-      const expiry = new Date(f.expiry);
-      return new Date() <= expiry;
+      return new Date() <= new Date(f.expiry);
     });
 
-    // random order
+    // shuffle
     flyers = flyers.sort(() => Math.random() - 0.5);
 
     if (flyers.length > 0) {
@@ -85,7 +83,7 @@ function showFlyer(i) {
     flyerEl.src = flyer.image;
     flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-    // BUTTON LOGIC
+    // Logic for buttons
     if (flyer.buttonText && flyer.buttonLink) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
@@ -108,17 +106,14 @@ function showFlyer(i) {
       buttonContainer.style.opacity = 1;
     };
 
-  }, 200);
+  }, 300);
 }
 
-// ==========================
-//  BUTTON CONTROLS
-// ==========================
+// BUTTONS
 prevBtn.onclick = () => {
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
 };
-
 nextBtn.onclick = () => {
   currentIndex = (currentIndex + 1) % flyers.length;
   showFlyer(currentIndex);
@@ -126,7 +121,5 @@ nextBtn.onclick = () => {
 
 closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
-// ==========================
-//  START
-// ==========================
+// START
 loadAdverts();
