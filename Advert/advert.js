@@ -3,8 +3,11 @@
 // =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs
+  getFirestore, collection, getDocs, addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // =========================
 //  FIREBASE CONFIG
@@ -21,20 +24,30 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // ==========================
-//  UI ELEMENTS (MAIN PAGE)
+//  UI ELEMENTS (ADVERT VIEW)
 // ==========================
-const flyerEl       = document.getElementById("flyer");
-const flyerBg       = document.getElementById("flyerBg");
-const contactBtn    = document.getElementById("contactBtn");
-const closeAdBtn    = document.getElementById("closeAdBtn");
-const prevBtn       = document.getElementById("prevBtn");
-const nextBtn       = document.getElementById("nextBtn");
-const buttonContainer = contactBtn ? contactBtn.parentElement : null;
+const flyerEl = document.getElementById("flyer");
+const flyerBg = document.getElementById("flyerBg");
+const contactBtn = document.getElementById("contactBtn");
+const closeAdBtn = document.getElementById("closeAdBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const advertLink = document.getElementById("advertLink");
+const buttonContainer = contactBtn.parentElement;
 
 let flyers = [];
 let currentIndex = 0;
+
+// pricing: plan + visibility
+const PRICING = {
+  "1_month":  { low: 30,  medium: 40,  high: 50  },
+  "3_months": { low: 80,  medium: 90,  high: 100 },
+  "6_months": { low: 180, medium: 190, high: 200 },
+  "12_months":{ low: 280, medium: 290, high: 300 }
+};
 
 // ==========================
 //  LOAD ADVERTS FROM FIRESTORE
@@ -64,22 +77,23 @@ async function loadAdverts() {
 
     console.log("Remaining after expiry filter:", flyers.length);
 
-    if (!flyers.length) {
-      if (flyerEl) flyerEl.style.display = "none";
-      if (buttonContainer) buttonContainer.style.display = "none";
-      if (flyerBg) flyerBg.style.background = "#000";
+    if (flyers.length === 0) {
+      flyerEl.style.display = "none";
+      buttonContainer.style.display = "none";
+      flyerBg.style.background = "#000";
       return;
     }
 
-    // RANDOM ORDER (for all users)
+    // Random order
     flyers = flyers
       .map(f => ({ f, r: Math.random() }))
       .sort((a, b) => a.r - b.r)
       .map(x => x.f);
 
-    // RANDOM START INDEX
+    // Random first index
     currentIndex = Math.floor(Math.random() * flyers.length);
     showFlyer(currentIndex);
+
   } catch (err) {
     console.error("Error loading adverts:", err);
   }
@@ -90,7 +104,7 @@ async function loadAdverts() {
 // ==========================
 function showFlyer(i) {
   const flyer = flyers[i];
-  if (!flyer || !flyerEl || !flyerBg || !buttonContainer) return;
+  if (!flyer) return;
 
   flyerEl.style.opacity = 0;
   buttonContainer.style.opacity = 0;
@@ -123,450 +137,405 @@ function showFlyer(i) {
 }
 
 // ==========================
-//  BUTTON CONTROLS
+//  ARROWS + SWIPE
 // ==========================
-if (prevBtn) {
-  prevBtn.onclick = () => {
-    if (!flyers.length) return;
-    currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
-    showFlyer(currentIndex);
-  };
-}
+prevBtn.onclick = () => {
+  currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
+  showFlyer(currentIndex);
+};
 
-if (nextBtn) {
-  nextBtn.onclick = () => {
-    if (!flyers.length) return;
-    currentIndex = (currentIndex + 1) % flyers.length;
-    showFlyer(currentIndex);
-  };
-}
+nextBtn.onclick = () => {
+  currentIndex = (currentIndex + 1) % flyers.length;
+  showFlyer(currentIndex);
+};
 
-if (closeAdBtn) {
-  closeAdBtn.onclick = () => window.location.href = "/homepage.html";
-}
-
-// ==========================
-//  SWIPE GESTURE (RESTORED)
-// ==========================
+// swipe back (you asked for this to return)
 let startX = 0;
-if (flyerEl) {
-  flyerEl.addEventListener("touchstart", e => {
-    if (!e.touches || !e.touches.length) return;
-    startX = e.touches[0].clientX;
-  });
+flyerEl.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+flyerEl.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (endX - startX > 50) {
+    // swipe right
+    prevBtn.onclick();
+  } else if (startX - endX > 50) {
+    // swipe left
+    nextBtn.onclick();
+  }
+});
 
-  flyerEl.addEventListener("touchend", e => {
-    if (!e.changedTouches || !e.changedTouches.length) return;
-    const endX = e.changedTouches[0].clientX;
-    const diff = endX - startX;
-    if (diff > 50 && prevBtn && typeof prevBtn.onclick === "function") {
-      prevBtn.onclick();
-    } else if (diff < -50 && nextBtn && typeof nextBtn.onclick === "function") {
-      nextBtn.onclick();
-    }
-  });
-}
+closeAdBtn.onclick = () => window.location.href = "/homepage.html";
 
 // ==========================
-//  ADVERT WIZARD (MULTI STEP)
+//  FULL PAGE FORM WIZARD
 // ==========================
-const advertLink      = document.getElementById("advertLink");
-const adWizardOverlay = document.getElementById("adWizardOverlay");
-const adWizardBody    = document.getElementById("adWizardBody");
-const adWizardStepLbl = document.getElementById("adWizardStepLabel");
-const adWizardClose   = document.getElementById("adWizardClose");
-const adWizardBack    = document.getElementById("adWizardBack");
-const adWizardNext    = document.getElementById("adWizardNext");
-const adWizardStatus  = document.getElementById("adWizardStatus");
+const adFormOverlay       = document.getElementById("adFormOverlay");
+const adFormCloseBtn      = document.getElementById("adFormCloseBtn");
+const adBackBtn           = document.getElementById("adBackBtn");
+const adNextBtn           = document.getElementById("adNextBtn");
+const adSteps             = document.querySelectorAll(".ad-step");
 
-// Form state we will build across steps
-const adState = {
-  type: "",          // "event" or "business"
-  eventDate: "",
-  title: "",
+// step 1
+const adTypeCards         = document.querySelectorAll(".ad-type-card");
+const adTypeInputs        = document.querySelectorAll('input[name="adType"]');
+
+// step 2
+const adHostInput         = document.getElementById("adHost");
+const adTitleInput        = document.getElementById("adTitle");
+const adWhatsappInput     = document.getElementById("adWhatsapp");
+const adDateRow           = document.getElementById("adDateRow");
+const adDateInput         = document.getElementById("adDate");
+
+// step 3
+const adFlyerInput        = document.getElementById("adFlyerInput");
+const adFlyerChooseBtn    = document.getElementById("adFlyerChooseBtn");
+const adFlyerPreviewWrapper = document.getElementById("adFlyerPreviewWrapper");
+const adFlyerPreview      = document.getElementById("adFlyerPreview");
+const adFlyerRemoveBtn    = document.getElementById("adFlyerRemoveBtn");
+
+// step 4
+const adPlanSelect        = document.getElementById("adPlan");
+const adVisibilitySelect  = document.getElementById("adVisibility");
+const adSummaryText       = document.getElementById("adSummaryText");
+
+let currentStep = 1;
+const TOTAL_STEPS = 4;
+
+let adFormData = {
+  adType: null,      // "event" or "business"
   host: "",
+  title: "",
   whatsapp: "",
-  plan: "",          // "1m", "3m", "6m", "12m"
-  visibility: "",    // "low", "medium", "high"
-  price: 0,
-  notes: "",
+  date: "",
+  plan: "1_month",
+  visibility: "low",
   flyerFile: null
 };
 
-// Price table (temporary – later from admin panel)
-const PRICE_TABLE = {
-  "1m":  { low: 30,  medium: 40,  high: 50  },
-  "3m":  { low: 80,  medium: 90,  high: 100 },
-  "6m":  { low: 180, medium: 190, high: 200 },
-  "12m": { low: 280, medium: 290, high: 300 }
-};
-
-let wizardStep = 0;  // 0..3
-const TOTAL_STEPS = 4;
-
-// Open / close
-function openWizard() {
-  if (!adWizardOverlay) return;
-  adWizardOverlay.classList.remove("hidden");
-  wizardStep = 0;
-  renderWizardStep();
+// open & close
+function openAdForm() {
+  currentStep = 1;
+  resetAdForm();
+  updateStepView();
+  adFormOverlay.classList.add("active");
 }
 
-function closeWizard() {
-  if (!adWizardOverlay) return;
-  adWizardOverlay.classList.add("hidden");
-  adWizardStatus.textContent = "";
+function closeAdForm() {
+  adFormOverlay.classList.remove("active");
 }
 
-// Attach open
-if (advertLink) {
-  advertLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    openWizard();
-  });
-}
-
-// Close controls
-if (adWizardClose) {
-  adWizardClose.addEventListener("click", () => closeWizard());
-}
-if (adWizardOverlay) {
-  adWizardOverlay.addEventListener("click", (e) => {
-    if (e.target === adWizardOverlay) closeWizard();
-  });
-}
-
-// Back / Next
-if (adWizardBack) {
-  adWizardBack.addEventListener("click", () => {
-    if (wizardStep > 0) {
-      wizardStep--;
-      adWizardStatus.textContent = "";
-      renderWizardStep();
-    }
-  });
-}
-if (adWizardNext) {
-  adWizardNext.addEventListener("click", () => {
-    handleWizardNext();
-  });
-}
-
-// Render each step
-function renderWizardStep() {
-  if (!adWizardBody || !adWizardStepLbl || !adWizardNext || !adWizardBack) return;
-
-  adWizardBody.innerHTML = "";
-  adWizardStatus.textContent = "";
-
-  adWizardBack.style.visibility = wizardStep === 0 ? "hidden" : "visible";
-  adWizardNext.textContent = wizardStep === TOTAL_STEPS - 1
-    ? "Submit & pay"
-    : "Continue";
-
-  switch (wizardStep) {
-    case 0:
-      adWizardStepLbl.textContent = "Step 1 of 4 • Type & date";
-      renderStepTypeAndDate();
-      break;
-    case 1:
-      adWizardStepLbl.textContent = "Step 2 of 4 • Basic details";
-      renderStepBasicDetails();
-      break;
-    case 2:
-      adWizardStepLbl.textContent = "Step 3 of 4 • Plan & visibility";
-      renderStepPlanVisibility();
-      break;
-    case 3:
-      adWizardStepLbl.textContent = "Step 4 of 4 • Flyer & notes";
-      renderStepFlyerNotes();
-      break;
-  }
-}
-
-// --- STEP 0: Type + optional date ---
-function renderStepTypeAndDate() {
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
-    <p>What kind of advert is this?</p>
-    <div class="ad-type-grid">
-      <div class="ad-type-card" data-type="event">
-        <div class="ad-type-card-title">Event / has date</div>
-        <div class="ad-type-card-sub">
-          Funerals, parties, church programs, promos ending on a specific date.
-        </div>
-      </div>
-      <div class="ad-type-card" data-type="business">
-        <div class="ad-type-card-title">Ongoing / business advert</div>
-        <div class="ad-type-card-sub">
-          Shops, services, forever products with no fixed end date.
-        </div>
-      </div>
-    </div>
-
-    <label style="margin-top:10px;">
-      Event date (only if your advert has a date)
-    </label>
-    <input type="date" id="adEventDateInput" value="${adState.eventDate || ""}">
-    <p style="font-size:12px; opacity:0.8; margin-top:4px;">
-      If your advert is a one-time event (e.g. funeral, show, promotion ending), choose <b>Event / has date</b> and select the date.
-      Otherwise choose <b>Ongoing / business advert</b>.
-    </p>
-  `;
-
-  adWizardBody.appendChild(wrap);
-
-  // set selected card
-  const cards = wrap.querySelectorAll(".ad-type-card");
-  cards.forEach(card => {
-    const t = card.getAttribute("data-type");
-    if (t === adState.type) card.classList.add("selected");
-    card.addEventListener("click", () => {
-      adState.type = t;
-      cards.forEach(c => c.classList.remove("selected"));
-      card.classList.add("selected");
-    });
-  });
-
-  const dateInput = wrap.querySelector("#adEventDateInput");
-  if (dateInput) {
-    dateInput.addEventListener("change", () => {
-      adState.eventDate = dateInput.value || "";
-    });
-  }
-}
-
-// --- STEP 1: basic details ---
-function renderStepBasicDetails() {
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
-    <label>
-      Advert title *
-    </label>
-    <input type="text" id="adTitleInput" value="${adState.title || ""}" placeholder="Eg. All Black Affair, Big Sales Promo">
-
-    <label>
-      Host / Business name *
-    </label>
-    <input type="text" id="adHostInput" value="${adState.host || ""}" placeholder="Eg. Manko Pub, PickMe Services">
-
-    <label>
-      WhatsApp / phone number *
-    </label>
-    <input type="tel" id="adWhatsappInput" value="${adState.whatsapp || ""}" placeholder="2335xxxxxxx">
-
-    <p style="font-size:12px; opacity:0.8; margin-top:6px;">
-      We'll use this number for enquiries and payment confirmation.
-    </p>
-  `;
-  adWizardBody.appendChild(wrap);
-
-  wrap.querySelector("#adTitleInput").addEventListener("input", e => {
-    adState.title = e.target.value.trim();
-  });
-  wrap.querySelector("#adHostInput").addEventListener("input", e => {
-    adState.host = e.target.value.trim();
-  });
-  wrap.querySelector("#adWhatsappInput").addEventListener("input", e => {
-    adState.whatsapp = e.target.value.trim();
-  });
-}
-
-// --- STEP 2: plan + visibility ---
-function renderStepPlanVisibility() {
-  const wrap = document.createElement("div");
-
-  const plan = adState.plan || "";
-  const vis  = adState.visibility || "";
-
-  const currentPrice = computePrice(plan, vis);
-
-  wrap.innerHTML = `
-    <label>Subscription plan *</label>
-    <select id="adPlanSelect">
-      <option value="">Select plan</option>
-      <option value="1m" ${plan === "1m" ? "selected" : ""}>1 month</option>
-      <option value="3m" ${plan === "3m" ? "selected" : ""}>3 months</option>
-      <option value="6m" ${plan === "6m" ? "selected" : ""}>6 months</option>
-      <option value="12m" ${plan === "12m" ? "selected" : ""}>12 months</option>
-    </select>
-
-    <label style="margin-top:10px;">Visibility level *</label>
-    <select id="adVisibilitySelect">
-      <option value="">Select visibility</option>
-      <option value="low" ${vis === "low" ? "selected" : ""}>Low visibility</option>
-      <option value="medium" ${vis === "medium" ? "selected" : ""}>Medium visibility</option>
-      <option value="high" ${vis === "high" ? "selected" : ""}>High visibility</option>
-    </select>
-
-    <div class="ad-price-hint" id="adPriceHint">
-      ${currentPrice ? `Estimated price: <b>GHS ${currentPrice}</b>` : "Choose plan + visibility to see price."}
-    </div>
-
-    <p style="font-size:12px; margin-top:6px; opacity:0.8;">
-      Price depends on <b>visibility</b>. Higher visibility means your advert shows more often across users.
-    </p>
-  `;
-  adWizardBody.appendChild(wrap);
-
-  const planSelect = wrap.querySelector("#adPlanSelect");
-  const visSelect  = wrap.querySelector("#adVisibilitySelect");
-  const priceHint  = wrap.querySelector("#adPriceHint");
-
-  function updatePrice() {
-    const p = planSelect.value;
-    const v = visSelect.value;
-    adState.plan = p;
-    adState.visibility = v;
-    const price = computePrice(p, v);
-    adState.price = price;
-
-    if (price && priceHint) {
-      priceHint.innerHTML = `Estimated price: <b>GHS ${price}</b>`;
-    } else if (priceHint) {
-      priceHint.textContent = "Choose plan + visibility to see price.";
-    }
-  }
-
-  planSelect.addEventListener("change", updatePrice);
-  visSelect.addEventListener("change", updatePrice);
-}
-
-function computePrice(plan, vis) {
-  if (!plan || !vis) return 0;
-  const row = PRICE_TABLE[plan];
-  if (!row) return 0;
-  const value = row[vis];
-  return value || 0;
-}
-
-// --- STEP 3: flyer + notes ---
-function renderStepFlyerNotes() {
-  const wrap = document.createElement("div");
-
-  wrap.innerHTML = `
-    <label>Flyer image (PNG / JPG) *</label>
-    <input type="file" id="adFlyerInput" accept="image/*">
-
-    <div id="adFlyerPreviewWrapper">
-      <img id="adFlyerPreview" alt="Flyer preview"/>
-      <button type="button" id="adFlyerRemoveBtn">Remove flyer</button>
-    </div>
-
-    <label style="margin-top:10px;">Extra notes (optional)</label>
-    <textarea id="adNotesInput" placeholder="Any extra information for the admin...">${adState.notes || ""}</textarea>
-
-    <p style="font-size:12px; opacity:0.8; margin-top:8px;">
-      On the next step, we will trigger payment using the amount from your plan + visibility.
-      After successful payment, your advert request will go to admin for review and approval.
-    </p>
-  `;
-
-  adWizardBody.appendChild(wrap);
-
-  const fileInput   = wrap.querySelector("#adFlyerInput");
-  const previewImg  = wrap.querySelector("#adFlyerPreview");
-  const removeBtn   = wrap.querySelector("#adFlyerRemoveBtn");
-  const notesInput  = wrap.querySelector("#adNotesInput");
-
-  // show existing file preview (if any) is not straightforward without blob,
-  // so preview only when user selects again in this step.
-
-  if (adState.flyerFile) {
-    const url = URL.createObjectURL(adState.flyerFile);
-    previewImg.src = url;
-    previewImg.style.display = "block";
-  } else {
-    previewImg.style.display = "none";
-  }
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    adState.flyerFile = file;
-    const url = URL.createObjectURL(file);
-    previewImg.src = url;
-    previewImg.style.display = "block";
-  });
-
-  removeBtn.addEventListener("click", () => {
-    adState.flyerFile = null;
-    fileInput.value = "";
-    previewImg.style.display = "none";
-  });
-
-  notesInput.addEventListener("input", e => {
-    adState.notes = e.target.value;
-  });
-}
-
-// Handle Next / Submit
-function handleWizardNext() {
-  if (!adWizardNext || !adWizardStatus) return;
-
-  // validate per step
-  if (wizardStep === 0) {
-    if (!adState.type) {
-      adWizardStatus.textContent = "Please choose whether your advert is Event / has date or Ongoing / business.";
-      return;
-    }
-    if (adState.type === "event" && !adState.eventDate) {
-      adWizardStatus.textContent = "Please select the event date for your advert.";
-      return;
-    }
-  } else if (wizardStep === 1) {
-    if (!adState.title || !adState.host || !adState.whatsapp) {
-      adWizardStatus.textContent = "Please fill in title, host and WhatsApp number.";
-      return;
-    }
-  } else if (wizardStep === 2) {
-    if (!adState.plan || !adState.visibility) {
-      adWizardStatus.textContent = "Select a subscription plan and visibility level.";
-      return;
-    }
-    if (!adState.price) {
-      adWizardStatus.textContent = "Price could not be calculated. Please re-select plan and visibility.";
-      return;
-    }
-  } else if (wizardStep === 3) {
-    if (!adState.flyerFile) {
-      adWizardStatus.textContent = "Please choose a flyer image.";
-      return;
-    }
-  }
-
-  if (wizardStep < TOTAL_STEPS - 1) {
-    wizardStep++;
-    adWizardStatus.textContent = "";
-    renderWizardStep();
-    return;
-  }
-
-  // FINAL SUBMIT STEP
-  // (We are NOT calling Firebase or Haptel yet – just simulating.)
-  adWizardNext.disabled = true;
-  adWizardNext.textContent = "Preparing payment...";
-  adWizardStatus.textContent = "";
-
-  const payload = {
-    ...adState,
-    createdAt: new Date().toISOString()
+// reset fields
+function resetAdForm() {
+  // clear data
+  adFormData = {
+    adType: null,
+    host: "",
+    title: "",
+    whatsapp: "",
+    date: "",
+    plan: "1_month",
+    visibility: "low",
+    flyerFile: null
   };
 
-  console.log("Advert wizard final payload (preview only – no payment yet):", payload);
+  // type
+  adTypeInputs.forEach(i => i.checked = false);
+  adTypeCards.forEach(c => c.classList.remove("selected"));
 
-  // TODO LATER:
-  // - Upload flyerFile to Firebase Storage
-  // - Call Haptel payment with adState.price
-  // - On success, write request to Firestore (AdvertsRequests / ...)
-  // - Send SMS + deep link to admin
+  // text fields
+  adHostInput.value = "";
+  adTitleInput.value = "";
+  adWhatsappInput.value = "";
+  adDateInput.value = "";
+  adDateRow.classList.remove("hidden");
 
-  setTimeout(() => {
-    adWizardStatus.textContent =
-      "Your details have been captured locally. Payment + admin review connection will be wired into this button.";
-    adWizardNext.disabled = false;
-    adWizardNext.textContent = "Submit & pay";
-  }, 800);
+  // flyer
+  adFlyerInput.value = "";
+  adFlyerPreviewWrapper.classList.add("hidden");
+  adFlyerPreview.src = "";
+
+  // step 4
+  adPlanSelect.value = "1_month";
+  adVisibilitySelect.value = "low";
+  updateSummary();
+}
+
+// show correct step
+function updateStepView() {
+  adSteps.forEach(step => {
+    const s = Number(step.getAttribute("data-step"));
+    step.classList.toggle("active", s === currentStep);
+  });
+
+  // back button
+  adBackBtn.disabled = currentStep === 1;
+
+  // next button text
+  if (currentStep === TOTAL_STEPS) {
+    adNextBtn.textContent = "Submit & Pay";
+  } else {
+    adNextBtn.textContent = "Continue";
+  }
+
+  // date row visibility based on type
+  if (adFormData.adType === "event") {
+    adDateRow.classList.remove("hidden");
+  } else {
+    adDateRow.classList.add("hidden");
+  }
+}
+
+// validation per step
+function validateStep(stepNum) {
+  if (stepNum === 1) {
+    if (!adFormData.adType) {
+      alert("Please choose what your advert is about.");
+      return false;
+    }
+  }
+
+  if (stepNum === 2) {
+    if (!adHostInput.value.trim()) {
+      alert("Please enter the host / organiser name.");
+      return false;
+    }
+    if (!adTitleInput.value.trim()) {
+      alert("Please enter the advert title.");
+      return false;
+    }
+    if (!adWhatsappInput.value.trim()) {
+      alert("Please enter a WhatsApp / phone number.");
+      return false;
+    }
+    if (adFormData.adType === "event" && !adDateInput.value) {
+      alert("Please choose an event date.");
+      return false;
+    }
+  }
+
+  if (stepNum === 3) {
+    if (!adFormData.flyerFile) {
+      alert("Please upload a flyer image.");
+      return false;
+    }
+  }
+
+  if (stepNum === 4) {
+    // everything already chosen
+    return true;
+  }
+
+  return true;
+}
+
+// collect data for current step before moving on
+function collectStepData(stepNum) {
+  if (stepNum === 1) {
+    const selected = Array.from(adTypeInputs).find(i => i.checked);
+    adFormData.adType = selected ? selected.value : null;
+  }
+
+  if (stepNum === 2) {
+    adFormData.host = adHostInput.value.trim();
+    adFormData.title = adTitleInput.value.trim();
+    adFormData.whatsapp = adWhatsappInput.value.trim();
+    adFormData.date = adDateInput.value || "";
+  }
+
+  if (stepNum === 3) {
+    // flyer already captured on change
+  }
+
+  if (stepNum === 4) {
+    adFormData.plan = adPlanSelect.value;
+    adFormData.visibility = adVisibilitySelect.value;
+  }
+}
+
+// summary text
+function updateSummary() {
+  const planKey = adPlanSelect.value;
+  const visKey = adVisibilitySelect.value;
+  const amount = PRICING[planKey][visKey];
+
+  const planLabel = {
+    "1_month": "1 month",
+    "3_months": "3 months",
+    "6_months": "6 months",
+    "12_months": "1 year"
+  }[planKey];
+
+  const visLabel = {
+    low: "Low visibility",
+    medium: "Medium visibility",
+    high: "High visibility"
+  }[visKey];
+
+  adSummaryText.textContent = `${planLabel} • ${visLabel} → GHS ${amount.toFixed(2)}`;
+}
+
+// when type card clicked
+adTypeCards.forEach(card => {
+  card.addEventListener("click", () => {
+    const input = card.querySelector('input[name="adType"]');
+    if (!input) return;
+
+    input.checked = true;
+    adFormData.adType = input.value;
+
+    adTypeCards.forEach(c => c.classList.remove("selected"));
+    card.classList.add("selected");
+
+    // show/hide date row
+    if (input.value === "event") {
+      adDateRow.classList.remove("hidden");
+    } else {
+      adDateRow.classList.add("hidden");
+    }
+  });
+});
+
+// flyer choose & preview
+adFlyerChooseBtn.addEventListener("click", () => {
+  adFlyerInput.click();
+});
+
+adFlyerInput.addEventListener("change", () => {
+  const file = adFlyerInput.files[0];
+  if (!file) return;
+
+  adFormData.flyerFile = file;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    adFlyerPreview.src = e.target.result;
+    adFlyerPreviewWrapper.classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
+});
+
+adFlyerRemoveBtn.addEventListener("click", () => {
+  adFlyerInput.value = "";
+  adFormData.flyerFile = null;
+  adFlyerPreviewWrapper.classList.add("hidden");
+  adFlyerPreview.src = "";
+});
+
+// plan / visibility change
+adPlanSelect.addEventListener("change", updateSummary);
+adVisibilitySelect.addEventListener("change", updateSummary);
+
+// open form from "HERE"
+advertLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  openAdForm();
+});
+
+// nav buttons
+adBackBtn.addEventListener("click", () => {
+  if (currentStep > 1) {
+    currentStep--;
+    updateStepView();
+  }
+});
+
+adNextBtn.addEventListener("click", async () => {
+  // validate current
+  if (!validateStep(currentStep)) return;
+
+  // store data
+  collectStepData(currentStep);
+
+  if (currentStep < TOTAL_STEPS) {
+    currentStep++;
+    if (currentStep === 4) {
+      updateSummary();
+    }
+    updateStepView();
+  } else {
+    // final submit
+    await submitAdvert();
+  }
+});
+
+adFormCloseBtn.addEventListener("click", () => {
+  closeAdForm();
+});
+
+// ==========================
+//  SUBMIT ADVERT REQUEST
+// ==========================
+async function submitAdvert() {
+  try {
+    adNextBtn.disabled = true;
+    adBackBtn.disabled = true;
+    adNextBtn.textContent = "Processing...";
+
+    // 1) Upload flyer to Firebase Storage
+    const file = adFormData.flyerFile;
+    const fileName = `${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, `adverts/${fileName}`);
+    await uploadBytes(storageRef, file);
+    const imageUrl = await getDownloadURL(storageRef);
+
+    // 2) Determine expiry from plan
+    const now = new Date();
+    const expiry = new Date(now);
+    switch (adFormData.plan) {
+      case "1_month":
+        expiry.setMonth(expiry.getMonth() + 1);
+        break;
+      case "3_months":
+        expiry.setMonth(expiry.getMonth() + 3);
+        break;
+      case "6_months":
+        expiry.setMonth(expiry.getMonth() + 6);
+        break;
+      case "12_months":
+        expiry.setFullYear(expiry.getFullYear() + 1);
+        break;
+    }
+
+    const amount = PRICING[adFormData.plan][adFormData.visibility];
+
+    // 3) (PLACEHOLDER) HAPTEL PAYMENT
+    // 👉 Here is where you will later call your backend or USSD/STK logic.
+    //    For now we assume payment is successful so the project can run.
+    //    You will replace this block with a real API call.
+    console.log("Simulating Haptel payment for GHS", amount);
+    // Example structure (you will implement the endpoint later):
+    // await fetch("https://YOUR_BACKEND_URL/haptel/advert-payment", { ... });
+
+    // 4) Create Firestore request for admin review
+    await addDoc(collection(db, "Adverts", "Requests"), {
+      type: adFormData.adType,
+      host: adFormData.host,
+      event: adFormData.title,
+      whatsapp: adFormData.whatsapp,
+      hasDate: adFormData.adType === "event",
+      date: adFormData.adType === "event" ? adFormData.date : null,
+      plan: adFormData.plan,
+      visibility: adFormData.visibility,
+      amount,
+      image: imageUrl,
+      createdAt: new Date().toISOString(),
+      expiry: expiry.toISOString().slice(0, 10),
+      status: "pending_approval",
+      source: "AdvertPageForm"
+    });
+
+    alert("Your advert request has been submitted. We will review and notify you.");
+    closeAdForm();
+
+  } catch (err) {
+    console.error("Error submitting advert request:", err);
+    alert("Sorry, something went wrong. Please try again.");
+  } finally {
+    adNextBtn.disabled = false;
+    adBackBtn.disabled = false;
+    adNextBtn.textContent = "Submit & Pay";
+  }
 }
 
 // ==========================
