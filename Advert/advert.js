@@ -3,10 +3,17 @@
 // =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, addDoc
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getStorage, ref, uploadBytes, getDownloadURL
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // =========================
@@ -149,7 +156,7 @@ nextBtn.onclick = () => {
   showFlyer(currentIndex);
 };
 
-// swipe back (you asked for this to return)
+// swipe (kept exactly as you asked)
 let startX = 0;
 flyerEl.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
@@ -157,10 +164,8 @@ flyerEl.addEventListener("touchstart", e => {
 flyerEl.addEventListener("touchend", e => {
   const endX = e.changedTouches[0].clientX;
   if (endX - startX > 50) {
-    // swipe right
     prevBtn.onclick();
   } else if (startX - endX > 50) {
-    // swipe left
     nextBtn.onclick();
   }
 });
@@ -174,6 +179,7 @@ const adFormOverlay       = document.getElementById("adFormOverlay");
 const adFormCloseBtn      = document.getElementById("adFormCloseBtn");
 const adBackBtn           = document.getElementById("adBackBtn");
 const adNextBtn           = document.getElementById("adNextBtn");
+const adFormFooter        = document.querySelector(".ad-form-footer");
 const adSteps             = document.querySelectorAll(".ad-step");
 
 // step 1
@@ -227,7 +233,6 @@ function closeAdForm() {
 
 // reset fields
 function resetAdForm() {
-  // clear data
   adFormData = {
     adType: null,
     host: "",
@@ -254,11 +259,15 @@ function resetAdForm() {
   adFlyerInput.value = "";
   adFlyerPreviewWrapper.classList.add("hidden");
   adFlyerPreview.src = "";
+  adFlyerChooseBtn.style.display = "inline-block";
+  adFlyerPreviewWrapper.style.removeProperty("--flyer-preview-url");
 
   // step 4
   adPlanSelect.value = "1_month";
   adVisibilitySelect.value = "low";
+  updateVisibilityOptionsWithPrices();
   updateSummary();
+  updateNextButtonState();
 }
 
 // show correct step
@@ -268,12 +277,19 @@ function updateStepView() {
     step.classList.toggle("active", s === currentStep);
   });
 
+  // footer should NOT show on step 1
+  if (currentStep === 1) {
+    adFormFooter.style.display = "none";
+  } else {
+    adFormFooter.style.display = "flex";
+  }
+
   // back button
-  adBackBtn.disabled = currentStep === 1;
+  adBackBtn.disabled = currentStep === 2;  // first step that shows back
 
   // next button text
   if (currentStep === TOTAL_STEPS) {
-    adNextBtn.textContent = "Submit & Pay";
+    adNextBtn.textContent = "Submit & pay";
   } else {
     adNextBtn.textContent = "Continue";
   }
@@ -284,9 +300,42 @@ function updateStepView() {
   } else {
     adDateRow.classList.add("hidden");
   }
+
+  // update enabled/disabled state
+  updateNextButtonState();
 }
 
-// validation per step
+// enable/disable Continue based on requirements
+function updateNextButtonState() {
+  let enabled = false;
+
+  if (currentStep === 1) {
+    // no footer here anyway
+    enabled = false;
+  } else if (currentStep === 2) {
+    const hostOk = adHostInput.value.trim().length > 0;
+    const titleOk = adTitleInput.value.trim().length > 0;
+    const phoneOk = adWhatsappInput.value.trim().length > 0;
+    const dateOk = adFormData.adType === "event"
+      ? !!adDateInput.value
+      : true;
+    enabled = hostOk && titleOk && phoneOk && dateOk;
+  } else if (currentStep === 3) {
+    enabled = !!adFormData.flyerFile;
+  } else if (currentStep === 4) {
+    enabled = true; // they already chose plan + visibility
+  }
+
+  if (enabled) {
+    adNextBtn.classList.remove("disabled");
+    adNextBtn.disabled = false;
+  } else {
+    adNextBtn.classList.add("disabled");
+    adNextBtn.disabled = true;
+  }
+}
+
+// validation per step (still hard guards)
 function validateStep(stepNum) {
   if (stepNum === 1) {
     if (!adFormData.adType) {
@@ -319,11 +368,6 @@ function validateStep(stepNum) {
       alert("Please upload a flyer image.");
       return false;
     }
-  }
-
-  if (stepNum === 4) {
-    // everything already chosen
-    return true;
   }
 
   return true;
@@ -372,7 +416,25 @@ function updateSummary() {
     high: "High visibility"
   }[visKey];
 
-  adSummaryText.textContent = `${planLabel} • ${visLabel} → GHS ${amount.toFixed(2)}`;
+  adSummaryText.innerHTML =
+    `${planLabel} • ${visLabel} → <span class="price">GHS ${amount.toFixed(2)}</span>`;
+}
+
+// update visibility dropdown text with prices for current plan
+function updateVisibilityOptionsWithPrices() {
+  const planKey = adPlanSelect.value;
+  const prices = PRICING[planKey];
+
+  Array.from(adVisibilitySelect.options).forEach(opt => {
+    const val = opt.value;
+    const labelMap = {
+      low: "Low visibility",
+      medium: "Medium visibility",
+      high: "High visibility"
+    };
+    const price = prices[val];
+    opt.textContent = `${labelMap[val]} – GHS ${price.toFixed(2)}`;
+  });
 }
 
 // when type card clicked
@@ -393,6 +455,11 @@ adTypeCards.forEach(card => {
     } else {
       adDateRow.classList.add("hidden");
     }
+
+    // as soon as they choose a type, move to step 2
+    collectStepData(1);
+    currentStep = 2;
+    updateStepView();
   });
 });
 
@@ -409,10 +476,22 @@ adFlyerInput.addEventListener("change", () => {
 
   const reader = new FileReader();
   reader.onload = e => {
-    adFlyerPreview.src = e.target.result;
+    const url = e.target.result;
+    adFlyerPreview.src = url;
     adFlyerPreviewWrapper.classList.remove("hidden");
+
+    // blurred background like main advert page
+    adFlyerPreviewWrapper.style.setProperty(
+      "--flyer-preview-url",
+      `url(${url})`
+    );
   };
   reader.readAsDataURL(file);
+
+  // hide choose button once a flyer is selected
+  adFlyerChooseBtn.style.display = "none";
+
+  updateNextButtonState();
 });
 
 adFlyerRemoveBtn.addEventListener("click", () => {
@@ -420,11 +499,27 @@ adFlyerRemoveBtn.addEventListener("click", () => {
   adFormData.flyerFile = null;
   adFlyerPreviewWrapper.classList.add("hidden");
   adFlyerPreview.src = "";
+  adFlyerPreviewWrapper.style.removeProperty("--flyer-preview-url");
+
+  // show choose button again
+  adFlyerChooseBtn.style.display = "inline-block";
+
+  updateNextButtonState();
 });
 
 // plan / visibility change
-adPlanSelect.addEventListener("change", updateSummary);
-adVisibilitySelect.addEventListener("change", updateSummary);
+adPlanSelect.addEventListener("change", () => {
+  updateVisibilityOptionsWithPrices();
+  updateSummary();
+});
+adVisibilitySelect.addEventListener("change", () => {
+  updateSummary();
+});
+
+// keep Continue state in sync on text changes
+[adHostInput, adTitleInput, adWhatsappInput, adDateInput].forEach(input => {
+  input.addEventListener("input", updateNextButtonState);
+});
 
 // open form from "HERE"
 advertLink.addEventListener("click", (e) => {
@@ -434,8 +529,12 @@ advertLink.addEventListener("click", (e) => {
 
 // nav buttons
 adBackBtn.addEventListener("click", () => {
-  if (currentStep > 1) {
+  if (currentStep > 2) {
     currentStep--;
+    updateStepView();
+  } else if (currentStep === 2) {
+    // if they go back from step2, we go to step1, which hides footer
+    currentStep = 1;
     updateStepView();
   }
 });
@@ -450,6 +549,7 @@ adNextBtn.addEventListener("click", async () => {
   if (currentStep < TOTAL_STEPS) {
     currentStep++;
     if (currentStep === 4) {
+      updateVisibilityOptionsWithPrices();
       updateSummary();
     }
     updateStepView();
@@ -474,6 +574,11 @@ async function submitAdvert() {
 
     // 1) Upload flyer to Firebase Storage
     const file = adFormData.flyerFile;
+    if (!file) {
+      alert("Please upload a flyer image.");
+      return;
+    }
+
     const fileName = `${Date.now()}_${file.name}`;
     const storageRef = ref(storage, `adverts/${fileName}`);
     await uploadBytes(storageRef, file);
@@ -499,13 +604,9 @@ async function submitAdvert() {
 
     const amount = PRICING[adFormData.plan][adFormData.visibility];
 
-    // 3) (PLACEHOLDER) HAPTEL PAYMENT
-    // 👉 Here is where you will later call your backend or USSD/STK logic.
-    //    For now we assume payment is successful so the project can run.
-    //    You will replace this block with a real API call.
-    console.log("Simulating Haptel payment for GHS", amount);
-    // Example structure (you will implement the endpoint later):
-    // await fetch("https://YOUR_BACKEND_URL/haptel/advert-payment", { ... });
+    // 3) (PLACEHOLDER) HUBTEL PAYMENT
+    // Here in future you'll call your backend that talks to Hubtel.
+    console.log("Simulating Hubtel payment for GHS", amount);
 
     // 4) Create Firestore request for admin review
     await addDoc(collection(db, "Adverts", "Requests"), {
@@ -519,7 +620,7 @@ async function submitAdvert() {
       visibility: adFormData.visibility,
       amount,
       image: imageUrl,
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),           // matches your rules
       expiry: expiry.toISOString().slice(0, 10),
       status: "pending_approval",
       source: "AdvertPageForm"
@@ -534,11 +635,15 @@ async function submitAdvert() {
   } finally {
     adNextBtn.disabled = false;
     adBackBtn.disabled = false;
-    adNextBtn.textContent = "Submit & Pay";
+    adNextBtn.textContent = "Submit & pay";
+    updateNextButtonState();
   }
 }
 
 // ==========================
 //  START
 // ==========================
+updateVisibilityOptionsWithPrices();
+updateSummary();
+updateNextButtonState();
 loadAdverts();
