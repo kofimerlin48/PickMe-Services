@@ -285,7 +285,7 @@ function updateStepView() {
   }
 
   // back button
-  adBackBtn.disabled = currentStep === 2;  // first step that shows back
+  adBackBtn.disabled = currentStep === 1;  // first step that shows back
 
   // next button text
   if (currentStep === TOTAL_STEPS) {
