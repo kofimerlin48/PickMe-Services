@@ -69,7 +69,16 @@ async function loadAdverts() {
     flyers = [];
     snap.forEach(doc => {
       const data = doc.data();
-      flyers.push(data);
+
+      // Ensure we always have a visibility value (default medium)
+      const visibility = data.visibility || "medium";
+
+      // Keep doc id so future features (like boost) can update
+      flyers.push({
+        id: doc.id,
+        ...data,
+        visibility
+      });
     });
 
     console.log("Total adverts from Firestore:", flyers.length);
@@ -91,14 +100,68 @@ async function loadAdverts() {
       return;
     }
 
-    // Random order
-    flyers = flyers
-      .map(f => ({ f, r: Math.random() }))
-      .sort((a, b) => a.r - b.r)
-      .map(x => x.f);
+    // ======================
+    // Weighted Visibility Sorting (High 5, Medium 3, Low 1)
+    // ======================
 
-    // Random first index
-    currentIndex = Math.floor(Math.random() * flyers.length);
+    // 1. Split adverts by visibility
+    const highAds   = flyers.filter(f => f.visibility === "high");
+    const mediumAds = flyers.filter(f => f.visibility === "medium");
+    const lowAds    = flyers.filter(f => f.visibility === "low");
+
+    // 2. Weighted pick for FIRST advert
+    function pickWeighted() {
+      const weightedPool = [];
+
+      highAds.forEach(ad   => weightedPool.push(...Array(5).fill(ad)));
+      mediumAds.forEach(ad => weightedPool.push(...Array(3).fill(ad)));
+      lowAds.forEach(ad    => weightedPool.push(...Array(1).fill(ad)));
+
+      if (weightedPool.length === 0) return null;
+
+      const randomIndex = Math.floor(Math.random() * weightedPool.length);
+      return weightedPool[randomIndex];
+    }
+
+    const firstAdvert = pickWeighted() || flyers[0];
+
+    // 3. Remove first advert from its group so it does not repeat
+    const removeFromArray = (arr, obj) => {
+      const index = arr.indexOf(obj);
+      if (index !== -1) arr.splice(index, 1);
+    };
+
+    if (firstAdvert) {
+      if (firstAdvert.visibility === "high")   removeFromArray(highAds, firstAdvert);
+      if (firstAdvert.visibility === "medium") removeFromArray(mediumAds, firstAdvert);
+      if (firstAdvert.visibility === "low")    removeFromArray(lowAds, firstAdvert);
+    }
+
+    // 4. Shuffle groups independently
+    function shuffle(arr) {
+      return arr
+        .map(x => ({ x, r: Math.random() }))
+        .sort((a, b) => a.r - b.r)
+        .map(o => o.x);
+    }
+
+    const shuffledHigh   = shuffle(highAds);
+    const shuffledMedium = shuffle(mediumAds);
+    const shuffledLow    = shuffle(lowAds);
+
+    // 5. Final arranged list:
+    //    firstAdvert (weighted), then all HIGH, then MEDIUM, then LOW
+    flyers = [
+      firstAdvert,
+      ...shuffledHigh,
+      ...shuffledMedium,
+      ...shuffledLow
+    ].filter(Boolean);
+
+    console.log("Weighted-arranged flyers:", flyers);
+
+    // Start at index 0 ALWAYS → firstAdvert
+    currentIndex = 0;
     showFlyer(currentIndex);
 
   } catch (err) {
@@ -310,7 +373,6 @@ function updateNextButtonState() {
   let enabled = false;
 
   if (currentStep === 1) {
-    // no footer here anyway
     enabled = false;
   } else if (currentStep === 2) {
     const hostOk = adHostInput.value.trim().length > 0;
@@ -323,7 +385,7 @@ function updateNextButtonState() {
   } else if (currentStep === 3) {
     enabled = !!adFormData.flyerFile;
   } else if (currentStep === 4) {
-    enabled = true; // they already chose plan + visibility
+    enabled = true;
   }
 
   if (enabled) {
@@ -584,28 +646,36 @@ async function submitAdvert() {
     await uploadBytes(storageRef, file);
     const imageUrl = await getDownloadURL(storageRef);
 
-    // 2) Determine expiry from plan
+    // 2) Determine subscription end from plan
     const now = new Date();
-    const expiry = new Date(now);
+    const subscriptionEnd = new Date(now);
     switch (adFormData.plan) {
       case "1_month":
-        expiry.setMonth(expiry.getMonth() + 1);
+        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
         break;
       case "3_months":
-        expiry.setMonth(expiry.getMonth() + 3);
+        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 3);
         break;
       case "6_months":
-        expiry.setMonth(expiry.getMonth() + 6);
+        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 6);
         break;
       case "12_months":
-        expiry.setFullYear(expiry.getFullYear() + 1);
+        subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
         break;
+    }
+
+    // 2b) If this is an event, use the EARLIER of event date or subscription end
+    let effectiveExpiry = subscriptionEnd;
+    if (adFormData.adType === "event" && adFormData.date) {
+      const eventDate = new Date(adFormData.date);
+      if (!isNaN(eventDate.getTime()) && eventDate < effectiveExpiry) {
+        effectiveExpiry = eventDate;
+      }
     }
 
     const amount = PRICING[adFormData.plan][adFormData.visibility];
 
     // 3) (PLACEHOLDER) HUBTEL PAYMENT
-    // Here in future you'll call your backend that talks to Hubtel.
     console.log("Simulating Hubtel payment for GHS", amount);
 
     // 4) Create Firestore request for admin review
@@ -621,7 +691,7 @@ async function submitAdvert() {
       amount,
       image: imageUrl,
       createdAt: serverTimestamp(),           // matches your rules
-      expiry: expiry.toISOString().slice(0, 10),
+      expiry: effectiveExpiry.toISOString().slice(0, 10),
       status: "pending_approval",
       source: "AdvertPageForm"
     });
