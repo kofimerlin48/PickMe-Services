@@ -3,10 +3,17 @@
 // =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, addDoc
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getStorage, ref, uploadBytes, getDownloadURL
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // =========================
@@ -35,19 +42,10 @@ const contactBtn = document.getElementById("contactBtn");
 const closeAdBtn = document.getElementById("closeAdBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
-const advertLink = document.getElementById("advertLink");
 const buttonContainer = contactBtn.parentElement;
 
 let flyers = [];
 let currentIndex = 0;
-
-// pricing: plan + visibility
-const PRICING = {
-  "1_month":  { low: 30,  medium: 40,  high: 50  },
-  "3_months": { low: 80,  medium: 90,  high: 100 },
-  "6_months": { low: 180, medium: 190, high: 200 },
-  "12_months":{ low: 280, medium: 290, high: 300 }
-};
 
 // ==========================
 //  LOAD ADVERTS FROM FIRESTORE
@@ -90,7 +88,7 @@ async function loadAdverts() {
       .sort((a, b) => a.r - b.r)
       .map(x => x.f);
 
-    // Random first index
+    // Random start index
     currentIndex = Math.floor(Math.random() * flyers.length);
     showFlyer(currentIndex);
 
@@ -118,6 +116,7 @@ function showFlyer(i) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = flyer.buttonText;
       contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
+
     } else if (flyer.whatsapp) {
       contactBtn.style.display = "inline-block";
       contactBtn.innerText = "Contact Us";
@@ -125,6 +124,7 @@ function showFlyer(i) {
         const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}* on PickMe Services and I want to make enquiries.`;
         window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
       };
+
     } else {
       contactBtn.style.display = "none";
     }
@@ -137,7 +137,7 @@ function showFlyer(i) {
 }
 
 // ==========================
-//  ARROWS + SWIPE
+//  BUTTON CONTROLS (VIEW)
 // ==========================
 prevBtn.onclick = () => {
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
@@ -149,7 +149,9 @@ nextBtn.onclick = () => {
   showFlyer(currentIndex);
 };
 
-// swipe back (you asked for this to return)
+closeAdBtn.onclick = () => window.location.href = "/homepage.html";
+
+// Swipe on mobile
 let startX = 0;
 flyerEl.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
@@ -157,388 +159,502 @@ flyerEl.addEventListener("touchstart", e => {
 flyerEl.addEventListener("touchend", e => {
   const endX = e.changedTouches[0].clientX;
   if (endX - startX > 50) {
-    // swipe right
     prevBtn.onclick();
   } else if (startX - endX > 50) {
-    // swipe left
     nextBtn.onclick();
   }
 });
 
-closeAdBtn.onclick = () => window.location.href = "/homepage.html";
+// Start
+loadAdverts();
 
-// ==========================
-//  FULL PAGE FORM WIZARD
-// ==========================
-const adFormOverlay       = document.getElementById("adFormOverlay");
-const adFormCloseBtn      = document.getElementById("adFormCloseBtn");
-const adBackBtn           = document.getElementById("adBackBtn");
-const adNextBtn           = document.getElementById("adNextBtn");
-const adSteps             = document.querySelectorAll(".ad-step");
 
-// step 1
-const adTypeCards         = document.querySelectorAll(".ad-type-card");
-const adTypeInputs        = document.querySelectorAll('input[name="adType"]');
+// ======================================
+//   FULL PAGE FORM LOGIC
+// ======================================
 
-// step 2
-const adHostInput         = document.getElementById("adHost");
-const adTitleInput        = document.getElementById("adTitle");
-const adWhatsappInput     = document.getElementById("adWhatsapp");
-const adDateRow           = document.getElementById("adDateRow");
-const adDateInput         = document.getElementById("adDate");
+// DOM refs
+const advertLink = document.getElementById("advertLink");
+const formOverlay = document.getElementById("advertFormOverlay");
+const closeFormBtn = document.getElementById("closeFormBtn");
+const formTitle = document.getElementById("formTitle");
 
-// step 3
-const adFlyerInput        = document.getElementById("adFlyerInput");
-const adFlyerChooseBtn    = document.getElementById("adFlyerChooseBtn");
-const adFlyerPreviewWrapper = document.getElementById("adFlyerPreviewWrapper");
-const adFlyerPreview      = document.getElementById("adFlyerPreview");
-const adFlyerRemoveBtn    = document.getElementById("adFlyerRemoveBtn");
+const backBtn = document.getElementById("backBtn");
+const nextBtn = document.getElementById("nextBtn");
+const formError = document.getElementById("formError");
 
-// step 4
-const adPlanSelect        = document.getElementById("adPlan");
-const adVisibilitySelect  = document.getElementById("adVisibility");
-const adSummaryText       = document.getElementById("adSummaryText");
+// Steps
+const steps = Array.from(document.querySelectorAll(".form-step"));
 
+// Step 1
+const typeCards = Array.from(document.querySelectorAll(".type-card"));
+
+// Step 2
+const advertTitleInput = document.getElementById("advertTitle");
+const advertDescInput = document.getElementById("advertDesc");
+const advertDateInput = document.getElementById("advertDate");
+const eventDateRow = document.getElementById("eventDateRow");
+
+// Step 3
+const chooseImageBtn = document.getElementById("chooseImageBtn");
+const advertImageInput = document.getElementById("advertImageInput");
+const imagePreviewWrapper = document.getElementById("imagePreviewWrapper");
+const imagePreview = document.getElementById("imagePreview");
+const imagePreviewBg = document.getElementById("imagePreviewBg");
+const removeImageBtn = document.getElementById("removeImageBtn");
+
+// Step 4
+const planSelect = document.getElementById("planSelect");
+const visibilitySelect = document.getElementById("visibilitySelect");
+const priceDisplay = document.getElementById("priceDisplay");
+
+// Step 5 (summary)
+const summaryType = document.getElementById("summaryType");
+const summaryTitle = document.getElementById("summaryTitle");
+const summaryDateRow = document.getElementById("summaryDateRow");
+const summaryDate = document.getElementById("summaryDate");
+const summaryPlan = document.getElementById("summaryPlan");
+const summaryVisibility = document.getElementById("summaryVisibility");
+const summaryAmount = document.getElementById("summaryAmount");
+
+// State
 let currentStep = 1;
-const TOTAL_STEPS = 4;
+let advertType = null;       // "event" or "business"
+let selectedFile = null;
+let uploading = false;
 
-let adFormData = {
-  adType: null,      // "event" or "business"
-  host: "",
-  title: "",
-  whatsapp: "",
-  date: "",
-  plan: "1_month",
-  visibility: "low",
-  flyerFile: null
+// Prices
+const PRICE_TABLE = {
+  "1m":  { label: "1 month",           prices: { low: 30,  medium: 40,  high: 50  } },
+  "3m":  { label: "3 months",          prices: { low: 80,  medium: 90,  high: 100 } },
+  "6m":  { label: "6 months",          prices: { low: 180, medium: 190, high: 200 } },
+  "12m": { label: "12 months (1 yr)",  prices: { low: 280, medium: 290, high: 300 } }
 };
 
-// open & close
-function openAdForm() {
-  currentStep = 1;
-  resetAdForm();
-  updateStepView();
-  adFormOverlay.classList.add("active");
+function getCurrentAmount() {
+  const plan = planSelect.value;
+  const vis = visibilitySelect.value;
+  if (!plan || !vis) return 0;
+  const row = PRICE_TABLE[plan];
+  if (!row) return 0;
+  return row.prices[vis] || 0;
 }
 
-function closeAdForm() {
-  adFormOverlay.classList.remove("active");
+// =====================
+//   FORM OPEN / CLOSE
+// =====================
+function openForm() {
+  resetFormState();
+  formOverlay.classList.remove("hidden");
 }
 
-// reset fields
-function resetAdForm() {
-  // clear data
-  adFormData = {
-    adType: null,
-    host: "",
-    title: "",
-    whatsapp: "",
-    date: "",
-    plan: "1_month",
-    visibility: "low",
-    flyerFile: null
-  };
-
-  // type
-  adTypeInputs.forEach(i => i.checked = false);
-  adTypeCards.forEach(c => c.classList.remove("selected"));
-
-  // text fields
-  adHostInput.value = "";
-  adTitleInput.value = "";
-  adWhatsappInput.value = "";
-  adDateInput.value = "";
-  adDateRow.classList.remove("hidden");
-
-  // flyer
-  adFlyerInput.value = "";
-  adFlyerPreviewWrapper.classList.add("hidden");
-  adFlyerPreview.src = "";
-
-  // step 4
-  adPlanSelect.value = "1_month";
-  adVisibilitySelect.value = "low";
-  updateSummary();
+function closeForm() {
+  formOverlay.classList.add("hidden");
 }
 
-// show correct step
-function updateStepView() {
-  adSteps.forEach(step => {
-    const s = Number(step.getAttribute("data-step"));
-    step.classList.toggle("active", s === currentStep);
+advertLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  openForm();
+});
+
+closeFormBtn.addEventListener("click", () => {
+  closeForm();
+});
+
+// Close on ESC
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !formOverlay.classList.contains("hidden")) {
+    closeForm();
+  }
+});
+
+// =====================
+//   STEP HANDLING
+// =====================
+function showStep(stepNumber) {
+  currentStep = stepNumber;
+
+  steps.forEach(step => {
+    const s = Number(step.dataset.step);
+    if (s === stepNumber) step.classList.remove("hidden");
+    else step.classList.add("hidden");
   });
 
-  // back button
-  adBackBtn.disabled = currentStep === 1;
+  // Header title (simple)
+  formTitle.textContent = "Create Advert";
 
-  // next button text
-  if (currentStep === TOTAL_STEPS) {
-    adNextBtn.textContent = "Submit & Pay";
+  // Show/hide Back + Continue
+  if (stepNumber === 1) {
+    backBtn.style.display = "none";
+    nextBtn.style.display = "none";
   } else {
-    adNextBtn.textContent = "Continue";
+    backBtn.style.display = "inline-block";
+    nextBtn.style.display = "inline-block";
   }
 
-  // date row visibility based on type
-  if (adFormData.adType === "event") {
-    adDateRow.classList.remove("hidden");
-  } else {
-    adDateRow.classList.add("hidden");
-  }
+  updateContinueState();
 }
 
-// validation per step
-function validateStep(stepNum) {
-  if (stepNum === 1) {
-    if (!adFormData.adType) {
-      alert("Please choose what your advert is about.");
-      return false;
-    }
+function resetFormState() {
+  advertType = null;
+  selectedFile = null;
+  uploading = false;
+  // Clear selections
+  typeCards.forEach(c => c.classList.remove("selected"));
+  advertTitleInput.value = "";
+  advertDescInput.value = "";
+  advertDateInput.value = "";
+  planSelect.value = "";
+  // Reset visibility options
+  visibilitySelect.innerHTML = `<option value="">Select visibility</option>`;
+  priceDisplay.textContent = "GHS 0.00";
+
+  // Hide image preview
+  imagePreviewWrapper.classList.add("hidden");
+  imagePreview.src = "";
+  imagePreviewBg.style.backgroundImage = "";
+
+  hideError();
+  nextBtn.disabled = true;
+
+  showStep(1);
+}
+
+// =====================
+//   VALIDATION
+// =====================
+function showError(msg) {
+  formError.textContent = msg;
+  formError.classList.remove("hidden");
+}
+
+function hideError() {
+  formError.textContent = "";
+  formError.classList.add("hidden");
+}
+
+function isStepValid(stepNumber) {
+  if (stepNumber === 1) {
+    return !!advertType;
   }
 
-  if (stepNum === 2) {
-    if (!adHostInput.value.trim()) {
-      alert("Please enter the host / organiser name.");
-      return false;
-    }
-    if (!adTitleInput.value.trim()) {
-      alert("Please enter the advert title.");
-      return false;
-    }
-    if (!adWhatsappInput.value.trim()) {
-      alert("Please enter a WhatsApp / phone number.");
-      return false;
-    }
-    if (adFormData.adType === "event" && !adDateInput.value) {
-      alert("Please choose an event date.");
-      return false;
-    }
-  }
-
-  if (stepNum === 3) {
-    if (!adFormData.flyerFile) {
-      alert("Please upload a flyer image.");
-      return false;
-    }
-  }
-
-  if (stepNum === 4) {
-    // everything already chosen
+  if (stepNumber === 2) {
+    if (!advertTitleInput.value.trim()) return false;
+    if (advertType === "event" && !advertDateInput.value) return false;
     return true;
   }
 
-  return true;
+  if (stepNumber === 3) {
+    return !!selectedFile;
+  }
+
+  if (stepNumber === 4) {
+    if (!planSelect.value || !visibilitySelect.value) return false;
+    if (getCurrentAmount() <= 0) return false;
+    return true;
+  }
+
+  if (stepNumber === 5) {
+    return true;
+  }
+
+  return false;
 }
 
-// collect data for current step before moving on
-function collectStepData(stepNum) {
-  if (stepNum === 1) {
-    const selected = Array.from(adTypeInputs).find(i => i.checked);
-    adFormData.adType = selected ? selected.value : null;
+function updateContinueState() {
+  hideError();
+  if (currentStep === 1) {
+    nextBtn.disabled = true;
+    return;
   }
-
-  if (stepNum === 2) {
-    adFormData.host = adHostInput.value.trim();
-    adFormData.title = adTitleInput.value.trim();
-    adFormData.whatsapp = adWhatsappInput.value.trim();
-    adFormData.date = adDateInput.value || "";
-  }
-
-  if (stepNum === 3) {
-    // flyer already captured on change
-  }
-
-  if (stepNum === 4) {
-    adFormData.plan = adPlanSelect.value;
-    adFormData.visibility = adVisibilitySelect.value;
-  }
+  const ok = isStepValid(currentStep);
+  nextBtn.disabled = !ok;
 }
 
-// summary text
-function updateSummary() {
-  const planKey = adPlanSelect.value;
-  const visKey = adVisibilitySelect.value;
-  const amount = PRICING[planKey][visKey];
-
-  const planLabel = {
-    "1_month": "1 month",
-    "3_months": "3 months",
-    "6_months": "6 months",
-    "12_months": "1 year"
-  }[planKey];
-
-  const visLabel = {
-    low: "Low visibility",
-    medium: "Medium visibility",
-    high: "High visibility"
-  }[visKey];
-
-  adSummaryText.textContent = `${planLabel} • ${visLabel} → GHS ${amount.toFixed(2)}`;
-}
-
-// when type card clicked
-adTypeCards.forEach(card => {
+// =====================
+//   TYPE SELECTION
+// =====================
+typeCards.forEach(card => {
   card.addEventListener("click", () => {
-    const input = card.querySelector('input[name="adType"]');
-    if (!input) return;
-
-    input.checked = true;
-    adFormData.adType = input.value;
-
-    adTypeCards.forEach(c => c.classList.remove("selected"));
+    typeCards.forEach(c => c.classList.remove("selected"));
     card.classList.add("selected");
+    advertType = card.dataset.type;   // "event" / "business"
 
-    // show/hide date row
-    if (input.value === "event") {
-      adDateRow.classList.remove("hidden");
-    } else {
-      adDateRow.classList.add("hidden");
-    }
+    // Immediately move to step 2
+    showStep(2);
   });
 });
 
-// flyer choose & preview
-adFlyerChooseBtn.addEventListener("click", () => {
-  adFlyerInput.click();
+// =====================
+//   STEP 2 (DETAILS)
+// =====================
+function updateDetailsUIForType() {
+  if (advertType === "event") {
+    eventDateRow.style.display = "flex";
+  } else {
+    eventDateRow.style.display = "none";
+  }
+}
+
+advertTitleInput.addEventListener("input", updateContinueState);
+advertDescInput.addEventListener("input", () => {}); // optional
+advertDateInput.addEventListener("input", updateContinueState);
+
+// =====================
+//   STEP 3 (IMAGE)
+// =====================
+chooseImageBtn.addEventListener("click", () => {
+  advertImageInput.click();
 });
 
-adFlyerInput.addEventListener("change", () => {
-  const file = adFlyerInput.files[0];
+advertImageInput.addEventListener("change", () => {
+  const file = advertImageInput.files[0];
   if (!file) return;
 
-  adFormData.flyerFile = file;
+  selectedFile = file;
 
   const reader = new FileReader();
-  reader.onload = e => {
-    adFlyerPreview.src = e.target.result;
-    adFlyerPreviewWrapper.classList.remove("hidden");
+  reader.onload = () => {
+    const url = reader.result;
+    imagePreview.src = url;
+    imagePreviewBg.style.backgroundImage = `url(${url})`;
+    imagePreviewWrapper.classList.remove("hidden");
+    // Hide upload button once image is there
+    chooseImageBtn.style.display = "none";
+    updateContinueState();
   };
   reader.readAsDataURL(file);
 });
 
-adFlyerRemoveBtn.addEventListener("click", () => {
-  adFlyerInput.value = "";
-  adFormData.flyerFile = null;
-  adFlyerPreviewWrapper.classList.add("hidden");
-  adFlyerPreview.src = "";
+removeImageBtn.addEventListener("click", () => {
+  selectedFile = null;
+  advertImageInput.value = "";
+  imagePreviewWrapper.classList.add("hidden");
+  imagePreview.src = "";
+  imagePreviewBg.style.backgroundImage = "";
+  // Show upload button again
+  chooseImageBtn.style.display = "inline-block";
+  updateContinueState();
 });
 
-// plan / visibility change
-adPlanSelect.addEventListener("change", updateSummary);
-adVisibilitySelect.addEventListener("change", updateSummary);
+// =====================
+//   STEP 4 (PLAN + VIS)
+// =====================
+function refreshVisibilityOptions() {
+  const plan = planSelect.value;
+  visibilitySelect.innerHTML = `<option value="">Select visibility</option>`;
 
-// open form from "HERE"
-advertLink.addEventListener("click", (e) => {
-  e.preventDefault();
-  openAdForm();
-});
-
-// nav buttons
-adBackBtn.addEventListener("click", () => {
-  if (currentStep > 1) {
-    currentStep--;
-    updateStepView();
+  if (!plan || !PRICE_TABLE[plan]) {
+    priceDisplay.textContent = "GHS 0.00";
+    updateContinueState();
+    return;
   }
+
+  const row = PRICE_TABLE[plan].prices;
+
+  const makeOption = (value, label, amount) => {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = `${label} – GHS ${amount}`;
+    return opt;
+  };
+
+  visibilitySelect.appendChild(makeOption("low", "Low visibility", row.low));
+  visibilitySelect.appendChild(makeOption("medium", "Medium visibility", row.medium));
+  visibilitySelect.appendChild(makeOption("high", "High visibility", row.high));
+
+  updatePriceLabel();
+}
+
+function updatePriceLabel() {
+  const amount = getCurrentAmount();
+  priceDisplay.textContent = `GHS ${amount.toFixed(2)}`;
+}
+
+planSelect.addEventListener("change", () => {
+  refreshVisibilityOptions();
+  updateContinueState();
 });
 
-adNextBtn.addEventListener("click", async () => {
-  // validate current
-  if (!validateStep(currentStep)) return;
+visibilitySelect.addEventListener("change", () => {
+  updatePriceLabel();
+  updateContinueState();
+});
 
-  // store data
-  collectStepData(currentStep);
+// =====================
+//   STEP 5 (SUMMARY)
+// =====================
+function fillSummary() {
+  summaryType.textContent = advertType === "event" ? "Event advert" : "Business advert";
+  summaryTitle.textContent = advertTitleInput.value.trim() || "—";
 
-  if (currentStep < TOTAL_STEPS) {
-    currentStep++;
-    if (currentStep === 4) {
-      updateSummary();
-    }
-    updateStepView();
+  if (advertType === "event") {
+    summaryDateRow.style.display = "flex";
+    summaryDate.textContent = advertDateInput.value || "—";
   } else {
-    // final submit
-    await submitAdvert();
+    summaryDateRow.style.display = "none";
+    summaryDate.textContent = "";
+  }
+
+  const plan = planSelect.value;
+  const planRow = PRICE_TABLE[plan];
+  summaryPlan.textContent = planRow ? planRow.label : "—";
+
+  const visMap = {
+    low: "Low visibility",
+    medium: "Medium visibility",
+    high: "High visibility"
+  };
+  summaryVisibility.textContent = visMap[visibilitySelect.value] || "—";
+
+  const amount = getCurrentAmount();
+  summaryAmount.textContent = `GHS ${amount.toFixed(2)}`;
+}
+
+// =====================
+//   NAVIGATION
+// =====================
+backBtn.addEventListener("click", () => {
+  hideError();
+  if (currentStep <= 1) return;
+
+  // If user goes back from step 2, we take them to step 1
+  const prev = currentStep - 1;
+  showStep(prev);
+});
+
+nextBtn.addEventListener("click", async () => {
+  hideError();
+
+  if (!isStepValid(currentStep)) {
+    showError("Please complete the required fields.");
+    return;
+  }
+
+  // Move between steps
+  if (currentStep === 2) {
+    updateDetailsUIForType();
+    showStep(3);
+    return;
+  }
+
+  if (currentStep === 3) {
+    showStep(4);
+    return;
+  }
+
+  if (currentStep === 4) {
+    fillSummary();
+    showStep(5);
+    nextBtn.textContent = "Submit & Pay";
+    return;
+  }
+
+  if (currentStep === 5) {
+    // FINAL SUBMIT
+    await handleFinalSubmit();
   }
 });
 
-adFormCloseBtn.addEventListener("click", () => {
-  closeAdForm();
-});
+// Reset button text when moving back from summary
+function maybeResetButtonText() {
+  if (currentStep < 5) {
+    nextBtn.textContent = "Continue";
+  }
+}
+backBtn.addEventListener("click", maybeResetButtonText);
 
-// ==========================
-//  SUBMIT ADVERT REQUEST
-// ==========================
-async function submitAdvert() {
+// =====================
+//   PAYMENT + SAVE
+// =====================
+
+// Simple fake payment for now (always success)
+async function simulatePayment(amount) {
+  // In future: integrate real Hubtel here
+  console.log("Simulating payment for GHS", amount);
+  return true;
+}
+
+async function uploadImageAndGetUrl() {
+  if (!selectedFile) return null;
+
+  const path = `Adverts/uploads/${Date.now()}_${selectedFile.name}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, selectedFile);
+  const url = await getDownloadURL(storageRef);
+  return { url, path };
+}
+
+async function handleFinalSubmit() {
   try {
-    adNextBtn.disabled = true;
-    adBackBtn.disabled = true;
-    adNextBtn.textContent = "Processing...";
+    if (uploading) return;
+    uploading = true;
+    nextBtn.disabled = true;
+    backBtn.disabled = true;
+    nextBtn.textContent = "Processing...";
 
-    // 1) Upload flyer to Firebase Storage
-    const file = adFormData.flyerFile;
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `adverts/${fileName}`);
-    await uploadBytes(storageRef, file);
-    const imageUrl = await getDownloadURL(storageRef);
+    hideError();
 
-    // 2) Determine expiry from plan
-    const now = new Date();
-    const expiry = new Date(now);
-    switch (adFormData.plan) {
-      case "1_month":
-        expiry.setMonth(expiry.getMonth() + 1);
-        break;
-      case "3_months":
-        expiry.setMonth(expiry.getMonth() + 3);
-        break;
-      case "6_months":
-        expiry.setMonth(expiry.getMonth() + 6);
-        break;
-      case "12_months":
-        expiry.setFullYear(expiry.getFullYear() + 1);
-        break;
+    const amount = getCurrentAmount();
+    if (amount <= 0) {
+      showError("Amount is invalid. Please go back and check your plan and visibility.");
+      uploading = false;
+      backBtn.disabled = false;
+      updateContinueState();
+      return;
     }
 
-    const amount = PRICING[adFormData.plan][adFormData.visibility];
+    // 1) Upload image
+    const imageInfo = await uploadImageAndGetUrl();
+    if (!imageInfo || !imageInfo.url) {
+      showError("We could not upload your flyer. Please check your internet and try again.");
+      uploading = false;
+      backBtn.disabled = false;
+      updateContinueState();
+      return;
+    }
 
-    // 3) (PLACEHOLDER) HAPTEL PAYMENT
-    // 👉 Here is where you will later call your backend or USSD/STK logic.
-    //    For now we assume payment is successful so the project can run.
-    //    You will replace this block with a real API call.
-    console.log("Simulating Haptel payment for GHS", amount);
-    // Example structure (you will implement the endpoint later):
-    // await fetch("https://YOUR_BACKEND_URL/haptel/advert-payment", { ... });
+    // 2) Simulate payment (replace with real Hubtel later)
+    const paymentOk = await simulatePayment(amount);
+    if (!paymentOk) {
+      showError("Payment was not completed.");
+      uploading = false;
+      backBtn.disabled = false;
+      updateContinueState();
+      return;
+    }
 
-    // 4) Create Firestore request for admin review
-    await addDoc(collection(db, "Adverts", "Requests"), {
-      type: adFormData.adType,
-      host: adFormData.host,
-      event: adFormData.title,
-      whatsapp: adFormData.whatsapp,
-      hasDate: adFormData.adType === "event",
-      date: adFormData.adType === "event" ? adFormData.date : null,
-      plan: adFormData.plan,
-      visibility: adFormData.visibility,
-      amount,
-      image: imageUrl,
-      createdAt: new Date().toISOString(),
-      expiry: expiry.toISOString().slice(0, 10),
-      status: "pending_approval",
-      source: "AdvertPageForm"
-    });
+    // 3) Save request
+    const planKey = planSelect.value;
+    const visKey = visibilitySelect.value;
 
-    alert("Your advert request has been submitted. We will review and notify you.");
-    closeAdForm();
+    const docData = {
+      type: advertType,                          // "event" / "business"
+      title: advertTitleInput.value.trim(),
+      description: advertDescInput.value.trim() || "",
+      eventDate: advertType === "event" ? advertDateInput.value : "",
+      plan: planKey,
+      visibility: visKey,
+      amount: amount,
+      imageUrl: imageInfo.url,
+      imagePath: imageInfo.path,
+      status: "pending",
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, "Adverts", "Requests"), docData);
+
+    // Done
+    alert("Your advert request has been submitted successfully. Admin will review and approve it.");
+    closeForm();
 
   } catch (err) {
     console.error("Error submitting advert request:", err);
-    alert("Sorry, something went wrong. Please try again.");
+    showError("Sorry, something went wrong. Please try again.");
   } finally {
-    adNextBtn.disabled = false;
-    adBackBtn.disabled = false;
-    adNextBtn.textContent = "Submit & Pay";
+    uploading = false;
+    backBtn.disabled = false;
+    nextBtn.textContent = "Submit & Pay";
+    updateContinueState();
   }
 }
-
-// ==========================
-//  START
-// ==========================
-loadAdverts();
