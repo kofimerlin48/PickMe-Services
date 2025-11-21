@@ -30,144 +30,160 @@
     <div id="nextBtn">&#10095;</div>
   </div>
 
-  <!-- =========================
-       FULL PAGE ADVERT FORM
-       ========================= -->
-  <div id="adFormOverlay" class="ad-form-overlay">
-    <div class="ad-form-wrapper">
-      <div class="ad-form-header">
-        <h2>Create Advert</h2>
-        <button id="adFormCloseBtn" class="ad-form-close-btn" type="button">&times;</button>
+  <!-- FULL PAGE FORM OVERLAY -->
+  <div id="advertFormOverlay" class="advert-form-overlay hidden">
+    <div class="advert-form-card">
+      <div class="advert-form-header">
+        <h2 id="formTitle">Create Advert</h2>
+        <button type="button" id="closeFormBtn" class="form-close-btn">&times;</button>
       </div>
 
-      <div class="ad-form-body">
-        <!-- STEP 1: TYPE -->
-        <div class="ad-step" data-step="1">
-          <p class="ad-step-title">What is your advert about?</p>
-          <p class="ad-step-sub">
-            Choose one option. You can change it before submitting.
+      <div class="advert-form-body">
+        <!-- STEP 1: ADVERT TYPE -->
+        <div class="form-step" data-step="1">
+          <p class="form-step-title">What is your advert about?</p>
+          <p class="form-step-subtitle">
+            Choose one option below.
           </p>
 
-          <label class="ad-type-card">
-            <input type="radio" name="adType" value="event">
-            <div class="ad-type-content">
-              <h3>Program / Event (has date)</h3>
-              <p>Funerals, church programs, parties, concerts, time-bound promos, etc.</p>
-            </div>
-          </label>
+          <div class="type-options">
+            <button type="button" class="type-card" data-type="event">
+              <div class="type-card-main">
+                <h3>Event advert</h3>
+                <p>Funerals, parties, shows, promos, or anything with a fixed date.</p>
+              </div>
+              <div class="type-card-check">&#10003;</div>
+            </button>
 
-          <label class="ad-type-card">
-            <input type="radio" name="adType" value="business">
-            <div class="ad-type-content">
-              <h3>Business / Ongoing (no fixed date)</h3>
-              <p>Shops, services, restaurants, schools, long-term offers, etc.</p>
-            </div>
-          </label>
-        </div>
-
-        <!-- STEP 2: TEXT DETAILS -->
-        <div class="ad-step" data-step="2">
-          <p class="ad-step-title">Basic details</p>
-          <p class="ad-step-sub">These details will appear under your flyer.</p>
-
-          <div class="ad-field">
-            <label for="adHost">Host / Organizer name</label>
-            <input id="adHost" type="text" placeholder="e.g. PickMe Services">
-          </div>
-
-          <div class="ad-field">
-            <label for="adTitle">Advert title</label>
-            <input id="adTitle" type="text" placeholder="e.g. All Black Affair">
-          </div>
-
-          <div class="ad-field">
-            <label for="adWhatsapp">WhatsApp / phone for enquiries</label>
-            <input id="adWhatsapp" type="tel" placeholder="e.g. 233534742142">
-          </div>
-
-          <div class="ad-field ad-date-row" id="adDateRow">
-            <label for="adDate">Event date</label>
-            <input id="adDate" type="date">
-            <small>This is only needed for programs / events.</small>
-          </div>
-        </div>
-
-        <!-- STEP 3: FLYER UPLOAD -->
-        <div class="ad-step" data-step="3">
-          <p class="ad-step-title">Upload your flyer</p>
-          <p class="ad-step-sub">This is the image that will show on the advert page.</p>
-
-          <input id="adFlyerInput" type="file" accept="image/*" hidden>
-
-          <button id="adFlyerChooseBtn" type="button" class="ad-primary-btn">
-            Choose flyer image
-          </button>
-
-          <div id="adFlyerPreviewWrapper" class="ad-flyer-preview-wrapper hidden">
-            <img id="adFlyerPreview" alt="Flyer preview">
-            <button
-              id="adFlyerRemoveBtn"
-              type="button"
-              class="ad-flyer-remove-btn"
-              aria-label="Remove flyer"
-            >
-              &times;
+            <button type="button" class="type-card" data-type="business">
+              <div class="type-card-main">
+                <h3>Business advert</h3>
+                <p>Shops, services, products and long-term adverts without a fixed date.</p>
+              </div>
+              <div class="type-card-check">&#10003;</div>
             </button>
           </div>
-
-          <p class="ad-help">
-            Use a clear flyer: JPG or PNG is recommended.
-          </p>
         </div>
 
-        <!-- STEP 4: PLAN & VISIBILITY -->
-        <div class="ad-step" data-step="4">
-          <p class="ad-step-title">Subscription & visibility</p>
-          <p class="ad-step-sub">
-            Choose how long your advert should run and how often it should appear.
-          </p>
+        <!-- STEP 2: BASIC INFO -->
+        <div class="form-step hidden" data-step="2">
+          <p class="form-step-title">Advert details</p>
 
-          <div class="ad-field">
-            <label for="adPlan">Duration</label>
-            <select id="adPlan">
-              <option value="1_month">1 month</option>
-              <option value="3_months">3 months</option>
-              <option value="6_months">6 months</option>
-              <option value="12_months">1 year</option>
+          <div class="form-field">
+            <label class="field-label">Advert title <span class="required">*</span></label>
+            <input type="text" id="advertTitle" placeholder="Eg. All Black Affair, Grand Opening, Promo..." />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Short description (optional)</label>
+            <textarea id="advertDesc" rows="3" placeholder="Add a short message that explains your advert."></textarea>
+          </div>
+
+          <div class="form-field" id="eventDateRow">
+            <label class="field-label">Event date <span class="required">*</span></label>
+            <input type="date" id="advertDate" />
+          </div>
+        </div>
+
+        <!-- STEP 3: IMAGE UPLOAD -->
+        <div class="form-step hidden" data-step="3">
+          <p class="form-step-title">Upload your flyer</p>
+
+          <div id="imageUploadArea">
+            <button type="button" id="chooseImageBtn" class="file-btn">
+              Choose flyer image
+            </button>
+            <input type="file" id="advertImageInput" accept="image/*" class="hidden-input" />
+          </div>
+
+          <div id="imagePreviewWrapper" class="image-preview hidden">
+            <div id="imagePreviewBg" class="image-preview-bg"></div>
+            <img id="imagePreview" class="image-preview-img" src="" alt="Flyer preview">
+            <button type="button" id="removeImageBtn" class="remove-image-btn">&times;</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: PLAN + VISIBILITY -->
+        <div class="form-step hidden" data-step="4">
+          <p class="form-step-title">Subscription & visibility</p>
+
+          <div class="form-field">
+            <label class="field-label">Subscription plan <span class="required">*</span></label>
+            <select id="planSelect">
+              <option value="">Select duration</option>
+              <option value="1m">1 month</option>
+              <option value="3m">3 months</option>
+              <option value="6m">6 months</option>
+              <option value="12m">12 months (1 year)</option>
             </select>
           </div>
 
-          <div class="ad-field">
-            <label for="adVisibility">Visibility level</label>
-            <select id="adVisibility">
-              <option value="low">Low visibility</option>
-              <option value="medium">Medium visibility</option>
-              <option value="high">High visibility</option>
+          <div class="form-field">
+            <label class="field-label">Visibility level <span class="required">*</span></label>
+            <select id="visibilitySelect">
+              <option value="">Select visibility</option>
+              <!-- Options text will be filled with prices via JS -->
             </select>
-            <small>Higher visibility means your advert appears more often.</small>
-          </div>
-
-          <div class="ad-summary-card">
-            <h3>Summary</h3>
-            <p id="adSummaryText">
-              Select duration and visibility to see the price.
+            <p class="helper-text small">
+              Higher visibility means your advert appears more often on the page.
             </p>
           </div>
+
+          <div class="price-preview">
+            <span>Amount to pay:</span>
+            <strong id="priceDisplay">GHS 0.00</strong>
+          </div>
+        </div>
+
+        <!-- STEP 5: SUMMARY -->
+        <div class="form-step hidden" data-step="5">
+          <p class="form-step-title">Confirm your advert</p>
+
+          <div class="summary-box">
+            <div class="summary-row">
+              <span>Type</span>
+              <strong id="summaryType">–</strong>
+            </div>
+            <div class="summary-row">
+              <span>Title</span>
+              <strong id="summaryTitle">–</strong>
+            </div>
+            <div class="summary-row" id="summaryDateRow">
+              <span>Event date</span>
+              <strong id="summaryDate">–</strong>
+            </div>
+            <div class="summary-row">
+              <span>Plan</span>
+              <strong id="summaryPlan">–</strong>
+            </div>
+            <div class="summary-row">
+              <span>Visibility</span>
+              <strong id="summaryVisibility">–</strong>
+            </div>
+            <div class="summary-row total">
+              <span>Amount</span>
+              <strong id="summaryAmount">GHS 0.00</strong>
+            </div>
+          </div>
+
+          <p class="helper-text">
+            After payment, your request will go to admin for review and approval.
+          </p>
         </div>
       </div>
 
-      <div class="ad-form-footer">
-        <button id="adBackBtn" class="ad-nav-btn ad-back" type="button">
-          Back
-        </button>
-        <button id="adNextBtn" class="ad-nav-btn ad-next" type="button">
-          Continue
-        </button>
+      <div class="advert-form-footer">
+        <div id="formError" class="form-error hidden"></div>
+
+        <div class="footer-buttons">
+          <button type="button" id="backBtn" class="form-nav-btn secondary">Back</button>
+          <button type="button" id="nextBtn" class="form-nav-btn primary" disabled>Continue</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- JS (ES module) -->
   <script type="module" src="/Advert/advert.js"></script>
 </body>
 </html>
