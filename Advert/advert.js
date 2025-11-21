@@ -325,6 +325,13 @@ boostBtn.classList.remove("visible");   // fade-out boost pill
     flyerEl.src = flyer.image;
     flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
+    // PRELOAD NEXT FLYER (smooth swipe experience)
+const nextIndex = (i + 1) % flyers.length;
+if (flyers[nextIndex] && flyers[nextIndex].image) {
+  const preloadImg = new Image();
+  preloadImg.src = flyers[nextIndex].image;
+}
+    
     // BUTTON LOGIC
     if (flyer.buttonText && flyer.buttonLink) {
       contactBtn.style.display = "inline-block";
