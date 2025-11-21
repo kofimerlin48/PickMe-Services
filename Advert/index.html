@@ -21,6 +21,9 @@
     <div id="flyerBg"></div>
     <img id="flyer" src="" />
 
+    <!-- BOOST PILL (TOP-RIGHT ON FLYER) -->
+    <button id="boostBtn" class="boost-pill">Boost</button>
+
     <div class="button-container">
       <button id="contactBtn">Contact Us</button>
       <button id="closeAdBtn">Close Ad</button>
@@ -158,6 +161,62 @@
         </button>
         <button id="adNextBtn" class="ad-nav-btn ad-next" type="button">
           Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BOOST MODAL (DURATION + VISIBILITY)
+       ========================= -->
+  <div id="boostOverlay" class="ad-form-overlay">
+    <div class="ad-form-wrapper boost-wrapper">
+      <div class="ad-form-header">
+        <h2>Boost advert</h2>
+        <button id="boostCloseBtn" class="ad-form-close-btn" type="button">&times;</button>
+      </div>
+
+      <div class="ad-form-body">
+        <p class="ad-step-title" id="boostTitle"></p>
+        <p class="ad-step-sub" id="boostHost"></p>
+
+        <div class="ad-summary-card">
+          <h3>Current package</h3>
+          <p id="boostCurrentPlanText"></p>
+          <p id="boostCurrentVisibilityText"></p>
+        </div>
+
+        <div class="ad-field">
+          <label for="boostPlan">New duration</label>
+          <select id="boostPlan">
+            <option value="1_month">1 month</option>
+            <option value="3_months">3 months</option>
+            <option value="6_months">6 months</option>
+            <option value="12_months">1 year</option>
+          </select>
+        </div>
+
+        <div class="ad-field">
+          <label for="boostVisibility">New visibility</label>
+          <select id="boostVisibility">
+            <option value="low">Low visibility</option>
+            <option value="medium">Medium visibility</option>
+            <option value="high">High visibility</option>
+          </select>
+        </div>
+
+        <div class="ad-summary-card">
+          <h3>Boost summary</h3>
+          <p id="boostSummaryText"></p>
+        </div>
+      </div>
+
+      <div class="ad-form-footer">
+        <button id="boostCancelBtn" class="ad-nav-btn ad-back" type="button">
+          Cancel
+        </button>
+        <button id="boostPayBtn" class="ad-nav-btn ad-next" type="button">
+          Pay &amp; boost
         </button>
       </div>
     </div>
