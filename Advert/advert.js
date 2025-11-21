@@ -328,10 +328,11 @@ function preloadImage(url) {
 //  SHOW A SINGLE ADVERT
 // ==========================
 function showFlyer(i) {
+function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
 
-  // If not the first load → fade out
+  // For second+ adverts: fade out current (CSS transition will handle animation)
   if (firstLoadDone) {
     flyerEl.style.opacity = 0;
     buttonContainer.style.opacity = 0;
@@ -368,18 +369,29 @@ function showFlyer(i) {
   // BOOST LOGIC
   boostBtn.onclick = () => openBoostModal(flyer);
 
-  // Fade in WHEN image loads
+  // Handle fade for first vs subsequent images
   flyerEl.onload = () => {
-    // First time: NO fade → show immediately
     if (!firstLoadDone) {
+      // FIRST IMAGE: no fade-in (disable transition temporarily)
+      flyerEl.style.transition = "none";
+      buttonContainer.style.transition = "none";
+      boostBtn.style.transition = "none";
+
       flyerEl.style.opacity = 1;
       buttonContainer.style.opacity = 1;
       boostBtn.classList.add("visible");
+
+      // Force reflow, then restore transitions so others can fade
+      void flyerEl.offsetHeight;
+      flyerEl.style.transition = "";
+      buttonContainer.style.transition = "";
+      boostBtn.style.transition = "";
+
       firstLoadDone = true;
       return;
     }
 
-    // Subsequent loads: normal fade
+    // OTHER IMAGES: normal fade-in (CSS transition applies)
     flyerEl.style.opacity = 1;
     buttonContainer.style.opacity = 1;
     boostBtn.classList.add("visible");
