@@ -17,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // =========================
-–  FIREBASE CONFIG
+//  FIREBASE CONFIG
 // =========================
 const firebaseConfig = {
   apiKey: "AIzaSyBBxLGdn11dnQqcQ8vJOGR1RyjRqzAGwGck",
@@ -41,7 +41,7 @@ const flyerBg = document.getElementById("flyerBg");
 const contactBtn = document.getElementById("contactBtn");
 const closeAdBtn = document.getElementById("closeAdBtn");
 const prevBtn = document.getElementById("prevBtn");
-const nextArrowBtn = document.getElementById("nextBtn");
+const nextBtn = document.getElementById("nextBtn");
 const buttonContainer = contactBtn.parentElement;
 
 let flyers = [];
@@ -144,7 +144,7 @@ prevBtn.onclick = () => {
   showFlyer(currentIndex);
 };
 
-nextArrowBtn.onclick = () => {
+nextBtn.onclick = () => {
   currentIndex = (currentIndex + 1) % flyers.length;
   showFlyer(currentIndex);
 };
@@ -161,7 +161,7 @@ flyerEl.addEventListener("touchend", e => {
   if (endX - startX > 50) {
     prevBtn.onclick();
   } else if (startX - endX > 50) {
-    nextArrowBtn.onclick();
+    nextBtn.onclick();
   }
 });
 
@@ -179,8 +179,8 @@ const formOverlay = document.getElementById("advertFormOverlay");
 const closeFormBtn = document.getElementById("closeFormBtn");
 const formTitle = document.getElementById("formTitle");
 
-const formBackBtn = document.getElementById("formBackBtn");
-const formNextBtn = document.getElementById("formNextBtn");
+const backBtn = document.getElementById("backBtn");
+const nextBtn = document.getElementById("nextBtn");
 const formError = document.getElementById("formError");
 
 // Steps
@@ -285,11 +285,11 @@ function showStep(stepNumber) {
 
   // Show/hide Back + Continue
   if (stepNumber === 1) {
-    formBackBtn.style.display = "none";
-    formNextBtn.style.display = "none";
+    backBtn.style.display = "none";
+    nextBtn.style.display = "none";
   } else {
-    formBackBtn.style.display = "inline-block";
-    formNextBtn.style.display = "inline-block";
+    backBtn.style.display = "inline-block";
+    nextBtn.style.display = "inline-block";
   }
 
   updateContinueState();
@@ -299,22 +299,23 @@ function resetFormState() {
   advertType = null;
   selectedFile = null;
   uploading = false;
-
+  // Clear selections
   typeCards.forEach(c => c.classList.remove("selected"));
   advertTitleInput.value = "";
   advertDescInput.value = "";
   advertDateInput.value = "";
   planSelect.value = "";
+  // Reset visibility options
   visibilitySelect.innerHTML = `<option value="">Select visibility</option>`;
   priceDisplay.textContent = "GHS 0.00";
 
+  // Hide image preview
   imagePreviewWrapper.classList.add("hidden");
   imagePreview.src = "";
   imagePreviewBg.style.backgroundImage = "";
-  chooseImageBtn.style.display = "inline-block";
 
   hideError();
-  formNextBtn.disabled = true;
+  nextBtn.disabled = true;
 
   showStep(1);
 }
@@ -363,11 +364,11 @@ function isStepValid(stepNumber) {
 function updateContinueState() {
   hideError();
   if (currentStep === 1) {
-    formNextBtn.disabled = true;
+    nextBtn.disabled = true;
     return;
   }
   const ok = isStepValid(currentStep);
-  formNextBtn.disabled = !ok;
+  nextBtn.disabled = !ok;
 }
 
 // =====================
@@ -396,7 +397,7 @@ function updateDetailsUIForType() {
 }
 
 advertTitleInput.addEventListener("input", updateContinueState);
-advertDescInput.addEventListener("input", () => {});
+advertDescInput.addEventListener("input", () => {}); // optional
 advertDateInput.addEventListener("input", updateContinueState);
 
 // =====================
@@ -418,6 +419,7 @@ advertImageInput.addEventListener("change", () => {
     imagePreview.src = url;
     imagePreviewBg.style.backgroundImage = `url(${url})`;
     imagePreviewWrapper.classList.remove("hidden");
+    // Hide upload button once image is there
     chooseImageBtn.style.display = "none";
     updateContinueState();
   };
@@ -430,6 +432,7 @@ removeImageBtn.addEventListener("click", () => {
   imagePreviewWrapper.classList.add("hidden");
   imagePreview.src = "";
   imagePreviewBg.style.backgroundImage = "";
+  // Show upload button again
   chooseImageBtn.style.display = "inline-block";
   updateContinueState();
 });
@@ -511,17 +514,16 @@ function fillSummary() {
 // =====================
 //   NAVIGATION
 // =====================
-formBackBtn.addEventListener("click", () => {
+backBtn.addEventListener("click", () => {
   hideError();
   if (currentStep <= 1) return;
+
+  // If user goes back from step 2, we take them to step 1
   const prev = currentStep - 1;
   showStep(prev);
-  if (prev < 5) {
-    formNextBtn.textContent = "Continue";
-  }
 });
 
-formNextBtn.addEventListener("click", async () => {
+nextBtn.addEventListener("click", async () => {
   hideError();
 
   if (!isStepValid(currentStep)) {
@@ -529,6 +531,7 @@ formNextBtn.addEventListener("click", async () => {
     return;
   }
 
+  // Move between steps
   if (currentStep === 2) {
     updateDetailsUIForType();
     showStep(3);
@@ -543,14 +546,23 @@ formNextBtn.addEventListener("click", async () => {
   if (currentStep === 4) {
     fillSummary();
     showStep(5);
-    formNextBtn.textContent = "Submit & Pay";
+    nextBtn.textContent = "Submit & Pay";
     return;
   }
 
   if (currentStep === 5) {
+    // FINAL SUBMIT
     await handleFinalSubmit();
   }
 });
+
+// Reset button text when moving back from summary
+function maybeResetButtonText() {
+  if (currentStep < 5) {
+    nextBtn.textContent = "Continue";
+  }
+}
+backBtn.addEventListener("click", maybeResetButtonText);
 
 // =====================
 //   PAYMENT + SAVE
@@ -558,6 +570,7 @@ formNextBtn.addEventListener("click", async () => {
 
 // Simple fake payment for now (always success)
 async function simulatePayment(amount) {
+  // In future: integrate real Hubtel here
   console.log("Simulating payment for GHS", amount);
   return true;
 }
@@ -576,9 +589,9 @@ async function handleFinalSubmit() {
   try {
     if (uploading) return;
     uploading = true;
-    formNextBtn.disabled = true;
-    formBackBtn.disabled = true;
-    formNextBtn.textContent = "Processing...";
+    nextBtn.disabled = true;
+    backBtn.disabled = true;
+    nextBtn.textContent = "Processing...";
 
     hideError();
 
@@ -586,7 +599,7 @@ async function handleFinalSubmit() {
     if (amount <= 0) {
       showError("Amount is invalid. Please go back and check your plan and visibility.");
       uploading = false;
-      formBackBtn.disabled = false;
+      backBtn.disabled = false;
       updateContinueState();
       return;
     }
@@ -596,7 +609,7 @@ async function handleFinalSubmit() {
     if (!imageInfo || !imageInfo.url) {
       showError("We could not upload your flyer. Please check your internet and try again.");
       uploading = false;
-      formBackBtn.disabled = false;
+      backBtn.disabled = false;
       updateContinueState();
       return;
     }
@@ -606,7 +619,7 @@ async function handleFinalSubmit() {
     if (!paymentOk) {
       showError("Payment was not completed.");
       uploading = false;
-      formBackBtn.disabled = false;
+      backBtn.disabled = false;
       updateContinueState();
       return;
     }
@@ -631,6 +644,7 @@ async function handleFinalSubmit() {
 
     await addDoc(collection(db, "Adverts", "Requests"), docData);
 
+    // Done
     alert("Your advert request has been submitted successfully. Admin will review and approve it.");
     closeForm();
 
@@ -639,8 +653,8 @@ async function handleFinalSubmit() {
     showError("Sorry, something went wrong. Please try again.");
   } finally {
     uploading = false;
-    formBackBtn.disabled = false;
-    formNextBtn.textContent = "Submit & Pay";
+    backBtn.disabled = false;
+    nextBtn.textContent = "Submit & Pay";
     updateContinueState();
   }
 }
