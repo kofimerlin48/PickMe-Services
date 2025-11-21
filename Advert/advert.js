@@ -300,7 +300,11 @@ async function loadAdverts() {
     console.log("Weighted-arranged flyers:", flyers);
 
     currentIndex = 0;
-    showFlyer(currentIndex);
+    
+    // Preload the first advert for instant display
+preloadImage(flyers[0].image).then(() => {
+  showFlyer(currentIndex);
+});
 
     // Show boost button once adverts exist
     boostBtn.style.display = "inline-flex";
@@ -308,6 +312,15 @@ async function loadAdverts() {
   } catch (err) {
     console.error("Error loading adverts:", err);
   }
+}
+
+// Preload image helper
+function preloadImage(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = resolve;
+    img.src = url;
+  });
 }
 
 // ==========================
