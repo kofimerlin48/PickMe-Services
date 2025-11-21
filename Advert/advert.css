@@ -97,6 +97,14 @@ body {
   letter-spacing: 0.02em;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+  /* fade-in sync */
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+
+.boost-pill.visible {
+  opacity: 1;
 }
 
 /* BUTTONS */
@@ -158,15 +166,6 @@ body {
    ======================================== */
 @media (min-width: 768px) {
 
-  /* Top text visible */
-  .advert-text {
-    top: 200px;                 /* your tuned value */
-    font-size: 20px;
-  }
-
-  /* Bigger flyer + wrapper on desktop */
-@media (min-width: 768px) {
-
   .advert-text {
     top: 200px;
     font-size: 20px;
@@ -182,35 +181,11 @@ body {
     max-height: 90vh;
   }
 
+  /* Move buttons up so they never hide */
   .button-container {
     bottom: 180px;
   }
 
-  #contactBtn,
-  #closeAdBtn {
-    font-size: 20px;
-    max-width: 350px;
-  }
-
-  #prevBtn,
-  #nextBtn {
-    font-size: 40px;
-    padding: 18px;
-  }
-
-  .boost-pill {
-    top: 12px;
-    right: 12px;
-    font-size: 14px;
-  }
-}
-
-  /* Move buttons up so they never hide */
-  .button-container {
-    bottom: 180px;              /* your tuned value */
-  }
-
-  /* Buttons larger on desktop */
   #contactBtn,
   #closeAdBtn {
     font-size: 20px;
@@ -225,8 +200,8 @@ body {
   }
 
   .boost-pill {
-    top: 30px;
-    right: 30px;
+    top: 12px;
+    right: 12px;
     font-size: 14px;
   }
 }
