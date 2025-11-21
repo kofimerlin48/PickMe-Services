@@ -7,7 +7,9 @@ import {
   collection,
   getDocs,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getStorage,
@@ -34,6 +36,54 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // ==========================
+//  PRICING + PLAN HELPERS
+// ==========================
+const PRICING = {
+  "1_month":  { low: 30,  medium: 40,  high: 50  },
+  "3_months": { low: 80,  medium: 90,  high: 100 },
+  "6_months": { low: 180, medium: 190, high: 200 },
+  "12_months":{ low: 280, medium: 290, high: 300 }
+};
+
+const PLAN_MONTHS = {
+  "1_month": 1,
+  "3_months": 3,
+  "6_months": 6,
+  "12_months": 12
+};
+
+const VIS_RANK = { low: 1, medium: 2, high: 3 };
+
+function getPlanLabel(planKey) {
+  return {
+    "1_month": "1 month",
+    "3_months": "3 months",
+    "6_months": "6 months",
+    "12_months": "1 year"
+  }[planKey] || planKey;
+}
+
+function getVisibilityLabel(visKey) {
+  return {
+    low: "Low visibility",
+    medium: "Medium visibility",
+    high: "High visibility"
+  }[visKey] || visKey;
+}
+
+function getBaseAmount(planKey, visKey) {
+  const plan = PRICING[planKey];
+  if (!plan) return 0;
+  return plan[visKey] ?? 0;
+}
+
+function addMonths(date, months) {
+  const d = new Date(date.getTime());
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+// ==========================
 //  UI ELEMENTS (ADVERT VIEW)
 // ==========================
 const flyerEl = document.getElementById("flyer");
@@ -44,199 +94,13 @@ const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const advertLink = document.getElementById("advertLink");
 const buttonContainer = contactBtn.parentElement;
+const boostBtn = document.getElementById("boostBtn");
 
 let flyers = [];
 let currentIndex = 0;
 
-// pricing: plan + visibility
-const PRICING = {
-  "1_month":  { low: 30,  medium: 40,  high: 50  },
-  "3_months": { low: 80,  medium: 90,  high: 100 },
-  "6_months": { low: 180, medium: 190, high: 200 },
-  "12_months":{ low: 280, medium: 290, high: 300 }
-};
-
 // ==========================
-//  LOAD ADVERTS FROM FIRESTORE
-// ==========================
-async function loadAdverts() {
-  try {
-    console.log("Reading: Adverts / items / AdvertsList");
-    const snap = await getDocs(
-      collection(db, "Adverts", "items", "AdvertsList")
-    );
-
-    flyers = [];
-    snap.forEach(doc => {
-      const data = doc.data();
-
-      // Ensure we always have a visibility value (default medium)
-      const visibility = data.visibility || "medium";
-
-      // Keep doc id so future features (like boost) can update
-      flyers.push({
-        id: doc.id,
-        ...data,
-        visibility
-      });
-    });
-
-    console.log("Total adverts from Firestore:", flyers.length);
-
-    // Remove expired
-    const now = new Date();
-    flyers = flyers.filter(f => {
-      if (!f.expiry) return true;
-      const expiry = new Date(f.expiry);
-      return now <= expiry;
-    });
-
-    console.log("Remaining after expiry filter:", flyers.length);
-
-    if (flyers.length === 0) {
-      flyerEl.style.display = "none";
-      buttonContainer.style.display = "none";
-      flyerBg.style.background = "#000";
-      return;
-    }
-
-    // ======================
-    // Weighted Visibility Sorting (High 5, Medium 3, Low 1)
-    // ======================
-
-    // 1. Split adverts by visibility
-    const highAds   = flyers.filter(f => f.visibility === "high");
-    const mediumAds = flyers.filter(f => f.visibility === "medium");
-    const lowAds    = flyers.filter(f => f.visibility === "low");
-
-    // 2. Weighted pick for FIRST advert
-    function pickWeighted() {
-      const weightedPool = [];
-
-      highAds.forEach(ad   => weightedPool.push(...Array(5).fill(ad)));
-      mediumAds.forEach(ad => weightedPool.push(...Array(3).fill(ad)));
-      lowAds.forEach(ad    => weightedPool.push(...Array(1).fill(ad)));
-
-      if (weightedPool.length === 0) return null;
-
-      const randomIndex = Math.floor(Math.random() * weightedPool.length);
-      return weightedPool[randomIndex];
-    }
-
-    const firstAdvert = pickWeighted() || flyers[0];
-
-    // 3. Remove first advert from its group so it does not repeat
-    const removeFromArray = (arr, obj) => {
-      const index = arr.indexOf(obj);
-      if (index !== -1) arr.splice(index, 1);
-    };
-
-    if (firstAdvert) {
-      if (firstAdvert.visibility === "high")   removeFromArray(highAds, firstAdvert);
-      if (firstAdvert.visibility === "medium") removeFromArray(mediumAds, firstAdvert);
-      if (firstAdvert.visibility === "low")    removeFromArray(lowAds, firstAdvert);
-    }
-
-    // 4. Shuffle groups independently
-    function shuffle(arr) {
-      return arr
-        .map(x => ({ x, r: Math.random() }))
-        .sort((a, b) => a.r - b.r)
-        .map(o => o.x);
-    }
-
-    const shuffledHigh   = shuffle(highAds);
-    const shuffledMedium = shuffle(mediumAds);
-    const shuffledLow    = shuffle(lowAds);
-
-    // 5. Final arranged list:
-    //    firstAdvert (weighted), then all HIGH, then MEDIUM, then LOW
-    flyers = [
-      firstAdvert,
-      ...shuffledHigh,
-      ...shuffledMedium,
-      ...shuffledLow
-    ].filter(Boolean);
-
-    console.log("Weighted-arranged flyers:", flyers);
-
-    // Start at index 0 ALWAYS → firstAdvert
-    currentIndex = 0;
-    showFlyer(currentIndex);
-
-  } catch (err) {
-    console.error("Error loading adverts:", err);
-  }
-}
-
-// ==========================
-//  SHOW A SINGLE ADVERT
-// ==========================
-function showFlyer(i) {
-  const flyer = flyers[i];
-  if (!flyer) return;
-
-  flyerEl.style.opacity = 0;
-  buttonContainer.style.opacity = 0;
-
-  setTimeout(() => {
-    flyerEl.src = flyer.image;
-    flyerBg.style.backgroundImage = `url(${flyer.image})`;
-
-    // BUTTON LOGIC
-    if (flyer.buttonText && flyer.buttonLink) {
-      contactBtn.style.display = "inline-block";
-      contactBtn.innerText = flyer.buttonText;
-      contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-    } else if (flyer.whatsapp) {
-      contactBtn.style.display = "inline-block";
-      contactBtn.innerText = "Contact Us";
-      contactBtn.onclick = () => {
-        const msg = `Hi ${flyer.host}, I saw your Advert: *${flyer.event}* on PickMe Services and I want to make enquiries.`;
-        window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
-      };
-    } else {
-      contactBtn.style.display = "none";
-    }
-
-    flyerEl.onload = () => {
-      flyerEl.style.opacity = 1;
-      buttonContainer.style.opacity = 1;
-    };
-  }, 200);
-}
-
-// ==========================
-//  ARROWS + SWIPE
-// ==========================
-prevBtn.onclick = () => {
-  currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
-  showFlyer(currentIndex);
-};
-
-nextBtn.onclick = () => {
-  currentIndex = (currentIndex + 1) % flyers.length;
-  showFlyer(currentIndex);
-};
-
-// swipe (kept exactly as you asked)
-let startX = 0;
-flyerEl.addEventListener("touchstart", e => {
-  startX = e.touches[0].clientX;
-});
-flyerEl.addEventListener("touchend", e => {
-  const endX = e.changedTouches[0].clientX;
-  if (endX - startX > 50) {
-    prevBtn.onclick();
-  } else if (startX - endX > 50) {
-    nextBtn.onclick();
-  }
-});
-
-closeAdBtn.onclick = () => window.location.href = "/homepage.html";
-
-// ==========================
-//  FULL PAGE FORM WIZARD
+//  UI ELEMENTS (FORM WIZARD)
 // ==========================
 const adFormOverlay       = document.getElementById("adFormOverlay");
 const adFormCloseBtn      = document.getElementById("adFormCloseBtn");
@@ -282,7 +146,242 @@ let adFormData = {
   flyerFile: null
 };
 
-// open & close
+// ==========================
+//  UI ELEMENTS (BOOST MODAL)
+// ==========================
+const boostOverlay                = document.getElementById("boostOverlay");
+const boostCloseBtn               = document.getElementById("boostCloseBtn");
+const boostTitleEl                = document.getElementById("boostTitle");
+const boostHostEl                 = document.getElementById("boostHost");
+const boostCurrentPlanText        = document.getElementById("boostCurrentPlanText");
+const boostCurrentVisibilityText  = document.getElementById("boostCurrentVisibilityText");
+const boostPlanSelect             = document.getElementById("boostPlan");
+const boostVisibilitySelect       = document.getElementById("boostVisibility");
+const boostSummaryText            = document.getElementById("boostSummaryText");
+const boostCancelBtn              = document.getElementById("boostCancelBtn");
+const boostPayBtn                 = document.getElementById("boostPayBtn");
+
+let currentBoostAd = null;
+
+// ==========================
+//  LOAD ADVERTS FROM FIRESTORE
+//  + WEIGHTED VISIBILITY + EVENT DATE
+// ==========================
+async function loadAdverts() {
+  try {
+    console.log("Reading: Adverts / items / AdvertsList");
+    const snap = await getDocs(
+      collection(db, "Adverts", "items", "AdvertsList")
+    );
+
+    const now = new Date();
+    flyers = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      // Include id so boost can update the exact document
+      const ad = {
+        id: docSnap.id,
+        ...data
+      };
+
+      // defaults if missing
+      if (!ad.visibility) ad.visibility = "medium";
+      if (!ad.plan) ad.plan = "1_month";
+
+      // FILTER BY EXPIRY + EVENT DATE
+      let show = true;
+
+      let expiryDate = null;
+      if (ad.expiry) {
+        // expiry stored as "YYYY-MM-DD" or ISO
+        expiryDate = new Date(ad.expiry);
+      }
+
+      let eventDate = null;
+      if (ad.hasDate && ad.date) {
+        eventDate = new Date(ad.date);
+      }
+
+      let cutoff = null;
+      if (expiryDate && eventDate) {
+        cutoff = (expiryDate < eventDate) ? expiryDate : eventDate;
+      } else if (expiryDate) {
+        cutoff = expiryDate;
+      } else if (eventDate) {
+        cutoff = eventDate;
+      }
+
+      if (cutoff && now > cutoff) {
+        show = false;
+      }
+
+      if (show) {
+        flyers.push(ad);
+      }
+    });
+
+    console.log("Remaining after expiry/event filter:", flyers.length);
+
+    if (flyers.length === 0) {
+      flyerEl.style.display = "none";
+      buttonContainer.style.display = "none";
+      boostBtn.style.display = "none";
+      flyerBg.style.background = "#000";
+      return;
+    }
+
+    // ======================
+    // Weighted visibility sorting
+    // High = 5, Medium = 3, Low = 1
+    // ======================
+
+    const highAds   = flyers.filter(f => f.visibility === "high");
+    const mediumAds = flyers.filter(f => f.visibility === "medium");
+    const lowAds    = flyers.filter(f => f.visibility === "low");
+    const others    = flyers.filter(
+      f => !["high", "medium", "low"].includes(f.visibility)
+    );
+
+    function buildWeightedPool() {
+      const pool = [];
+      highAds.forEach(ad   => pool.push(...Array(5).fill(ad)));
+      mediumAds.forEach(ad => pool.push(...Array(3).fill(ad)));
+      lowAds.forEach(ad    => pool.push(...Array(1).fill(ad)));
+      // if some adverts had weird visibility, treat them like medium
+      others.forEach(ad    => pool.push(...Array(3).fill(ad)));
+      return pool;
+    }
+
+    function pickWeighted() {
+      const pool = buildWeightedPool();
+      if (!pool.length) {
+        // fallback: random normal if something went wrong
+        return flyers[Math.floor(Math.random() * flyers.length)];
+      }
+      const randomIndex = Math.floor(Math.random() * pool.length);
+      return pool[randomIndex];
+    }
+
+    const firstAdvert = pickWeighted();
+
+    // remove firstAdvert from whichever group it belongs to
+    function removeFromArray(arr, obj) {
+      const idx = arr.indexOf(obj);
+      if (idx !== -1) arr.splice(idx, 1);
+    }
+
+    if (firstAdvert.visibility === "high") removeFromArray(highAds, firstAdvert);
+    else if (firstAdvert.visibility === "medium") removeFromArray(mediumAds, firstAdvert);
+    else if (firstAdvert.visibility === "low") removeFromArray(lowAds, firstAdvert);
+    else removeFromArray(others, firstAdvert);
+
+    // shuffle helper
+    function shuffle(arr) {
+      return arr
+        .map(x => ({ x, r: Math.random() }))
+        .sort((a, b) => a.r - b.r)
+        .map(o => o.x);
+    }
+
+    const shuffledHigh   = shuffle(highAds);
+    const shuffledMedium = shuffle(mediumAds);
+    const shuffledLow    = shuffle(lowAds);
+    const shuffledOthers = shuffle(others);
+
+    flyers = [
+      firstAdvert,
+      ...shuffledHigh,
+      ...shuffledMedium,
+      ...shuffledLow,
+      ...shuffledOthers
+    ];
+
+    console.log("Weighted-arranged flyers:", flyers);
+
+    currentIndex = 0;
+    showFlyer(currentIndex);
+
+    // Show boost button once adverts exist
+    boostBtn.style.display = "inline-flex";
+
+  } catch (err) {
+    console.error("Error loading adverts:", err);
+  }
+}
+
+// ==========================
+//  SHOW A SINGLE ADVERT
+// ==========================
+function showFlyer(i) {
+  const flyer = flyers[i];
+  if (!flyer) return;
+
+  flyerEl.style.opacity = 0;
+  buttonContainer.style.opacity = 0;
+
+  setTimeout(() => {
+    flyerEl.src = flyer.image;
+    flyerBg.style.backgroundImage = `url(${flyer.image})`;
+
+    // BUTTON LOGIC
+    if (flyer.buttonText && flyer.buttonLink) {
+      contactBtn.style.display = "inline-block";
+      contactBtn.innerText = flyer.buttonText;
+      contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
+    } else if (flyer.whatsapp) {
+      contactBtn.style.display = "inline-block";
+      contactBtn.innerText = "Contact Us";
+      contactBtn.onclick = () => {
+        const msg = `Hi ${flyer.host || ""}, I saw your Advert: *${flyer.event || flyer.title || ""}* on PickMe Services and I want to make enquiries.`;
+        window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
+      };
+    } else {
+      contactBtn.style.display = "none";
+    }
+
+    // BOOST behaviour: always prepares boost modal for this advert
+    boostBtn.onclick = () => openBoostModal(flyer);
+
+    flyerEl.onload = () => {
+      flyerEl.style.opacity = 1;
+      buttonContainer.style.opacity = 1;
+    };
+  }, 200);
+}
+
+// ==========================
+//  ARROWS + SWIPE
+// ==========================
+prevBtn.onclick = () => {
+  currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
+  showFlyer(currentIndex);
+};
+
+nextBtn.onclick = () => {
+  currentIndex = (currentIndex + 1) % flyers.length;
+  showFlyer(currentIndex);
+};
+
+// swipe (kept exactly as you asked)
+let startX = 0;
+flyerEl.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+flyerEl.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (endX - startX > 50) {
+    prevBtn.onclick();
+  } else if (startX - endX > 50) {
+    nextBtn.onclick();
+  }
+});
+
+closeAdBtn.onclick = () => window.location.href = "/homepage.html";
+
+// ==========================
+//  FULL PAGE FORM WIZARD
+// ==========================
 function openAdForm() {
   currentStep = 1;
   resetAdForm();
@@ -348,7 +447,7 @@ function updateStepView() {
   }
 
   // back button
-  adBackBtn.disabled = currentStep === 1;  // first step that shows back
+  adBackBtn.disabled = currentStep === 1;
 
   // next button text
   if (currentStep === TOTAL_STEPS) {
@@ -373,7 +472,7 @@ function updateNextButtonState() {
   let enabled = false;
 
   if (currentStep === 1) {
-    enabled = false;
+    enabled = false; // footer hidden anyway
   } else if (currentStep === 2) {
     const hostOk = adHostInput.value.trim().length > 0;
     const titleOk = adTitleInput.value.trim().length > 0;
@@ -397,7 +496,7 @@ function updateNextButtonState() {
   }
 }
 
-// validation per step (still hard guards)
+// validation per step (hard guards)
 function validateStep(stepNum) {
   if (stepNum === 1) {
     if (!adFormData.adType) {
@@ -459,24 +558,14 @@ function collectStepData(stepNum) {
   }
 }
 
-// summary text
+// summary text for create form
 function updateSummary() {
   const planKey = adPlanSelect.value;
   const visKey = adVisibilitySelect.value;
-  const amount = PRICING[planKey][visKey];
+  const amount = getBaseAmount(planKey, visKey);
 
-  const planLabel = {
-    "1_month": "1 month",
-    "3_months": "3 months",
-    "6_months": "6 months",
-    "12_months": "1 year"
-  }[planKey];
-
-  const visLabel = {
-    low: "Low visibility",
-    medium: "Medium visibility",
-    high: "High visibility"
-  }[visKey];
+  const planLabel = getPlanLabel(planKey);
+  const visLabel = getVisibilityLabel(visKey);
 
   adSummaryText.innerHTML =
     `${planLabel} • ${visLabel} → <span class="price">GHS ${amount.toFixed(2)}</span>`;
@@ -489,13 +578,9 @@ function updateVisibilityOptionsWithPrices() {
 
   Array.from(adVisibilitySelect.options).forEach(opt => {
     const val = opt.value;
-    const labelMap = {
-      low: "Low visibility",
-      medium: "Medium visibility",
-      high: "High visibility"
-    };
+    const label = getVisibilityLabel(val);
     const price = prices[val];
-    opt.textContent = `${labelMap[val]} – GHS ${price.toFixed(2)}`;
+    opt.textContent = `${label} – GHS ${price.toFixed(2)}`;
   });
 }
 
@@ -595,17 +680,14 @@ adBackBtn.addEventListener("click", () => {
     currentStep--;
     updateStepView();
   } else if (currentStep === 2) {
-    // if they go back from step2, we go to step1, which hides footer
     currentStep = 1;
     updateStepView();
   }
 });
 
 adNextBtn.addEventListener("click", async () => {
-  // validate current
   if (!validateStep(currentStep)) return;
 
-  // store data
   collectStepData(currentStep);
 
   if (currentStep < TOTAL_STEPS) {
@@ -616,7 +698,6 @@ adNextBtn.addEventListener("click", async () => {
     }
     updateStepView();
   } else {
-    // final submit
     await submitAdvert();
   }
 });
@@ -626,7 +707,7 @@ adFormCloseBtn.addEventListener("click", () => {
 });
 
 // ==========================
-//  SUBMIT ADVERT REQUEST
+//  SUBMIT ADVERT REQUEST (CREATE)
 // ==========================
 async function submitAdvert() {
   try {
@@ -646,34 +727,11 @@ async function submitAdvert() {
     await uploadBytes(storageRef, file);
     const imageUrl = await getDownloadURL(storageRef);
 
-    // 2) Determine subscription end from plan
+    // 2) Determine expiry from plan (base window)
     const now = new Date();
-    const subscriptionEnd = new Date(now);
-    switch (adFormData.plan) {
-      case "1_month":
-        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
-        break;
-      case "3_months":
-        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 3);
-        break;
-      case "6_months":
-        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 6);
-        break;
-      case "12_months":
-        subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
-        break;
-    }
+    const baseExpiry = addMonths(now, PLAN_MONTHS[adFormData.plan] || 1);
 
-    // 2b) If this is an event, use the EARLIER of event date or subscription end
-    let effectiveExpiry = subscriptionEnd;
-    if (adFormData.adType === "event" && adFormData.date) {
-      const eventDate = new Date(adFormData.date);
-      if (!isNaN(eventDate.getTime()) && eventDate < effectiveExpiry) {
-        effectiveExpiry = eventDate;
-      }
-    }
-
-    const amount = PRICING[adFormData.plan][adFormData.visibility];
+    const amount = getBaseAmount(adFormData.plan, adFormData.visibility);
 
     // 3) (PLACEHOLDER) HUBTEL PAYMENT
     console.log("Simulating Hubtel payment for GHS", amount);
@@ -690,8 +748,8 @@ async function submitAdvert() {
       visibility: adFormData.visibility,
       amount,
       image: imageUrl,
-      createdAt: serverTimestamp(),           // matches your rules
-      expiry: effectiveExpiry.toISOString().slice(0, 10),
+      createdAt: serverTimestamp(),
+      expiry: baseExpiry.toISOString().slice(0, 10),
       status: "pending_approval",
       source: "AdvertPageForm"
     });
@@ -709,6 +767,172 @@ async function submitAdvert() {
     updateNextButtonState();
   }
 }
+
+// ==========================
+//  BOOST MODAL LOGIC
+// ==========================
+function openBoostModal(ad) {
+  currentBoostAd = ad;
+
+  const title = ad.event || ad.title || "Advert";
+  const host = ad.host || "";
+
+  const currentPlan = ad.plan || "1_month";
+  const currentVis  = ad.visibility || "medium";
+
+  const currentAmount = getBaseAmount(currentPlan, currentVis);
+
+  boostTitleEl.textContent = title;
+  boostHostEl.textContent = host ? `by ${host}` : "";
+
+  boostCurrentPlanText.textContent =
+    `Duration: ${getPlanLabel(currentPlan)} (Base: GHS ${currentAmount.toFixed(2)})`;
+  boostCurrentVisibilityText.textContent =
+    `Visibility: ${getVisibilityLabel(currentVis)}`;
+
+  // set selects, disable lower options
+  Array.from(boostPlanSelect.options).forEach(opt => {
+    const val = opt.value;
+    const rank = PLAN_MONTHS[val] || 0;
+    const curRank = PLAN_MONTHS[currentPlan] || 0;
+    opt.disabled = rank < curRank; // cannot go down
+  });
+  boostPlanSelect.value = currentPlan;
+
+  Array.from(boostVisibilitySelect.options).forEach(opt => {
+    const val = opt.value;
+    const rank = VIS_RANK[val] || 0;
+    const curRank = VIS_RANK[currentVis] || 0;
+    opt.disabled = rank < curRank; // cannot go down
+  });
+  boostVisibilitySelect.value = currentVis;
+
+  updateBoostSummary();
+
+  boostOverlay.classList.add("active");
+}
+
+function closeBoostModal() {
+  boostOverlay.classList.remove("active");
+  currentBoostAd = null;
+}
+
+function updateBoostSummary() {
+  if (!currentBoostAd) return;
+
+  const currentPlan = currentBoostAd.plan || "1_month";
+  const currentVis  = currentBoostAd.visibility || "medium";
+  const currentAmount = getBaseAmount(currentPlan, currentVis);
+
+  const newPlan = boostPlanSelect.value;
+  const newVis  = boostVisibilitySelect.value;
+  const newAmount = getBaseAmount(newPlan, newVis);
+
+  const planLabelCurrent = getPlanLabel(currentPlan);
+  const visLabelCurrent  = getVisibilityLabel(currentVis);
+  const planLabelNew     = getPlanLabel(newPlan);
+  const visLabelNew      = getVisibilityLabel(newVis);
+
+  const topUp = newAmount - currentAmount;
+
+  if (topUp <= 0) {
+    boostSummaryText.innerHTML =
+      `You are already on <strong>${planLabelCurrent}</strong> • <strong>${visLabelCurrent}</strong>.<br>` +
+      `No extra payment needed.`;
+    boostPayBtn.classList.add("disabled");
+    boostPayBtn.disabled = true;
+  } else {
+    boostSummaryText.innerHTML =
+      `Current: ${planLabelCurrent} • ${visLabelCurrent} → GHS ${currentAmount.toFixed(2)}<br>` +
+      `New: ${planLabelNew} • ${visLabelNew} → <span class="price">GHS ${newAmount.toFixed(2)}</span><br>` +
+      `Top-up to pay now: <span class="price">GHS ${topUp.toFixed(2)}</span>`;
+    boostPayBtn.classList.remove("disabled");
+    boostPayBtn.disabled = false;
+  }
+}
+
+boostPlanSelect.addEventListener("change", updateBoostSummary);
+boostVisibilitySelect.addEventListener("change", updateBoostSummary);
+
+boostCloseBtn.addEventListener("click", closeBoostModal);
+boostCancelBtn.addEventListener("click", closeBoostModal);
+
+boostPayBtn.addEventListener("click", async () => {
+  if (!currentBoostAd) return;
+
+  const currentPlan = currentBoostAd.plan || "1_month";
+  const currentVis  = currentBoostAd.visibility || "medium";
+  const currentAmount = getBaseAmount(currentPlan, currentVis);
+
+  const newPlan = boostPlanSelect.value;
+  const newVis  = boostVisibilitySelect.value;
+  const newAmount = getBaseAmount(newPlan, newVis);
+  const topUp = newAmount - currentAmount;
+
+  if (topUp <= 0) {
+    alert("No upgrade selected.");
+    return;
+  }
+
+  try {
+    boostPayBtn.disabled = true;
+    boostCancelBtn.disabled = true;
+    boostPayBtn.textContent = "Processing...";
+
+    // ===== HUBTEL PAYMENT PLACEHOLDER =====
+    console.log("Simulating Hubtel BOOST payment for GHS", topUp);
+
+    // ===== UPDATE FIRESTORE ADVERT DOC =====
+    const adId = currentBoostAd.id;
+    if (!adId) {
+      console.warn("Advert has no id; cannot update in Firestore.");
+    } else {
+      // Extend expiry based on difference in months
+      const curMonths = PLAN_MONTHS[currentPlan] || 0;
+      const newMonths = PLAN_MONTHS[newPlan] || curMonths;
+
+      let existingExpiry = null;
+      if (currentBoostAd.expiry) {
+        existingExpiry = new Date(currentBoostAd.expiry);
+      }
+
+      let baseDate;
+      if (existingExpiry && existingExpiry > new Date()) {
+        baseDate = existingExpiry;
+      } else {
+        baseDate = new Date();
+      }
+
+      const extraMonths = Math.max(newMonths - curMonths, 0);
+      const newExpiry = extraMonths > 0
+        ? addMonths(baseDate, extraMonths)
+        : baseDate;
+
+      const adRef = doc(db, "Adverts", "items", "AdvertsList", adId);
+      await updateDoc(adRef, {
+        plan: newPlan,
+        visibility: newVis,
+        amount: newAmount,
+        expiry: newExpiry.toISOString().slice(0, 10),
+        boostedAt: serverTimestamp()
+      });
+
+      alert("Advert boosted successfully.");
+    }
+
+    closeBoostModal();
+    // Reload adverts so new visibility/plan reflects in ordering
+    await loadAdverts();
+
+  } catch (err) {
+    console.error("Error boosting advert:", err);
+    alert("Sorry, something went wrong while boosting. Please try again.");
+  } finally {
+    boostPayBtn.disabled = false;
+    boostCancelBtn.disabled = false;
+    boostPayBtn.textContent = "Pay & boost";
+  }
+});
 
 // ==========================
 //  START
