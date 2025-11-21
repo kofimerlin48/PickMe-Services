@@ -3,7 +3,9 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
+  /* allow slight scroll so pull-to-refresh can work */
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #000;
 }
 
@@ -187,14 +189,16 @@ body {
   width: 100%;
   max-width: 480px;
   height: 100vh;
+  max-height: 100vh;
   background: #fff;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0,0,0,0.4);
 }
 
+/* header */
 .ad-form-header {
-  padding: 16px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid #eee;
   display: flex;
   align-items: center;
@@ -203,7 +207,7 @@ body {
 
 .ad-form-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -219,7 +223,7 @@ body {
 .ad-form-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 18px 24px;
+  padding: 12px 16px 18px;
 }
 
 .ad-step {
@@ -232,26 +236,31 @@ body {
 
 .ad-step-title {
   margin: 0 0 6px 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
 }
 
 .ad-step-sub {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #555;
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: #666;
 }
 
 /* Type cards */
 .ad-type-card {
   display: block;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid #ddd;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18); /* stronger 3D effect */
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease,
+    background-color 0.2s ease;
+  background: #fff;
 }
 
 .ad-type-card input[type="radio"] {
@@ -260,7 +269,7 @@ body {
 
 .ad-type-card .ad-type-content h3 {
   margin: 0 0 4px 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -273,8 +282,9 @@ body {
 /* when selected */
 .ad-type-card.selected {
   border-color: #c12872;
-  box-shadow: 0 4px 14px rgba(193,40,114,0.25);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(193,40,114,0.3);
+  transform: translateY(-2px);
+  background-color: #fff8fc;
 }
 
 /* standard field */
@@ -286,56 +296,71 @@ body {
 
 .ad-field label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600; /* main caption bold */
   margin-bottom: 4px;
 }
 
 .ad-field input,
 .ad-field select {
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border: 1px solid #ccc;
   font-size: 14px;
 }
 
 .ad-field small {
-  font-size: 12px;
-  color: #777;
-  margin-top: 4px;
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
 }
 
 /* date row */
 .ad-date-row {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
-/* primary button */
+/* primary button (choose flyer) */
 .ad-primary-btn {
   background: #c12872;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 12px 20px;
+  padding: 11px 18px;
   font-size: 15px;
   cursor: pointer;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-/* flyer preview */
+/* flyer preview with blurred background like main page */
 .ad-flyer-preview-wrapper {
   position: relative;
   margin-top: 8px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  background: #000;
+}
+
+/* blurred BG behind preview */
+.ad-flyer-preview-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--flyer-preview-url, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) brightness(0.6);
+  transform: scale(1.3);
+  z-index: 1;
 }
 
 .ad-flyer-preview-wrapper img {
+  position: relative;
+  z-index: 2;
   width: 100%;
   display: block;
   max-height: 380px;
   object-fit: contain;
-  background: #000;
 }
 
 .ad-flyer-remove-btn {
@@ -351,10 +376,11 @@ body {
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
+  z-index: 3;
 }
 
 .ad-help {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
 }
 
@@ -377,9 +403,14 @@ body {
   font-size: 14px;
 }
 
+.ad-summary-card p .price {
+  font-weight: 700;
+  font-size: 16px;
+}
+
 /* footer nav buttons */
 .ad-form-footer {
-  padding: 10px 16px 14px;
+  padding: 8px 14px 12px;
   border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -390,7 +421,7 @@ body {
   flex: 1;
   border-radius: 8px;
   border: none;
-  padding: 12px 0;
+  padding: 11px 0;
   font-size: 15px;
   cursor: pointer;
 }
@@ -405,11 +436,23 @@ body {
   color: #fff;
 }
 
+/* disabled state for Continue */
+.ad-next.disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* desktop width for form */
 @media (min-width: 768px) {
   .ad-form-wrapper {
     max-width: 520px;
     border-radius: 16px;
     height: 90vh;
+    max-height: 90vh;
+  }
+
+  .ad-form-body {
+    padding: 16px 20px 20px;
   }
 }
