@@ -71,6 +71,24 @@ body {
   transition: opacity 0.7s ease;
 }
 
+/* BOOST PILL ON FLYER */
+.boost-pill {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0,0,0,0.65);
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
 /* BUTTONS */
 .button-container {
   position: absolute;
@@ -160,6 +178,12 @@ body {
   #nextBtn {
     font-size: 40px;
     padding: 18px;
+  }
+
+  .boost-pill {
+    top: 30px;
+    right: 30px;
+    font-size: 14px;
   }
 }
 
@@ -436,14 +460,14 @@ body {
   color: #fff;
 }
 
-/* disabled state for Continue */
+/* disabled state for Continue / Boost pay */
 .ad-next.disabled {
   opacity: 0.45;
   cursor: default;
   pointer-events: none;
 }
 
-/* desktop width for form */
+/* desktop width for form + boost modal */
 @media (min-width: 768px) {
   .ad-form-wrapper {
     max-width: 520px;
