@@ -318,7 +318,8 @@ function showFlyer(i) {
   if (!flyer) return;
 
   flyerEl.style.opacity = 0;
-  buttonContainer.style.opacity = 0;
+buttonContainer.style.opacity = 0;
+boostBtn.classList.remove("visible");   // fade-out boost pill
 
   setTimeout(() => {
     flyerEl.src = flyer.image;
@@ -344,9 +345,10 @@ function showFlyer(i) {
     boostBtn.onclick = () => openBoostModal(flyer);
 
     flyerEl.onload = () => {
-      flyerEl.style.opacity = 1;
-      buttonContainer.style.opacity = 1;
-    };
+    flyerEl.style.opacity = 1;
+    buttonContainer.style.opacity = 1;
+    boostBtn.classList.add("visible");  // fade-in boost pill
+};
   }, 200);
 }
 
