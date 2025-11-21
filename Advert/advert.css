@@ -164,12 +164,46 @@ body {
     font-size: 20px;
   }
 
-  /* Bigger flyer */
-  #flyer {
-    width: min(90vw, 800px);   /* tuned for desktop */
+  /* Bigger flyer + wrapper on desktop */
+@media (min-width: 768px) {
+
+  .advert-text {
+    top: 200px;
+    font-size: 20px;
+  }
+
+  .flyer-wrapper {
+    width: min(90vw, 800px);
     top: 50%;
     max-height: 90vh;
   }
+
+  #flyer {
+    max-height: 90vh;
+  }
+
+  .button-container {
+    bottom: 180px;
+  }
+
+  #contactBtn,
+  #closeAdBtn {
+    font-size: 20px;
+    max-width: 350px;
+  }
+
+  #prevBtn,
+  #nextBtn {
+    font-size: 40px;
+    padding: 18px;
+  }
+
+  .boost-pill {
+    top: 12px;
+    right: 12px;
+    font-size: 14px;
+  }
+}
 
   /* Move buttons up so they never hide */
   .button-container {
