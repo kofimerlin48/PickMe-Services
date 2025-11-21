@@ -327,16 +327,24 @@ function preloadImage(url) {
 // ==========================
 //  SHOW A SINGLE ADVERT
 // ==========================
+// ==========================
+//  SHOW A SINGLE ADVERT
+// ==========================
 function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
 
-  // For second+ adverts: fade out current (CSS transition will handle animation)
-  if (firstLoadDone) {
+  const isFirst = !firstLoadDone;
+
+  // For second+ adverts: fade out current (CSS transition will animate)
+  if (!isFirst) {
     flyerEl.style.opacity = 0;
     buttonContainer.style.opacity = 0;
     boostBtn.classList.remove("visible");
   }
+
+  // Clear old onload handler to avoid stacking
+  flyerEl.onload = null;
 
   // Set image instantly
   flyerEl.src = flyer.image;
@@ -344,7 +352,7 @@ function showFlyer(i) {
 
   // Preload next flyer
   const nextIndex = (i + 1) % flyers.length;
-  if (flyers[nextIndex]?.image) {
+  if (flyers[nextIndex] && flyers[nextIndex].image) {
     const preloadImg = new Image();
     preloadImg.src = flyers[nextIndex].image;
   }
@@ -368,29 +376,18 @@ function showFlyer(i) {
   // BOOST LOGIC
   boostBtn.onclick = () => openBoostModal(flyer);
 
-  // Handle fade for first vs subsequent images
+  // Fade logic
   flyerEl.onload = () => {
-    if (!firstLoadDone) {
-      // FIRST IMAGE: no fade-in (disable transition temporarily)
-      flyerEl.style.transition = "none";
-      buttonContainer.style.transition = "none";
-      boostBtn.style.transition = "none";
-
+    // FIRST IMAGE: no fade-in special delay, just show
+    if (isFirst) {
       flyerEl.style.opacity = 1;
       buttonContainer.style.opacity = 1;
       boostBtn.classList.add("visible");
-
-      // Force reflow, then restore transitions so others can fade
-      void flyerEl.offsetHeight;
-      flyerEl.style.transition = "";
-      buttonContainer.style.transition = "";
-      boostBtn.style.transition = "";
-
       firstLoadDone = true;
       return;
     }
 
-    // OTHER IMAGES: normal fade-in (CSS transition applies)
+    // OTHER IMAGES: fade-in (CSS transition handles animation)
     flyerEl.style.opacity = 1;
     buttonContainer.style.opacity = 1;
     boostBtn.classList.add("visible");
