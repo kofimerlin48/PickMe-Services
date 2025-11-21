@@ -36,7 +36,7 @@
   <div id="adFormOverlay" class="ad-form-overlay">
     <div class="ad-form-wrapper">
       <div class="ad-form-header">
-        <h2>Create Advert</h2>
+        <h2>Create advert</h2>
         <button id="adFormCloseBtn" class="ad-form-close-btn" type="button">&times;</button>
       </div>
 
@@ -45,22 +45,22 @@
         <div class="ad-step" data-step="1">
           <p class="ad-step-title">What is your advert about?</p>
           <p class="ad-step-sub">
-            Choose one option. You can change it before submitting.
+            Choose the option that best matches your advert.
           </p>
 
           <label class="ad-type-card">
             <input type="radio" name="adType" value="event">
             <div class="ad-type-content">
-              <h3>Program / Event (has date)</h3>
-              <p>Funerals, church programs, parties, concerts, time-bound promos, etc.</p>
+              <h3>Program / event (has date)</h3>
+              <p>Funerals, church programs, parties, concerts, time-bound promos.</p>
             </div>
           </label>
 
           <label class="ad-type-card">
             <input type="radio" name="adType" value="business">
             <div class="ad-type-content">
-              <h3>Business / Ongoing (no fixed date)</h3>
-              <p>Shops, services, restaurants, schools, long-term offers, etc.</p>
+              <h3>Business / ongoing (no date)</h3>
+              <p>Shops, services, restaurants, schools, long-term offers.</p>
             </div>
           </label>
         </div>
@@ -68,10 +68,10 @@
         <!-- STEP 2: TEXT DETAILS -->
         <div class="ad-step" data-step="2">
           <p class="ad-step-title">Basic details</p>
-          <p class="ad-step-sub">These details will appear under your flyer.</p>
+          <p class="ad-step-sub">These will appear under your flyer.</p>
 
           <div class="ad-field">
-            <label for="adHost">Host / Organizer name</label>
+            <label for="adHost">Host / organiser</label>
             <input id="adHost" type="text" placeholder="e.g. PickMe Services">
           </div>
 
@@ -81,21 +81,21 @@
           </div>
 
           <div class="ad-field">
-            <label for="adWhatsapp">WhatsApp / phone for enquiries</label>
+            <label for="adWhatsapp">WhatsApp / phone</label>
             <input id="adWhatsapp" type="tel" placeholder="e.g. 233534742142">
           </div>
 
           <div class="ad-field ad-date-row" id="adDateRow">
             <label for="adDate">Event date</label>
             <input id="adDate" type="date">
-            <small>This is only needed for programs / events.</small>
+            <small>Only needed for programs / events.</small>
           </div>
         </div>
 
         <!-- STEP 3: FLYER UPLOAD -->
         <div class="ad-step" data-step="3">
           <p class="ad-step-title">Upload your flyer</p>
-          <p class="ad-step-sub">This is the image that will show on the advert page.</p>
+          <p class="ad-step-sub">This image will show on the advert page.</p>
 
           <input id="adFlyerInput" type="file" accept="image/*" hidden>
 
@@ -114,17 +114,13 @@
               &times;
             </button>
           </div>
-
-          <p class="ad-help">
-            Use a clear flyer: JPG or PNG is recommended.
-          </p>
         </div>
 
         <!-- STEP 4: PLAN & VISIBILITY -->
         <div class="ad-step" data-step="4">
           <p class="ad-step-title">Subscription & visibility</p>
           <p class="ad-step-sub">
-            Choose how long your advert should run and how often it should appear.
+            Choose how long the advert runs and how often it appears.
           </p>
 
           <div class="ad-field">
@@ -138,13 +134,13 @@
           </div>
 
           <div class="ad-field">
-            <label for="adVisibility">Visibility level</label>
+            <label for="adVisibility">Visibility level & price</label>
             <select id="adVisibility">
+              <!-- text is updated from JS based on plan -->
               <option value="low">Low visibility</option>
               <option value="medium">Medium visibility</option>
               <option value="high">High visibility</option>
             </select>
-            <small>Higher visibility means your advert appears more often.</small>
           </div>
 
           <div class="ad-summary-card">
