@@ -328,7 +328,6 @@ function preloadImage(url) {
 //  SHOW A SINGLE ADVERT
 // ==========================
 function showFlyer(i) {
-function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
 
