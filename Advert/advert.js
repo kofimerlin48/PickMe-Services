@@ -98,6 +98,7 @@ const boostBtn = document.getElementById("boostBtn");
 
 let flyers = [];
 let currentIndex = 0;
+let firstLoadDone = false;
 
 // ==========================
 //  UI ELEMENTS (FORM WIZARD)
@@ -330,18 +331,20 @@ function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
 
-  // fade out current
-  flyerEl.style.opacity = 0;
-  buttonContainer.style.opacity = 0;
-  boostBtn.classList.remove("visible");
+  // If not the first load → fade out
+  if (firstLoadDone) {
+    flyerEl.style.opacity = 0;
+    buttonContainer.style.opacity = 0;
+    boostBtn.classList.remove("visible");
+  }
 
-  // SET IMAGE INSTANTLY
+  // Set image instantly
   flyerEl.src = flyer.image;
   flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-  // PRELOAD NEXT FLYER
+  // Preload next flyer
   const nextIndex = (i + 1) % flyers.length;
-  if (flyers[nextIndex] && flyers[nextIndex].image) {
+  if (flyers[nextIndex]?.image) {
     const preloadImg = new Image();
     preloadImg.src = flyers[nextIndex].image;
   }
@@ -365,8 +368,18 @@ function showFlyer(i) {
   // BOOST LOGIC
   boostBtn.onclick = () => openBoostModal(flyer);
 
-  // FADE IN WHEN NEW IMAGE LOADS
+  // Fade in WHEN image loads
   flyerEl.onload = () => {
+    // First time: NO fade → show immediately
+    if (!firstLoadDone) {
+      flyerEl.style.opacity = 1;
+      buttonContainer.style.opacity = 1;
+      boostBtn.classList.add("visible");
+      firstLoadDone = true;
+      return;
+    }
+
+    // Subsequent loads: normal fade
     flyerEl.style.opacity = 1;
     buttonContainer.style.opacity = 1;
     boostBtn.classList.add("visible");
