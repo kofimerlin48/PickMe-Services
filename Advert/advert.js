@@ -330,46 +330,47 @@ function showFlyer(i) {
   const flyer = flyers[i];
   if (!flyer) return;
 
+  // fade out current
   flyerEl.style.opacity = 0;
-buttonContainer.style.opacity = 0;
-boostBtn.classList.remove("visible");   // fade-out boost pill
+  buttonContainer.style.opacity = 0;
+  boostBtn.classList.remove("visible");
 
-  setTimeout(() => {
-    flyerEl.src = flyer.image;
-    flyerBg.style.backgroundImage = `url(${flyer.image})`;
+  // SET IMAGE INSTANTLY
+  flyerEl.src = flyer.image;
+  flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-    // PRELOAD NEXT FLYER (smooth swipe experience)
-const nextIndex = (i + 1) % flyers.length;
-if (flyers[nextIndex] && flyers[nextIndex].image) {
-  const preloadImg = new Image();
-  preloadImg.src = flyers[nextIndex].image;
-}
-    
-    // BUTTON LOGIC
-    if (flyer.buttonText && flyer.buttonLink) {
-      contactBtn.style.display = "inline-block";
-      contactBtn.innerText = flyer.buttonText;
-      contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
-    } else if (flyer.whatsapp) {
-      contactBtn.style.display = "inline-block";
-      contactBtn.innerText = "Contact Us";
-      contactBtn.onclick = () => {
-        const msg = `Hi ${flyer.host || ""}, I saw your Advert: *${flyer.event || flyer.title || ""}* on PickMe Services and I want to make enquiries.`;
-        window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
-      };
-    } else {
-      contactBtn.style.display = "none";
-    }
+  // PRELOAD NEXT FLYER
+  const nextIndex = (i + 1) % flyers.length;
+  if (flyers[nextIndex] && flyers[nextIndex].image) {
+    const preloadImg = new Image();
+    preloadImg.src = flyers[nextIndex].image;
+  }
 
-    // BOOST behaviour: always prepares boost modal for this advert
-    boostBtn.onclick = () => openBoostModal(flyer);
+  // BUTTON LOGIC
+  if (flyer.buttonText && flyer.buttonLink) {
+    contactBtn.style.display = "inline-block";
+    contactBtn.innerText = flyer.buttonText;
+    contactBtn.onclick = () => window.open(flyer.buttonLink, "_blank");
+  } else if (flyer.whatsapp) {
+    contactBtn.style.display = "inline-block";
+    contactBtn.innerText = "Contact Us";
+    contactBtn.onclick = () => {
+      const msg = `Hi ${flyer.host || ""}, I saw your Advert: *${flyer.event || flyer.title || ""}* on PickMe Services and I want to make enquiries.`;
+      window.open(`https://wa.me/${flyer.whatsapp}?text=${encodeURIComponent(msg)}`);
+    };
+  } else {
+    contactBtn.style.display = "none";
+  }
 
-    flyerEl.onload = () => {
+  // BOOST LOGIC
+  boostBtn.onclick = () => openBoostModal(flyer);
+
+  // FADE IN WHEN NEW IMAGE LOADS
+  flyerEl.onload = () => {
     flyerEl.style.opacity = 1;
     buttonContainer.style.opacity = 1;
-    boostBtn.classList.add("visible");  // fade-in boost pill
-};
-  }, 200);
+    boostBtn.classList.add("visible");
+  };
 }
 
 // ==========================
