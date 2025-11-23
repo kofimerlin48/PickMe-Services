@@ -9,7 +9,8 @@ import {
   addDoc,
   serverTimestamp,
   doc,
-  updateDoc
+  updateDoc,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getStorage,
@@ -36,6 +37,11 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // ==========================
+//  HUBTEL (BACKEND URL)
+// ==========================
+const BACKEND_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
+
+// ==========================
 //  PRICING + PLAN HELPERS
 // ==========================
 const PRICING = {
@@ -53,7 +59,11 @@ const PLAN_MONTHS = {
 };
 
 const VIS_RANK = { low: 1, medium: 2, high: 3 };
+const VIS_WEIGHT = { low: 1, medium: 2, high: 3 };
 
+// ==========================
+//  HELPERS
+// ==========================
 function getPlanLabel(planKey) {
   return {
     "1_month": "1 month",
@@ -83,6 +93,30 @@ function addMonths(date, months) {
   return d;
 }
 
+function slugify(str) {
+  return String(str || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// Ghana number normalizer (same logic as groceries page)
+function normalizeGhanaNumber(input) {
+  let s = String(input || "").trim().replace(/[\s\-]/g, "");
+  if (!s) return null;
+
+  if (s.startsWith("+233")) return { e164: s };
+  if (s.startsWith("233")) return { e164: "+" + s };
+  if (/^0\d{9}$/.test(s)) return { e164: "+233" + s.slice(1) };
+  if (/^\d{9}$/.test(s)) return { e164: "+233" + s };
+
+  const d = s.replace(/\D/g, "");
+  if (d.startsWith("233")) return { e164: "+" + d };
+  if (d.length === 10 && d.startsWith("0")) return { e164: "+233" + d.slice(1) };
+
+  return null;
+}
+
 // ==========================
 //  UI ELEMENTS (ADVERT VIEW)
 // ==========================
@@ -99,6 +133,9 @@ const boostBtn = document.getElementById("boostBtn");
 let flyers = [];
 let currentIndex = 0;
 let firstLoadDone = false;
+
+// Track which adverts we have already counted in this session
+const countedImpressions = new Set();
 
 // ==========================
 //  UI ELEMENTS (FORM WIZARD)
@@ -165,8 +202,24 @@ const boostPayBtn                 = document.getElementById("boostPayBtn");
 let currentBoostAd = null;
 
 // ==========================
+//  IMPRESSION TRACKING
+// ==========================
+async function recordImpression(ad) {
+  try {
+    if (!ad || !ad.id) return;
+    const adRef = doc(db, "Adverts", "items", "AdvertsList", ad.id);
+    await updateDoc(adRef, {
+      impressions: increment(1),
+      lastShownAt: serverTimestamp()
+    });
+  } catch (e) {
+    console.error("recordImpression error", e);
+  }
+}
+
+// ==========================
 //  LOAD ADVERTS FROM FIRESTORE
-//  + WEIGHTED VISIBILITY + EVENT DATE
+//  + GLOBAL FAIRNESS (OPTION B)
 // ==========================
 async function loadAdverts() {
   try {
@@ -176,11 +229,10 @@ async function loadAdverts() {
     );
 
     const now = new Date();
-    flyers = [];
+    const temp = [];
 
     snap.forEach(docSnap => {
       const data = docSnap.data();
-      // Include id so boost can update the exact document
       const ad = {
         id: docSnap.id,
         ...data
@@ -195,7 +247,6 @@ async function loadAdverts() {
 
       let expiryDate = null;
       if (ad.expiry) {
-        // expiry stored as "YYYY-MM-DD" or ISO
         expiryDate = new Date(ad.expiry);
       }
 
@@ -217,10 +268,25 @@ async function loadAdverts() {
         show = false;
       }
 
-      if (show) {
-        flyers.push(ad);
-      }
+      if (!show) return;
+
+      // ensure impressions field exists
+      const impressions = (typeof ad.impressions === "number")
+        ? ad.impressions
+        : 0;
+
+      const weight = VIS_WEIGHT[ad.visibility] || 2;
+      const score = impressions / weight; // fairness score
+
+      temp.push({
+        ...ad,
+        impressions,
+        weight,
+        score
+      });
     });
+
+    flyers = temp;
 
     console.log("Remaining after expiry/event filter:", flyers.length);
 
@@ -233,79 +299,30 @@ async function loadAdverts() {
     }
 
     // ======================
-    // Weighted visibility sorting
-    // High = 5, Medium = 3, Low = 1
+    // GLOBAL FAIRNESS ORDERING
+    // lowest score (impressions / weight) first
+    // tie-break randomly
     // ======================
+    flyers = flyers
+      .map(ad => ({
+        ...ad,
+        _rand: Math.random()
+      }))
+      .sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        // tie-breaker random
+        return a._rand - b._rand;
+      });
 
-    const highAds   = flyers.filter(f => f.visibility === "high");
-    const mediumAds = flyers.filter(f => f.visibility === "medium");
-    const lowAds    = flyers.filter(f => f.visibility === "low");
-    const others    = flyers.filter(
-      f => !["high", "medium", "low"].includes(f.visibility)
-    );
-
-    function buildWeightedPool() {
-      const pool = [];
-      highAds.forEach(ad   => pool.push(...Array(5).fill(ad)));
-      mediumAds.forEach(ad => pool.push(...Array(3).fill(ad)));
-      lowAds.forEach(ad    => pool.push(...Array(1).fill(ad)));
-      // if some adverts had weird visibility, treat them like medium
-      others.forEach(ad    => pool.push(...Array(3).fill(ad)));
-      return pool;
-    }
-
-    function pickWeighted() {
-      const pool = buildWeightedPool();
-      if (!pool.length) {
-        // fallback: random normal if something went wrong
-        return flyers[Math.floor(Math.random() * flyers.length)];
-      }
-      const randomIndex = Math.floor(Math.random() * pool.length);
-      return pool[randomIndex];
-    }
-
-    const firstAdvert = pickWeighted();
-
-    // remove firstAdvert from whichever group it belongs to
-    function removeFromArray(arr, obj) {
-      const idx = arr.indexOf(obj);
-      if (idx !== -1) arr.splice(idx, 1);
-    }
-
-    if (firstAdvert.visibility === "high") removeFromArray(highAds, firstAdvert);
-    else if (firstAdvert.visibility === "medium") removeFromArray(mediumAds, firstAdvert);
-    else if (firstAdvert.visibility === "low") removeFromArray(lowAds, firstAdvert);
-    else removeFromArray(others, firstAdvert);
-
-    // shuffle helper
-    function shuffle(arr) {
-      return arr
-        .map(x => ({ x, r: Math.random() }))
-        .sort((a, b) => a.r - b.r)
-        .map(o => o.x);
-    }
-
-    const shuffledHigh   = shuffle(highAds);
-    const shuffledMedium = shuffle(mediumAds);
-    const shuffledLow    = shuffle(lowAds);
-    const shuffledOthers = shuffle(others);
-
-    flyers = [
-      firstAdvert,
-      ...shuffledHigh,
-      ...shuffledMedium,
-      ...shuffledLow,
-      ...shuffledOthers
-    ];
-
-    console.log("Weighted-arranged flyers:", flyers);
+    // drop helper field
+    flyers = flyers.map(({ _rand, ...rest }) => rest);
 
     currentIndex = 0;
-    
-    // Preload the first advert for instant display
-preloadImage(flyers[0].image).then(() => {
-  showFlyer(currentIndex);
-});
+
+    // Preload the first advert for instant display, then show
+    preloadImage(flyers[0].image).then(() => {
+      showFlyer(currentIndex);
+    });
 
     // Show boost button once adverts exist
     boostBtn.style.display = "inline-flex";
@@ -318,15 +335,14 @@ preloadImage(flyers[0].image).then(() => {
 // Preload image helper
 function preloadImage(url) {
   return new Promise(resolve => {
+    if (!url) return resolve();
     const img = new Image();
     img.onload = resolve;
+    img.onerror = resolve;
     img.src = url;
   });
 }
 
-// ==========================
-//  SHOW A SINGLE ADVERT
-// ==========================
 // ==========================
 //  SHOW A SINGLE ADVERT
 // ==========================
@@ -335,8 +351,9 @@ function showFlyer(i) {
   if (!flyer) return;
 
   const isFirst = !firstLoadDone;
+  const adId = flyer.id;
 
-  // For second+ adverts: fade out current (CSS transition will animate)
+  // For second+ adverts: fade out current
   if (!isFirst) {
     flyerEl.style.opacity = 0;
     buttonContainer.style.opacity = 0;
@@ -346,11 +363,11 @@ function showFlyer(i) {
   // Clear old onload handler to avoid stacking
   flyerEl.onload = null;
 
-  // Set image instantly
+  // Set image + background
   flyerEl.src = flyer.image;
   flyerBg.style.backgroundImage = `url(${flyer.image})`;
 
-  // Preload next flyer
+  // Preload next flyer (nice but not forced)
   const nextIndex = (i + 1) % flyers.length;
   if (flyers[nextIndex] && flyers[nextIndex].image) {
     const preloadImg = new Image();
@@ -376,21 +393,26 @@ function showFlyer(i) {
   // BOOST LOGIC
   boostBtn.onclick = () => openBoostModal(flyer);
 
-  // Fade logic
+  // Fade + impression logic
   flyerEl.onload = () => {
-    // FIRST IMAGE: no fade-in special delay, just show
+    // FIRST IMAGE: show instantly (no fancy delay)
     if (isFirst) {
       flyerEl.style.opacity = 1;
       buttonContainer.style.opacity = 1;
       boostBtn.classList.add("visible");
       firstLoadDone = true;
-      return;
+    } else {
+      // OTHERS: fade in (CSS handles animation)
+      flyerEl.style.opacity = 1;
+      buttonContainer.style.opacity = 1;
+      boostBtn.classList.add("visible");
     }
 
-    // OTHER IMAGES: fade-in (CSS transition handles animation)
-    flyerEl.style.opacity = 1;
-    buttonContainer.style.opacity = 1;
-    boostBtn.classList.add("visible");
+    // Record impression ONCE per advert per page session
+    if (adId && !countedImpressions.has(adId)) {
+      countedImpressions.add(adId);
+      recordImpression(flyer);
+    }
   };
 }
 
@@ -398,16 +420,18 @@ function showFlyer(i) {
 //  ARROWS + SWIPE
 // ==========================
 prevBtn.onclick = () => {
+  if (!flyers.length) return;
   currentIndex = (currentIndex - 1 + flyers.length) % flyers.length;
   showFlyer(currentIndex);
 };
 
 nextBtn.onclick = () => {
+  if (!flyers.length) return;
   currentIndex = (currentIndex + 1) % flyers.length;
   showFlyer(currentIndex);
 };
 
-// swipe (kept exactly as you asked)
+// swipe
 let startX = 0;
 flyerEl.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
@@ -483,7 +507,7 @@ function updateStepView() {
     step.classList.toggle("active", s === currentStep);
   });
 
-  // footer should NOT show on step 1
+  // footer hidden on step 1
   if (currentStep === 1) {
     adFormFooter.style.display = "none";
   } else {
@@ -507,7 +531,6 @@ function updateStepView() {
     adDateRow.classList.add("hidden");
   }
 
-  // update enabled/disabled state
   updateNextButtonState();
 }
 
@@ -593,7 +616,7 @@ function collectStepData(stepNum) {
   }
 
   if (stepNum === 3) {
-    // flyer already captured on change
+    // flyer already captured
   }
 
   if (stepNum === 4) {
@@ -752,6 +775,7 @@ adFormCloseBtn.addEventListener("click", () => {
 
 // ==========================
 //  SUBMIT ADVERT REQUEST (CREATE)
+//  + REAL HUBTEL PAYMENT
 // ==========================
 async function submitAdvert() {
   try {
@@ -759,33 +783,72 @@ async function submitAdvert() {
     adBackBtn.disabled = true;
     adNextBtn.textContent = "Processing...";
 
-    // 1) Upload flyer to Firebase Storage
+    // Validate flyer again
     const file = adFormData.flyerFile;
     if (!file) {
       alert("Please upload a flyer image.");
       return;
     }
 
+    // Normalize phone for payment
+    const norm = normalizeGhanaNumber(adFormData.whatsapp);
+    if (!norm) {
+      alert("Please enter a valid Ghana number (0..., 233..., or +233...).");
+      return;
+    }
+
+    const now = new Date();
+    const baseExpiry = addMonths(now, PLAN_MONTHS[adFormData.plan] || 1);
+    const amount = getBaseAmount(adFormData.plan, adFormData.visibility);
+
+    const planLabel = getPlanLabel(adFormData.plan);
+    const visLabel = getVisibilityLabel(adFormData.visibility);
+    const refBase = slugify(adFormData.title || adFormData.host || "advert");
+
+    // ===== START HUBTEL PAYMENT (same backend as groceries) =====
+    try {
+      const payRes = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          customerName: adFormData.host,
+          customerPhone: norm.e164,
+          shopName: adFormData.title || adFormData.host,
+          description: `Advert Subscription - ${planLabel} • ${visLabel}`,
+          clientReference: `${refBase}_${Date.now()}`,
+          channel: "mtn-gh"
+        })
+      });
+
+      const payJson = await payRes.json();
+
+      if (!payJson.ok) {
+        alert("Payment failed: " + (payJson.message || "Please try again."));
+        return;
+      }
+
+      alert("Payment prompt sent! Please approve on your phone.");
+    } catch (e) {
+      console.error("Payment error:", e);
+      alert("Unable to start payment. Check your internet and try again.");
+      return;
+    }
+    // ===== END HUBTEL PAYMENT =====
+
+    // 1) Upload flyer to Firebase Storage
     const fileName = `${Date.now()}_${file.name}`;
     const storageRef = ref(storage, `adverts/${fileName}`);
     await uploadBytes(storageRef, file);
     const imageUrl = await getDownloadURL(storageRef);
 
-    // 2) Determine expiry from plan (base window)
-    const now = new Date();
-    const baseExpiry = addMonths(now, PLAN_MONTHS[adFormData.plan] || 1);
-
-    const amount = getBaseAmount(adFormData.plan, adFormData.visibility);
-
-    // 3) (PLACEHOLDER) HUBTEL PAYMENT
-    console.log("Simulating Hubtel payment for GHS", amount);
-
-    // 4) Create Firestore request for admin review
+    // 2) Create Firestore request for admin review
     await addDoc(collection(db, "Adverts", "Requests"), {
       type: adFormData.adType,
       host: adFormData.host,
       event: adFormData.title,
       whatsapp: adFormData.whatsapp,
+      whatsappE164: norm.e164,
       hasDate: adFormData.adType === "event",
       date: adFormData.adType === "event" ? adFormData.date : null,
       plan: adFormData.plan,
@@ -901,6 +964,9 @@ boostVisibilitySelect.addEventListener("change", updateBoostSummary);
 boostCloseBtn.addEventListener("click", closeBoostModal);
 boostCancelBtn.addEventListener("click", closeBoostModal);
 
+// ==========================
+//  BOOST PAY + UPDATE (REAL PAYMENT)
+// ==========================
 boostPayBtn.addEventListener("click", async () => {
   if (!currentBoostAd) return;
 
@@ -918,20 +984,58 @@ boostPayBtn.addEventListener("click", async () => {
     return;
   }
 
+  // Phone number for the person boosting (host's number)
+  const norm = normalizeGhanaNumber(currentBoostAd.whatsapp);
+  if (!norm) {
+    alert("This advert has an invalid phone number saved. Please contact PickMe to update it before boosting.");
+    return;
+  }
+
   try {
     boostPayBtn.disabled = true;
     boostCancelBtn.disabled = true;
     boostPayBtn.textContent = "Processing...";
 
-    // ===== HUBTEL PAYMENT PLACEHOLDER =====
-    console.log("Simulating Hubtel BOOST payment for GHS", topUp);
+    const planLabelNew = getPlanLabel(newPlan);
+    const visLabelNew  = getVisibilityLabel(newVis);
+    const refBase = slugify(currentBoostAd.event || currentBoostAd.title || "advert");
+
+    // ===== HUBTEL PAYMENT – BOOST =====
+    try {
+      const payRes = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: topUp,
+          customerName: currentBoostAd.host || "",
+          customerPhone: norm.e164,
+          shopName: currentBoostAd.event || currentBoostAd.title || "",
+          description: `Advert Boost - ${planLabelNew} • ${visLabelNew}`,
+          clientReference: `${refBase}_boost_${Date.now()}`,
+          channel: "mtn-gh"
+        })
+      });
+
+      const payJson = await payRes.json();
+
+      if (!payJson.ok) {
+        alert("Payment failed: " + (payJson.message || "Please try again."));
+        return;
+      }
+
+      alert("Payment prompt sent! Please approve on your phone.");
+    } catch (e) {
+      console.error("Boost payment error:", e);
+      alert("Unable to start payment. Check your internet and try again.");
+      return;
+    }
+    // ===== END HUBTEL BOOST PAYMENT =====
 
     // ===== UPDATE FIRESTORE ADVERT DOC =====
     const adId = currentBoostAd.id;
     if (!adId) {
       console.warn("Advert has no id; cannot update in Firestore.");
     } else {
-      // Extend expiry based on difference in months
       const curMonths = PLAN_MONTHS[currentPlan] || 0;
       const newMonths = PLAN_MONTHS[newPlan] || curMonths;
 
@@ -965,8 +1069,7 @@ boostPayBtn.addEventListener("click", async () => {
     }
 
     closeBoostModal();
-    // Reload adverts so new visibility/plan reflects in ordering
-    await loadAdverts();
+    await loadAdverts(); // reload ordering with updated plan/visibility
 
   } catch (err) {
     console.error("Error boosting advert:", err);
