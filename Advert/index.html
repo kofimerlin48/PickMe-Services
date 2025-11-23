@@ -20,11 +20,11 @@
 
     <div id="flyerBg"></div>
 
-<!-- Flyer + Boost pill grouped together -->
-<div class="flyer-wrapper">
-  <img id="flyer" src="" />
-  <button id="boostBtn" class="boost-pill">Boost this Ad</button>
-</div>
+    <!-- Flyer + Boost pill grouped together -->
+    <div class="flyer-wrapper">
+      <img id="flyer" src="" />
+      <button id="boostBtn" class="boost-pill">Boost this Ad</button>
+    </div>
 
     <div class="button-container">
       <button id="contactBtn">Contact Us</button>
@@ -224,7 +224,12 @@
     </div>
   </div>
 
-  <!-- JS -->
-  <script type="module" src="/Advert/advert.js"></script>
+  <!-- JS: AUTO-BUST CACHE FOR advert.js (no manual versioning needed) -->
+  <script type="module">
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = '/Advert/advert.js?v=' + Date.now();
+    document.body.appendChild(script);
+  </script>
 </body>
 </html>
