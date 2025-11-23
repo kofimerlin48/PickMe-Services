@@ -1,3 +1,6 @@
+// groceries.js  (ES module – linked from groceries.html)
+
+/* ========= FIREBASE IMPORTS ========= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
@@ -143,7 +146,6 @@ const shopError        = document.getElementById("shopError");
 
 /* Waiting modal */
 const waitingModal = document.getElementById("waitingModal");
-const waitingMsg   = document.getElementById("waitingMsg");
 const waitingDots  = document.getElementById("waitingDots");
 const waitingBtn   = document.getElementById("waitingBtn");
 
