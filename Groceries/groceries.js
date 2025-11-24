@@ -1,3 +1,5 @@
+// groceries.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
@@ -506,7 +508,9 @@ function closeChooseMode(){
 openFormBtn.addEventListener("click", openChooseMode);
 cancelBtn.addEventListener("click", closeForm);
 
-modeCancelBtn.addEventListener("click", closeChooseMode);
+modeCancelBtn.addEventListener("click", ()=>{
+  closeChooseMode();
+});
 modeTypeBtn.addEventListener("click", ()=>{
   closeChooseMode();
   // open normal form (type manually)
