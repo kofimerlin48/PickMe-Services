@@ -7,14 +7,6 @@
   box-shadow: none !important;
 }
 
-/* Preload hide */
-body.hide-initial * {
-  visibility: hidden !important;
-}
-body.ready * {
-  visibility: visible !important;
-}
-
 body{
   margin:0;
   font-family: Arial, sans-serif;
@@ -452,3 +444,11 @@ input, textarea, select, button {
 
 /* Footer iframe pinned */
 .footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999}
+
+/* Extra body visibility states */
+body.hide-initial * {
+  visibility: hidden !important;
+}
+body.ready * {
+  visibility: visible !important;
+}
