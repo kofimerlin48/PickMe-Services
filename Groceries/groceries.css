@@ -262,13 +262,8 @@ body {
   cursor: pointer;
 }
 
-.carousel .left {
-  left: 10px;
-}
-
-.carousel .right {
-  right: 10px;
-}
+.carousel .left { left: 10px; }
+.carousel .right { right: 10px; }
 
 #dots {
   display: flex;
@@ -332,7 +327,7 @@ body {
 }
 
 /* ===========================
-   ITEM ROWS (FORM)
+   ITEM ROWS
 =========================== */
 .item-card {
   border: 1px solid #eee;
@@ -367,9 +362,7 @@ body {
   border-radius: 6px;
 }
 
-.item-qty {
-  margin-top: 8px;
-}
+.item-qty { margin-top: 8px; }
 
 .qty-label {
   font-size: 12px;
@@ -397,7 +390,7 @@ body {
 }
 
 /* ===========================
-   CATALOG MODAL
+   CATALOG
 =========================== */
 .catalog-item-card {
   display: flex;
@@ -462,15 +455,6 @@ body {
   resize: none;
 }
 
-#shopSubmitBtn {
-  background: #c12872;
-  border: none;
-  color: white;
-  padding: 10px 14px;
-  font-size: 16px;
-  border-radius: 8px;
-}
-
 /* ===========================
    WAITING MODAL
 =========================== */
@@ -488,118 +472,6 @@ body {
   border-radius: 7px;
   width: 0%;
   transition: width 0.3s ease;
-}
-
-/* ===========================
-   ADMIN PANEL
-=========================== */
-#adminPanel {
-  display: none;
-  padding: 20px;
-}
-
-.admin-item-card {
-  border: 1px solid #ddd;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 10px;
-}
-
-.admin-row1 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.admin-item-name {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-weight: 600;
-}
-
-.admin-row2 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.avail-toggle {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  font-size: 13px;
-  color: white;
-}
-
-.avail-toggle.on {
-  background: #0a7d0a;
-}
-
-.avail-toggle.off {
-  background: #b00020;
-}
-
-.price-input {
-  width: 110px;
-  border: 1px solid #ccc;
-  padding: 6px;
-  border-radius: 6px;
-}
-
-.subtotal {
-  margin-left: auto;
-  font-weight: bold;
-}
-
-/* ===========================
-   CUSTOMER PANEL
-=========================== */
-#customerPanel {
-  display: none;
-  padding: 20px;
-}
-
-.cust-item-card {
-  border: 1px solid #eee;
-  padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 12px;
-}
-
-.cust-row1 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.cust-row2 {
-  margin-top: 10px;
-}
-
-.cust-badge {
-  padding: 4px 8px;
-  background: #0a7d0a;
-  color: #fff;
-  font-size: 12px;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.cust-badge.off {
-  background: #b00020;
-}
-
-.cust-totals .line {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-}
-
-.cust-totals .grand {
-  font-weight: bold;
-  font-size: 15px;
 }
 
 /* ===========================
