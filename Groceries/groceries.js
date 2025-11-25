@@ -1,5 +1,3 @@
-// groceries.js
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
@@ -30,7 +28,7 @@ const storage = getStorage(app);
 /* ===== Constants ===== */
 const ADMIN_CODE = "123456"; // simple front-door for now
 const SERVICE_FEE_DEFAULT  = 0;
-const DELIVERY_FEE_DEFAULT = 0;
+the DELIVERY_FEE_DEFAULT = 0;
 
 /* Collections that match your rules */
 const linksCol   = collection(db, "Groceries", "Links", "items");
@@ -508,9 +506,7 @@ function closeChooseMode(){
 openFormBtn.addEventListener("click", openChooseMode);
 cancelBtn.addEventListener("click", closeForm);
 
-modeCancelBtn.addEventListener("click", ()=>{
-  closeChooseMode();
-});
+modeCancelBtn.addEventListener("click", closeChooseMode);
 modeTypeBtn.addEventListener("click", ()=>{
   closeChooseMode();
   // open normal form (type manually)
