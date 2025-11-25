@@ -5,25 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Groceries – PickMe Services</title>
 
-<!-- LOAD CSS (CORRECT PATH WITH CAPITAL G) -->
-<link rel="stylesheet" href="/Groceries/groceries.css">
+<!-- CSS -->
+<link rel="stylesheet" href="/Groceries/groceries.css" />
 
 </head>
-
 <body class="hide-initial">
 
-<!-- HEADER PLACEHOLDER (MOVED OUTSIDE HEAD TO FIX BLANK PAGE) -->
+<!-- HEADER -->
 <div id="header-placeholder"></div>
-
 <script>
 (async () => {
   try {
-    const response = await fetch('/header.html');
-    if (!response.ok) throw new Error("Failed to load header");
-    const html = await response.text();
-    document.getElementById("header-placeholder").innerHTML = html;
+    const res = await fetch("/header.html");
+    if (!res.ok) throw new Error("Header missing");
+    const html = await res.text();
+    document.querySelector("#header-placeholder").innerHTML = html;
   } catch (err) {
-    console.error(err);
+    console.error("Header load error:", err);
   }
 })();
 </script>
@@ -45,7 +43,7 @@
 </div>
 
 <!-- Category Tabs -->
-<div class="tabs">
+<div class="tabs" id="tabs">
   <div class="tab active" data-cat="All">All</div>
   <div class="tab" data-cat="Stores">Stores</div>
   <div class="tab" data-cat="Supermarkets">Supermarkets</div>
@@ -59,7 +57,7 @@
 <div id="detailsPanel">
   <button id="detailsBackBtn">&times;</button>
 
-  <section class="banner" id="detailsBanner">
+  <section id="detailsBanner">
     <div class="banner-text">
       <h2>Welcome to</h2>
       <h1 id="shopName"></h1>
@@ -71,7 +69,7 @@
     <div class="section-title">Sample of items sold</div>
 
     <div class="carousel" id="carousel"></div>
-    <div class="dots" id="dots"></div>
+    <div id="dots"></div>
 
     <div class="action-row">
       <button class="btn-primary" id="openFormBtn">+ Add Items to your list</button>
@@ -204,25 +202,26 @@
   <div class="modal-box">
     <h3>We are confirming your prices</h3>
     <p>Please wait <span id="waitingDots"></span></p>
+
     <div class="waiting-bar">
       <div id="waitingProgressBar" class="waiting-bar-fill"></div>
     </div>
-    <p id="waitingCounter">0 of 0 items reviewed</p>
 
+    <p id="waitingCounter">0 of 0 items reviewed</p>
     <button id="waitingBtn" class="btn-primary" style="display:none;">View reviewed list</button>
   </div>
 </div>
 
-<!-- Panels -->
+<!-- PANELS -->
 <div id="adminPanel"></div>
 <div id="customerPanel"></div>
 
 <!-- FOOTER -->
-<div class="footer-wrap">
+<div style="margin-top:30px;">
   <iframe src="/footer.html" style="width:100%;height:60px;border:none;"></iframe>
 </div>
 
-<!-- LOAD JS (CORRECT PATH WITH CAPITAL G) -->
+<!-- JS -->
 <script type="module" src="/Groceries/groceries.js"></script>
 
 </body>
