@@ -3,52 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PickMe Groceries</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
+  <title>Groceries - PickMe Services</title>
 
-  <!-- Your full HTML UI goes here — even a minimal one works -->
-  <div id="homeHeader">
-    <h1>PickMe Groceries</h1>
-    <p>Order from local shops & markets</p>
+  <!-- Load external CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Header placeholder (will be filled by header.html) -->
+  <div id="header-placeholder"></div>
+
+  <script>
+    // Load header.html and inject it with dynamic title
+    (async () => {
+      try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error('Header not found');
+        let html = await response.text();
+        const pageTitle = "Groceries";
+        html = html.replace(
+          /<h1[^>]*>.*?<\/h1>/i,
+          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+        );
+        document.getElementById('header-placeholder').innerHTML = html;
+
+        // Re-inject any scripts from header.html
+        document.querySelectorAll('#header-placeholder script').forEach(old => {
+          const script = document.createElement('script');
+          if (old.src) script.src = old.src;
+          else script.textContent = old.textContent;
+          document.body.appendChild(script);
+        });
+      } catch (err) {
+        console.error("Failed to load header:", err);
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <style>
+    body.hide-initial * { visibility: hidden !important; }
+    body.ready * { visibility: visible !important; }
+  </style>
+
+  <script>
+    // Hide page flash
+    document.documentElement.style.background = "#fff";
+    document.body.classList.add("hide-initial");
+  </script>
+
+  <!-- ===== Home ===== -->
+  <div class="page-header" id="homeHeader">
+    <h1></h1>
+    <p>Find grocery shops around you and send your list</p>
   </div>
 
   <div class="add-shop-wrap">
-    <button id="openShopBtn">+ Add Your Shop</button>
+    <button id="openShopBtn">Add your grocery shop</button>
   </div>
 
-  <div id="homeSearch">
-    <input type="text" id="searchInput" placeholder="Search shops..." />
+  <div class="search-bar" id="homeSearch">
+    <input type="text" id="searchInput" placeholder="Search grocery shops...">
   </div>
 
-  <div id="tabs">
-    <button class="tab active" data-cat="All">All</button>
-    <button class="tab" data-cat="Supermarkets">Supermarkets</button>
-    <button class="tab" data-cat="Stores">Stores</button>
-    <button class="tab" data-cat="Market">Markets</button>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-cat="All">All</div>
+    <div class="tab" data-cat="Stores">Stores</div>
+    <div class="tab" data-cat="Supermarkets">Supermarkets</div>
+    <div class="tab" data-cat="Market">Market</div>
   </div>
 
-  <div id="cardsContainer"></div>
+  <div class="cards-container" id="cardsContainer"></div>
 
-  <!-- Details Panel -->
+  <!-- ================= DETAILS PANEL ================= -->
   <div id="detailsPanel">
-    <button id="detailsBackBtn">Back</button>
-    <div id="detailsBanner"></div>
-    <h2 id="shopName"></h2>
-    <p id="shopSlogan"></p>
-    <div id="carousel"></div>
-    <div id="dots"></div>
-    <button id="openFormBtn" class="btn-primary">Start Shopping</button>
+    <button id="detailsBackBtn">×</button>
+    <section class="banner" id="detailsBanner">
+      <div class="banner-text">
+        <h2>Welcome to</h2>
+        <h1 id="shopName"></h1>
+        <p id="shopSlogan"></p>
+      </div>
+    </section>
+
+    <div class="details-content">
+      <div class="section-title">Sample of items sold</div>
+      <div class="carousel" id="carousel"></div>
+      <div class="dots" id="dots"></div>
+      <div class="action-row">
+        <button class="btn-primary" id="openFormBtn">+ Add Items to your list</button>
+      </div>
+    </div>
   </div>
 
-  <!-- All your modals (formModal, chooseModeModal, catalogModal, etc.) go here -->
-  <!-- I'm skipping pasting 1000 lines — just keep whatever you had before -->
+  <!-- All modals (form, choose mode, catalog, shop, waiting, admin, customer) -->
+  <!-- ... (they will stay exactly as in your original code) ... -->
 
-  <!-- CRITICAL: This line MUST be at the very bottom -->
-  <script type="module" src="./groceries.js"></script>
+  <!-- We'll put ALL the modals in Part 2 so this message doesn't get cut -->
+
+  <!-- Load JavaScript at the end (as module) -->
+  <script type="module" src="groceries.js"></script>
+
+  <!-- Footer -->
+  <div class="footer-wrap">
+    <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+  </div>
 </body>
 </html>
