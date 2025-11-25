@@ -20,14 +20,15 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-/* ================== HEADER LOADER (was in <head>) ================== */
+/* ================== HEADER LOADER (original behaviour) ================== */
 (async () => {
   try {
-    const response = await fetch('header.html');
+    const response = await fetch('/header.html'); // root header, works from /Groceries/
     if (!response.ok) throw new Error('Failed to load header');
     let html = await response.text();
     const pageTitle = "Groceries";
-    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+    html = html.replace(
+      /<h1[^>]*>.*?<\/h1>/i,
       `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
     );
     const placeholder = document.getElementById('header-placeholder');
@@ -45,9 +46,9 @@ import {
   }
 })();
 
-/* ================== BODY HIDE INITIAL (was inline in <body>) ================== */
+/* ================== BODY HIDE INITIAL (same as original) ================== */
 document.documentElement.style.background = "#fff";
-if (document.body) {
+if (document.body && !document.body.classList.contains("hide-initial")) {
   document.body.classList.add("hide-initial");
 }
 
@@ -142,7 +143,7 @@ const openFormBtn   = document.getElementById("openFormBtn");
 const formModal     = document.getElementById("formModal");
 const itemsHolder   = document.getElementById("itemsHolder");
 const addRowBtn     = document.getElementById("addRowBtn");
-const clearAllBtn   = document.getElementById("clearAllBtn");
+const clearAllBtn   = document.getElementById("clearAllBtn"); // may be null (HTML doesn’t have it now)
 const customerNameInput = document.getElementById("customerName");
 const customerPhoneInput= document.getElementById("customerPhone");
 const submitBtn     = document.getElementById("submitBtn");
@@ -159,7 +160,7 @@ const catalogModal        = document.getElementById("catalogModal");
 const catalogSearchInput  = document.getElementById("catalogSearch");
 const catalogListEl       = document.getElementById("catalogList");
 const catalogSelectedCount= document.getElementById("catalogSelectedCount");
-const catalogCloseBtn     = document.getElementById("catalogCloseBtn");
+const catalogCloseBtn     = document.getElementById("catalogCloseBtn"); // may be null in current HTML
 const catalogCancelBtn    = document.getElementById("catalogCancelBtn");
 const catalogDoneBtn      = document.getElementById("catalogDoneBtn");
 
@@ -176,6 +177,7 @@ const shopSloganInput  = document.getElementById("shopSloganInput");
 const shopShortDesc    = document.getElementById("shopShortDesc");
 const shopCategorySel  = document.getElementById("shopCategory");
 const shopPlanSel      = document.getElementById("shopPlan");
+// In your current HTML there is no town / shop phone fields, so we keep them optional:
 const shopTownInput    = document.getElementById("shopTown");
 const shopPhoneInput   = document.getElementById("shopPhone");
 const shopMainImage    = document.getElementById("shopMainImage");
@@ -184,7 +186,7 @@ const shopError        = document.getElementById("shopError");
 
 /* Waiting modal */
 const waitingModal = document.getElementById("waitingModal");
-const waitingMsg   = document.getElementById("waitingMsg");
+const waitingMsg   = document.getElementById("waitingMsg"); // optional, not used
 const waitingDots  = document.getElementById("waitingDots");
 const waitingBtn   = document.getElementById("waitingBtn");
 
@@ -421,6 +423,7 @@ async function fetchShopCatalog(shopName){
 
 /* ====== Cards ====== */
 function renderCards(activeCategory="All", term=""){
+  if (!cardsContainer) return;
   cardsContainer.innerHTML = "";
   const q = (term||"").trim().toLowerCase();
 
@@ -468,17 +471,21 @@ function renderCards(activeCategory="All", term=""){
 /* ====== Details & Carousel ====== */
 function openShop(shop){
   currentShop = shop;
-  detailsBanner.style.backgroundImage = `url('${shop.heroImage}')`;
-  shopNameEl.textContent = shop.name;
-  shopSloganEl.textContent = shop.slogan || "";
+  if (detailsBanner) detailsBanner.style.backgroundImage = `url('${shop.heroImage}')`;
+  if (shopNameEl)   shopNameEl.textContent = shop.name;
+  if (shopSloganEl) shopSloganEl.textContent = shop.slogan || "";
   buildCarousel(shop.samples||[]);
   loadItemsForShop(shop.name);
-  detailsPanel.classList.add("show");
+  if (detailsPanel) detailsPanel.classList.add("show");
 }
-detailsBackBtn.addEventListener("click",()=>detailsPanel.classList.remove("show"));
+if (detailsBackBtn && detailsPanel){
+  detailsBackBtn.addEventListener("click",()=>detailsPanel.classList.remove("show"));
+}
 
 function buildCarousel(images){
-  carouselEl.innerHTML=""; dotsEl.innerHTML="";
+  if (!carouselEl || !dotsEl) return;
+  carouselEl.innerHTML=""; 
+  dotsEl.innerHTML="";
   if (!images || !images.length) return;
   images.forEach((src,i)=>{
     const img=document.createElement("img"); img.src=src; img.alt=`sample-${i+1}`;
@@ -522,14 +529,15 @@ function openForm(){
     alert("Please open a shop first.");
     return;
   }
+  if (!formModal) return;
   formModal.classList.add("show");
-  formError.style.display="none";
+  if (formError) formError.style.display="none";
   if (!itemsHolder.children.length) addRow();
   const first=itemsHolder.querySelector(".item-card .item-name");
   if (first) setTimeout(()=>first.focus(),50);
 }
 function closeForm(){
-  formModal.classList.remove("show");
+  if (formModal) formModal.classList.remove("show");
 }
 
 /* NEW: choose mode modal logic */
@@ -538,33 +546,38 @@ function openChooseMode(){
     alert("Please open a shop first.");
     return;
   }
-  chooseModeModal.classList.add("show");
+  if (chooseModeModal) chooseModeModal.classList.add("show");
 }
 function closeChooseMode(){
-  chooseModeModal.classList.remove("show");
+  if (chooseModeModal) chooseModeModal.classList.remove("show");
 }
 
-openFormBtn.addEventListener("click", openChooseMode);
-cancelBtn.addEventListener("click", closeForm);
+if (openFormBtn)   openFormBtn.addEventListener("click", openChooseMode);
+if (cancelBtn)     cancelBtn.addEventListener("click", closeForm);
+if (modeCancelBtn) modeCancelBtn.addEventListener("click", closeChooseMode);
 
-modeCancelBtn.addEventListener("click", closeChooseMode);
-modeTypeBtn.addEventListener("click", ()=>{
-  closeChooseMode();
-  // open normal form (type manually)
-  openForm();
-});
-modeSelectBtn.addEventListener("click", async ()=>{
-  closeChooseMode();
-  await openCatalogModalForCurrentShop();
-});
+if (modeTypeBtn){
+  modeTypeBtn.addEventListener("click", ()=>{
+    closeChooseMode();
+    openForm();
+  });
+}
+if (modeSelectBtn){
+  modeSelectBtn.addEventListener("click", async ()=>{
+    closeChooseMode();
+    await openCatalogModalForCurrentShop();
+  });
+}
 
 let stickyFocusEl=null;
-formModal.addEventListener('focusin',e=>{
-  if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) stickyFocusEl=e.target;
-});
-formModal.addEventListener('mousedown',e=>{
-  if (e.target.closest('button')) e.preventDefault();
-});
+if (formModal){
+  formModal.addEventListener('focusin',e=>{
+    if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) stickyFocusEl=e.target;
+  });
+  formModal.addEventListener('mousedown',e=>{
+    if (e.target.closest('button')) e.preventDefault();
+  });
+}
 function restoreFocusSoon(el=stickyFocusEl){ setTimeout(()=>{ if(el) el.focus(); },0); }
 
 function renumberRows(){
@@ -620,37 +633,48 @@ function addRow(itemVal="", qtyVal="1"){
 
   itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0); persist();
 }
-addRowBtn.addEventListener("click",()=>{
-  const last=itemsHolder.querySelector(".item-card:last-child .item-name");
-  if (last && !last.value.trim()){ last.focus(); return; }
-  addRow();
-  const newest=itemsHolder.querySelector(".item-card:last-child .item-name");
-  restoreFocusSoon(newest);
-});
-clearAllBtn.addEventListener("click", ()=>{
-  if (!currentShop) return;
-  itemsHolder.innerHTML="";
-  renumberRows();
-  sessionStorage.removeItem(shopKeyStorage(currentShop.name));
-});
+if (addRowBtn){
+  addRowBtn.addEventListener("click",()=>{
+    const last=itemsHolder.querySelector(".item-card:last-child .item-name");
+    if (last && !last.value.trim()){ last.focus(); return; }
+    addRow();
+    const newest=itemsHolder.querySelector(".item-card:last-child .item-name");
+    restoreFocusSoon(newest);
+  });
+}
+
+/* Clear all – guarded so blank page doesn’t happen if button isn’t in HTML */
+if (clearAllBtn){
+  clearAllBtn.addEventListener("click", ()=>{
+    if (!currentShop) return;
+    itemsHolder.innerHTML="";
+    renumberRows();
+    sessionStorage.removeItem(shopKeyStorage(currentShop.name));
+  });
+}
 
 /* ===== Catalog modal logic ===== */
 function resetCatalogModal(){
   currentCatalogItems = [];
   selectedCatalogIds = new Set();
-  catalogSearchInput.value = "";
-  catalogListEl.innerHTML = "";
-  catalogSelectedCount.textContent = "0";
+  if (catalogSearchInput) catalogSearchInput.value = "";
+  if (catalogListEl) catalogListEl.innerHTML = "";
+  if (catalogSelectedCount) catalogSelectedCount.textContent = "0";
 }
 function closeCatalogModal(){
-  catalogModal.classList.remove("show");
+  if (catalogModal) catalogModal.classList.remove("show");
   resetCatalogModal();
 }
-catalogCloseBtn.addEventListener("click", closeCatalogModal);
-catalogCancelBtn.addEventListener("click", closeCatalogModal);
+if (catalogCloseBtn){
+  catalogCloseBtn.addEventListener("click", closeCatalogModal);
+}
+if (catalogCancelBtn){
+  catalogCancelBtn.addEventListener("click", closeCatalogModal);
+}
 
 function updateCatalogSelectionUI(){
-  catalogSelectedCount.textContent = String(selectedCatalogIds.size);
+  if (catalogSelectedCount) catalogSelectedCount.textContent = String(selectedCatalogIds.size);
+  if (!catalogListEl) return;
   const cards = catalogListEl.querySelectorAll(".catalog-item-card");
   cards.forEach(card=>{
     const id = card.dataset.id;
@@ -666,6 +690,7 @@ function updateCatalogSelectionUI(){
 }
 
 function renderCatalogList(filterTerm=""){
+  if (!catalogListEl) return;
   const q = (filterTerm||"").trim().toLowerCase();
   catalogListEl.innerHTML = "";
   if (!currentCatalogItems.length){
@@ -717,7 +742,7 @@ function renderCatalogList(filterTerm=""){
 }
 
 async function openCatalogModalForCurrentShop(){
-  if (!currentShop) return;
+  if (!currentShop || !catalogModal || !catalogListEl || !catalogSelectedCount) return;
   catalogModal.classList.add("show");
   catalogListEl.innerHTML = `<p style="font-size:14px;color:#666;">Loading items for this shop...</p>`;
   catalogSelectedCount.textContent = "0";
@@ -730,56 +755,63 @@ async function openCatalogModalForCurrentShop(){
     catalogListEl.innerHTML = `<p style="font-size:14px;color:#b00020;">Unable to load shop items. You may close this and type items yourself.</p>`;
   }
 }
-catalogSearchInput.addEventListener("input", ()=>{
-  renderCatalogList(catalogSearchInput.value);
-});
+if (catalogSearchInput){
+  catalogSearchInput.addEventListener("input", ()=>{
+    renderCatalogList(catalogSearchInput.value);
+  });
+}
 
-catalogDoneBtn.addEventListener("click", ()=>{
-  if (!selectedCatalogIds.size){
-    alert("Please select at least one item, or cancel and choose 'Type items yourself'.");
-    return;
-  }
-  const names = [];
-  currentCatalogItems.forEach(it=>{
-    if (selectedCatalogIds.has(it.id)){
-      names.push(it.name);
+if (catalogDoneBtn){
+  catalogDoneBtn.addEventListener("click", ()=>{
+    if (!selectedCatalogIds.size){
+      alert("Please select at least one item, or cancel and choose 'Type items yourself'.");
+      return;
     }
-  });
+    const names = [];
+    currentCatalogItems.forEach(it=>{
+      if (selectedCatalogIds.has(it.id)){
+        names.push(it.name);
+      }
+    });
 
-  closeCatalogModal();
+    closeCatalogModal();
 
-  // Fill the existing form with selected items
-  itemsHolder.innerHTML = "";
-  renumberRows();
-  names.forEach(name=>{
-    addRow(name, "1");
+    itemsHolder.innerHTML = "";
+    renumberRows();
+    names.forEach(name=>{
+      addRow(name, "1");
+    });
+    if (formError) formError.style.display = "none";
+    if (formModal) formModal.classList.add("show");
   });
-  formError.style.display = "none";
-  formModal.classList.add("show");
-});
+}
 
 /* ===== Waiting modal logic ===== */
 function openWaitingModal(adminId) {
+  if (!waitingModal) return;
   if (waitingUnsub) waitingUnsub();
 
   waitingModal.classList.add("show");
 
-  const dotsEl2 = document.getElementById("waitingDots");
+  const dotsEl2 = waitingDots;
   const bar = document.getElementById("waitingProgressBar");
   const counter = document.getElementById("waitingCounter");
-  const btn = document.getElementById("waitingBtn");
-  const topMsg = document.getElementById("waitingTopMsg");
+  const btn = waitingBtn;
+  const topMsg = document.getElementById("waitingTopMsg"); // optional, may be null
 
-  btn.style.display = "none";
-  btn.disabled = true;
+  if (btn){
+    btn.style.display = "none";
+    btn.disabled = true;
+  }
 
-  // start dot animation
   let d = 0;
   if (waitingDotsTimer) clearInterval(waitingDotsTimer);
-  waitingDotsTimer = setInterval(() => {
-    d = (d + 1) % 4;
-    dotsEl2.textContent = ".".repeat(d);
-  }, 450);
+  if (dotsEl2){
+    waitingDotsTimer = setInterval(() => {
+      d = (d + 1) % 4;
+      dotsEl2.textContent = ".".repeat(d);
+    }, 450);
+  }
 
   const adminDocRef = doc(linksCol, adminId);
 
@@ -790,125 +822,137 @@ function openWaitingModal(adminId) {
     const items = data.payload?.items || [];
     const total = items.length;
 
-    // Count reviewed items (available flag OR price filled)
     let reviewed = 0;
     items.forEach(it => {
       if (it.available === false || it.price != null) reviewed++;
     });
 
-    // update progress bar + counter
-    const pct = total > 0 ? (reviewed / total) * 100 : 0;
-    bar.style.width = pct + "%";
-    counter.textContent = `${reviewed} of ${total} items reviewed`;
+    if (bar){
+      const pct = total > 0 ? (reviewed / total) * 100 : 0;
+      bar.style.width = pct + "%";
+    }
+    if (counter){
+      counter.textContent = `${reviewed} of ${total} items reviewed`;
+    }
 
-    // check if admin finished AND created orderId
     if (reviewed === total && data.orderId) {
-      // stop dots
       if (waitingDotsTimer) clearInterval(waitingDotsTimer);
-      dotsEl2.textContent = "";
+      if (dotsEl2) dotsEl2.textContent = "";
 
-      // change to "Review Completed"
-      topMsg.innerHTML = `<span style="color:#0a7d0a;font-weight:bold;">Review Completed</span>`;
+      if (topMsg){
+        topMsg.innerHTML = `<span style="color:#0a7d0a;font-weight:bold;">Review Completed</span>`;
+      }
 
-      // show button
       currentOrderId = data.orderId;
-      btn.style.display = "inline-block";
-      btn.disabled = false;
+      if (btn){
+        btn.style.display = "inline-block";
+        btn.disabled = false;
+      }
     }
 
   }, err => console.error(err));
 }
 
-waitingBtn.addEventListener("click", () => {
-  if (!currentOrderId) return;
-  const url = new URL(location.href);
-  url.searchParams.set("order", currentOrderId);
-  url.searchParams.delete("admin");
-  window.location.href = url.toString();
-});
+if (waitingBtn){
+  waitingBtn.addEventListener("click", () => {
+    if (!currentOrderId) return;
+    const url = new URL(location.href);
+    url.searchParams.set("order", currentOrderId);
+    url.searchParams.delete("admin");
+    window.location.href = url.toString();
+  });
+}
 
 /* ===== Submit item list: create admin link in Firestore (no link shown to user) ===== */
-submitBtn.addEventListener("click", async ()=>{
-  const rows=[...itemsHolder.querySelectorAll(".item-card")];
-  const items=rows.map(r=>{
-    const name=(r.querySelector(".item-name").value||"").trim();
-    let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
-    if(!qty||qty<1) qty=1;
-    return { name, qty };
-  }).filter(x=>x.name);
+if (submitBtn){
+  submitBtn.addEventListener("click", async ()=>{
+    const rows=[...itemsHolder.querySelectorAll(".item-card")];
+    const items=rows.map(r=>{
+      const name=(r.querySelector(".item-name").value||"").trim();
+      let qty=parseInt(r.querySelector(".qty-input").value||"1",10);
+      if(!qty||qty<1) qty=1;
+      return { name, qty };
+    }).filter(x=>x.name);
 
-  const fullName = customerNameInput.value.trim();
-  const phoneRaw = customerPhoneInput.value.trim();
-  const norm = normalizeGhanaNumber(phoneRaw);
+    const fullName = customerNameInput ? customerNameInput.value.trim() : "";
+    const phoneRaw = customerPhoneInput ? customerPhoneInput.value.trim() : "";
+    const norm = normalizeGhanaNumber(phoneRaw);
 
-  if (!items.length){
-    formError.textContent="Please add at least one item before submitting.";
-    formError.style.display="block";
-    return;
-  }
-  if (!fullName){
-    formError.textContent="Please enter your full name.";
-    formError.style.display="block";
-    customerNameInput.focus();
-    return;
-  }
-  if (!norm){
-    formError.textContent="Please enter a valid phone number.";
-    formError.style.display="block";
-    customerPhoneInput.focus();
-    return;
-  }
-  formError.style.display="none";
+    if (!formError) return;
 
-  const adminPayload = {
-    type:"admin",
-    shop: currentShop.name,
-    shopPhone: currentShop.phone || "",
-    customerName: fullName,
-    customerPhone: norm.e164,
-    items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
-    fees: { service:SERVICE_FEE_DEFAULT, delivery:DELIVERY_FEE_DEFAULT }
-  };
+    if (!items.length){
+      formError.textContent="Please add at least one item before submitting.";
+      formError.style.display="block";
+      return;
+    }
+    if (!fullName){
+      formError.textContent="Please enter your full name.";
+      formError.style.display="block";
+      if (customerNameInput) customerNameInput.focus();
+      return;
+    }
+    if (!norm){
+      formError.textContent="Please enter a valid phone number.";
+      formError.style.display="block";
+      if (customerPhoneInput) customerPhoneInput.focus();
+      return;
+    }
+    formError.style.display="none";
 
-  try {
-    const adminId = await putShort(adminPayload);
-    saveItemsForShop(currentShop.name);
-    formModal.classList.remove("show");
-    openWaitingModal(adminId);
-    adminDocId = adminId;
-  } catch (e) {
-    console.error(e);
-    formError.textContent = "Something went wrong sending your list. Please try again.";
-    formError.style.display="block";
-  }
-});
+    const adminPayload = {
+      type:"admin",
+      shop: currentShop.name,
+      shopPhone: currentShop.phone || "",
+      customerName: fullName,
+      customerPhone: norm.e164,
+      items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
+      fees: { service:SERVICE_FEE_DEFAULT, delivery:DELIVERY_FEE_DEFAULT }
+    };
+
+    try {
+      const adminId = await putShort(adminPayload);
+      saveItemsForShop(currentShop.name);
+      if (formModal) formModal.classList.remove("show");
+      openWaitingModal(adminId);
+      adminDocId = adminId;
+    } catch (e) {
+      console.error(e);
+      formError.textContent = "Something went wrong sending your list. Please try again.";
+      formError.style.display="block";
+    }
+  });
+}
 
 /* ===== Add Grocery Shop modal logic ===== */
 function resetShopForm(){
-  ownerNameInput.value = "";
-  ownerPhoneInput.value = "";
-  shopNameInput.value = "";
-  shopSloganInput.value = "";
-  shopShortDesc.value = "";
-  shopCategorySel.value = "";
-  shopPlanSel.value = "";
-  shopTownInput.value = "";
-  shopPhoneInput.value = "";
-  shopMainImage.value = "";
-  shopSampleImages.value = "";
+  if (ownerNameInput)  ownerNameInput.value = "";
+  if (ownerPhoneInput) ownerPhoneInput.value = "";
+  if (shopNameInput)   shopNameInput.value = "";
+  if (shopSloganInput) shopSloganInput.value = "";
+  if (shopShortDesc)   shopShortDesc.value = "";
+  if (shopCategorySel) shopCategorySel.value = "";
+  if (shopPlanSel)     shopPlanSel.value = "";
+  if (shopTownInput)   shopTownInput.value = "";
+  if (shopPhoneInput)  shopPhoneInput.value = "";
+  if (shopMainImage)   shopMainImage.value = "";
+  if (shopSampleImages)shopSampleImages.value = "";
 }
 
 function openShopModal(){
-  shopError.style.display="none";
-  shopError.textContent="";
+  if (!shopModal) return;
+  if (shopError){
+    shopError.style.display="none";
+    shopError.textContent="";
+  }
   shopModal.classList.add("show");
 }
 function closeShopModal(){
+  if (!shopModal) return;
   shopModal.classList.remove("show");
 }
-openShopBtn.addEventListener("click", openShopModal);
-shopCloseBtn.addEventListener("click", closeShopModal);
-shopCancelBtn.addEventListener("click", closeShopModal);
+if (openShopBtn)  openShopBtn.addEventListener("click", openShopModal);
+if (shopCloseBtn) shopCloseBtn.addEventListener("click", closeShopModal);
+if (shopCancelBtn)shopCancelBtn.addEventListener("click", closeShopModal);
 
 async function uploadFile(path, file){
   const r = ref(storage, path);
@@ -916,166 +960,164 @@ async function uploadFile(path, file){
   return await getDownloadURL(snap.ref);
 }
 
-shopSubmitBtn.addEventListener("click", async ()=>{
-  const ownerName = ownerNameInput.value.trim();
-  const ownerPhoneRaw = ownerPhoneInput.value.trim();
-  const shopNameVal = shopNameInput.value.trim();
-  const slogan = shopSloganInput.value.trim();
-  const shortDescVal = shopShortDesc.value.trim();
-  const category = shopCategorySel.value;
-  const planVal  = shopPlanSel.value;
-  const town     = shopTownInput.value.trim();
-  const shopPhoneRaw = shopPhoneInput.value.trim();
+if (shopSubmitBtn){
+  shopSubmitBtn.addEventListener("click", async ()=>{
+    const ownerName = ownerNameInput ? ownerNameInput.value.trim() : "";
+    const ownerPhoneRaw = ownerPhoneInput ? ownerPhoneInput.value.trim() : "";
+    const shopNameVal = shopNameInput ? shopNameInput.value.trim() : "";
+    const slogan = shopSloganInput ? shopSloganInput.value.trim() : "";
+    const shortDescVal = shopShortDesc ? shopShortDesc.value.trim() : "";
+    const category = shopCategorySel ? shopCategorySel.value : "";
+    const planVal  = shopPlanSel ? shopPlanSel.value : "";
+    const town     = shopTownInput ? shopTownInput.value.trim() : "";
+    const shopPhoneRaw = shopPhoneInput ? shopPhoneInput.value.trim() : "";
 
-  const ownerNorm = normalizeGhanaNumber(ownerPhoneRaw);
-  const shopNorm  = normalizeGhanaNumber(shopPhoneRaw);
+    if (!shopError) return;
 
-  const mainFile = shopMainImage.files[0] || null;
-  const sampleFiles = Array.from(shopSampleImages.files || []);
+    const ownerNorm = normalizeGhanaNumber(ownerPhoneRaw);
+    const shopNorm  = normalizeGhanaNumber(shopPhoneRaw);
 
-  if (!ownerName || !ownerNorm || !shopNameVal || !category || !planVal || !town || !shopNorm || !mainFile) {
-    shopError.textContent = "Please fill in all fields and choose images before submitting.";
-    shopError.style.display = "block";
-    return;
-  }
-  if (!sampleFiles.length){
-    shopError.textContent = "Please upload at least one sample item picture.";
-    shopError.style.display = "block";
-    return;
-  }
-  if (sampleFiles.length > 5){
-    shopError.textContent = "You can upload a maximum of 5 sample pictures.";
-    shopError.style.display = "block";
-    return;
-  }
+    const mainFile = shopMainImage && shopMainImage.files ? (shopMainImage.files[0] || null) : null;
+    const sampleFiles = shopSampleImages && shopSampleImages.files
+      ? Array.from(shopSampleImages.files || [])
+      : [];
 
-  // derive subscription info
-  const [planKey, priceStr] = planVal.split("_");
-  const priceNum = Number(priceStr || 0);
-  let months = 0;
-  if (planKey === "1m") months = 1;
-  else if (planKey === "3m") months = 3;
-  else if (planKey === "6m") months = 6;
-  else if (planKey === "12m") months = 12;
+    if (!ownerName || !ownerNorm || !shopNameVal || !category || !planVal || !mainFile) {
+      shopError.textContent = "Please fill in all required fields and choose images before submitting.";
+      shopError.style.display = "block";
+      return;
+    }
+    if (!sampleFiles.length){
+      shopError.textContent = "Please upload at least one sample item picture.";
+      shopError.style.display = "block";
+      return;
+    }
+    if (sampleFiles.length > 5){
+      shopError.textContent = "You can upload a maximum of 5 sample pictures.";
+      shopError.style.display = "block";
+      return;
+    }
 
-  const planLabelMap = {
-    "1m_50": "1 Month 50",
-    "3m_100": "3 Months 100",
-    "6m_200": "6 Months 200",
-    "12m_300": "1 Year 300"
-  };
-  const planLabel = planLabelMap[planVal] || planVal;
+    const [planKey, priceStr] = planVal.split("_");
+    const priceNum = Number(priceStr || 0);
+    let months = 0;
+    if (planKey === "1m") months = 1;
+    else if (planKey === "3m") months = 3;
+    else if (planKey === "6m") months = 6;
+    else if (planKey === "12m") months = 12;
 
-  shopError.style.display="none";
-  shopError.textContent="";
+    const planLabelMap = {
+      "1m_50": "1 Month 50",
+      "3m_100": "3 Months 100",
+      "6m_200": "6 Months 200",
+      "12m_300": "1 Year 300"
+    };
+    const planLabel = planLabelMap[planVal] || planVal;
 
-  const slug = slugify(shopNameVal);
-  const originalText = shopSubmitBtn.textContent;
-  const originalWidth = shopSubmitBtn.offsetWidth;
-  shopSubmitBtn.disabled = true;
+    shopError.style.display="none";
+    shopError.textContent="";
 
-  // FIX: lock button width so it doesn't change as dots change
-  shopSubmitBtn.style.width = originalWidth + "px";
+    const slug = slugify(shopNameVal);
+    const originalText = shopSubmitBtn.textContent;
+    const originalWidth = shopSubmitBtn.offsetWidth;
+    shopSubmitBtn.disabled = true;
+    shopSubmitBtn.style.width = originalWidth + "px";
 
-  // animated dots on submit button
-  if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
-  let dot = 0;
-  shopSubmitDotsTimer = setInterval(() => {
-    dot = (dot + 1) % 4;
-    shopSubmitBtn.textContent = "Submitting" + ".".repeat(dot);
-  }, 400);
+    if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+    let dot = 0;
+    shopSubmitDotsTimer = setInterval(() => {
+      dot = (dot + 1) % 4;
+      shopSubmitBtn.textContent = "Submitting" + ".".repeat(dot);
+    }, 400);
 
-  try {
-    // ===== PAYMENT TRIGGER BEFORE UPLOAD =====
     try {
-      const payRes = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: priceNum,
-          customerName: ownerName,
-          customerPhone: ownerNorm.e164,
-          shopName: shopNameVal,
-          description: `Grocery Shop Subscription - ${planLabel}`,
-          clientReference: `${slug}_${Date.now()}`,
-          channel: "mtn-gh"
-        })
-      });
+      try {
+        const payRes = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: priceNum,
+            customerName: ownerName,
+            customerPhone: ownerNorm.e164,
+            shopName: shopNameVal,
+            description: `Grocery Shop Subscription - ${planLabel}`,
+            clientReference: `${slug}_${Date.now()}`,
+            channel: "mtn-gh"
+          })
+        });
 
-      const payJson = await payRes.json();
+        const payJson = await payRes.json();
 
-      if (!payJson.ok) {
+        if (!payJson.ok) {
+          if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+          shopSubmitBtn.disabled = false;
+          shopSubmitBtn.textContent = originalText;
+          shopSubmitBtn.style.width = "";
+          shopError.textContent = "Payment failed: " + (payJson.message || "Please try again.");
+          shopError.style.display = "block";
+          return;
+        }
+
+        alert("Payment prompt sent! Please approve on your phone.");
+      } catch (e) {
         if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
         shopSubmitBtn.disabled = false;
         shopSubmitBtn.textContent = originalText;
         shopSubmitBtn.style.width = "";
-        shopError.textContent = "Payment failed: " + (payJson.message || "Please try again.");
+        shopError.textContent = "Unable to start payment. Check your internet.";
         shopError.style.display = "block";
         return;
       }
 
-      alert("Payment prompt sent! Please approve on your phone.");
-    } catch (e) {
-      if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+      const mainPromise = uploadFile(`groceries/shops/${slug}/main.jpg`, mainFile);
+      const samplePromises = sampleFiles.map((file, i) =>
+        uploadFile(`groceries/shops/${slug}/sample_${i+1}.jpg`, file)
+      );
+
+      const mainUrl = await mainPromise;
+      const sampleUrls = await Promise.all(samplePromises);
+
+      await setDoc(doc(pendingShopsItemsCol, slug), {
+        name: shopNameVal,
+        slogan: slogan,
+        desc: shortDescVal || slogan || "",
+        ownerName: ownerName,
+        ownerPhone: ownerNorm.e164,
+        phone: shopNorm ? shopNorm.e164 : "",
+        town: town || "",
+        category: category,
+        price: priceNum,
+        subscription: {
+          code: planVal,
+          label: planLabel,
+          months: months
+        },
+        images: [mainUrl, ...sampleUrls],
+        createdAt: serverTimestamp()
+      });
+
+      alert(
+`Your shop request has been received.
+Once payment is confirmed, we will review and publish your shop, then notify you by SMS.`
+      );
+
+      resetShopForm();
+      closeShopModal();
+    } catch(e) {
+      console.error("submit shop error", e);
+      shopError.textContent = "Something went wrong. Please check your internet and try again.";
+      shopError.style.display = "block";
+    } finally {
+      if (shopSubmitDotsTimer) {
+        clearInterval(shopSubmitDotsTimer);
+        shopSubmitDotsTimer = null;
+      }
       shopSubmitBtn.disabled = false;
       shopSubmitBtn.textContent = originalText;
       shopSubmitBtn.style.width = "";
-      shopError.textContent = "Unable to start payment. Check your internet.";
-      shopError.style.display = "block";
-      return;
     }
-    // ===== END PAYMENT TRIGGER =====
-    
-    // Upload images to Storage in parallel (faster)
-    const mainPromise = uploadFile(`groceries/shops/${slug}/main.jpg`, mainFile);
-    const samplePromises = sampleFiles.map((file, i) =>
-      uploadFile(`groceries/shops/${slug}/sample_${i+1}.jpg`, file)
-    );
-
-    const mainUrl = await mainPromise;
-    const sampleUrls = await Promise.all(samplePromises);
-
-    // Save shop request with shop-name-based ID
-    await setDoc(doc(pendingShopsItemsCol, slug), {
-      name: shopNameVal,
-      slogan: slogan,
-      desc: shortDescVal || slogan || "",
-      ownerName: ownerName,
-      ownerPhone: ownerNorm.e164,
-      phone: shopNorm.e164,
-      town: town,
-      category: category,
-      price: priceNum,
-      subscription: {
-        code: planVal,
-        label: planLabel,
-        months: months
-      },
-      images: [mainUrl, ...sampleUrls],
-      createdAt: serverTimestamp()
-    });
-
-    alert(
-`Your shop request has been received.
-Once payment is confirmed, we will review and publish your shop, then notify you by SMS.`
-    );
-
-    resetShopForm();
-    closeShopModal();
-  } catch(e) {
-    console.error("submit shop error", e);
-    shopError.textContent = "Something went wrong. Please check your internet and try again.";
-    shopError.style.display = "block";
-  } finally {
-    if (shopSubmitDotsTimer) {
-      clearInterval(shopSubmitDotsTimer);
-      shopSubmitDotsTimer = null;
-    }
-    shopSubmitBtn.disabled = false;
-    shopSubmitBtn.textContent = originalText;
-    shopSubmitBtn.style.width = ""; // release width after done
-  }
-});
+  });
+}
 
 /* ===== Admin UI ===== */
 function hideHome(){
@@ -1158,6 +1200,7 @@ function buildAdminCard(idx, rec) {
 }
 
 function renderAdminLists() {
+  if (!adminAvail || !adminUnavail) return;
   adminAvail.innerHTML = "";
   adminUnavail.innerHTML = "";
   currentAdmin.items.forEach((rec, idx) => {
@@ -1167,15 +1210,16 @@ function renderAdminLists() {
 }
 
 function updateTotals() {
+  if (!adminItemsTotal || !adminGrandTotal) return;
   const availableItems = currentAdmin.items.filter(it => it.available && it.price != null);
   const itemsTotal = availableItems.reduce((sum, it) => {
     return sum + (Math.max(1, parseInt(it.qty || 1, 10)) * money(it.price));
   }, 0);
 
-  const service  = availableItems.length > 0
+  const service  = (availableItems.length > 0 && feeServiceInput)
     ? money(feeServiceInput.value || SERVICE_FEE_DEFAULT)
     : 0;
-  const delivery = availableItems.length > 0
+  const delivery = (availableItems.length > 0 && feeDeliveryInput)
     ? money(feeDeliveryInput.value || DELIVERY_FEE_DEFAULT)
     : 0;
 
@@ -1185,90 +1229,93 @@ function updateTotals() {
 
 function openAdmin(payload){
   currentAdmin = JSON.parse(JSON.stringify(payload));
-  adminShop.textContent = `Order · ${currentAdmin.shop || ''}`;
+  if (adminShop) adminShop.textContent = `Order · ${currentAdmin.shop || ''}`;
 
-  adminShopActions.innerHTML='';
-  if (currentAdmin.shopPhone){
-    const a1=document.createElement('a'); a1.href=`tel:${currentAdmin.shopPhone}`; a1.className='call-btn'; a1.innerHTML='📞 Call shop';
-    const a2=document.createElement('a'); a2.href=`https://wa.me/${currentAdmin.shopPhone}`; a2.target='_blank'; a2.className='wa-btn'; a2.innerHTML='🟢 WhatsApp shop';
-    adminShopActions.append(a1,a2);
+  if (adminShopActions){
+    adminShopActions.innerHTML='';
+    if (currentAdmin.shopPhone){
+      const a1=document.createElement('a'); a1.href=`tel:${currentAdmin.shopPhone}`; a1.className='call-btn'; a1.innerHTML='📞 Call shop';
+      const a2=document.createElement('a'); a2.href=`https://wa.me/${currentAdmin.shopPhone}`; a2.target='_blank'; a2.className='wa-btn'; a2.innerHTML='🟢 WhatsApp shop';
+      adminShopActions.append(a1,a2);
+    }
   }
 
   renderAdminLists();
 
-  feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE_DEFAULT;
-  feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE_DEFAULT;
-  feeServiceInput.oninput  = updateTotals;
-  feeDeliveryInput.oninput = updateTotals;
+  if (feeServiceInput)  feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE_DEFAULT;
+  if (feeDeliveryInput) feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE_DEFAULT;
+  if (feeServiceInput)  feeServiceInput.oninput  = updateTotals;
+  if (feeDeliveryInput) feeDeliveryInput.oninput = updateTotals;
   updateTotals();
 
   hideHome();
-  adminPanel.style.display='block';
-  adminPanel.setAttribute('aria-hidden','false');
+  if (adminPanel){
+    adminPanel.style.display='block';
+    adminPanel.setAttribute('aria-hidden','false');
+  }
 }
 
 function closeAdmin(){
-  window.location.href = "groceries.html";
+  window.location.href = "index.html";
 }
-closeAdminBtn.addEventListener('click', closeAdmin);
-adminCancelBtn.addEventListener('click', closeAdmin);
+if (closeAdminBtn)  closeAdminBtn.addEventListener('click', closeAdmin);
+if (adminCancelBtn) adminCancelBtn.addEventListener('click', closeAdmin);
 
 /* Admin Done: create customer link in Firestore AND link it to the admin doc */
-adminDoneBtn.addEventListener('click', async ()=>{
-  const serviceFee  = feeServiceInput.value==='' ? SERVICE_FEE_DEFAULT : +feeServiceInput.value;
-  const deliveryFee = feeDeliveryInput.value==='' ? DELIVERY_FEE_DEFAULT : +feeDeliveryInput.value;
+if (adminDoneBtn){
+  adminDoneBtn.addEventListener('click', async ()=>{
+    const serviceFee  = (!feeServiceInput || feeServiceInput.value==='') ? SERVICE_FEE_DEFAULT : +feeServiceInput.value;
+    const deliveryFee = (!feeDeliveryInput || feeDeliveryInput.value==='') ? DELIVERY_FEE_DEFAULT : +feeDeliveryInput.value;
 
-  const processedItems = currentAdmin.items.map(it=>({
-    name: it.name,
-    qty:  Math.max(1, parseInt(it.qty||1,10)),
-    available: !!it.available,
-    price: (it.available && it.price!=null) ? money(it.price) : null
-  }));
+    const processedItems = currentAdmin.items.map(it=>({
+      name: it.name,
+      qty:  Math.max(1, parseInt(it.qty||1,10)),
+      available: !!it.available,
+      price: (it.available && it.price!=null) ? money(it.price) : null
+    }));
 
-  const anyAvailableWithPrice = processedItems.some(it => it.available && it.price != null);
-  if (!anyAvailableWithPrice){
-    alert("Please mark at least one item as available and set its price before finishing.");
-    return;
-  }
-
-  const customerPayload = {
-    type:'order',
-    shop: currentAdmin.shop,
-    shopPhone: currentAdmin.shopPhone || "",
-    customerName: currentAdmin.customerName || "",
-    customerPhone: currentAdmin.customerPhone || "",
-    items: processedItems,
-    fees: { service: serviceFee, delivery: deliveryFee }
-  };
-
-  try {
-    // update per-shop catalog before creating customer link
-    await syncShopCatalog(currentAdmin.shop, processedItems);
-
-    const id = await putShort(customerPayload);
-    const link = `${location.origin}${location.pathname}?order=${id}`;
-
-    // connect this customer order link back to the admin doc
-    if (adminDocId) {
-      try {
-        await updateDoc(doc(linksCol, adminDocId), { orderId: id });
-      } catch (e) {
-        console.error("Failed to attach orderId to admin doc", e);
-      }
+    const anyAvailableWithPrice = processedItems.some(it => it.available && it.price != null);
+    if (!anyAvailableWithPrice){
+      alert("Please mark at least one item as available and set its price before finishing.");
+      return;
     }
 
-    // For now, still show link to admin (you) for testing
+    const customerPayload = {
+      type:'order',
+      shop: currentAdmin.shop,
+      shopPhone: currentAdmin.shopPhone || "",
+      customerName: currentAdmin.customerName || "",
+      customerPhone: currentAdmin.customerPhone || "",
+      items: processedItems,
+      fees: { service: serviceFee, delivery: deliveryFee }
+    };
+
     try {
-      await navigator.clipboard.writeText(link);
-      alert("Customer summary link copied to clipboard.\nYou can send it to the customer by SMS.");
-    } catch {
-      alert("Customer link:\n" + link);
+      await syncShopCatalog(currentAdmin.shop, processedItems);
+
+      const id = await putShort(customerPayload);
+      const link = `${location.origin}${location.pathname}?order=${id}`;
+
+      if (adminDocId) {
+        try {
+          await updateDoc(doc(linksCol, adminDocId), { orderId: id });
+        } catch (e) {
+          console.error("Failed to attach orderId to admin doc", e);
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(link);
+        alert("Customer summary link copied to clipboard.\nYou can send it to the customer by SMS.");
+      } catch {
+        alert("Customer link:\n" + link);
+      }
+    } catch(e) {
+      console.error("adminDone error", e);
+      alert("Something went wrong creating customer summary.");
     }
-  } catch(e) {
-    console.error("adminDone error", e);
-    alert("Something went wrong creating customer summary.");
-  }
-});
+  });
+}
 
 /* ===== Customer UI ===== */
 function addCustCard(container, idx, it){
@@ -1306,9 +1353,10 @@ function addCustCard(container, idx, it){
 }
 
 function openCustomer(data){
-  custShop.textContent = `Order · ${data.shop || ''}`;
-  custAvail.innerHTML=''; 
-  custUnavail.innerHTML='';
+  if (!customerPanel) return;
+  if (custShop)  custShop.textContent = `Order · ${data.shop || ''}`;
+  if (custAvail) custAvail.innerHTML=''; 
+  if (custUnavail) custUnavail.innerHTML='';
 
   let itemsTotal = 0;
   let availableCount = 0;
@@ -1319,9 +1367,9 @@ function openCustomer(data){
       const qty = Math.max(1, parseInt(it.qty||1,10));
       const sub = money(it.price) * qty;
       itemsTotal += sub;
-      addCustCard(custAvail, i+1, it);
+      if (custAvail) addCustCard(custAvail, i+1, it);
     } else {
-      addCustCard(custUnavail, i+1, it);
+      if (custUnavail) addCustCard(custUnavail, i+1, it);
     }
   });
 
@@ -1329,80 +1377,90 @@ function openCustomer(data){
   const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE_DEFAULT) : 0;
   const grand = itemsTotal + service + delivery;
 
-  custTotalsWrap.innerHTML = `
-    <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
-    <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
-    <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
-    <div class="line grand"><span>Grand total</span><span>GH₵ ${grand.toFixed(2).replace(/\.00$/,'')}</span></div>
-  `;
+  if (custTotalsWrap){
+    custTotalsWrap.innerHTML = `
+      <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
+      <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
+      <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
+      <div class="line grand"><span>Grand total</span><span>GH₵ ${grand.toFixed(2).replace(/\.00$/,'')}</span></div>
+    `;
+  }
 
   hideHome();
   customerPanel.style.display='block';
   customerPanel.setAttribute('aria-hidden','false');
 
-  if (grand <= 0) {
-    custPayBtn.style.display = 'none';
-  } else {
-    custPayBtn.style.display = 'inline-block';
+  if (custPayBtn){
+    if (grand <= 0) {
+      custPayBtn.style.display = 'none';
+    } else {
+      custPayBtn.style.display = 'inline-block';
+    }
+
+    custPayBtn.onclick = async () => {
+      const BACKEND_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
+
+      try {
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            amount: grand,
+            customerName: data.customerName || "",
+            customerPhone: data.customerPhone || "",
+            shopName: data.shop || "",
+            description: `Grocery order - ${data.shop || ""}`,
+            clientReference: currentOrderId || Date.now().toString(36),
+            channel: "mtn-gh"
+          })
+        });
+
+        const json = await res.json();
+
+        if (json.ok) {
+          alert(
+            "We have sent a payment prompt to your phone.\n" +
+            "Please check your Mobile Money and approve to finish the order."
+          );
+          window.location.href = "index.html";
+        } else {
+          alert(
+            "We could not start the payment.\n" +
+            (json.message || "Please try again or contact PickMe.")
+          );
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Network error starting payment. Please try again.");
+      }
+    };
   }
 
-  custPayBtn.onclick = async () => {
-    const BACKEND_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
-
-    try {
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          amount: grand,
-          customerName: data.customerName || "",
-          customerPhone: data.customerPhone || "",
-          shopName: data.shop || "",
-          description: `Grocery order - ${data.shop || ""}`,
-          clientReference: currentOrderId || Date.now().toString(36),
-          channel: "mtn-gh"   // change later based on selected network
-        })
-      });
-
-      const json = await res.json();
-
-      if (json.ok) {
-        alert(
-          "We have sent a payment prompt to your phone.\n" +
-          "Please check your Mobile Money and approve to finish the order."
-        );
-        window.location.href = "groceries.html";
-      } else {
-        alert(
-          "We could not start the payment.\n" +
-          (json.message || "Please try again or contact PickMe.")
-        );
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Network error starting payment. Please try again.");
-    }
-  };
-
-  const goHome = () => window.location.href = "groceries.html";
-  closeCustomerBtn.onclick = goHome;
-  custCancelBtn.onclick = goHome;
+  const goHome = () => window.location.href = "index.html";
+  if (closeCustomerBtn) closeCustomerBtn.onclick = goHome;
+  if (custCancelBtn)   custCancelBtn.onclick = goHome;
 }
 
 /* ===== Tabs + search ===== */
-tabs.forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    tabs.forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    renderCards(tab.dataset.cat, searchInput.value);
+if (tabs && tabs.length){
+  tabs.forEach(tab=>{
+    tab.addEventListener("click",()=>{
+      tabs.forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      const cat = tab.dataset.cat || "All";
+      renderCards(cat, searchInput ? searchInput.value : "");
+    });
   });
-});
-searchInput.addEventListener("input",()=>{
-  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
-  renderCards(active, searchInput.value);
-});
+}
+if (searchInput){
+  searchInput.addEventListener("input",()=>{
+    const activeTab = document.querySelector(".tab.active");
+    const active = activeTab ? (activeTab.dataset.cat || "All") : "All";
+    renderCards(active, searchInput.value);
+  });
+}
 
 /* ===== Router ===== */
 async function router() {
