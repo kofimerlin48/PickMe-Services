@@ -123,8 +123,14 @@ const catalogDoneBtn = document.getElementById("catalogDoneBtn");
 
 const openShopBtn = document.getElementById("openShopBtn");
 const shopModal = document.getElementById("shopModal");
+// Fixed: both buttons now exist in HTML
 const shopCloseBtn = document.getElementById("shopCloseBtn");
 const shopCancelBtn = document.getElementById("shopCancelBtn");
+
+// Close shop modal with either button
+[shopCloseBtn, shopCancelBtn].forEach(btn => {
+  if (btn) btn.addEventListener("click", () => shopModal.classList.remove("show"));
+});
 const shopSubmitBtn = document.getElementById("shopSubmitBtn");
 const ownerNameInput = document.getElementById("ownerName");
 const ownerPhoneInput = document.getElementById("ownerPhone");
