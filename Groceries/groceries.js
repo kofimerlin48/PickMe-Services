@@ -1,3 +1,11 @@
+// groceries.js
+// ==================== ALL JS FROM YOUR ORIGINAL PAGE IN ONE FILE ====================
+// This file includes:
+// 1) Header loader (was in <head>)
+// 2) Hide-initial logic (was inline in <body>)
+// 3) Full Firebase + page logic (was in <script type="module">)
+
+/* ================== FIREBASE IMPORTS ================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
@@ -11,6 +19,39 @@ import {
   uploadBytes,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+/* ================== HEADER LOADER (was in <head>) ================== */
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+    const pageTitle = "Groceries";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+    );
+    const placeholder = document.getElementById('header-placeholder');
+    if (placeholder) {
+      placeholder.innerHTML = html;
+      document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+        const s = document.createElement('script');
+        if (oldScript.src) s.src = oldScript.src;
+        else s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+})();
+
+/* ================== BODY HIDE INITIAL (was inline in <body>) ================== */
+document.documentElement.style.background = "#fff";
+if (document.body) {
+  document.body.classList.add("hide-initial");
+}
+
+/* ================== MAIN APP LOGIC (original <script type="module">) ================== */
 
 /* ===== Firebase config ===== */
 const firebaseConfig = {
@@ -28,7 +69,7 @@ const storage = getStorage(app);
 /* ===== Constants ===== */
 const ADMIN_CODE = "123456"; // simple front-door for now
 const SERVICE_FEE_DEFAULT  = 0;
-the DELIVERY_FEE_DEFAULT = 0;
+const DELIVERY_FEE_DEFAULT = 0;
 
 /* Collections that match your rules */
 const linksCol   = collection(db, "Groceries", "Links", "items");
@@ -723,7 +764,7 @@ function openWaitingModal(adminId) {
 
   waitingModal.classList.add("show");
 
-  const dotsEl = document.getElementById("waitingDots");
+  const dotsEl2 = document.getElementById("waitingDots");
   const bar = document.getElementById("waitingProgressBar");
   const counter = document.getElementById("waitingCounter");
   const btn = document.getElementById("waitingBtn");
@@ -737,7 +778,7 @@ function openWaitingModal(adminId) {
   if (waitingDotsTimer) clearInterval(waitingDotsTimer);
   waitingDotsTimer = setInterval(() => {
     d = (d + 1) % 4;
-    dotsEl.textContent = ".".repeat(d);
+    dotsEl2.textContent = ".".repeat(d);
   }, 450);
 
   const adminDocRef = doc(linksCol, adminId);
@@ -764,7 +805,7 @@ function openWaitingModal(adminId) {
     if (reviewed === total && data.orderId) {
       // stop dots
       if (waitingDotsTimer) clearInterval(waitingDotsTimer);
-      dotsEl.textContent = "";
+      dotsEl2.textContent = "";
 
       // change to "Review Completed"
       topMsg.innerHTML = `<span style="color:#0a7d0a;font-weight:bold;">Review Completed</span>`;
@@ -1038,19 +1079,23 @@ Once payment is confirmed, we will review and publish your shop, then notify you
 
 /* ===== Admin UI ===== */
 function hideHome(){
-  homeHeader.style.display='none';
-  document.querySelector(".add-shop-wrap").style.display='none';
-  homeSearch.style.display='none';
-  document.getElementById('tabs').style.display='none';
-  cardsContainer.style.display='none';
-  detailsPanel.classList.remove('show');
+  if (homeHeader) homeHeader.style.display='none';
+  const addShopWrap = document.querySelector(".add-shop-wrap");
+  if (addShopWrap) addShopWrap.style.display='none';
+  if (homeSearch) homeSearch.style.display='none';
+  const tabsEl = document.getElementById('tabs');
+  if (tabsEl) tabsEl.style.display='none';
+  if (cardsContainer) cardsContainer.style.display='none';
+  if (detailsPanel) detailsPanel.classList.remove('show');
 }
 function showHome(){
-  homeHeader.style.display='';
-  document.querySelector(".add-shop-wrap").style.display='';
-  homeSearch.style.display='';
-  document.getElementById('tabs').style.display='';
-  cardsContainer.style.display='';
+  if (homeHeader) homeHeader.style.display='';
+  const addShopWrap = document.querySelector(".add-shop-wrap");
+  if (addShopWrap) addShopWrap.style.display='';
+  if (homeSearch) homeSearch.style.display='';
+  const tabsEl = document.getElementById('tabs');
+  if (tabsEl) tabsEl.style.display='';
+  if (cardsContainer) cardsContainer.style.display='';
 }
 
 function buildAdminCard(idx, rec) {
@@ -1365,8 +1410,10 @@ async function router() {
   const adminId = url.searchParams.get("admin");
   const orderId = url.searchParams.get("order");
 
-  document.body.classList.remove("ready");
-  document.body.classList.add("hide-initial");
+  if (document.body) {
+    document.body.classList.remove("ready");
+    document.body.classList.add("hide-initial");
+  }
 
   try {
     if (adminId) {
@@ -1377,8 +1424,10 @@ async function router() {
           hideHome();
           adminDocId = adminId;
           openAdmin(payload);
-          document.body.classList.remove("hide-initial");
-          document.body.classList.add("ready");
+          if (document.body) {
+            document.body.classList.remove("hide-initial");
+            document.body.classList.add("ready");
+          }
           return;
         } else {
           alert("Incorrect code. Access denied.");
@@ -1393,20 +1442,26 @@ async function router() {
       if (payload && payload.type === "order") {
         hideHome();
         openCustomer(payload);
-        document.body.classList.remove("hide-initial");
-        document.body.classList.add("ready");
+        if (document.body) {
+          document.body.classList.remove("hide-initial");
+          document.body.classList.add("ready");
+        }
         return;
       }
     }
 
     showHome();
-    document.body.classList.remove("hide-initial");
-    document.body.classList.add("ready");
+    if (document.body) {
+      document.body.classList.remove("hide-initial");
+      document.body.classList.add("ready");
+    }
   } catch (err) {
     console.error("router error:", err);
     showHome();
-    document.body.classList.remove("hide-initial");
-    document.body.classList.add("ready");
+    if (document.body) {
+      document.body.classList.remove("hide-initial");
+      document.body.classList.add("ready");
+    }
   }
 }
 
