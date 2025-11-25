@@ -5,55 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Groceries - PickMe Services</title>
 
-  <!-- Load external CSS -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- Correct CSS & JS paths -->
+  <link rel="stylesheet" href="groceries.css">
+  <script type="module" src="groceries.js"></script>
 
-  <!-- Header placeholder (will be filled by header.html) -->
-  <div id="header-placeholder"></div>
-
-  <script>
-    // Load header.html and inject it with dynamic title
-    (async () => {
-      try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error('Header not found');
-        let html = await response.text();
-        const pageTitle = "Groceries";
-        html = html.replace(
-          /<h1[^>]*>.*?<\/h1>/i,
-          `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
-        );
-        document.getElementById('header-placeholder').innerHTML = html;
-
-        // Re-inject any scripts from header.html
-        document.querySelectorAll('#header-placeholder script').forEach(old => {
-          const script = document.createElement('script');
-          if (old.src) script.src = old.src;
-          else script.textContent = old.textContent;
-          document.body.appendChild(script);
-        });
-      } catch (err) {
-        console.error("Failed to load header:", err);
-      }
-    })();
-  </script>
-</head>
-
-<body>
   <style>
     body.hide-initial * { visibility: hidden !important; }
     body.ready * { visibility: visible !important; }
+    body { margin: 0; background: #f9f9f9; }
   </style>
+</head>
+<body>
 
   <script>
-    // Hide page flash
+    // Prevent flash of unstyled content
     document.documentElement.style.background = "#fff";
     document.body.classList.add("hide-initial");
   </script>
 
-  <!-- ===== Home ===== -->
+  <!-- ===== Home Screen ===== -->
   <div class="page-header" id="homeHeader">
-    <h1></h1>
+    <h1>PickMe Groceries</h1>
     <p>Find grocery shops around you and send your list</p>
   </div>
 
@@ -95,17 +67,159 @@
     </div>
   </div>
 
-  <!-- All modals (form, choose mode, catalog, shop, waiting, admin, customer) -->
-  <!-- ... (they will stay exactly as in your original code) ... -->
+  <!-- ================= ALL MODALS (copy-paste from your original) ================= -->
+  <!-- Form Modal -->
+  <div class="modal" id="formModal">
+    <div class="modal-card">
+      <div class="modal-header">Your Grocery List <button id="cancelBtn">×</button></div>
+      <div class="modal-body">
+        <div id="itemsHolder"></div>
+        <button id="addRowBtn" class="btn-primary" style="width:100%;margin:12px 0;">+ Add Another Item</button>
+        <button id="clearAllBtn" style="width:100%;background:#666;">Clear All Items</button>
+        <div class="whats-row">
+          <input type="text" id="customerName" placeholder="Your full name" required>
+          <input type="tel" id="customerPhone" placeholder="Your WhatsApp number (e.g. 024XXXXXXX)" required>
+        </div>
+        <div id="formError" class="error"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="submitBtn" class="btn-done">Send List to Shop</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- We'll put ALL the modals in Part 2 so this message doesn't get cut -->
+  <!-- Choose Mode Modal -->
+  <div class="modal" id="chooseModeModal">
+    <div class="modal-card">
+      <div class="modal-header">How do you want to add items?</div>
+      <div class="modal-body mode-options">
+        <button class="mode-btn" id="modeTypeBtn">
+          <span>Type items yourself</span>
+          <small>Best when you know exactly what you want</small>
+        </button>
+        <button class="mode-btn" id="modeSelectBtn">
+          <span>Pick from shop's saved items</span>
+          <small>Faster — uses items the shop already knows</small>
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button id="modeCancelBtn" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Load JavaScript at the end (as module) -->
-  <script type="module" src="groceries.js"></script>
+  <!-- Catalog Modal -->
+  <div class="modal" id="catalogModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>Saved items in this shop</div>
+        <button id="catalogCloseBtn">×</button>
+      </div>
+      <div class="modal-body catalog-body">
+        <div class="catalog-search">
+          <input type="text" id="catalogSearch" placeholder="Search saved items...">
+        </div>
+        <div class="catalog-list" id="catalogList"></div>
+      </div>
+      <div class="modal-footer catalog-footer">
+        <div class="catalog-footer-left">
+          Selected: <strong id="catalogSelectedCount">0</strong> items
+        </div>
+        <div>
+          <button id="catalogCancelBtn" class="btn-cancel">Cancel</button>
+          <button id="catalogDoneBtn" class="btn-done">Add Selected</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Shop Modal -->
+  <div class="modal" id="shopModal">
+    <div class="modal-card">
+      <div class="modal-header">Add Your Grocery Shop</div>
+      <div class="modal-body">
+        <div class="shop-form-group">
+          <label>Owner Name</label>
+          <input type="text" id="ownerName" placeholder="Your full name">
+        </div>
+        <div class="shop-form-group">
+          <label>Owner Phone (WhatsApp)</label>
+          <input type="tel" id="ownerPhone" placeholder="024XXXXXXX">
+        </div>
+        <div class="shop-form-group">
+          <label>Shop Name</label>
+          <input type="text" id="shopNameInput" placeholder="e.g. Mama's Provision Store">
+        </div>
+        <div class="shop-form-group">
+          <label>Shop Slogan (optional)</label>
+          <input type="text" id="shopSloganInput" placeholder="Fresh & Affordable">
+        </div>
+        <div class="shop-form-group">
+          <label>Short Description</label>
+          <textarea id="shopShortDesc" placeholder="We sell rice, oil, tomatoes, etc."></textarea>
+        </div>
+        <div class="shop-form-group">
+          <label>Category</label>
+          <select id="shopCategory">
+            <option>Stores</option>
+            <option>Supermarkets</option>
+            <option>Market</option>
+          </select>
+        </div>
+        <div class="shop-form-group">
+          <label>Town / Area</label>
+          <input type="text" id="shopTown" placeholder="e.g. Kumasi, Adum">
+        </div>
+        <div class="shop-form-group">
+          <label>Shop Phone (for display)</label>
+          <input type="tel" id="shopPhone" placeholder="054XXXXXXX">
+        </div>
+        <div class="shop-form-group">
+          <label>Main Banner Photo</label>
+          <input type="file" id="shopMainImage" accept="image/*">
+        </div>
+        <div class="shop-form-group">
+          <label>Sample Photos (up to 4)</label>
+          <input type="file" id="shopSampleImages" accept="image/*" multiple>
+        </div>
+        <div id="shopError" class="error"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="shopCancelBtn" class="btn-cancel">Cancel</button>
+        <button id="shopSubmitBtn" class="btn-done">Submit for Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Waiting Modal -->
+  <div class="modal" id="waitingModal">
+    <div class="modal-card">
+      <div class="modal-header">List Sent!</div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px;">
+        <p id="waitingTopMsg">The shop is reviewing your list<span id="waitingDots">...</span></p>
+        <div style="margin:30px 0;">
+          <div style="background:#eee;height:12px;border-radius:6px;overflow:hidden;">
+            <div id="waitingProgressBar" style="width:0%;height:100%;background:var(--theme-color);transition:width 0.6s;"></div>
+          </div>
+          <p id="waitingCounter" style="margin-top:8px;color:#666;">0 of 0 items reviewed</p>
+        </div>
+        <button id="waitingBtn" class="btn-done" style="display:none;">View Quote</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel"></div>
+
+  <!-- Customer Panel -->
+  <div id="customerPanel"></div>
 
   <!-- Footer -->
   <div class="footer-wrap">
-    <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+    <iframe src="https://kofimerlin48.github.io/PickMe-Services/footer.html" 
+            style="width:100%;height:70px;border:none;overflow:hidden" 
+            scrolling="no" loading="lazy"></iframe>
   </div>
+
 </body>
 </html>
