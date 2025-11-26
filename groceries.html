@@ -34,21 +34,50 @@
 
 *{box-sizing:border-box}
 * { -webkit-tap-highlight-color: transparent; }
-:focus, :focus-visible, button:focus, input:focus { outline: none !important; box-shadow: none !important; }
+:focus, :focus-visible, button:focus, input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
 
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family: Arial, sans-serif;
   background:#f9f9f9;
   padding-top:100px;
   overflow-x:hidden;
 }
 
-.page-header{text-align:center;margin-bottom:20px;}
+/* For all basic controls */
+input, textarea, select, button {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+/* PAGE TOP */
+.page-header{text-align:center;margin-bottom:10px;}
 .page-header h1{color:var(--theme-color);margin:0;font-size:28px;}
 .page-header p{color:#000;margin-top:5px;font-size:16px;font-weight:bold;}
 
-.search-bar{display:flex;justify-content:center;margin:10px 16px 6px;}
+.add-shop-wrap{
+  display:flex;
+  justify-content:center;
+  margin:4px 16px 10px;
+}
+#openShopBtn{
+  border:2px solid var(--theme-color);
+  border-radius:999px;
+  padding:9px 18px;
+  background:#fff;
+  color:var(--theme-color);
+  font-size:14px;
+  cursor:pointer;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* SEARCH + TABS */
+.search-bar{display:flex;justify-content:center;margin:4px 16px 6px;}
 .search-bar input{width:100%;max-width:480px;padding:10px 14px;border:1px solid #ccc;border-radius:8px;font-size:16px;}
 
 .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;border-bottom:2px solid #eee;}
@@ -57,8 +86,11 @@ body{
 
 /* Cards grid */
 .cards-container{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:70px;padding:20px;padding-bottom:160px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:70px;
+  padding:20px;
+  padding-bottom:160px;
 }
 .card{
   position:relative;border-radius:15px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.1);
@@ -112,15 +144,148 @@ body{
 .action-row{display:flex;justify-content:center;margin:22px 0 120px;}
 .btn-primary{background:var(--theme-color);color:#fff;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;font-size:15px}
 
-/* Modal form */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10001;}
+/* Generic Modal */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10001;
+}
 .modal.show{display:flex}
-.modal-card{width:95%;max-width:560px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
-.modal-header{padding:14px 16px;border-bottom:1px solid #eee;font-weight:bold;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.modal-body{padding:16px;overflow-y:auto;max-height:calc(90vh - 120px)}
-.modal-footer{padding:14px 16px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end}
+.modal-card{
+  width:95%;
+  max-width:560px;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  overflow:hidden;
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+}
+.modal-header{
+  padding:14px 16px;
+  border-bottom:1px solid #eee;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px
+}
+.modal-body{
+  padding:16px;
+  overflow-y:auto;
+  max-height:calc(90vh - 120px)
+}
+.modal-footer{
+  padding:14px 16px;
+  border-top:1px solid #eee;
+  display:flex;
+  gap:10px;
+  justify-content:flex-end
+}
 
-/* item card layout (modern) */
+/* ===== Mode choose + catalog modals ===== */
+
+.mode-options{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.mode-btn{
+  width:100%;
+  border-radius:12px;
+  border:1px solid #eee;
+  padding:12px 14px;
+  font-size:15px;
+  text-align:left;
+  background:#fafafa;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.mode-btn span:first-child{
+  font-weight:600;
+}
+.mode-btn small{
+  font-size:12px;
+  color:#666;
+}
+
+/* Catalog modal: big cards */
+.catalog-body{
+  padding:12px 16px 4px;
+}
+.catalog-search{
+  margin-bottom:10px;
+}
+.catalog-search input{
+  width:100%;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+.catalog-list{
+  max-height:50vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding-right:4px;
+}
+.catalog-item-card{
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  padding:12px 12px 10px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  cursor:pointer;
+}
+.catalog-item-card .check-box{
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  border:2px solid var(--theme-color);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  font-size:14px;
+}
+.catalog-item-card.selected .check-box{
+  background:var(--theme-color);
+  color:#fff;
+}
+.catalog-item-card .info{
+  flex:1;
+}
+.catalog-item-name{
+  font-weight:700;
+  font-size:15px;
+  margin-bottom:4px;
+}
+.catalog-item-meta{
+  font-size:12px;
+  color:#666;
+}
+.modal-footer.catalog-footer{
+  justify-content:space-between;
+  align-items:center;
+}
+.catalog-footer-left{
+  flex:1;
+  font-size:13px;
+  color:#555;
+}
+
+/* item card layout (vertical, no horizontal scroll) */
 .item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
   padding:12px 12px 10px;margin-bottom:12px;
@@ -140,16 +305,63 @@ body{
 .qty-controls{display:flex;align-items:center;gap:8px;}
 .qty-btn{ width:38px;height:38px;border:none;border-radius:8px;background:#3a3a3a;color:#fff;font-size:22px;cursor:pointer;}
 .qty-input{width:64px;height:38px;border:1px solid #ccc;border-radius:8px;text-align:center;font-size:16px;}
-.small-note{font-size:12px;color:#666;margin:8px 0 0}
-.whats-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
-#whatsappInput{
-  padding:14px 12px;height:52px;border:1px solid #ddd;border-radius:10px;font-size:16px;
-  transition:border-color .2s, box-shadow .2s;
+.small-note{font-size:12px;color:#666;margin:6px 0 0}
+
+/* Name + phone row */
+.whats-row{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:12px;
 }
-#whatsappInput:focus{border-color:var(--theme-color);box-shadow:0 0 4px rgba(193,40,114,0.5);}
+
+/* --- Add Grocery Shop form (vertical, modern) --- */
+.shop-form-group{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:10px;
+}
+.shop-form-group label{
+  font-size:13px;
+  color:#444;
+  margin-bottom:4px;
+  font-weight:600;
+}
+.shop-form-group input,
+.shop-form-group select,
+.shop-form-group textarea{
+  width:100%;
+  max-width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #e0e0e0;
+  font-size:14px;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+.shop-form-group input::placeholder,
+.shop-form-group textarea::placeholder{
+  color:#b8b8b8;
+}
+.shop-form-group textarea{
+  min-height:70px;
+  resize:vertical;
+}
+.shop-form-group small{
+  font-size:11px;
+  color:#777;
+}
+
+/* Error text */
 .error{color:#b00020;font-size:13px;margin-top:8px;display:none}
 
-/* Admin panel */
+/* Disable state for shop submit */
+#shopSubmitBtn[disabled]{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+/* Admin & customer panels – unchanged layout */
 #adminPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 #adminPanel .admin-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
 #adminPanel .admin-top h2{margin:0; font-size:18px;}
@@ -162,7 +374,7 @@ body{
 .admin-section{margin:10px 0 16px;}
 .group-title{font-weight:700; margin:10px 0 8px;}
 
-/* Admin item card (modern, 2-row layout) */
+/* Admin cards */
 .admin-item-card{
   background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
   padding:12px;margin-bottom:10px;
@@ -177,7 +389,7 @@ body{
 .avail-toggle.on{background:#e9fff1;border-color:#b7e7c5;color:#146c2e;}
 .avail-toggle.off{background:#fff3f3;border-color:#f0c3c3;color:#8a1c1c;}
 
-.price-input{flex:1;min-width:160px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
+.price-input{flex:1;min-width:140px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px}
 .price-input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
 .subtotal{margin-left:auto;font-weight:700}
 
@@ -191,6 +403,9 @@ body{
   width:120px;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px;text-align:right
 }
 .fee-input input:focus{border-color:var(--theme-color);box-shadow:0 0 0 3px rgba(193,40,114,.08)}
+
+.admin-totals{margin-top:10px;font-size:14px;font-weight:600;}
+.admin-totals div{margin:4px 0}
 
 /* Modern Admin Action Buttons */
 .admin-actions {
@@ -222,7 +437,7 @@ body{
 .btn-done:hover {
   background: #a21f60;
 }
-  
+
 /* Customer panel (modern cards) */
 #customerPanel{position:fixed; inset:0; background:#fff; z-index:10002; display:none; overflow-y:auto; padding:16px 16px 90px;}
 .cust-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
@@ -253,7 +468,7 @@ body{
 .cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
 .cust-totals .line{display:flex;justify-content:space-between;margin:4px 0}
 .cust-totals .grand{color:var(--theme-color);font-weight:800}
-.cust-totals{margin-top:10px;border-top:1px dashed #ddd;padding-top:10px;font-weight:600;}
+
 .cust-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
 .cust-btn{border:none; border-radius:10px; padding:10px 14px; cursor:pointer;}
 .cust-pay{background:var(--theme-color); color:#fff;}
@@ -277,10 +492,15 @@ body{
   document.documentElement.style.background = "#fff";
   document.body.classList.add("hide-initial");
 </script>
+  
 <!-- ===== Home ===== -->
 <div class="page-header" id="homeHeader">
   <h1></h1>
   <p>Find grocery shops around you and send your list</p>
+</div>
+
+<div class="add-shop-wrap">
+  <button id="openShopBtn">🛒 Add your grocery shop</button>
 </div>
 
 <div class="search-bar" id="homeSearch">
@@ -312,7 +532,7 @@ body{
     <div class="carousel" id="carousel"></div>
     <div class="dots" id="dots"></div>
     <div class="action-row">
-      <button class="btn-primary" id="openFormBtn">+ Add Items</button>
+      <button class="btn-primary" id="openFormBtn">+ Add Items to your list</button>
     </div>
   </div>
 </div>
@@ -327,16 +547,197 @@ body{
     <div class="modal-body">
       <div id="itemsHolder"></div>
       <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">Add another item</button>
+
       <div class="whats-row">
-        <input type="tel" id="whatsappInput" placeholder="Your WhatsApp (+233… or 0…)" />
-        <div class="small-note">We’ll message you back on WhatsApp after confirming prices.</div>
+        <div class="shop-form-group">
+          <label for="customerName">Your full name</label>
+          <input type="text" id="customerName" placeholder="Your full name"/>
+        </div>
+        <div class="shop-form-group">
+          <label for="customerPhone">Your phone number</label>
+          <input type="tel" id="customerPhone" placeholder="+233… or 0…"/>
+        </div>
+        <div class="small-note">
+          We’ll review prices with the shop and send you your list with totals before you pay.
+        </div>
       </div>
+
       <div class="error" id="formError"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
-      <button class="btn-primary" id="submitBtn">Submit</button>
+      <button class="btn-primary" id="submitBtn">Submit list</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Choose how to add items ===== -->
+<div class="modal" id="chooseModeModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Add items to your list</span>
+    </div>
+    <div class="modal-body">
+      <div class="mode-options">
+        <button class="mode-btn" id="modeTypeBtn">
+          <span>Type items yourself</span>
+          <small>Start with an empty form and type each item name.</small>
+        </button>
+        <button class="mode-btn" id="modeSelectBtn">
+          <span>Select items from shop list</span>
+          <small>Pick from items other customers have bought from this shop.</small>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="modeCancelBtn" style="background:#777">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Select items from this shop ===== -->
+<div class="modal" id="catalogModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Shop items</span>
+      <button class="btn-primary" id="catalogCloseBtn" style="background:#777">Close</button>
+    </div>
+    <div class="modal-body catalog-body">
+      <div class="catalog-search">
+        <input type="text" id="catalogSearch" placeholder="Search items in this shop...">
+      </div>
+      <div id="catalogList" class="catalog-list">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+    <div class="modal-footer catalog-footer">
+      <div class="catalog-footer-left">
+        Selected: <span id="catalogSelectedCount">0</span> item(s)
+      </div>
+      <div>
+        <button class="btn-primary" id="catalogCancelBtn" style="background:#777">Cancel</button>
+        <button class="btn-primary" id="catalogDoneBtn">Use selected items</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Add Grocery Shop ===== -->
+<div class="modal" id="shopModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Add your grocery shop</span>
+      <button class="btn-primary" id="shopCloseBtn" style="background:#777">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="shop-form-group">
+        <label for="ownerName">Owner full name</label>
+        <input type="text" id="ownerName" placeholder="Your full name"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="ownerPhone">Owner phone number</label>
+        <input type="tel" id="ownerPhone" placeholder="+233… or 0…"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopNameInput">Shop name</label>
+        <input type="text" id="shopNameInput" placeholder="e.g. E&G Supermarket"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopSloganInput">Shop slogan</label>
+        <input type="text" id="shopSloganInput" placeholder="e.g. Everything household & fresh"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopShortDesc">Short description</label>
+        <textarea id="shopShortDesc" placeholder="Brief description of your shop"></textarea>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopCategory">Category</label>
+        <select id="shopCategory">
+          <option value="">Select category</option>
+          <option value="Stores">Stores</option>
+          <option value="Supermarkets">Supermarkets</option>
+          <option value="Market">Market</option>
+        </select>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopPlan">Subscription plan</label>
+        <select id="shopPlan">
+          <option value="">Select subscription plan</option>
+          <option value="1m_50">1 Month 50</option>
+          <option value="3m_100">3 Months 100</option>
+          <option value="6m_200">6 Months 200</option>
+          <option value="12m_300">1 Year 300</option>
+        </select>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopTown">Location / Town</label>
+        <input type="text" id="shopTown" placeholder="e.g. Agogo, near main station"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopPhone">Shop phone number</label>
+        <input type="tel" id="shopPhone" placeholder="+233… or 0…"/>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopMainImage">Main shop image</label>
+        <input type="file" id="shopMainImage" accept="image/*"/>
+        <small>This will be used as the shop card background.</small>
+      </div>
+      <div class="shop-form-group">
+        <label for="shopSampleImages">Sample item pictures (up to 5)</label>
+        <input type="file" id="shopSampleImages" accept="image/*" multiple/>
+        <small>Upload some pictures of items you sell. At least 1 is required.</small>
+      </div>
+
+      <div class="error" id="shopError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="shopCancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary" id="shopSubmitBtn">Submit shop</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Waiting Modal after list submit ===== -->
+<!-- ===== NEW Waiting Modal ===== -->
+<div class="modal" id="waitingModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>We are confirming your prices</span>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Main message -->
+      <p id="waitingTopMsg" style="margin:0 0 6px;font-size:14px;color:#444;">
+        Your list has been submitted. We are confirming prices with the shop.
+      </p>
+
+      <!-- Big WAIT + animated dots -->
+      <p style="font-size:18px;font-weight:bold;margin:10px 0;color:#333;">
+        Please wait<span id="waitingDots"></span>
+      </p>
+
+      <!-- Progress bar -->
+      <div style="margin:14px 0 4px;">
+        <div style="background:#eee;width:100%;height:12px;border-radius:6px;overflow:hidden;">
+          <div id="waitingProgressBar" style="height:100%;width:0%;background:#c12872;transition:width .4s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Counter below progress bar -->
+      <div id="waitingCounter" style="font-size:14px;color:#666;margin-top:4px;">
+        0 of 0 items reviewed
+      </div>
+
+    </div>
+
+    <!-- Button appears ONLY after completion -->
+    <div class="modal-footer">
+      <button class="btn-primary" id="waitingBtn" disabled style="display:none;">
+        View reviewed list
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -394,10 +795,7 @@ body{
     <div id="custUnavail" class="cust-items-wrap"></div>
   </div>
 
-  <div class="cust-totals">
-    <div>Items total: GH₵ <span id="custItemsTotal">0</span></div>
-    <div>Grand total (with fees): GH₵ <span id="custGrandTotal">0</span></div>
-  </div>
+  <div class="cust-totals"></div>
 
   <div class="cust-actions">
     <button class="cust-btn cust-cancel" id="custCancel">Cancel</button>
@@ -407,14 +805,21 @@ body{
 
 <!-- ========= FIREBASE + PAGE LOGIC ========= -->
 <script type="module">
-/* Firebase */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
-  collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc,
-  serverTimestamp, query, orderBy, limit
+  collection, doc, setDoc, getDoc, getDocs,
+  serverTimestamp, onSnapshot, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+/* ===== Firebase config ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
   authDomain: "pickmeservicesonline.firebaseapp.com",
@@ -425,15 +830,24 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const storage = getStorage(app);
 
-/* ======== Constants ======== */
-const ADMIN_CODE = "123456";
-const SERVICE_FEE  = 5;   // GH₵
-const DELIVERY_FEE = 15;  // GH₵
-const PICKME_WHATSAPP = "233534742142"; // no '+'
-const PAYSTACK_LINK   = "https://paystack.com/pay/example-link";
+/* ===== Constants ===== */
+const ADMIN_CODE = "123456"; // simple front-door for now
+const SERVICE_FEE_DEFAULT  = 0;
+const DELIVERY_FEE_DEFAULT = 0;
 
-/* ======== Hardcoded shops ======== */
+/* Collections that match your rules */
+const linksCol   = collection(db, "Groceries", "Links", "items");
+const numbersCol = collection(db, "Groceries", "Numbers", "items");
+const pendingShopsItemsCol = collection(db, "Groceries", "Shops", "items", "_pendingShops", "items");
+
+/* Per-shop catalog (for select-from-list) */
+function shopCatalogCollection(slug){
+  return collection(db, "Groceries", "Shops", "items", slug, "catalog");
+}
+
+/* ===== Hardcoded shops (as before) ===== */
 const GROCERY_DATA = [
   {
     name: "E&G Supermarket",
@@ -446,8 +860,7 @@ const GROCERY_DATA = [
       "https://via.placeholder.com/1000x600?text=Beverages",
       "https://via.placeholder.com/1000x600?text=Toiletries"
     ],
-    phone: "233201234567",
-    expiry: "2026-09-19"
+    phone: "233201234567"
   },
   {
     name: "FreshMart Store",
@@ -459,8 +872,7 @@ const GROCERY_DATA = [
       "https://via.placeholder.com/1000x600?text=Bread+%26+Eggs",
       "https://via.placeholder.com/1000x600?text=Soap+%26+Detergents"
     ],
-    phone: "233209876543",
-    expiry: "2025-12-31"
+    phone: "233209876543"
   },
   {
     name: "Kumasi Central Market",
@@ -473,21 +885,11 @@ const GROCERY_DATA = [
       "https://via.placeholder.com/1000x600?text=Yam",
       "https://via.placeholder.com/1000x600?text=Pepper"
     ],
-    phone: "233551112223",
-    expiry: "2025-12-31"
+    phone: "233551112223"
   }
 ];
 
-/* ========= Groceries root collections/paths =========
-   - Shortlinks:  Groceries / Links / items / {id}
-   - Shops meta:  Groceries / ShopsMeta / items / {shopName}
-   - Buyers:      Groceries / Shops / {shopName} / buyers
-   - Customers:   Groceries / Shops / {shopName} / customers
-*/
-const linksCol  = collection(db, "Groceries", "Links", "items");
-const shopsMeta = collection(db, "Groceries", "ShopsMeta", "items");
-
-/* ======== DOM ======== */
+/* ===== DOM ===== */
 const cardsContainer  = document.getElementById("cardsContainer");
 const searchInput     = document.getElementById("searchInput");
 const tabs            = document.querySelectorAll(".tab");
@@ -507,10 +909,50 @@ const formModal     = document.getElementById("formModal");
 const itemsHolder   = document.getElementById("itemsHolder");
 const addRowBtn     = document.getElementById("addRowBtn");
 const clearAllBtn   = document.getElementById("clearAllBtn");
-const whatsappInput = document.getElementById("whatsappInput");
+const customerNameInput = document.getElementById("customerName");
+const customerPhoneInput= document.getElementById("customerPhone");
 const submitBtn     = document.getElementById("submitBtn");
 const cancelBtn     = document.getElementById("cancelBtn");
 const formError     = document.getElementById("formError");
+
+/* NEW: mode choose + catalog modals */
+const chooseModeModal    = document.getElementById("chooseModeModal");
+const modeTypeBtn        = document.getElementById("modeTypeBtn");
+const modeSelectBtn      = document.getElementById("modeSelectBtn");
+const modeCancelBtn      = document.getElementById("modeCancelBtn");
+
+const catalogModal        = document.getElementById("catalogModal");
+const catalogSearchInput  = document.getElementById("catalogSearch");
+const catalogListEl       = document.getElementById("catalogList");
+const catalogSelectedCount= document.getElementById("catalogSelectedCount");
+const catalogCloseBtn     = document.getElementById("catalogCloseBtn");
+const catalogCancelBtn    = document.getElementById("catalogCancelBtn");
+const catalogDoneBtn      = document.getElementById("catalogDoneBtn");
+
+/* Add shop modal dom */
+const openShopBtn      = document.getElementById("openShopBtn");
+const shopModal        = document.getElementById("shopModal");
+const shopCloseBtn     = document.getElementById("shopCloseBtn");
+const shopCancelBtn    = document.getElementById("shopCancelBtn");
+const shopSubmitBtn    = document.getElementById("shopSubmitBtn");
+const ownerNameInput   = document.getElementById("ownerName");
+const ownerPhoneInput  = document.getElementById("ownerPhone");
+const shopNameInput    = document.getElementById("shopNameInput");
+const shopSloganInput  = document.getElementById("shopSloganInput");
+const shopShortDesc    = document.getElementById("shopShortDesc");
+const shopCategorySel  = document.getElementById("shopCategory");
+const shopPlanSel      = document.getElementById("shopPlan");
+const shopTownInput    = document.getElementById("shopTown");
+const shopPhoneInput   = document.getElementById("shopPhone");
+const shopMainImage    = document.getElementById("shopMainImage");
+const shopSampleImages = document.getElementById("shopSampleImages");
+const shopError        = document.getElementById("shopError");
+
+/* Waiting modal */
+const waitingModal = document.getElementById("waitingModal");
+const waitingMsg   = document.getElementById("waitingMsg");
+const waitingDots  = document.getElementById("waitingDots");
+const waitingBtn   = document.getElementById("waitingBtn");
 
 /* Admin panel */
 const adminPanel      = document.getElementById("adminPanel");
@@ -532,136 +974,228 @@ const closeCustomerBtn= document.getElementById("closeCustomerBtn");
 const custShop        = document.getElementById("custShop");
 const custAvail       = document.getElementById("custAvail");
 const custUnavail     = document.getElementById("custUnavail");
-const custItemsTotal  = document.getElementById("custItemsTotal");
-const custGrandTotal  = document.getElementById("custGrandTotal");
+const custTotalsWrap  = document.querySelector(".cust-totals");
 const custPayBtn      = document.getElementById("custPay");
 const custCancelBtn   = document.getElementById("custCancel");
 
-/* ======== State ======== */
+/* ===== State ===== */
 let currentShop = null;
-let buyersCountMap = {};
 let currentAdmin = null;
+let buyersCountMap = {}; // shopSlug -> count
+let adminDocId = null;   // id of admin link document (for waiting modal)
+let shopSubmitDotsTimer = null;
+let waitingDotsTimer = null;
+let waitingUnsub = null;
+let currentOrderId = null;
 
-/* ======== Helpers ======== */
+let currentCatalogItems = [];
+let selectedCatalogIds = new Set();
+
+/* ===== Helpers ===== */
 function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 function money(n){ return Number(n||0); }
-function isExpired(iso){ if(!iso) return false; return new Date()>new Date(iso+"T23:59:59"); }
-function shopKey(shop){ return `pkm_items_${shop}`; }
-function serializeItems(){ return [...itemsHolder.querySelectorAll(".item-card")].map(r=>({ name:(r.querySelector(".item-name").value||"").trim(), qty: parseInt(r.querySelector(".qty-input").value||"1",10)||1 })); }
+
+function slugify(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function shopKeyStorage(shop){ return `pkm_grocery_items_${shop}`; }
+
+function serializeItems(){
+  return [...itemsHolder.querySelectorAll(".item-card")].map(r=>({
+    name:(r.querySelector(".item-name").value||"").trim(),
+    qty: parseInt(r.querySelector(".qty-input").value||"1",10)||1
+  }));
+}
 function loadItemsForShop(shop){
   itemsHolder.innerHTML="";
   try{
-    const raw = sessionStorage.getItem(shopKey(shop));
+    const raw = sessionStorage.getItem(shopKeyStorage(shop));
     const arr = raw? JSON.parse(raw): [];
     if (arr.length) arr.forEach(it=>addRow(it.name, String(it.qty)));
   }catch{}
 }
-function saveItemsForShop(shop){ try{ sessionStorage.setItem(shopKey(shop), JSON.stringify(serializeItems())); }catch{} }
-
-/* ======== Firestore customer + buyers (dedup + permanent count, adjusted for your structure) ======== */
-
-// Save WhatsApp leads (for general advertisements)
-async function saveCustomerWhatsApp(shopName, phoneE164) {
-  try {
-    if (!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g, '');
-    // ✅ Corrected path: under ShopsMeta → items → shopName → customers
-    const custCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "customers");
-
-    await setDoc(
-      doc(custCol, clean),
-      { whatsapp: phoneE164, timestamp: serverTimestamp() },
-      { merge: true }
-    );
-    console.log(`✅ Customer saved (unique): ${phoneE164}`);
-  } catch (e) {
-    console.error("saveCustomerWhatsApp error:", e);
-  }
+function saveItemsForShop(shop){
+  try{ sessionStorage.setItem(shopKeyStorage(shop), JSON.stringify(serializeItems())); }catch{}
 }
 
-// Save real buyers (for Trusted Buyers count)
-async function saveBuyerUnique(shopName, phoneE164) {
+function normalizeGhanaNumber(input){
+  let s=String(input).trim().replace(/[\s\-]/g,'');
+  if (s.startsWith('+233')) return { e164:s };
+  if (s.startsWith('233'))  return { e164:'+'+s };
+  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1) };
+  if (/^\d{9}$/.test(s))    return { e164:'+233'+s };
+  const d=s.replace(/\D/g,'');
+  if (d.startsWith('233')) return { e164:'+'+d };
+  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1) };
+  return null;
+}
+
+/* ====== Trusted buyers: stored in Groceries/Numbers/items ====== */
+async function markTrustedBuyer(shopName, phoneE164) {
   try {
     if (!shopName || !phoneE164) return;
-    const clean = phoneE164.replace(/[^\d+]/g, '');
-    // ✅ Corrected path: under ShopsMeta → items → shopName → buyers
-    const buyersCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "buyers");
-    const ref = doc(buyersCol, clean);
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) {
-      await setDoc(ref, {
+    const slug = slugify(shopName);
+    const digits = phoneE164.replace(/[^\d]/g, "");
+    const id = `${slug}__${digits}`;
+    await setDoc(
+      doc(numbersCol, id),
+      {
         whatsapp: phoneE164,
         timestamp: serverTimestamp()
-      });
-      console.log(`🛒 Added new unique buyer for ${shopName}: ${phoneE164}`);
-    } else {
-      console.log(`⚠️ Buyer already counted for ${shopName}`);
-    }
+      }
+    );
   } catch (e) {
-    console.error("saveBuyerUnique error:", e);
+    console.error("markTrustedBuyer error", e);
   }
 }
 
-// Count all unique buyers (no duplicates, optional 7-day cleanup)
-async function fetchBuyersCount(shopName) {
+async function loadTrustedCounts() {
   try {
-    if (!shopName) return 0;
-    // ✅ Corrected path: under ShopsMeta → items → shopName → buyers
-    const buyersCol = collection(db, "Groceries", "ShopsMeta", "items", shopName, "buyers");
-    const snap = await getDocs(buyersCol);
-    const count = snap.size || 0;
-    console.log(`⭐ ${shopName} has ${count} trusted buyers`);
-    return count;
-  } catch (e) {
-    console.error("fetchBuyersCount error:", e);
-    return 0;
+    const snap = await getDocs(numbersCol);
+    const counts = {};
+    snap.forEach(d => {
+      const id = d.id || "";
+      const idx = id.indexOf("__");
+      if (idx === -1) return;
+      const slug = id.slice(0, idx);
+      counts[slug] = (counts[slug] || 0) + 1;
+    });
+    buyersCountMap = counts;
+  } catch(e) {
+    console.error("loadTrustedCounts error", e);
   }
 }
 
-/* ======== Persist shops meta under Groceries root ======== */
-async function upsertShopsMeta(){
+/* ====== Short links in Firestore (Links/items) ====== */
+function makeId() {
+  return (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase();
+}
+async function putShort(payload) {
+  const id = makeId();
+  try {
+    await setDoc(doc(linksCol, id), {
+      payload,
+      createdAt: serverTimestamp()
+    });
+    return id;
+  } catch(e) {
+    console.error("putShort error:", e);
+    alert("Unable to save data. Please check your internet and try again.");
+    throw e;
+  }
+}
+async function getShort(id) {
+  try {
+    const snap = await getDoc(doc(linksCol, id));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return data.payload || null;
+  } catch(e) {
+    console.error("getShort error:", e);
+    return null;
+  }
+}
+
+/* ====== Shop catalog helpers (per shop items for select-from-list) ====== */
+async function syncShopCatalog(shopName, items){
   try{
-    await Promise.all(GROCERY_DATA.map(async shop=>{
-      const id = shop.name;
-      await setDoc(doc(shopsMeta, id), {
-        name: shop.name,
-        slogan: shop.slogan||"",
-        category: shop.category||"",
-        heroImage: shop.heroImage||"",
-        samples: shop.samples||[],
-        phone: shop.phone||"",
-        expiry: shop.expiry||null,
+    if (!shopName) return;
+    const slug = slugify(shopName);
+    const colRef = shopCatalogCollection(slug);
+
+    // Step 1: Load EXISTING items
+    const snap = await getDocs(colRef);
+    const existing = {};
+    snap.forEach(ds => {
+      const d = ds.data();
+      if (!d || !d.name) return;
+      const key = d.name.trim().toLowerCase();
+      existing[key] = true;   // Mark as already saved before
+    });
+
+    // Step 2: Process ONLY correct items according to rules
+    const writes = [];
+
+    items.forEach(it => {
+      const key = (it.name || "").trim().toLowerCase();
+      if (!key) return;
+
+      const wasSavedBefore = !!existing[key];
+      const isAvailableNow = !!it.available;
+      const hasPrice = it.price != null;
+
+      // RULE 1: First-time item must be available with price
+      if (!wasSavedBefore && !(isAvailableNow && hasPrice)) {
+        // do NOT save
+        return;
+      }
+
+      // RULE 2: If saved before, keep updating lastAvailable & lastPrice
+      const payload = {
+        name: it.name,
+        lastAvailable: isAvailableNow,
         updatedAt: serverTimestamp()
-      }, { merge: true });
-    }));
-  }catch(e){ console.warn("shops meta upsert failed:", e); }
+      };
+
+      if (isAvailableNow && hasPrice){
+        payload.lastPrice = money(it.price);
+      }
+
+      const docRef = doc(colRef, key);
+      writes.push(setDoc(docRef, payload, { merge:true }));
+    });
+
+    if (writes.length > 0) {
+      await Promise.all(writes);
+    }
+
+  } catch(e){
+    console.error("syncShopCatalog FIX error", e);
+  }
 }
 
-/* ======== Buyers cache (for instant home render) ======== */
-const CACHE_KEY = "pkm_grocery_buyers";
-function cacheBuyers(data){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch{} }
-function loadBuyersCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)); }catch{return null;} }
-
-async function buildBuyersCountMap(){
-  const cache = loadBuyersCache();
-  if(cache) buyersCountMap = cache;
-  // Render immediately with cache (if any), then refresh actual counts:
-  const entries = await Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]));
-  buyersCountMap = Object.fromEntries(entries);
-  cacheBuyers(buyersCountMap);
+async function fetchShopCatalog(shopName){
+  if (!shopName) return [];
+  const slug = slugify(shopName);
+  const colRef = shopCatalogCollection(slug);
+  const snap = await getDocs(colRef);
+  const list = [];
+  snap.forEach(ds=>{
+    const d = ds.data();
+    if (!d || !d.name) return;
+    list.push({
+      id: ds.id,
+      name: d.name,
+      lastPrice: d.lastPrice ?? null,
+      lastAvailable: d.lastAvailable ?? true
+    });
+  });
+  list.sort((a,b)=>{
+    // Available first, then alphabetical
+    if (a.lastAvailable !== b.lastAvailable){
+      return a.lastAvailable ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+  return list;
 }
 
-/* ======== Cards ======== */
+/* ====== Cards ====== */
 function renderCards(activeCategory="All", term=""){
   cardsContainer.innerHTML = "";
   const q = (term||"").trim().toLowerCase();
 
   const data = [...GROCERY_DATA]
-    .filter(s => !isExpired(s.expiry))
     .sort((a,b)=>{
-      const ca = buyersCountMap[a.name]||0, cb = buyersCountMap[b.name]||0;
+      const sa = slugify(a.name);
+      const sb = slugify(b.name);
+      const ca = buyersCountMap[sa] || 0;
+      const cb = buyersCountMap[sb] || 0;
       if (cb!==ca) return cb-ca;
       return a.name.localeCompare(b.name);
     });
@@ -670,7 +1204,7 @@ function renderCards(activeCategory="All", term=""){
     if (activeCategory!=="All" && shop.category!==activeCategory) return;
     if (q && !shop.name.toLowerCase().includes(q)) return;
 
-    const buyers = buyersCountMap[shop.name]??0;
+    const buyers = buyersCountMap[slugify(shop.name)] ?? 0;
     const card = document.createElement("div");
     card.className = "card";
     card.style.backgroundImage = `url('${shop.heroImage}')`;
@@ -683,7 +1217,7 @@ function renderCards(activeCategory="All", term=""){
         <div class="card-description">${escapeHtml(shop.slogan||"")}</div>
       </div>
       <div class="card-lower">
-        <div class="card-meta">⭐ Trusted by ${buyers} Buyers</div>
+        <div class="card-meta">⭐ Trusted by ${buyers} buyers</div>
         <button class="btn-enter">Enter Shop</button>
       </div>
     `;
@@ -697,14 +1231,13 @@ function renderCards(activeCategory="All", term=""){
   }
 }
 
-/* ======== Details / Carousel ======== */
+/* ====== Details & Carousel ====== */
 function openShop(shop){
   currentShop = shop;
   detailsBanner.style.backgroundImage = `url('${shop.heroImage}')`;
   shopNameEl.textContent = shop.name;
   shopSloganEl.textContent = shop.slogan || "";
   buildCarousel(shop.samples||[]);
-  // Load per-shop saved items
   loadItemsForShop(shop.name);
   detailsPanel.classList.add("show");
 }
@@ -726,26 +1259,20 @@ function buildCarousel(images){
 
   let current=0;
   const slides=carouselEl.querySelectorAll("img");
-  const dots=dotsEl.querySelectorAll(".dot");
-  function setPos(prev,next,dir){
-    const a=slides[prev], b=slides[next];
-    b.style.transition="none"; b.style.left=(dir===1?"100%":"-100%"); b.style.opacity="1"; void b.offsetWidth;
-    a.style.transition="left .45s ease, opacity .45s ease";
-    b.style.transition="left .45s ease, opacity .45s ease";
-    a.style.left=(dir===1?"-100%":"100%"); a.style.opacity="1"; b.style.left="0";
-  }
+
   function goTo(n){
     if (n===current) return;
-    const dir=(n>current)?1:-1;
-    setPos(current,n,dir);
-    slides[current].classList.remove("active");
-    slides[n].classList.add("active");
-    dots[current].classList.remove("active");
-    dots[n].classList.add("active");
-    current=n;
+    current = n;
+    slides.forEach((img,idx)=>{
+      img.classList.toggle("active", idx===current);
+      img.style.left = idx===current ? "0" : (idx<current ? "-100%" : "100%");
+      img.style.opacity = idx===current ? "1" : "0";
+    });
+    document.querySelectorAll("#dots .dot").forEach((d,idx)=>d.classList.toggle("active", idx===current));
   }
   left.addEventListener("click",()=>goTo((current-1+slides.length)%slides.length));
   right.addEventListener("click",()=>goTo((current+1)%slides.length));
+
   let startX=0;
   carouselEl.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
   carouselEl.addEventListener("touchend",e=>{
@@ -755,23 +1282,55 @@ function buildCarousel(images){
   });
 }
 
-/* ======== Modal (items) + keyboard stability + per-shop save ======== */
+/* ===== Modal: Items list ===== */
 function openForm(){
+  if (!currentShop){
+    alert("Please open a shop first.");
+    return;
+  }
   formModal.classList.add("show");
   formError.style.display="none";
-  if (itemsHolder.children.length===0) addRow();
+  if (!itemsHolder.children.length) addRow();
   const first=itemsHolder.querySelector(".item-card .item-name");
   if (first) setTimeout(()=>first.focus(),50);
 }
-function closeForm(){ formModal.classList.remove("show"); }
-document.getElementById("openFormBtn").addEventListener("click", openForm);
+function closeForm(){
+  formModal.classList.remove("show");
+}
+
+/* NEW: choose mode modal logic */
+function openChooseMode(){
+  if (!currentShop){
+    alert("Please open a shop first.");
+    return;
+  }
+  chooseModeModal.classList.add("show");
+}
+function closeChooseMode(){
+  chooseModeModal.classList.remove("show");
+}
+
+openFormBtn.addEventListener("click", openChooseMode);
 cancelBtn.addEventListener("click", closeForm);
+
+modeCancelBtn.addEventListener("click", closeChooseMode);
+modeTypeBtn.addEventListener("click", ()=>{
+  closeChooseMode();
+  // open normal form (type manually)
+  openForm();
+});
+modeSelectBtn.addEventListener("click", async ()=>{
+  closeChooseMode();
+  await openCatalogModalForCurrentShop();
+});
 
 let stickyFocusEl=null;
 formModal.addEventListener('focusin',e=>{
   if (e.target.matches('input[type="text"], input[type="number"], input[type="tel"]')) stickyFocusEl=e.target;
 });
-formModal.addEventListener('mousedown',e=>{ if (e.target.closest('button')) e.preventDefault(); });
+formModal.addEventListener('mousedown',e=>{
+  if (e.target.closest('button')) e.preventDefault();
+});
 function restoreFocusSoon(el=stickyFocusEl){ setTimeout(()=>{ if(el) el.focus(); },0); }
 
 function renumberRows(){
@@ -810,10 +1369,19 @@ function addRow(itemVal="", qtyVal="1"){
                    || nameEl.closest(".item-card")?.previousElementSibling?.querySelector(".item-name");
     card.remove(); renumberRows(); persist(); restoreFocusSoon(nextFocus||stickyFocusEl);
   });
-  minus.addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) qtyIn.value=String(v-1); persist(); restoreFocusSoon(qtyIn); });
-  plus .addEventListener("click",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v+1); persist(); restoreFocusSoon(qtyIn); });
-  qtyIn.addEventListener("input",()=>{ qtyIn.value = qtyIn.value.replace(/[^\d]/g,''); persist(); });
-  qtyIn.addEventListener("blur",()=>{ let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persist(); });
+  minus.addEventListener("click",()=>{
+    let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; if(v>1) v--; qtyIn.value=String(v); persist(); restoreFocusSoon(qtyIn);
+  });
+  plus .addEventListener("click",()=>{
+    let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; v++; qtyIn.value=String(v); persist(); restoreFocusSoon(qtyIn);
+  });
+  qtyIn.addEventListener("input",()=>{
+    qtyIn.value = qtyIn.value.replace(/[^\d]/g,'');
+    persist();
+  });
+  qtyIn.addEventListener("blur",()=>{
+    let v=parseInt(qtyIn.value||"1",10); if(!v||v<1) v=1; qtyIn.value=String(v); persist();
+  });
   nameEl.addEventListener("input", persist);
 
   itemsHolder.appendChild(card); renumberRows(); setTimeout(()=>nameEl.focus(),0); persist();
@@ -821,132 +1389,211 @@ function addRow(itemVal="", qtyVal="1"){
 addRowBtn.addEventListener("click",()=>{
   const last=itemsHolder.querySelector(".item-card:last-child .item-name");
   if (last && !last.value.trim()){ last.focus(); return; }
-  addRow(); const newest=itemsHolder.querySelector(".item-card:last-child .item-name"); restoreFocusSoon(newest);
+  addRow();
+  const newest=itemsHolder.querySelector(".item-card:last-child .item-name");
+  restoreFocusSoon(newest);
 });
 clearAllBtn.addEventListener("click", ()=>{
   if (!currentShop) return;
   itemsHolder.innerHTML="";
   renumberRows();
-  sessionStorage.removeItem(shopKey(currentShop.name));
+  sessionStorage.removeItem(shopKeyStorage(currentShop.name));
 });
 
-function normalizeGhanaNumber(input){
-  let s=String(input).trim().replace(/[\s\-]/g,'');
-  if (s.startsWith('+233')) return { e164:s, wa:s.slice(1) };
-  if (s.startsWith('233'))  return { e164:'+'+s, wa:s };
-  if (/^0\d{9}$/.test(s))   return { e164:'+233'+s.slice(1), wa:'233'+s.slice(1) };
-  if (/^\d{9}$/.test(s))    return { e164:'+233'+s, wa:'233'+s };
-  const d=s.replace(/\D/g,'');
-  if (d.startsWith('233')) return { e164:'+'+d, wa:d };
-  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1), wa:'233'+d.slice(1) };
-  return null;
+/* ===== Catalog modal logic ===== */
+function resetCatalogModal(){
+  currentCatalogItems = [];
+  selectedCatalogIds = new Set();
+  catalogSearchInput.value = "";
+  catalogListEl.innerHTML = "";
+  catalogSelectedCount.textContent = "0";
 }
+function closeCatalogModal(){
+  catalogModal.classList.remove("show");
+  resetCatalogModal();
+}
+catalogCloseBtn.addEventListener("click", closeCatalogModal);
+catalogCancelBtn.addEventListener("click", closeCatalogModal);
 
-/* ======== Tabs + search ======== */
-tabs.forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    tabs.forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    renderCards(tab.dataset.cat, searchInput.value);
+function updateCatalogSelectionUI(){
+  catalogSelectedCount.textContent = String(selectedCatalogIds.size);
+  const cards = catalogListEl.querySelectorAll(".catalog-item-card");
+  cards.forEach(card=>{
+    const id = card.dataset.id;
+    const check = card.querySelector(".check-box");
+    if (selectedCatalogIds.has(id)){
+      card.classList.add("selected");
+      if (check) check.textContent = "✓";
+    } else {
+      card.classList.remove("selected");
+      if (check) check.textContent = "";
+    }
   });
-});
-searchInput.addEventListener("input",()=>{
-  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
-  renderCards(active, searchInput.value);
-});
-
-/* ======== Short links in Firestore (cross-device) + auto cleanup ======== */
-
-// 🔧 Set your desired auto-delete duration here
-// Example: 2 * 60 * 1000 = 2 minutes
-//          30 * 60 * 1000 = 30 minutes
-//          7 * 24 * 60 * 60 * 1000 = 7 days
-const LINK_EXPIRY_MS = 24 * 60 * 60 * 1000;  
-
-// Generate unique shortlink IDs
-function makeId() {
-  return (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).toLowerCase();
 }
 
-// 🧹 Automatically delete old links based on LINK_EXPIRY_MS
-async function cleanupOldLinks() {
-  try {
-    const cutoff = new Date(Date.now() - LINK_EXPIRY_MS);
-    const qy = query(linksCol, orderBy("createdAt", "asc"), limit(200));
-    const snap = await getDocs(qy);
-    const deletions = [];
-
-    snap.forEach(d => {
-      const ts = d.data().createdAt;
-      if (ts && ts.toDate && ts.toDate() < cutoff) {
-        deletions.push(deleteDoc(d.ref));
-      }
-    });
-
-    if (deletions.length) await Promise.allSettled(deletions);
-  } catch (e) {
-    console.warn("cleanup failed:", e);
+function renderCatalogList(filterTerm=""){
+  const q = (filterTerm||"").trim().toLowerCase();
+  catalogListEl.innerHTML = "";
+  if (!currentCatalogItems.length){
+    catalogListEl.innerHTML = `<p style="font-size:14px;color:#666;">No saved items yet for this shop. You can close this and choose <b>Type items yourself</b>.</p>`;
+    return;
   }
-}
 
-// ✏️ Save new shortlink
-async function putShort(data) {
-  const id = makeId();
-  try {
-    await setDoc(doc(linksCol, id), {
-      payload: data,
-      type: data?.type || null,
-      shop: data?.shop || null,
-      createdAt: serverTimestamp()
-    });
-    return id;
-  } catch (e) {
-    console.error("putShort error:", e);
-    sessionStorage.setItem("pkm_" + id, JSON.stringify(data)); // fallback
-    return id;
-  }
-}
+  currentCatalogItems.forEach(item=>{
+    if (q && !item.name.toLowerCase().includes(q)) return;
+    const card = document.createElement("div");
+    card.className = "catalog-item-card";
+    card.dataset.id = item.id;
+    card.dataset.name = item.name;
 
-// 🔍 Retrieve shortlink and auto-handle expiry
-async function getShort(id) {
-  try {
-    const snap = await getDoc(doc(linksCol, id));
-
-    // Case 1: The document still exists in Firestore
-    if (snap.exists()) {
-      const data = snap.data();
-      const ts = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
-
-      // Check expiry using LINK_EXPIRY_MS
-      if (ts && (Date.now() - ts.getTime()) > LINK_EXPIRY_MS) {
-        await deleteDoc(doc(linksCol, id));
-        alert("⏰ This link has expired.\nPlease add new items to get a new link.");
-        window.location.href = "groceries.html";
-        return null;
-      }
-
-      // Still valid
-      return data.payload || null;
+    if (selectedCatalogIds.has(item.id)){
+      card.classList.add("selected");
     }
 
-    // Case 2: Document no longer exists (was deleted already)
-    alert("⏰ This link has expired.\nPlease add new items to get a new link.");
-    window.location.href = "groceries.html";
-    return null;
+    const metaPieces = [];
+    if (item.lastPrice != null){
+      metaPieces.push(`Last price: GH₵ ${money(item.lastPrice).toFixed(2).replace(/\.00$/,'')}`);
+    }
+    metaPieces.push(item.lastAvailable ? "Usually available" : "Recently unavailable");
 
-  } catch (e) {
-    console.error("getShort error:", e);
-  }
+    card.innerHTML = `
+      <div class="check-box">${selectedCatalogIds.has(item.id) ? "✓" : ""}</div>
+      <div class="info">
+        <div class="catalog-item-name">${escapeHtml(item.name)}</div>
+        <div class="catalog-item-meta">${metaPieces.join(" • ")}</div>
+      </div>
+    `;
 
-  // Case 3: fallback (same-device session storage)
-  try {
-    return JSON.parse(sessionStorage.getItem("pkm_" + id));
-  } catch {
-    return null;
+    card.addEventListener("click", ()=>{
+      const id = item.id;
+      if (selectedCatalogIds.has(id)){
+        selectedCatalogIds.delete(id);
+      } else {
+        selectedCatalogIds.add(id);
+      }
+      updateCatalogSelectionUI();
+    });
+
+    catalogListEl.appendChild(card);
+  });
+
+  if (!catalogListEl.children.length){
+    catalogListEl.innerHTML = `<p style="font-size:14px;color:#666;">No items match your search.</p>`;
   }
 }
 
-/* ======== Submit (create admin link, WhatsApp to PickMe) ======== */
+async function openCatalogModalForCurrentShop(){
+  if (!currentShop) return;
+  catalogModal.classList.add("show");
+  catalogListEl.innerHTML = `<p style="font-size:14px;color:#666;">Loading items for this shop...</p>`;
+  catalogSelectedCount.textContent = "0";
+  selectedCatalogIds = new Set();
+  try{
+    currentCatalogItems = await fetchShopCatalog(currentShop.name);
+    renderCatalogList("");
+  }catch(e){
+    console.error("fetchShopCatalog error", e);
+    catalogListEl.innerHTML = `<p style="font-size:14px;color:#b00020;">Unable to load shop items. You may close this and type items yourself.</p>`;
+  }
+}
+catalogSearchInput.addEventListener("input", ()=>{
+  renderCatalogList(catalogSearchInput.value);
+});
+
+catalogDoneBtn.addEventListener("click", ()=>{
+  if (!selectedCatalogIds.size){
+    alert("Please select at least one item, or cancel and choose 'Type items yourself'.");
+    return;
+  }
+  const names = [];
+  currentCatalogItems.forEach(it=>{
+    if (selectedCatalogIds.has(it.id)){
+      names.push(it.name);
+    }
+  });
+
+  closeCatalogModal();
+
+  // Fill the existing form with selected items
+  itemsHolder.innerHTML = "";
+  renumberRows();
+  names.forEach(name=>{
+    addRow(name, "1");
+  });
+  formError.style.display = "none";
+  formModal.classList.add("show");
+});
+
+/* ===== Waiting modal logic ===== */
+function openWaitingModal(adminId) {
+  if (waitingUnsub) waitingUnsub();
+
+  waitingModal.classList.add("show");
+
+  const dotsEl = document.getElementById("waitingDots");
+  const bar = document.getElementById("waitingProgressBar");
+  const counter = document.getElementById("waitingCounter");
+  const btn = document.getElementById("waitingBtn");
+  const topMsg = document.getElementById("waitingTopMsg");
+
+  btn.style.display = "none";
+  btn.disabled = true;
+
+  // start dot animation
+  let d = 0;
+  if (waitingDotsTimer) clearInterval(waitingDotsTimer);
+  waitingDotsTimer = setInterval(() => {
+    d = (d + 1) % 4;
+    dotsEl.textContent = ".".repeat(d);
+  }, 450);
+
+  const adminDocRef = doc(linksCol, adminId);
+
+  waitingUnsub = onSnapshot(adminDocRef, snap => {
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const items = data.payload?.items || [];
+    const total = items.length;
+
+    // Count reviewed items (available flag OR price filled)
+    let reviewed = 0;
+    items.forEach(it => {
+      if (it.available === false || it.price != null) reviewed++;
+    });
+
+    // update progress bar + counter
+    const pct = total > 0 ? (reviewed / total) * 100 : 0;
+    bar.style.width = pct + "%";
+    counter.textContent = `${reviewed} of ${total} items reviewed`;
+
+    // check if admin finished AND created orderId
+    if (reviewed === total && data.orderId) {
+      // stop dots
+      if (waitingDotsTimer) clearInterval(waitingDotsTimer);
+      dotsEl.textContent = "";
+
+      // change to "Review Completed"
+      topMsg.innerHTML = `<span style="color:#0a7d0a;font-weight:bold;">Review Completed</span>`;
+
+      // show button
+      currentOrderId = data.orderId;
+      btn.style.display = "inline-block";
+      btn.disabled = false;
+    }
+
+  }, err => console.error(err));
+}
+
+waitingBtn.addEventListener("click", () => {
+  if (!currentOrderId) return;
+  const url = new URL(location.href);
+  url.searchParams.set("order", currentOrderId);
+  url.searchParams.delete("admin");
+  window.location.href = url.toString();
+});
+
+/* ===== Submit item list: create admin link in Firestore (no link shown to user) ===== */
 submitBtn.addEventListener("click", async ()=>{
   const rows=[...itemsHolder.querySelectorAll(".item-card")];
   const items=rows.map(r=>{
@@ -956,50 +1603,262 @@ submitBtn.addEventListener("click", async ()=>{
     return { name, qty };
   }).filter(x=>x.name);
 
-  const raw = whatsappInput.value.trim();
-  const norm = normalizeGhanaNumber(raw);
+  const fullName = customerNameInput.value.trim();
+  const phoneRaw = customerPhoneInput.value.trim();
+  const norm = normalizeGhanaNumber(phoneRaw);
 
-  if (items.length===0){
+  if (!items.length){
     formError.textContent="Please add at least one item before submitting.";
     formError.style.display="block";
-    const first=itemsHolder.querySelector(".item-card .item-name");
-    if(first) first.focus(); else { addRow(); setTimeout(()=>itemsHolder.querySelector(".item-card .item-name")?.focus(),30); }
+    return;
+  }
+  if (!fullName){
+    formError.textContent="Please enter your full name.";
+    formError.style.display="block";
+    customerNameInput.focus();
     return;
   }
   if (!norm){
-    formError.textContent="Please enter a valid WhatsApp number.";
+    formError.textContent="Please enter a valid phone number.";
     formError.style.display="block";
-    whatsappInput.focus();
+    customerPhoneInput.focus();
     return;
   }
   formError.style.display="none";
 
-  const { e164 } = norm;
-  await saveCustomerWhatsApp(currentShop.name, e164);
-
   const adminPayload = {
     type:"admin",
     shop: currentShop.name,
-    shopPhone: currentShop.phone||"",
-    cust: e164, // carry forward to customer link so we can count unique buyer later
+    shopPhone: currentShop.phone || "",
+    customerName: fullName,
+    customerPhone: norm.e164,
     items: items.map(({name,qty})=>({ name, qty, available:true, price:null })),
-    fees: { service:SERVICE_FEE, delivery:DELIVERY_FEE }
+    fees: { service:SERVICE_FEE_DEFAULT, delivery:DELIVERY_FEE_DEFAULT }
   };
 
-  const id = await putShort(adminPayload);
-  const link = `${location.origin}${location.pathname}?admin=${id}`;
-
-  const msg = `Hello PickMe Services,
-I would like to buy from *${currentShop.name}*.
-
-Open Order: ${link}`;
-  const waUrl = `https://wa.me/${PICKME_WHATSAPP}?text=${encodeURIComponent(msg)}`;
-  window.location.href = waUrl;
-
-  // persist per-shop items
-  saveItemsForShop(currentShop.name);
-  formModal.classList.remove("show");
+  try {
+    const adminId = await putShort(adminPayload);
+    saveItemsForShop(currentShop.name);
+    formModal.classList.remove("show");
+    openWaitingModal(adminId);
+    adminDocId = adminId;
+  } catch (e) {
+    console.error(e);
+    formError.textContent = "Something went wrong sending your list. Please try again.";
+    formError.style.display="block";
+  }
 });
+
+/* ===== Add Grocery Shop modal logic ===== */
+function resetShopForm(){
+  ownerNameInput.value = "";
+  ownerPhoneInput.value = "";
+  shopNameInput.value = "";
+  shopSloganInput.value = "";
+  shopShortDesc.value = "";
+  shopCategorySel.value = "";
+  shopPlanSel.value = "";
+  shopTownInput.value = "";
+  shopPhoneInput.value = "";
+  shopMainImage.value = "";
+  shopSampleImages.value = "";
+}
+
+function openShopModal(){
+  shopError.style.display="none";
+  shopError.textContent="";
+  shopModal.classList.add("show");
+}
+function closeShopModal(){
+  shopModal.classList.remove("show");
+}
+openShopBtn.addEventListener("click", openShopModal);
+shopCloseBtn.addEventListener("click", closeShopModal);
+shopCancelBtn.addEventListener("click", closeShopModal);
+
+async function uploadFile(path, file){
+  const r = ref(storage, path);
+  const snap = await uploadBytes(r, file);
+  return await getDownloadURL(snap.ref);
+}
+
+shopSubmitBtn.addEventListener("click", async ()=>{
+  const ownerName = ownerNameInput.value.trim();
+  const ownerPhoneRaw = ownerPhoneInput.value.trim();
+  const shopNameVal = shopNameInput.value.trim();
+  const slogan = shopSloganInput.value.trim();
+  const shortDescVal = shopShortDesc.value.trim();
+  const category = shopCategorySel.value;
+  const planVal  = shopPlanSel.value;
+  const town     = shopTownInput.value.trim();
+  const shopPhoneRaw = shopPhoneInput.value.trim();
+
+  const ownerNorm = normalizeGhanaNumber(ownerPhoneRaw);
+  const shopNorm  = normalizeGhanaNumber(shopPhoneRaw);
+
+  const mainFile = shopMainImage.files[0] || null;
+  const sampleFiles = Array.from(shopSampleImages.files || []);
+
+  if (!ownerName || !ownerNorm || !shopNameVal || !category || !planVal || !town || !shopNorm || !mainFile) {
+    shopError.textContent = "Please fill in all fields and choose images before submitting.";
+    shopError.style.display = "block";
+    return;
+  }
+  if (!sampleFiles.length){
+    shopError.textContent = "Please upload at least one sample item picture.";
+    shopError.style.display = "block";
+    return;
+  }
+  if (sampleFiles.length > 5){
+    shopError.textContent = "You can upload a maximum of 5 sample pictures.";
+    shopError.style.display = "block";
+    return;
+  }
+
+  // derive subscription info
+  const [planKey, priceStr] = planVal.split("_");
+  const priceNum = Number(priceStr || 0);
+  let months = 0;
+  if (planKey === "1m") months = 1;
+  else if (planKey === "3m") months = 3;
+  else if (planKey === "6m") months = 6;
+  else if (planKey === "12m") months = 12;
+
+  const planLabelMap = {
+    "1m_50": "1 Month 50",
+    "3m_100": "3 Months 100",
+    "6m_200": "6 Months 200",
+    "12m_300": "1 Year 300"
+  };
+  const planLabel = planLabelMap[planVal] || planVal;
+
+  shopError.style.display="none";
+  shopError.textContent="";
+
+  const slug = slugify(shopNameVal);
+  const originalText = shopSubmitBtn.textContent;
+  const originalWidth = shopSubmitBtn.offsetWidth;
+  shopSubmitBtn.disabled = true;
+
+  // FIX: lock button width so it doesn't change as dots change
+  shopSubmitBtn.style.width = originalWidth + "px";
+
+  // animated dots on submit button
+  if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+  let dot = 0;
+  shopSubmitDotsTimer = setInterval(() => {
+    dot = (dot + 1) % 4;
+    shopSubmitBtn.textContent = "Submitting" + ".".repeat(dot);
+  }, 400);
+
+  try {
+    // ===== PAYMENT TRIGGER BEFORE UPLOAD =====
+try {
+  const payRes = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amount: priceNum,
+      customerName: ownerName,
+      customerPhone: ownerNorm.e164,
+      shopName: shopNameVal,
+      description: `Grocery Shop Subscription - ${planLabel}`,
+      clientReference: `${slug}_${Date.now()}`,
+      channel: "mtn-gh"
+    })
+  });
+
+  const payJson = await payRes.json();
+
+  if (!payJson.ok) {
+    if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+    shopSubmitBtn.disabled = false;
+    shopSubmitBtn.textContent = originalText;
+    shopSubmitBtn.style.width = "";
+    shopError.textContent = "Payment failed: " + (payJson.message || "Please try again.");
+    shopError.style.display = "block";
+    return;
+  }
+
+  alert("Payment prompt sent! Please approve on your phone.");
+} catch (e) {
+  if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
+  shopSubmitBtn.disabled = false;
+  shopSubmitBtn.textContent = originalText;
+  shopSubmitBtn.style.width = "";
+  shopError.textContent = "Unable to start payment. Check your internet.";
+  shopError.style.display = "block";
+  return;
+}
+// ===== END PAYMENT TRIGGER =====
+    
+    // Upload images to Storage in parallel (faster)
+    const mainPromise = uploadFile(`groceries/shops/${slug}/main.jpg`, mainFile);
+    const samplePromises = sampleFiles.map((file, i) =>
+      uploadFile(`groceries/shops/${slug}/sample_${i+1}.jpg`, file)
+    );
+
+    const mainUrl = await mainPromise;
+    const sampleUrls = await Promise.all(samplePromises);
+
+    // Save shop request with shop-name-based ID
+    await setDoc(doc(pendingShopsItemsCol, slug), {
+      name: shopNameVal,
+      slogan: slogan,
+      desc: shortDescVal || slogan || "",
+      ownerName: ownerName,
+      ownerPhone: ownerNorm.e164,
+      phone: shopNorm.e164,
+      town: town,
+      category: category,
+      price: priceNum,
+      subscription: {
+        code: planVal,
+        label: planLabel,
+        months: months
+      },
+      images: [mainUrl, ...sampleUrls],
+      createdAt: serverTimestamp()
+    });
+
+    alert(
+`Your shop request has been received.
+Once payment is confirmed, we will review and publish your shop, then notify you by SMS.`
+    );
+
+    resetShopForm();
+    closeShopModal();
+  } catch(e) {
+    console.error("submit shop error", e);
+    shopError.textContent = "Something went wrong. Please check your internet and try again.";
+    shopError.style.display = "block";
+  } finally {
+    if (shopSubmitDotsTimer) {
+      clearInterval(shopSubmitDotsTimer);
+      shopSubmitDotsTimer = null;
+    }
+    shopSubmitBtn.disabled = false;
+    shopSubmitBtn.textContent = originalText;
+    shopSubmitBtn.style.width = ""; // release width after done
+  }
+});
+
+/* ===== Admin UI ===== */
+function hideHome(){
+  homeHeader.style.display='none';
+  document.querySelector(".add-shop-wrap").style.display='none';
+  homeSearch.style.display='none';
+  document.getElementById('tabs').style.display='none';
+  cardsContainer.style.display='none';
+  detailsPanel.classList.remove('show');
+}
+function showHome(){
+  homeHeader.style.display='';
+  document.querySelector(".add-shop-wrap").style.display='';
+  homeSearch.style.display='';
+  document.getElementById('tabs').style.display='';
+  cardsContainer.style.display='';
+}
 
 function buildAdminCard(idx, rec) {
   const wrap = document.createElement("div");
@@ -1044,7 +1903,7 @@ function buildAdminCard(idx, rec) {
     if (!rec.available) {
       rec.price = null;
     }
-    renderAdminLists(); // move between lists instantly
+    renderAdminLists();
     updateTotals();
   });
 
@@ -1075,9 +1934,12 @@ function updateTotals() {
     return sum + (Math.max(1, parseInt(it.qty || 1, 10)) * money(it.price));
   }, 0);
 
-  // Fees become 0 if all items are unavailable
-  const service  = availableItems.length > 0 ? money(feeServiceInput.value || SERVICE_FEE) : 0;
-  const delivery = availableItems.length > 0 ? money(feeDeliveryInput.value || DELIVERY_FEE) : 0;
+  const service  = availableItems.length > 0
+    ? money(feeServiceInput.value || SERVICE_FEE_DEFAULT)
+    : 0;
+  const delivery = availableItems.length > 0
+    ? money(feeDeliveryInput.value || DELIVERY_FEE_DEFAULT)
+    : 0;
 
   adminItemsTotal.textContent = itemsTotal.toFixed(2).replace(/\.00$/,'');
   adminGrandTotal.textContent = (itemsTotal + service + delivery).toFixed(2).replace(/\.00$/,'');
@@ -1085,63 +1947,92 @@ function updateTotals() {
 
 function openAdmin(payload){
   currentAdmin = JSON.parse(JSON.stringify(payload));
-  adminShop.textContent = `Order · ${currentAdmin.shop||''}`;
+  adminShop.textContent = `Order · ${currentAdmin.shop || ''}`;
 
   adminShopActions.innerHTML='';
   if (currentAdmin.shopPhone){
-    const a1=document.createElement('a'); a1.href=`tel:${currentAdmin.shopPhone}`; a1.className='call-btn'; a1.innerHTML='📞 Call';
-    const a2=document.createElement('a'); a2.href=`https://wa.me/${currentAdmin.shopPhone}`; a2.target='_blank'; a2.className='wa-btn'; a2.innerHTML='🟢 WhatsApp';
+    const a1=document.createElement('a'); a1.href=`tel:${currentAdmin.shopPhone}`; a1.className='call-btn'; a1.innerHTML='📞 Call shop';
+    const a2=document.createElement('a'); a2.href=`https://wa.me/${currentAdmin.shopPhone}`; a2.target='_blank'; a2.className='wa-btn'; a2.innerHTML='🟢 WhatsApp shop';
     adminShopActions.append(a1,a2);
   }
 
-  // render lists with new 2-row cards
   renderAdminLists();
 
-  // modern fee inputs still use same IDs
-  feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE;
-  feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE;
-  feeServiceInput.addEventListener('input', updateTotals);
-  feeDeliveryInput.addEventListener('input', updateTotals);
+  feeServiceInput.value  = currentAdmin.fees?.service ?? SERVICE_FEE_DEFAULT;
+  feeDeliveryInput.value = currentAdmin.fees?.delivery ?? DELIVERY_FEE_DEFAULT;
+  feeServiceInput.oninput  = updateTotals;
+  feeDeliveryInput.oninput = updateTotals;
   updateTotals();
 
   hideHome();
-  adminPanel.style.display='block'; adminPanel.setAttribute('aria-hidden','false');
+  adminPanel.style.display='block';
+  adminPanel.setAttribute('aria-hidden','false');
 }
-function closeEntireBrowser(){
-  // Attempt to close the full window
-  window.open('', '_self');
-  window.close();
-}
-closeAdminBtn.addEventListener('click', closeEntireBrowser);
-adminCancelBtn.addEventListener('click', closeEntireBrowser);
 
-/* Admin Done: send customer link via WhatsApp (carry cust phone for later unique count) */
+function closeAdmin(){
+  window.location.href = "groceries.html";
+}
+closeAdminBtn.addEventListener('click', closeAdmin);
+adminCancelBtn.addEventListener('click', closeAdmin);
+
+/* Admin Done: create customer link in Firestore AND link it to the admin doc */
 adminDoneBtn.addEventListener('click', async ()=>{
-  const useService = feeServiceInput.value===''?SERVICE_FEE:+feeServiceInput.value;
-  const useDelivery= feeDeliveryInput.value===''?DELIVERY_FEE:+feeDeliveryInput.value;
+  const serviceFee  = feeServiceInput.value==='' ? SERVICE_FEE_DEFAULT : +feeServiceInput.value;
+  const deliveryFee = feeDeliveryInput.value==='' ? DELIVERY_FEE_DEFAULT : +feeDeliveryInput.value;
+
+  const processedItems = currentAdmin.items.map(it=>({
+    name: it.name,
+    qty:  Math.max(1, parseInt(it.qty||1,10)),
+    available: !!it.available,
+    price: (it.available && it.price!=null) ? money(it.price) : null
+  }));
+
+  const anyAvailableWithPrice = processedItems.some(it => it.available && it.price != null);
+  if (!anyAvailableWithPrice){
+    alert("Please mark at least one item as available and set its price before finishing.");
+    return;
+  }
 
   const customerPayload = {
     type:'order',
     shop: currentAdmin.shop,
-    cust: currentAdmin.cust || null, // carry forward for unique buyer credit
-    items: currentAdmin.items.map(it=>({
-      name: it.name,
-      qty:  Math.max(1, parseInt(it.qty||1,10)),
-      available: !!it.available,
-      price: (it.available && it.price!=null) ? money(it.price) : null
-    })),
-    fees: { service: useService, delivery: useDelivery }
+    shopPhone: currentAdmin.shopPhone || "",
+    customerName: currentAdmin.customerName || "",
+    customerPhone: currentAdmin.customerPhone || "",
+    items: processedItems,
+    fees: { service: serviceFee, delivery: deliveryFee }
   };
-  const id = await putShort(customerPayload);
-  const link = `${location.origin}${location.pathname}?order=${id}`;
 
-  const waNum=(currentAdmin.cust||'').replace(/^\+/,'');
-  const msg=`Hello, here is your order summary for *${currentAdmin.shop}*.
-Open to view: ${link}`;
-  window.location.href=`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+  try {
+    // update per-shop catalog before creating customer link
+    await syncShopCatalog(currentAdmin.shop, processedItems);
+
+    const id = await putShort(customerPayload);
+    const link = `${location.origin}${location.pathname}?order=${id}`;
+
+    // connect this customer order link back to the admin doc
+    if (adminDocId) {
+      try {
+        await updateDoc(doc(linksCol, adminDocId), { orderId: id });
+      } catch (e) {
+        console.error("Failed to attach orderId to admin doc", e);
+      }
+    }
+
+    // For now, still show link to admin (you) for testing
+    try {
+      await navigator.clipboard.writeText(link);
+      alert("Customer summary link copied to clipboard.\nYou can send it to the customer by SMS.");
+    } catch {
+      alert("Customer link:\n" + link);
+    }
+  } catch(e) {
+    console.error("adminDone error", e);
+    alert("Something went wrong creating customer summary.");
+  }
 });
 
-/* ======== CUSTOMER UI (modern) ======== */
+/* ===== Customer UI ===== */
 function addCustCard(container, idx, it){
   const available = !!it.available && it.price!=null;
   const unit = available ? money(it.price) : 0;
@@ -1177,7 +2068,7 @@ function addCustCard(container, idx, it){
 }
 
 function openCustomer(data){
-  custShop.textContent = `Order · ${data.shop||''}`;
+  custShop.textContent = `Order · ${data.shop || ''}`;
   custAvail.innerHTML=''; 
   custUnavail.innerHTML='';
 
@@ -1196,12 +2087,11 @@ function openCustomer(data){
     }
   });
 
-  // Fees go to 0 if everything is unavailable
-  const service  = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE) : 0;
-  const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE) : 0;
+  const service  = availableCount > 0 ? money(data.fees?.service ?? SERVICE_FEE_DEFAULT) : 0;
+  const delivery = availableCount > 0 ? money(data.fees?.delivery ?? DELIVERY_FEE_DEFAULT) : 0;
   const grand = itemsTotal + service + delivery;
 
-  document.querySelector('.cust-totals').innerHTML = `
+  custTotalsWrap.innerHTML = `
     <div class="line"><span>Items total</span><span>GH₵ ${itemsTotal.toFixed(2).replace(/\.00$/,'')}</span></div>
     <div class="line"><span>Service fee</span><span>GH₵ ${service.toFixed(2).replace(/\.00$/,'')}</span></div>
     <div class="line"><span>Delivery fee</span><span>GH₵ ${delivery.toFixed(2).replace(/\.00$/,'')}</span></div>
@@ -1212,56 +2102,76 @@ function openCustomer(data){
   customerPanel.style.display='block';
   customerPanel.setAttribute('aria-hidden','false');
 
-  // Hide Proceed to Payment if nothing to pay
   if (grand <= 0) {
     custPayBtn.style.display = 'none';
   } else {
     custPayBtn.style.display = 'inline-block';
   }
 
- // Proceed to payment: copy grand total, count buyer, then redirect
-custPayBtn.onclick = async ()=>{
-  if (data.cust) await saveBuyerUnique(data.shop, data.cust);
-
-  const amountNum = grand.toFixed(2).replace(/\.00$/,''); // numbers only
+  custPayBtn.onclick = async () => {
+  const BACKEND_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
 
   try {
-    await navigator.clipboard.writeText(amountNum);
-    // (No custom toast — the device’s own "Copied" popup will appear)
-  } catch(e) {
-    alert(`Copied amount: GH₵${amountNum}`);
-  }
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        amount: grand,
+        customerName: data.customerName || "",
+        customerPhone: data.customerPhone || "",
+        shopName: data.shop || "",
+        description: `Grocery order - ${data.shop || ""}`,
+        clientReference: currentOrderId || Date.now().toString(36),
+        channel: "mtn-gh"   // change later based on selected network
+      })
+    });
 
-  // Redirect to Paystack
-  window.location.href = PAYSTACK_LINK;
+    const json = await res.json();
+
+    if (json.ok) {
+      alert(
+        "We have sent a payment prompt to your phone.\n" +
+        "Please check your Mobile Money and approve to finish the order."
+      );
+      window.location.href = "groceries.html";
+    } else {
+      alert(
+        "We could not start the payment.\n" +
+        (json.message || "Please try again or contact PickMe.")
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Network error starting payment. Please try again.");
+  }
 };
 
-  // Customer Close / Cancel → groceries.html
   const goHome = () => window.location.href = "groceries.html";
   closeCustomerBtn.onclick = goHome;
   custCancelBtn.onclick = goHome;
 }
 
-/* ======== Router + no-home flash ======== */
-function hideHome(){
-  homeHeader.style.display='none';
-  homeSearch.style.display='none';
-  document.getElementById('tabs').style.display='none';
-  cardsContainer.style.display='none';
-  detailsPanel.classList.remove('show');
-}
-function showHome(){
-  homeHeader.style.display='';
-  homeSearch.style.display='';
-  document.getElementById('tabs').style.display='';
-  cardsContainer.style.display='';
-}
+/* ===== Tabs + search ===== */
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCards(tab.dataset.cat, searchInput.value);
+  });
+});
+searchInput.addEventListener("input",()=>{
+  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
+  renderCards(active, searchInput.value);
+});
+
+/* ===== Router ===== */
 async function router() {
   const url = new URL(location.href);
   const adminId = url.searchParams.get("admin");
   const orderId = url.searchParams.get("order");
 
-  // Keep everything hidden until destination is ready
   document.body.classList.remove("ready");
   document.body.classList.add("hide-initial");
 
@@ -1271,7 +2181,8 @@ async function router() {
       if (payload && payload.type === "admin") {
         const code = prompt("Enter admin access code:");
         if (code === ADMIN_CODE) {
-          hideHome(); // hide home permanently
+          hideHome();
+          adminDocId = adminId;
           openAdmin(payload);
           document.body.classList.remove("hide-initial");
           document.body.classList.add("ready");
@@ -1287,7 +2198,7 @@ async function router() {
     if (orderId) {
       const payload = await getShort(orderId);
       if (payload && payload.type === "order") {
-        hideHome(); // hide home permanently
+        hideHome();
         openCustomer(payload);
         document.body.classList.remove("hide-initial");
         document.body.classList.add("ready");
@@ -1295,7 +2206,6 @@ async function router() {
       }
     }
 
-    // No admin/order → normal home
     showHome();
     document.body.classList.remove("hide-initial");
     document.body.classList.add("ready");
@@ -1307,25 +2217,11 @@ async function router() {
   }
 }
 
-/* ======== Init ======== */
+/* ===== Init ===== */
 (async()=>{
-  // run router immediately (no waiting)
+  await loadTrustedCounts();
+  renderCards("All","");
   router();
-
-  // continue background work silently
-  upsertShopsMeta().catch(()=>{});
-  const cached = loadBuyersCache();
-  if (cached) buyersCountMap = cached;
-  renderCards("All", "");
-
-  Promise.all(GROCERY_DATA.map(async s => [s.name, await fetchBuyersCount(s.name)]))
-    .then(entries=>{
-      buyersCountMap = Object.fromEntries(entries);
-      cacheBuyers(buyersCountMap);
-      renderCards(document.querySelector(".tab.active")?.dataset.cat || "All", searchInput.value);
-    }).catch(console.warn);
-
-  cleanupOldLinks().catch(()=>{});
 })();
 </script>
 
