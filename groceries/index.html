@@ -1,33 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Groceries - PickMe Services</title>
-  <meta name="description" content="Find grocery shops around you and send your list instantly">
-  
-  <!-- FIX #1: Force correct paths (works even with case-sensitive GitHub Pages) -->
-  <link rel="stylesheet" href="./groceries.css">
-  
-  <style>
-    body.hide-initial * { visibility: hidden !important; }
-    body.ready * { visibility: visible !important; }
-    body { margin:0; background:#f9f9f9; font-family:system-ui,-apple-system,sans-serif; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Groceries - PickMe Services</title>
+
+<!-- ========= LINKED CSS ========= -->
+<link rel="stylesheet" href="groceries.css">
+
+<!-- ========= HEADER LOADER (KEPT INLINE) ========= -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+    const pageTitle = "Groceries";
+    html = html.replace(/<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0; font-weight:bold; color:#c12872; font-size:24px; position:absolute; left:50%; transform:translateX(-50%);">${pageTitle}</h1>`
+    );
+    document.getElementById('header-placeholder').innerHTML = html;
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const s = document.createElement('script');
+      if (oldScript.src) s.src = oldScript.src;
+      else s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    });
+  } catch (err) { console.error(err); }
+})();
+</script>
+
 </head>
 <body>
+
+<!-- ========= HIDE INITIAL (KEPT INLINE) ========= -->
+<style>
+  body.hide-initial * {
+    visibility: hidden !important;
+  }
+  body.ready * {
+    visibility: visible !important;
+  }
+</style>
 <script>
-  document.documentElement.style.background="#fff";
+  document.documentElement.style.background = "#fff";
   document.body.classList.add("hide-initial");
 </script>
 
+<!-- ===== Home ===== -->
 <div class="page-header" id="homeHeader">
-  <h1>Groceries</h1>
+  <h1></h1>
   <p>Find grocery shops around you and send your list</p>
 </div>
 
 <div class="add-shop-wrap">
-  <button id="openShopBtn">Add your grocery shop</button>
+  <button id="openShopBtn">🛒 Add your grocery shop</button>
 </div>
 
 <div class="search-bar" id="homeSearch">
@@ -43,8 +71,10 @@
 
 <div class="cards-container" id="cardsContainer"></div>
 
+<!-- ================= DETAILS PANEL ================= -->
 <div id="detailsPanel">
-  <button id="detailsBackBtn">×</button>
+  <button id="detailsBackBtn">&times;</button>
+
   <section class="banner" id="detailsBanner">
     <div class="banner-text">
       <h2>Welcome to</h2>
@@ -52,36 +82,313 @@
       <p id="shopSlogan"></p>
     </div>
   </section>
+
   <div class="details-content">
     <div class="section-title">Sample of items sold</div>
+
     <div class="carousel" id="carousel"></div>
     <div class="dots" id="dots"></div>
+
     <div class="action-row">
       <button class="btn-primary" id="openFormBtn">+ Add Items to your list</button>
     </div>
   </div>
 </div>
 
-<!-- MODALS (you can now safely paste your full original modal HTML here) -->
-<div class="modal" id="formModal">YOUR FULL FORM MODAL HTML HERE</div>
-<div class="modal" id="chooseModeModal">YOUR CHOOSE MODE MODAL HERE</div>
-<div class="modal" id="catalogModal">YOUR CATALOG MODAL HERE</div>
-<div class="modal" id="shopModal">YOUR ADD SHOP MODAL HERE</div>
-<div class="modal" id="waitingModal">YOUR WAITING MODAL HERE</div>
-<div id="adminPanel" aria-hidden="true">YOUR ADMIN PANEL HERE</div>
-<div id="customerPanel" aria-hidden="true">YOUR CUSTOMER PANEL HERE</div>
+<!-- ===== Modal: Add Items Form ===== -->
+<div class="modal" id="formModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>List your items</span>
+      <button class="btn-primary" id="clearAllBtn" style="background:#777">Clear all</button>
+    </div>
 
-<!-- FIX #2: Footer iframe with allow-scripts (so no more red errors) -->
-<div class="footer-wrap">
-  <iframe src="https://kofimerlin48.github.io/PickMe-Services/footer.html"
-          style="width:100%;height:70px;border:none;overflow:hidden"
-          scrolling="no" loading="lazy"
-          sandbox="allow-same-origin allow-scripts allow-modals"
-          title="PickMe Services Footer"></iframe>
+    <div class="modal-body">
+      <div id="itemsHolder"></div>
+
+      <button class="btn-primary" id="addRowBtn" style="margin:8px 0 0">
+        Add another item
+      </button>
+
+      <div class="whats-row">
+        <div class="shop-form-group">
+          <label for="customerName">Your full name</label>
+          <input type="text" id="customerName" placeholder="Your full name"/>
+        </div>
+
+        <div class="shop-form-group">
+          <label for="customerPhone">Your phone number</label>
+          <input type="tel" id="customerPhone" placeholder="+233… or 0…"/>
+        </div>
+
+        <div class="small-note">
+          We’ll review prices with the shop and send you your list with totals before you pay.
+        </div>
+      </div>
+
+      <div class="error" id="formError"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="cancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary" id="submitBtn">Submit list</button>
+    </div>
+  </div>
 </div>
 
-<!-- FIX #3: Bulletproof script loading (works 100% on GitHub Pages) -->
-<script type="module" src="./groceries.js"></script>
+<!-- ===== Choose Mode Modal ===== -->
+<div class="modal" id="chooseModeModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Add items to your list</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="mode-options">
+        <button class="mode-btn" id="modeTypeBtn">
+          <span>Type items yourself</span>
+          <small>Start with an empty form and type each item name.</small>
+        </button>
+        <button class="mode-btn" id="modeSelectBtn">
+          <span>Select items from shop list</span>
+          <small>Pick from items other customers have bought from this shop.</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="modeCancelBtn" style="background:#777">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Catalog Modal ===== -->
+<div class="modal" id="catalogModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Shop items</span>
+      <button class="btn-primary" id="catalogCloseBtn" style="background:#777">Close</button>
+    </div>
+
+    <div class="modal-body catalog-body">
+      <div class="catalog-search">
+        <input type="text" id="catalogSearch" placeholder="Search items in this shop...">
+      </div>
+
+      <div id="catalogList" class="catalog-list"></div>
+    </div>
+
+    <div class="modal-footer catalog-footer">
+      <div class="catalog-footer-left">
+        Selected: <span id="catalogSelectedCount">0</span> item(s)
+      </div>
+      <div>
+        <button class="btn-primary" id="catalogCancelBtn" style="background:#777">Cancel</button>
+        <button class="btn-primary" id="catalogDoneBtn">Use selected items</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Add Grocery Shop Modal ===== -->
+<div class="modal" id="shopModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>Add your grocery shop</span>
+      <button class="btn-primary" id="shopCloseBtn" style="background:#777">Close</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="shop-form-group">
+        <label for="ownerName">Owner full name</label>
+        <input type="text" id="ownerName" placeholder="Your full name"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="ownerPhone">Owner phone number</label>
+        <input type="tel" id="ownerPhone" placeholder="+233… or 0…"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopNameInput">Shop name</label>
+        <input type="text" id="shopNameInput" placeholder="e.g. E&G Supermarket"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopSloganInput">Shop slogan</label>
+        <input type="text" id="shopSloganInput" placeholder="e.g. Everything household & fresh"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopShortDesc">Short description</label>
+        <textarea id="shopShortDesc" placeholder="Brief description of your shop"></textarea>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopCategory">Category</label>
+        <select id="shopCategory">
+          <option value="">Select category</option>
+          <option value="Stores">Stores</option>
+          <option value="Supermarkets">Supermarkets</option>
+          <option value="Market">Market</option>
+        </select>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopPlan">Subscription plan</label>
+        <select id="shopPlan">
+          <option value="">Select subscription plan</option>
+          <option value="1m_50">1 Month 50</option>
+          <option value="3m_100">3 Months 100</option>
+          <option value="6m_200">6 Months 200</option>
+          <option value="12m_300">1 Year 300</option>
+        </select>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopTown">Location / Town</label>
+        <input type="text" id="shopTown" placeholder="e.g. Agogo, near main station"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopPhone">Shop phone number</label>
+        <input type="tel" id="shopPhone" placeholder="+233… or 0…"/>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopMainImage">Main shop image</label>
+        <input type="file" id="shopMainImage" accept="image/*"/>
+        <small>This will be used as the shop card background.</small>
+      </div>
+
+      <div class="shop-form-group">
+        <label for="shopSampleImages">Sample item pictures (up to 5)</label>
+        <input type="file" id="shopSampleImages" accept="image/*" multiple/>
+        <small>Upload some pictures of items you sell. At least 1 is required.</small>
+      </div>
+
+      <div class="error" id="shopError"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="shopCancelBtn" style="background:#777">Cancel</button>
+      <button class="btn-primary" id="shopSubmitBtn">Submit shop</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Waiting Modal ===== -->
+<div class="modal" id="waitingModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>We are confirming your prices</span>
+    </div>
+
+    <div class="modal-body">
+
+      <p id="waitingTopMsg" style="margin:0 0 6px;font-size:14px;color:#444;">
+        Your list has been submitted. We are confirming prices with the shop.
+      </p>
+
+      <p style="font-size:18px;font-weight:bold;margin:10px 0;color:#333;">
+        Please wait<span id="waitingDots"></span>
+      </p>
+
+      <div style="margin:14px 0 4px;">
+        <div style="background:#eee;width:100%;height:12px;border-radius:6px;overflow:hidden;">
+          <div id="waitingProgressBar" style="height:100%;width:0%;background:#c12872;transition:width .4s ease;"></div>
+        </div>
+      </div>
+
+      <div id="waitingCounter" style="font-size:14px;color:#666;margin-top:4px;">
+        0 of 0 items reviewed
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="waitingBtn" disabled style="display:none;">
+        View reviewed list
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== Hidden Admin Panel ===== -->
+<div id="adminPanel" aria-hidden="true">
+  <div class="admin-top">
+    <div>
+      <h2 id="adminShop">Order</h2>
+      <div class="admin-shop-actions" id="adminShopActions"></div>
+    </div>
+    <button class="close-admin" id="closeAdminBtn">Close</button>
+  </div>
+
+  <div class="admin-section">
+    <div class="group-title">Available items</div>
+    <div id="adminAvail"></div>
+  </div>
+
+  <div class="admin-section">
+    <div class="group-title">Unavailable items</div>
+    <div id="adminUnavail"></div>
+  </div>
+
+  <div class="admin-section">
+    <div class="group-title">Fees</div>
+    <div class="admin-fee-row">
+      <label class="fee-input">Service: GH₵ <input type="number" min="0" step="1" id="feeServiceInput"></label>
+      <label class="fee-input">Delivery: GH₵ <input type="number" min="0" step="1" id="feeDeliveryInput"></label>
+    </div>
+  </div>
+
+  <div class="admin-totals">
+    <div>Items total: GH₵ <span id="adminItemsTotal">0</span></div>
+    <div>Grand total (with fees): GH₵ <span id="adminGrandTotal">0</span></div>
+  </div>
+
+  <div class="admin-actions">
+    <button class="btn btn-cancel" id="adminCancel">Cancel</button>
+    <button class="btn btn-done" id="adminDone">Done</button>
+  </div>
+</div>
+
+<!-- ===== Hidden Customer Panel ===== -->
+<div id="customerPanel" aria-hidden="true">
+  <div class="cust-top">
+    <h2 id="custShop">Order</h2>
+    <button class="cust-close" id="closeCustomerBtn">Close</button>
+  </div>
+
+  <div class="cust-group">
+    <h3>Available items</h3>
+    <div id="custAvail" class="cust-items-wrap"></div>
+  </div>
+
+  <div class="cust-group">
+    <h3>Unavailable items</h3>
+    <div id="custUnavail" class="cust-items-wrap"></div>
+  </div>
+
+  <div class="cust-totals"></div>
+
+  <div class="cust-actions">
+    <button class="cust-btn cust-cancel" id="custCancel">Cancel</button>
+    <button class="cust-btn cust-pay" id="custPay">Proceed to payment</button>
+  </div>
+</div>
+
+<!-- ========= LINKED JAVASCRIPT ========= -->
+<script type="module" src="groceries.js"></script>
+
+<!-- ========= FOOTER ========= -->
+<div class="footer-wrap">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+</div>
 
 </body>
 </html>
