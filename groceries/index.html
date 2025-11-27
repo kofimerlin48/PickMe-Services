@@ -2199,14 +2199,11 @@ searchInput.addEventListener("input",()=>{
   renderCards(active, searchInput.value);
 });
 
-/* ===== Router ===== */
+/* ===== Router (No lag fix) ===== */
 async function router() {
   const url = new URL(location.href);
   const adminId = url.searchParams.get("admin");
   const orderId = url.searchParams.get("order");
-
-  document.body.classList.remove("ready");
-  document.body.classList.add("hide-initial");
 
   try {
     if (adminId) {
@@ -2217,8 +2214,6 @@ async function router() {
           hideHome();
           adminDocId = adminId;
           openAdmin(payload);
-          document.body.classList.remove("hide-initial");
-          document.body.classList.add("ready");
           return;
         } else {
           alert("Incorrect code. Access denied.");
@@ -2233,27 +2228,23 @@ async function router() {
       if (payload && payload.type === "order") {
         hideHome();
         openCustomer(payload);
-        document.body.classList.remove("hide-initial");
-        document.body.classList.add("ready");
         return;
       }
     }
 
+    // Default
     showHome();
-    document.body.classList.remove("hide-initial");
-    document.body.classList.add("ready");
+
   } catch (err) {
     console.error("router error:", err);
     showHome();
-    document.body.classList.remove("hide-initial");
-    document.body.classList.add("ready");
   }
 }
 
-/* ===== Init ===== */
-(async()=>{
+/* ===== Init (No lag fix) ===== */
+(async () => {
   await loadTrustedCounts();
-  renderCards("All","");
+  renderCards("All", "");
   router();
 })();
 
