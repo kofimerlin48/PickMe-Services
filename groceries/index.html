@@ -462,8 +462,6 @@ shop-form-group textarea::placeholder{
 
 /* ===== CSS SECTION END ===== */
 
-
-
 </style>
 
 </head>
@@ -489,7 +487,38 @@ shop-form-group textarea::placeholder{
      ========================================= -->
 
 <div id="page-content">
-  <!-- ===== HTML SECTION START ===== -->
+  <!-- ========= HEADER (Static, do not touch) ========= -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const res = await fetch("header.html");
+    let html = await res.text();
+
+    // Insert page title
+    html = html.replace("{{PAGE_TITLE}}", "Groceries");
+
+    // Insert header HTML
+    document.getElementById("header-placeholder").innerHTML = html;
+
+    // Re-execute scripts inside header.html (fix hamburger)
+    document
+      .querySelectorAll("#header-placeholder script")
+      .forEach(oldScript => {
+        const s = document.createElement("script");
+        if (oldScript.src) s.src = oldScript.src;
+        else s.textContent = oldScript.textContent;
+        oldScript.replaceWith(s);
+      });
+
+  } catch (err) {
+    console.error("Header load error:", err);
+  }
+})();
+</script>
+
+
+<!-- ===== HTML SECTION START ===== -->
 
 <!-- ===== Home ===== -->
 <div class="page-header" id="homeHeader">
@@ -814,7 +843,9 @@ shop-form-group textarea::placeholder{
    PASTE ALL YOUR JAVASCRIPT HERE ONLY
    ========================================= */
 
-// ========= FIREBASE + PAGE LOGIC =========
+// ========== JS SECTION START ==========
+
+  // ========= FIREBASE + PAGE LOGIC =========
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
