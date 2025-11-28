@@ -2241,11 +2241,31 @@ async function router() {
   }
 }
 
-/* ===== Init (No lag fix) ===== */
+/* ===== Init ===== */
 (async () => {
-  await loadTrustedCounts();
+  // 1) Show page title instantly in the section header (no lag)
+  const pageTitleEl = document.querySelector("#homeHeader h1");
+  if (pageTitleEl && !pageTitleEl.textContent.trim()) {
+    pageTitleEl.textContent = "Groceries";
+  }
+
+  // 2) Render cards immediately with current data (buyersCountMap is empty at first)
+  //    This avoids waiting for Firestore before the user sees shops.
   renderCards("All", "");
+
+  // 3) Run the router (admin / customer / normal view)
   router();
+
+  // 4) Now load trusted buyers in the background and quietly update the cards
+  //    so that "Trusted by X buyers" and the sort order get refreshed
+  try {
+    await loadTrustedCounts();
+    const activeCat =
+      document.querySelector(".tab.active")?.dataset.cat || "All";
+    renderCards(activeCat, searchInput.value);
+  } catch (e) {
+    console.error("loadTrustedCounts (background) error:", e);
+  }
 })();
 
 </script>
