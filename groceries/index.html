@@ -491,7 +491,7 @@ shop-form-group textarea::placeholder{
   <script>
   (async () => {
     try {
-      const res = await fetch("header.html", { cache: "no-store" });
+      const res = await fetch("header.html", { cache: "force-cache" });
       let html = await res.text();
 
       // Correct title injection (fix)
