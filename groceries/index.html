@@ -2243,11 +2243,11 @@ async function router() {
 
 /* ===== Init ===== */
 (async () => {
-  // 1) Show page title instantly in the section header (no lag)
-  const pageTitleEl = document.querySelector("#homeHeader h1");
-  if (pageTitleEl && !pageTitleEl.textContent.trim()) {
-    pageTitleEl.textContent = "Groceries";
-  }
+  // 1) Ensure header.html title appears instantly
+document.addEventListener("DOMContentLoaded", () => {
+  const headerTitle = document.querySelector("#header-placeholder h1");
+  if (headerTitle) headerTitle.textContent = "Groceries";
+});
 
   // 2) Render cards immediately with current data (buyersCountMap is empty at first)
   //    This avoids waiting for Firestore before the user sees shops.
