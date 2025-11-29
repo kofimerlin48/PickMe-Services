@@ -59,11 +59,10 @@ input, textarea, select, button {
   gap:8px;
 }
 
-/* SEARCH (no tabs on cosmetics) */
+/* SEARCH + TABS */
 .search-bar{display:flex;justify-content:center;margin:4px 16px 6px;}
 .search-bar input{width:100%;max-width:480px;padding:10px 14px;border:1px solid #ccc;border-radius:8px;font-size:16px;}
 
-/* Tabs CSS kept but HTML removed (no categories for cosmetics) */
 .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;border-bottom:2px solid #eee;}
 .tab{padding:10px 14px;border-radius:999px;background:#fff;border:1px solid #eee;cursor:pointer;white-space:nowrap;font-size:14px;}
 .tab.active{color:#fff;background:var(--theme-color);border-color:var(--theme-color);}
@@ -299,7 +298,7 @@ input, textarea, select, button {
   margin-top:12px;
 }
 
-/* --- Add Cosmetics Shop form (vertical, modern) --- */
+/* --- Add Cosmetic Shop form (vertical, modern) --- */
 .shop-form-group{
   display:flex;
   flex-direction:column;
@@ -324,7 +323,7 @@ input, textarea, select, button {
   box-shadow:0 2px 6px rgba(0,0,0,0.06);
 }
 .shop-form-group input::placeholder,
-.shop-form-group textarea::placeholder {
+shop-form-group textarea::placeholder{
   color:#b8b8b8;
 }
 .shop-form-group textarea{
@@ -519,6 +518,8 @@ input, textarea, select, button {
   })();
   </script>
 
+  <!-- ===== HTML SECTION START ===== -->
+
   <!-- ===== Home ===== -->
   <div class="page-header" id="homeHeader">
     <h1></h1>
@@ -526,14 +527,20 @@ input, textarea, select, button {
   </div>
 
   <div class="add-shop-wrap">
-    <button id="openShopBtn">💄 Add your cosmetics shop</button>
+    <button id="openShopBtn">💄 Add your cosmetic shop</button>
   </div>
 
   <div class="search-bar" id="homeSearch">
-    <input type="text" id="searchInput" placeholder="Search cosmetics shops...">
+    <input type="text" id="searchInput" placeholder="Search cosmetic shops...">
   </div>
 
-  <!-- NO TABS for cosmetics -->
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-cat="All">All</div>
+    <div class="tab" data-cat="Skin Care">Skin Care</div>
+    <div class="tab" data-cat="Makeup">Makeup</div>
+    <div class="tab" data-cat="Hair & Nails">Hair & Nails</div>
+  </div>
+
   <div class="cards-container" id="cardsContainer"></div>
 
   <!-- ================= DETAILS PANEL ================= -->
@@ -640,11 +647,11 @@ input, textarea, select, button {
     </div>
   </div>
 
-  <!-- ===== Modal: Add Cosmetics Shop ===== -->
+  <!-- ===== Modal: Add Cosmetic Shop ===== -->
   <div class="modal" id="shopModal">
     <div class="modal-card">
       <div class="modal-header">
-        <span>Add your cosmetics shop</span>
+        <span>Add your cosmetic shop</span>
         <button class="btn-primary" id="shopCloseBtn" style="background:#777">Close</button>
       </div>
       <div class="modal-body">
@@ -658,19 +665,25 @@ input, textarea, select, button {
         </div>
         <div class="shop-form-group">
           <label for="shopNameInput">Shop name</label>
-          <input type="text" id="shopNameInput" placeholder="e.g. Beauty Hub"/>
+          <input type="text" id="shopNameInput" placeholder="e.g. Najat's Beauty Care"/>
         </div>
         <div class="shop-form-group">
           <label for="shopSloganInput">Shop slogan</label>
-          <input type="text" id="shopSloganInput" placeholder="e.g. All things beauty & glow"/>
+          <input type="text" id="shopSloganInput" placeholder="e.g. We care about your beauty"/>
         </div>
         <div class="shop-form-group">
           <label for="shopShortDesc">Short description</label>
           <textarea id="shopShortDesc" placeholder="Brief description of your shop"></textarea>
         </div>
-
-        <!-- NO CATEGORY DROPDOWN FOR COSMETICS -->
-
+        <div class="shop-form-group">
+          <label for="shopCategory">Category</label>
+          <select id="shopCategory">
+            <option value="">Select category</option>
+            <option value="Skin Care">Skin Care</option>
+            <option value="Makeup">Makeup</option>
+            <option value="Hair & Nails">Hair & Nails</option>
+          </select>
+        </div>
         <div class="shop-form-group">
           <label for="shopPlan">Subscription plan</label>
           <select id="shopPlan">
@@ -709,7 +722,7 @@ input, textarea, select, button {
     </div>
   </div>
 
-  <!-- ===== Waiting Modal (same as groceries) ===== -->
+  <!-- ===== NEW Waiting Modal ===== -->
   <div class="modal" id="waitingModal">
     <div class="modal-card">
       <div class="modal-header">
@@ -858,10 +871,9 @@ const ADMIN_CODE = "123456"; // simple front-door for now
 const SERVICE_FEE_DEFAULT  = 0;
 const DELIVERY_FEE_DEFAULT = 0;
 
-/* Collections (COSMETICS VERSION) */
+/* Collections that match your rules */
 const linksCol   = collection(db, "Cosmetics", "Links", "items");
 const numbersCol = collection(db, "Cosmetics", "Numbers", "items");
-const shopsCol   = collection(db, "Cosmetics", "Shops", "items");
 const pendingShopsItemsCol = collection(db, "Cosmetics", "Shops", "items", "_pendingShops", "items");
 
 /* Per-shop catalog (for select-from-list) */
@@ -869,38 +881,43 @@ function shopCatalogCollection(slug){
   return collection(db, "Cosmetics", "Shops", "items", slug, "catalog");
 }
 
-/* ===== Sample cosmetics shops (three hard-coded samples) ===== */
-const COSMETICS_SAMPLES = [
+/* ===== Hardcoded shops (as before) ===== */
+const COSMETIC_DATA = [
   {
-    name: "Beauty Hub",
-    slogan: "All your beauty essentials in one place",
-    heroImage: "https://via.placeholder.com/1200x700?text=Beauty+Hub",
+    name: "Glam Haven",
+    slogan: "Glow, glam and elegance",
+    category: "Makeup",
+    heroImage: "https://via.placeholder.com/1200x700?text=Glam+Haven",
     samples: [
-      "https://via.placeholder.com/1000x600?text=Makeup+Kits",
-      "https://via.placeholder.com/1000x600?text=Skin+Care",
-      "https://via.placeholder.com/1000x600?text=Hair+Products"
+      "https://via.placeholder.com/1000x600?text=Rice+Bags",
+      "https://via.placeholder.com/1000x600?text=Canned+Foods",
+      "https://via.placeholder.com/1000x600?text=Beverages",
+      "https://via.placeholder.com/1000x600?text=Toiletries"
     ],
     phone: "233201234567"
   },
   {
-    name: "Glam Haven",
-    slogan: "Glow, glam and elegance",
-    heroImage: "https://via.placeholder.com/1200x700?text=Glam+Haven",
+    name: "Beauty Hub",
+    slogan: "All your beauty essentials in one place",
+    category: "Skin Care",
+    heroImage: "https://via.placeholder.com/1200x700?text=Beauty+Hub",
     samples: [
-      "https://via.placeholder.com/1000x600?text=Lipsticks",
-      "https://via.placeholder.com/1000x600?text=Foundations",
-      "https://via.placeholder.com/1000x600?text=Perfumes"
+      "https://via.placeholder.com/1000x600?text=Cooking+Oil",
+      "https://via.placeholder.com/1000x600?text=Bread+%26+Eggs",
+      "https://via.placeholder.com/1000x600?text=Soap+%26+Detergents"
     ],
     phone: "233209876543"
   },
   {
-    name: "SkinGlow Emporium",
-    slogan: "Everything for clear & glowing skin",
-    heroImage: "https://via.placeholder.com/1200x700?text=SkinGlow+Emporium",
+    name: "Emporium Hair",
+    slogan: "All your hair styles hub",
+    category: "Hair & Nails",
+    heroImage: "https://via.placeholder.com/1200x700?text=Emporium+Hair",
     samples: [
-      "https://via.placeholder.com/1000x600?text=Body+Lotion",
-      "https://via.placeholder.com/1000x600?text=Serums",
-      "https://via.placeholder.com/1000x600?text=Face+Wash"
+      "https://via.placeholder.com/1000x600?text=Bonestraight",
+      "https://via.placeholder.com/1000x600?text=Obaa Sima",
+      "https://via.placeholder.com/1000x600?text=Darling",
+      "https://via.placeholder.com/1000x600?text=Brazilian"
     ],
     phone: "233551112223"
   }
@@ -909,6 +926,7 @@ const COSMETICS_SAMPLES = [
 /* ===== DOM ===== */
 const cardsContainer  = document.getElementById("cardsContainer");
 const searchInput     = document.getElementById("searchInput");
+const tabs            = document.querySelectorAll(".tab");
 const homeHeader      = document.getElementById("homeHeader");
 const homeSearch      = document.getElementById("homeSearch");
 
@@ -956,6 +974,7 @@ const ownerPhoneInput  = document.getElementById("ownerPhone");
 const shopNameInput    = document.getElementById("shopNameInput");
 const shopSloganInput  = document.getElementById("shopSloganInput");
 const shopShortDesc    = document.getElementById("shopShortDesc");
+const shopCategorySel  = document.getElementById("shopCategory");
 const shopPlanSel      = document.getElementById("shopPlan");
 const shopTownInput    = document.getElementById("shopTown");
 const shopPhoneInput   = document.getElementById("shopPhone");
@@ -1004,7 +1023,6 @@ let currentOrderId = null;
 
 let currentCatalogItems = [];
 let selectedCatalogIds = new Set();
-let dynamicShops = []; // shops loaded from Firestore
 
 /* ===== Helpers ===== */
 function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
@@ -1018,7 +1036,7 @@ function slugify(name) {
     .replace(/^-+|-+$/g, "");
 }
 
-function shopKeyStorage(shop){ return `pkm_cosmetics_items_${shop}`; }
+function shopKeyStorage(shop){ return `pkm_cosmetic_items_${shop}`; }
 
 function serializeItems(){
   return [...itemsHolder.querySelectorAll(".item-card")].map(r=>({
@@ -1146,6 +1164,7 @@ async function syncShopCatalog(shopName, items){
 
       // RULE 1: First-time item must be available with price
       if (!wasSavedBefore && !(isAvailableNow && hasPrice)) {
+        // do NOT save
         return;
       }
 
@@ -1190,6 +1209,7 @@ async function fetchShopCatalog(shopName){
     });
   });
   list.sort((a,b)=>{
+    // Available first, then alphabetical
     if (a.lastAvailable !== b.lastAvailable){
       return a.lastAvailable ? -1 : 1;
     }
@@ -1198,43 +1218,12 @@ async function fetchShopCatalog(shopName){
   return list;
 }
 
-/* ===== Load real cosmetics shops from Firestore ===== */
-async function loadShopsFromFirestore() {
-  try {
-    const snap = await getDocs(shopsCol);
-    const arr = [];
-    snap.forEach(docSnap => {
-      if (docSnap.id === "_pendingShops") return;
-      const d = docSnap.data();
-      if (!d || !d.name) return;
-
-      const images = Array.isArray(d.images) ? d.images : [];
-      const hero = images[0] || "https://via.placeholder.com/1200x700?text=Cosmetics+Shop";
-      const samples = images.slice(1).length ? images.slice(1) : images;
-
-      arr.push({
-        name: d.name,
-        slogan: d.slogan || d.desc || "",
-        heroImage: hero,
-        samples: samples,
-        phone: (d.phone || d.ownerPhone || "").replace(/[^\d+]/g,"")
-      });
-    });
-    dynamicShops = arr;
-    renderCards(searchInput.value);
-  } catch (e) {
-    console.error("loadShopsFromFirestore error", e);
-  }
-}
-
-/* ====== Cards (NO categories) ====== */
-function renderCards(term=""){
+/* ====== Cards ====== */
+function renderCards(activeCategory="All", term=""){
   cardsContainer.innerHTML = "";
   const q = (term||"").trim().toLowerCase();
 
-  const allShops = [...COSMETICS_SAMPLES, ...dynamicShops];
-
-  const data = allShops
+  const data = [...COSMETIC_DATA]
     .sort((a,b)=>{
       const sa = slugify(a.name);
       const sb = slugify(b.name);
@@ -1245,6 +1234,7 @@ function renderCards(term=""){
     });
 
   data.forEach(shop=>{
+    if (activeCategory!=="All" && shop.category!==activeCategory) return;
     if (q && !shop.name.toLowerCase().includes(q)) return;
 
     const buyers = buyersCountMap[slugify(shop.name)] ?? 0;
@@ -1359,6 +1349,7 @@ cancelBtn.addEventListener("click", closeForm);
 modeCancelBtn.addEventListener("click", closeChooseMode);
 modeTypeBtn.addEventListener("click", ()=>{
   closeChooseMode();
+  // open normal form (type manually)
   openForm();
 });
 modeSelectBtn.addEventListener("click", async ()=>{
@@ -1556,6 +1547,7 @@ catalogDoneBtn.addEventListener("click", ()=>{
 
   closeCatalogModal();
 
+  // Fill the existing form with selected items
   itemsHolder.innerHTML = "";
   renumberRows();
   names.forEach(name=>{
@@ -1580,6 +1572,7 @@ function openWaitingModal(adminId) {
   btn.style.display = "none";
   btn.disabled = true;
 
+  // start dot animation
   let d = 0;
   if (waitingDotsTimer) clearInterval(waitingDotsTimer);
   waitingDotsTimer = setInterval(() => {
@@ -1596,21 +1589,27 @@ function openWaitingModal(adminId) {
     const items = data.payload?.items || [];
     const total = items.length;
 
+    // Count reviewed items (available flag OR price filled)
     let reviewed = 0;
     items.forEach(it => {
       if (it.available === false || it.price != null) reviewed++;
     });
 
+    // update progress bar + counter
     const pct = total > 0 ? (reviewed / total) * 100 : 0;
     bar.style.width = pct + "%";
     counter.textContent = `${reviewed} of ${total} items reviewed`;
 
+    // check if admin finished AND created orderId
     if (reviewed === total && data.orderId) {
+      // stop dots
       if (waitingDotsTimer) clearInterval(waitingDotsTimer);
       dotsEl.textContent = "";
 
+      // change to "Review Completed"
       topMsg.innerHTML = `<span style="color:#0a7d0a;font-weight:bold;">Review Completed</span>`;
 
+      // show button
       currentOrderId = data.orderId;
       btn.style.display = "inline-block";
       btn.disabled = false;
@@ -1683,13 +1682,14 @@ submitBtn.addEventListener("click", async ()=>{
   }
 });
 
-/* ===== Add Cosmetics Shop modal logic ===== */
+/* ===== Add Cosmetic Shop modal logic ===== */
 function resetShopForm(){
   ownerNameInput.value = "";
   ownerPhoneInput.value = "";
   shopNameInput.value = "";
   shopSloganInput.value = "";
   shopShortDesc.value = "";
+  shopCategorySel.value = "";
   shopPlanSel.value = "";
   shopTownInput.value = "";
   shopPhoneInput.value = "";
@@ -1721,6 +1721,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
   const shopNameVal = shopNameInput.value.trim();
   const slogan = shopSloganInput.value.trim();
   const shortDescVal = shopShortDesc.value.trim();
+  const category = shopCategorySel.value;
   const planVal  = shopPlanSel.value;
   const town     = shopTownInput.value.trim();
   const shopPhoneRaw = shopPhoneInput.value.trim();
@@ -1731,7 +1732,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
   const mainFile = shopMainImage.files[0] || null;
   const sampleFiles = Array.from(shopSampleImages.files || []);
 
-  if (!ownerName || !ownerNorm || !shopNameVal || !planVal || !town || !shopNorm || !mainFile) {
+  if (!ownerName || !ownerNorm || !shopNameVal || !category || !planVal || !town || !shopNorm || !mainFile) {
     shopError.textContent = "Please fill in all fields and choose images before submitting.";
     shopError.style.display = "block";
     return;
@@ -1747,6 +1748,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
     return;
   }
 
+  // derive subscription info
   const [planKey, priceStr] = planVal.split("_");
   const priceNum = Number(priceStr || 0);
   let months = 0;
@@ -1771,8 +1773,10 @@ shopSubmitBtn.addEventListener("click", async ()=>{
   const originalWidth = shopSubmitBtn.offsetWidth;
   shopSubmitBtn.disabled = true;
 
+  // FIX: lock button width so it doesn't change as dots change
   shopSubmitBtn.style.width = originalWidth + "px";
 
+  // animated dots on submit button
   if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
   let dot = 0;
   shopSubmitDotsTimer = setInterval(() => {
@@ -1781,6 +1785,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
   }, 400);
 
   try {
+    // ===== PAYMENT TRIGGER BEFORE UPLOAD =====
     try {
       const payRes = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
         method: "POST",
@@ -1790,7 +1795,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
           customerName: ownerName,
           customerPhone: ownerNorm.e164,
           shopName: shopNameVal,
-          description: `Cosmetics Shop Subscription - ${planLabel}`,
+          description: `Cosmetic Shop Subscription - ${planLabel}`,
           clientReference: `${slug}_${Date.now()}`,
           channel: "mtn-gh"
         })
@@ -1818,7 +1823,9 @@ shopSubmitBtn.addEventListener("click", async ()=>{
       shopError.style.display = "block";
       return;
     }
+    // ===== END PAYMENT TRIGGER =====
     
+    // Upload images to Storage in parallel (faster)
     const mainPromise = uploadFile(`cosmetics/shops/${slug}/main.jpg`, mainFile);
     const samplePromises = sampleFiles.map((file, i) =>
       uploadFile(`cosmetics/shops/${slug}/sample_${i+1}.jpg`, file)
@@ -1827,6 +1834,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
     const mainUrl = await mainPromise;
     const sampleUrls = await Promise.all(samplePromises);
 
+    // Save shop request with shop-name-based ID
     await setDoc(doc(pendingShopsItemsCol, slug), {
       name: shopNameVal,
       slogan: slogan,
@@ -1835,6 +1843,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
       ownerPhone: ownerNorm.e164,
       phone: shopNorm.e164,
       town: town,
+      category: category,
       price: priceNum,
       subscription: {
         code: planVal,
@@ -1863,7 +1872,7 @@ Once payment is confirmed, we will review and publish your shop, then notify you
     }
     shopSubmitBtn.disabled = false;
     shopSubmitBtn.textContent = originalText;
-    shopSubmitBtn.style.width = "";
+    shopSubmitBtn.style.width = ""; // release width after done
   }
 });
 
@@ -1872,6 +1881,7 @@ function hideHome(){
   homeHeader.style.display='none';
   document.querySelector(".add-shop-wrap").style.display='none';
   homeSearch.style.display='none';
+  document.getElementById('tabs').style.display='none';
   cardsContainer.style.display='none';
   detailsPanel.classList.remove('show');
 }
@@ -1879,6 +1889,7 @@ function showHome(){
   homeHeader.style.display='';
   document.querySelector(".add-shop-wrap").style.display='';
   homeSearch.style.display='';
+  document.getElementById('tabs').style.display='';
   cardsContainer.style.display='';
 }
 
@@ -2026,11 +2037,13 @@ adminDoneBtn.addEventListener('click', async ()=>{
   };
 
   try {
+    // update per-shop catalog before creating customer link
     await syncShopCatalog(currentAdmin.shop, processedItems);
 
     const id = await putShort(customerPayload);
     const link = `${location.origin}${location.pathname}?order=${id}`;
 
+    // connect this customer order link back to the admin doc
     if (adminDocId) {
       try {
         await updateDoc(doc(linksCol, adminDocId), { orderId: id });
@@ -2039,6 +2052,7 @@ adminDoneBtn.addEventListener('click', async ()=>{
       }
     }
 
+    // For now, still show link to admin (you) for testing
     try {
       await navigator.clipboard.writeText(link);
       alert("Customer summary link copied to clipboard.\nYou can send it to the customer by SMS.");
@@ -2141,9 +2155,9 @@ function openCustomer(data){
           customerName: data.customerName || "",
           customerPhone: data.customerPhone || "",
           shopName: data.shop || "",
-          description: `Cosmetics order - ${data.shop || ""}`,
+          description: `Cosmetic order - ${data.shop || ""}`,
           clientReference: currentOrderId || Date.now().toString(36),
-          channel: "mtn-gh"
+          channel: "mtn-gh"   // change later based on selected network
         })
       });
 
@@ -2172,12 +2186,20 @@ function openCustomer(data){
   custCancelBtn.onclick = goHome;
 }
 
-/* ===== Search only (no tabs) ===== */
+/* ===== Tabs + search ===== */
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCards(tab.dataset.cat, searchInput.value);
+  });
+});
 searchInput.addEventListener("input",()=>{
-  renderCards(searchInput.value);
+  const active = document.querySelector(".tab.active")?.dataset.cat || "All";
+  renderCards(active, searchInput.value);
 });
 
-/* ===== Router ===== */
+/* ===== Router (No lag fix) ===== */
 async function router() {
   const url = new URL(location.href);
   const adminId = url.searchParams.get("admin");
@@ -2210,6 +2232,7 @@ async function router() {
       }
     }
 
+    // Default
     showHome();
 
   } catch (err) {
@@ -2220,24 +2243,31 @@ async function router() {
 
 /* ===== Init ===== */
 (async () => {
+  // 1) Ensure header.html title appears instantly
+document.addEventListener("DOMContentLoaded", () => {
+  const headerTitle = document.querySelector("#header-placeholder h1");
+  if (headerTitle) headerTitle.textContent = "Cosmetics";
+});
 
-  renderCards("");
+  // 2) Render cards immediately with current data (buyersCountMap is empty at first)
+  //    This avoids waiting for Firestore before the user sees shops.
+  renderCards("All", "");
 
+  // 3) Run the router (admin / customer / normal view)
   router();
 
+  // 4) Now load trusted buyers in the background and quietly update the cards
+  //    so that "Trusted by X buyers" and the sort order get refreshed
   try {
     await loadTrustedCounts();
-    renderCards(searchInput.value);
+    const activeCat =
+      document.querySelector(".tab.active")?.dataset.cat || "All";
+    renderCards(activeCat, searchInput.value);
   } catch (e) {
     console.error("loadTrustedCounts (background) error:", e);
   }
-
-  try {
-    await loadShopsFromFirestore();
-  } catch (e) {
-    console.error("loadShopsFromFirestore (background) error:", e);
-  }
 })();
+
 </script>
 
 </body>
