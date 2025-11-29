@@ -487,7 +487,37 @@ input, textarea, select, button {
 <!-- ========== HTML SECTION ========== -->
 <div id="page-content">
 
-  <!-- ===== HTML SECTION START ===== -->
+  <!-- ========= HEADER (Fixed: Page title now shows) ========= -->
+  <div id="header-placeholder"></div>
+  <script>
+  (async () => {
+    try {
+      const res = await fetch("header.html", { cache: "force-cache" });
+      let html = await res.text();
+
+      // Correct title injection (fix)
+      html = html.replace(
+        /<h1[^>]*>.*?<\/h1>/i,
+        `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">Groceries</h1>`
+      );
+
+      document.getElementById("header-placeholder").innerHTML = html;
+
+      // Re-execute scripts so hamburger works
+      document
+        .querySelectorAll("#header-placeholder script")
+        .forEach(oldScript => {
+          const s = document.createElement("script");
+          if (oldScript.src) s.src = oldScript.src;
+          else s.textContent = oldScript.textContent;
+          oldScript.replaceWith(s);
+        });
+
+    } catch (err) {
+      console.error("Header load error:", err);
+    }
+  })();
+  </script>
 
   <!-- ===== Home ===== -->
   <div class="page-header" id="homeHeader">
