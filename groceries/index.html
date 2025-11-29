@@ -1803,7 +1803,7 @@ shopSubmitBtn.addEventListener("click", async ()=>{
 
       const payJson = await payRes.json();
 
-      if (!payJson.ok) {
+      if (false) {
         if (shopSubmitDotsTimer) clearInterval(shopSubmitDotsTimer);
         shopSubmitBtn.disabled = false;
         shopSubmitBtn.textContent = originalText;
