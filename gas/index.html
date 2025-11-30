@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gas Refill - PickMe Services</title>
+
+<style>
+:root{
+  --theme-color:#c12872;
+  --accent:#0a7d0a;
+  --bg:#f5f5f7;
+  --card-radius:20px;
+}
+
+*{box-sizing:border-box}
+* { -webkit-tap-highlight-color: transparent; }
+:focus, :focus-visible, button:focus, input:focus, textarea:focus, select:focus {
+  outline:none!important;
+  box-shadow:none!important;
+}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+  color:#111827;
+  padding-top:100px;
+  overflow-x:hidden;
+}
+
+/* HEADER */
+#header-placeholder{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:1000;
+}
+
+/* MAIN LAYOUT */
+main#gasMain{
+  padding:16px 16px 120px;
+  max-width:900px;
+  margin:0 auto;
+}
+
+/* Hero */
+.gas-hero{
+  background:linear-gradient(135deg,#111827,#1f2937);
+  border-radius:24px;
+  padding:18px 18px 20px;
+  color:#fff;
+  box-shadow:0 18px 45px rgba(15,23,42,0.45);
+  position:relative;
+  overflow:hidden;
+  margin-bottom:18px;
+}
+.gas-hero::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:
+     radial-gradient(circle at 0 0, rgba(193,40,114,0.45), transparent 55%),
+     radial-gradient(circle at 90% 20%, rgba(96,165,250,0.5), transparent 55%);
+  opacity:.7;
+}
+.gas-hero-inner{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.gas-hero-text{
+  flex:1;
+}
+.gas-hero-title{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:0.02em;
+  margin:0 0 6px;
+}
+.gas-hero-sub{
+  margin:0;
+  font-size:14px;
+  opacity:.95;
+}
+.gas-badge-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.gas-badge{
+  font-size:11px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(248,250,252,0.18);
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.gas-badge span.icon{
+  font-size:14px;
+}
+.gas-hero-illustration{
+  width:90px;
+  height:90px;
+  border-radius:999px;
+  background:radial-gradient(circle at 30% 0%,#fbbf24,transparent 60%),
+             radial-gradient(circle at 80% 60%,#f97316,transparent 60%),
+             #facc15;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 12px 35px rgba(250,204,21,0.55);
+}
+.gas-hero-illustration svg{
+  width:44px;
+  height:44px;
+  fill:#111827;
+}
+
+/* Section title */
+.section-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:18px 2px 8px;
+}
+.section-heading h2{
+  margin:0;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:0.01em;
+}
+.section-heading small{
+  color:#6b7280;
+  font-size:12px;
+}
+
+/* Cylinder carousel */
+.cylinder-carousel-wrap{
+  position:relative;
+  margin:0 -4px 12px;
+}
+.cylinder-carousel{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  padding:8px 2px 4px;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+}
+.cylinder-carousel::-webkit-scrollbar{
+  height:4px;
+}
+.cylinder-carousel::-webkit-scrollbar-thumb{
+  background:rgba(148,163,184,0.6);
+  border-radius:999px;
+}
+.cylinder-card{
+  position:relative;
+  min-width:170px;
+  max-width:200px;
+  height:210px;
+  border-radius:var(--card-radius);
+  background:#111827;
+  color:#fff;
+  padding:12px 12px 14px;
+  overflow:hidden;
+  box-shadow:0 16px 35px rgba(15,23,42,0.55);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  scroll-snap-align:center;
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.cylinder-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(251,191,36,0.9), transparent 70%),
+    radial-gradient(circle at 90% 40%, rgba(52,211,153,0.9), transparent 65%);
+  opacity:.72;
+}
+.cylinder-card-content{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+.cylinder-size{
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:0.04em;
+}
+.cylinder-meta{
+  margin-top:auto;
+}
+.cylinder-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:11px;
+  background:rgba(15,23,42,0.85);
+  border:1px solid rgba(148,163,184,0.7);
+}
+.cylinder-price-line{
+  margin-top:8px;
+  font-size:13px;
+}
+.cylinder-price-label{
+  opacity:.85;
+}
+.cylinder-price-value{
+  font-weight:700;
+}
+
+/* Card check / selected state */
+.cylinder-card .card-check{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(15,23,42,0.4);
+  opacity:0;
+  pointer-events:none;
+  transform:scale(0.9);
+  transition:opacity .16s ease, transform .16s ease;
+}
+.cylinder-card .card-check span{
+  width:54px;
+  height:54px;
+  border-radius:999px;
+  background:#22c55e;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  box-shadow:0 0 0 4px rgba(34,197,94,0.55);
+}
+.cylinder-card.selected{
+  transform:translateY(-4px) scale(0.98);
+  box-shadow:0 12px 28px rgba(34,197,94,0.75);
+  opacity:0.98;
+}
+.cylinder-card.selected .card-check{
+  opacity:1;
+  transform:scale(1);
+}
+
+/* Service status + button area */
+.service-status{
+  margin:4px 4px 10px;
+  font-size:12px;
+  color:#6b7280;
+}
+.service-status strong{
+  color:#111827;
+}
+.action-row{
+  display:flex;
+  justify-content:flex-end;
+  margin:6px 2px 0;
+}
+.primary-btn{
+  border:none;
+  border-radius:999px;
+  padding:11px 20px;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 12px 30px rgba(193,40,114,0.45);
+  background:linear-gradient(135deg,#f97316,#c12872);
+  color:#fff;
+  transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.primary-btn:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+  box-shadow:none;
+  transform:none;
+}
+.primary-btn:not(:disabled):active{
+  transform:translateY(1px) scale(0.98);
+  box-shadow:0 8px 20px rgba(193,40,114,0.45);
+}
+
+/* No gas overlay */
+.no-gas-wrap{
+  max-width:900px;
+  margin:76px auto 120px;
+  padding:0 16px;
+  text-align:center;
+}
+.no-gas-card{
+  background:#0f172a;
+  color:#e5e7eb;
+  border-radius:24px;
+  padding:30px 20px 28px;
+  box-shadow:0 20px 60px rgba(15,23,42,0.75);
+}
+.no-gas-card h1{
+  margin:0 0 8px;
+  font-size:24px;
+}
+.no-gas-card p{
+  margin:4px 0;
+  font-size:14px;
+  color:#9ca3af;
+}
+.no-gas-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(239,68,68,0.1);
+  color:#fecaca;
+  border:1px solid rgba(248,113,113,0.4);
+  margin-bottom:10px;
+}
+
+/* Modals (multi-step) */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1200;
+}
+.modal.show{
+  display:flex;
+}
+.modal-card{
+  width:95%;
+  max-width:520px;
+  max-height:90vh;
+  background:#f9fafb;
+  border-radius:22px;
+  box-shadow:0 18px 60px rgba(15,23,42,0.7);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.modal-header{
+  padding:14px 18px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.modal-header-title{
+  font-weight:700;
+  font-size:15px;
+}
+.modal-close-btn{
+  border:none;
+  border-radius:999px;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:19px;
+  cursor:pointer;
+  background:#111827;
+  color:#f9fafb;
+}
+.modal-body{
+  padding:14px 18px 4px;
+  overflow-y:auto;
+}
+.modal-footer{
+  padding:12px 18px 14px;
+  border-top:1px solid #e5e7eb;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+/* Steps */
+.modal-step{
+  display:none;
+}
+.modal-step.active{
+  display:block;
+}
+
+/* Step1: price selection */
+.step1-top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.step1-cylinder-pill{
+  padding:6px 10px;
+  border-radius:999px;
+  background:#111827;
+  color:#f9fafb;
+  font-size:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.step1-cylinder-pill span.dot{
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  background:#22c55e;
+}
+.step1-size{
+  font-size:20px;
+  font-weight:800;
+}
+.step1-sub{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:2px;
+}
+
+.price-options{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:10px 0 4px;
+}
+.price-card{
+  background:#f9fafb;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 4px 12px rgba(15,23,42,0.08);
+  padding:10px 11px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  cursor:pointer;
+  position:relative;
+}
+.price-card-main{
+  flex:1;
+}
+.price-card-label{
+  font-size:13px;
+  font-weight:600;
+}
+.price-card-desc{
+  font-size:11px;
+  color:#6b7280;
+  margin-top:3px;
+}
+.price-chip{
+  font-size:13px;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(15,23,42,0.06);
+  border:1px solid rgba(156,163,175,0.6);
+}
+.price-card.selected{
+  border-color:#22c55e;
+  box-shadow:0 0 0 1px rgba(34,197,94,0.3), 0 6px 18px rgba(34,197,94,0.28);
+}
+.price-card .radio-dot{
+  width:16px;
+  height:16px;
+  border-radius:999px;
+  border:2px solid #d1d5db;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:2px;
+}
+.price-card .radio-inner{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:transparent;
+}
+.price-card.selected .radio-dot{
+  border-color:#22c55e;
+}
+.price-card.selected .radio-inner{
+  background:#22c55e;
+}
+
+.price-input-wrap{
+  margin-top:7px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.price-input-wrap span.currency{
+  font-size:13px;
+  color:#6b7280;
+}
+.price-input-wrap input{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+}
+.price-input-wrap input:disabled{
+  background:#f3f4f6;
+}
+
+/* Step2: details */
+.form-group{
+  margin-bottom:10px;
+  display:flex;
+  flex-direction:column;
+}
+.form-group label{
+  font-size:12px;
+  font-weight:600;
+  color:#374151;
+  margin-bottom:3px;
+}
+.form-group input,
+.form-group textarea{
+  padding:9px 11px;
+  border-radius:11px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  background:#fff;
+}
+.form-group textarea{
+  min-height:70px;
+  resize:vertical;
+}
+.form-group small{
+  font-size:11px;
+  color:#6b7280;
+}
+
+/* Error text */
+.error-text{
+  margin-top:4px;
+  font-size:12px;
+  color:#b91c1c;
+}
+
+/* Ghost button */
+.secondary-btn{
+  border-radius:999px;
+  padding:9px 16px;
+  font-size:13px;
+  font-weight:600;
+  border:1px solid #d1d5db;
+  background:#fff;
+  color:#374151;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* Success modal */
+.success-body{
+  padding:18px 18px 6px;
+}
+.success-icon{
+  width:60px;
+  height:60px;
+  border-radius:999px;
+  background:#ecfdf3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+}
+.success-icon span{
+  font-size:32px;
+  color:#16a34a;
+}
+.success-title{
+  margin:0 0 6px;
+  font-size:18px;
+  font-weight:800;
+}
+.success-text{
+  font-size:13px;
+  color:#4b5563;
+  margin:4px 0;
+}
+.success-highlight{
+  font-weight:600;
+  color:#111827;
+}
+.success-contact{
+  margin-top:8px;
+  font-size:13px;
+}
+
+/* Footer */
+.footer-wrap{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:900;
+}
+
+/* Small screens */
+@media (max-width:480px){
+  .gas-hero{
+    border-radius:0 0 24px 24px;
+  }
+  main#gasMain{
+    padding-top:10px;
+  }
+  .cylinder-card{
+    min-width:160px;
+    height:200px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ========= HEADER ========= -->
+<div id="header-placeholder"></div>
+<script>
+(async () => {
+  try {
+    const response = await fetch('header.html');
+    if (!response.ok) throw new Error('Failed to load header');
+    let html = await response.text();
+    const pageTitle = "Gas Refill";
+    html = html.replace(
+      /<h1[^>]*>.*?<\/h1>/i,
+      `<h1 style="margin:0;font-weight:800;color:#c12872;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">`+pageTitle+`</h1>`
+    );
+    document.getElementById('header-placeholder').innerHTML = html;
+
+    // re-run any scripts inside header
+    document.querySelectorAll('#header-placeholder script').forEach(oldScript => {
+      const s = document.createElement('script');
+      if (oldScript.src) s.src = oldScript.src;
+      else s.textContent = oldScript.textContent;
+      oldScript.replaceWith(s);
+    });
+  } catch (err) {
+    console.error("Header load error:", err);
+  }
+})();
+</script>
+
+<!-- ========= MAIN CONTENT ========= -->
+<main id="gasMain">
+  <!-- Hero -->
+  <section class="gas-hero">
+    <div class="gas-hero-inner">
+      <div class="gas-hero-text">
+        <h1 class="gas-hero-title">Gas Refill</h1>
+        <p class="gas-hero-sub">
+          Refill your cylinder at your doorstep — safe, convenient and handled by PickMe dispatch.
+        </p>
+        <div class="gas-badge-row">
+          <div class="gas-badge"><span class="icon">🕒</span><span>Same–day delivery within town</span></div>
+          <div class="gas-badge"><span class="icon">⛽</span><span>Verified partner gas stations</span></div>
+          <div class="gas-badge"><span class="icon">💳</span><span>Pay securely via Mobile Money</span></div>
+        </div>
+      </div>
+      <div class="gas-hero-illustration" aria-hidden="true">
+        <!-- Simple cylinder icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M9 2h6a1 1 0 0 1 1 1v2h1a2 2 0 0 1 2 2v2H5V7a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm1 2v1h4V4h-4Z"/>
+          <path d="M5 10h14v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-8Z"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cylinder sizes -->
+  <div class="section-heading">
+    <h2>Choose your cylinder size</h2>
+    <small>Select one size below to continue</small>
+  </div>
+
+  <div class="cylinder-carousel-wrap">
+    <div class="cylinder-carousel" id="cylinderCarousel">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+
+  <div id="serviceStatus" class="service-status">
+    <strong>Service status:</strong> Checking availability…
+  </div>
+
+  <div class="action-row">
+    <button id="refillNowBtn" class="primary-btn" disabled>
+      <span>Refill Now</span> <span>⟶</span>
+    </button>
+  </div>
+</main>
+
+<!-- No gas overlay (used when admin marks "no gas") -->
+<div id="noGasWrap" class="no-gas-wrap" style="display:none;">
+  <div class="no-gas-card">
+    <div class="no-gas-pill">
+      <span>⛽</span>
+      <span>No Gas Available</span>
+    </div>
+    <h1>No gas at our partner stations</h1>
+    <p>Refill service is temporarily unavailable because there is no gas from our partner stations.</p>
+    <p>Please check back later or try again in a few hours.</p>
+  </div>
+</div>
+
+<!-- ========= MODAL: Amount + Details (multi-step) ========= -->
+<div class="modal" id="gasModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-header-title" id="modalTitle">Gas refill</div>
+      <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: choose amount -->
+      <div class="modal-step" id="step1">
+        <div class="step1-top">
+          <div>
+            <div class="step1-cylinder-pill">
+              <span class="dot"></span>
+              <span id="step1CylinderLabel">Cylinder</span>
+            </div>
+            <div class="step1-size" id="step1SizeText">–</div>
+            <div class="step1-sub">
+              Choose to pay standard station price or enter a preferred amount.
+            </div>
+          </div>
+        </div>
+
+        <div class="price-options">
+          <!-- Station price card -->
+          <div class="price-card" id="cardStation">
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            <div class="price-card-main">
+              <div class="price-card-label">Station price</div>
+              <div class="price-card-desc">
+                Recommended refill price from our partner station.
+              </div>
+            </div>
+            <div class="price-chip" id="stationPriceChip">GHC 0.00</div>
+          </div>
+
+          <!-- Custom amount card -->
+          <div class="price-card" id="cardCustom">
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            <div class="price-card-main">
+              <div class="price-card-label">Enter preferred amount</div>
+              <div class="price-card-desc">
+                You can top up or pay a different amount (talk to rider if needed).
+              </div>
+              <div class="price-input-wrap">
+                <span class="currency">GH₵</span>
+                <input type="number" id="customAmountInput" placeholder="Enter amount" min="1" step="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="error-text" id="step1Error" style="display:none;"></div>
+      </div>
+
+      <!-- Step 2: contact & delivery -->
+      <div class="modal-step" id="step2">
+        <div style="margin-bottom:8px;">
+          <div class="step1-cylinder-pill">
+            <span class="dot"></span>
+            <span id="step2CylinderLabel">Cylinder</span>
+          </div>
+          <div class="step1-size" id="step2SizeText">–</div>
+          <div class="step1-sub" id="step2AmountSummary">Amount: GH₵ 0</div>
+        </div>
+
+        <div class="form-group">
+          <label for="customerName">Your full name</label>
+          <input type="text" id="customerName" placeholder="Enter your full name" />
+        </div>
+        <div class="form-group">
+          <label for="momoNumber">Momo number (for payment)</label>
+          <input type="tel" id="momoNumber" placeholder="+233… or 0…" />
+          <small>We’ll send the payment prompt to this number.</small>
+        </div>
+        <div class="form-group">
+          <label for="deliveryAddress">Delivery address</label>
+          <textarea id="deliveryAddress" placeholder="House description / landmark / area"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="contactNumber">Contact phone (for rider)</label>
+          <input type="tel" id="contactNumber" placeholder="+233… or 0…" />
+          <small>Rider will call this number when approaching.</small>
+        </div>
+        <div class="error-text" id="step2Error" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" id="backBtn" style="display:none;">← Back</button>
+      <button class="primary-btn" id="nextBtn">
+        <span id="nextBtnText">Next</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= SUCCESS MODAL ========= -->
+<div class="modal" id="successModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-header-title">Order received</div>
+      <button class="modal-close-btn" id="successCloseBtn">&times;</button>
+    </div>
+    <div class="success-body">
+      <div class="success-icon"><span>✔</span></div>
+      <h2 class="success-title">Your gas refill request has been sent</h2>
+      <p class="success-text">
+        If you approved the Mobile Money prompt, your payment will be processed and
+        <span class="success-highlight">you’ll receive an SMS confirmation.</span>
+      </p>
+      <p class="success-text">
+        A PickMe admin will also receive this order with a link to view the details on the admin panel.
+      </p>
+      <p class="success-contact">
+        For any questions about this order, call PickMe Services on
+        <span class="success-highlight" id="pickmeNumberDisplay">0550000000</span>.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="primary-btn" id="successOkBtn"><span>OK, got it</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= FOOTER ========= -->
+<div class="footer-wrap">
+  <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+</div>
+
+<!-- ========= JS / FIREBASE ========= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  collection, doc, setDoc, getDoc, getDocs,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+  authDomain: "pickmeservicesonline.firebaseapp.com",
+  projectId: "pickmeservicesonline",
+  storageBucket: "pickmeservicesonline.firebasestorage.app",
+  messagingSenderId: "265031616239",
+  appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+};
+
+const app   = initializeApp(firebaseConfig);
+const db    = getFirestore(app);
+
+/* ==== Collections / Docs for Gas Refill ==== */
+// GasRefill/Settings
+const gasSettingsDoc = doc(db, "GasRefill", "Settings");
+// GasRefill/Sizes/items -> each doc is one cylinder size
+const gasSizesCol    = collection(db, "GasRefill", "Sizes", "items");
+// GasRefill/Orders/items -> each doc is an order (for admin panel later)
+const gasOrdersCol   = collection(db, "GasRefill", "Orders", "items");
+
+/* Create base structure (safe to call, uses merge) */
+async function ensureGasStructure(){
+  try{
+    await setDoc(gasSettingsDoc, { createdAt: serverTimestamp() }, { merge:true });
+  }catch(e){
+    console.error("ensureGasStructure error", e);
+  }
+}
+ensureGasStructure();
+
+/* ==== Defaults (sample cylinders) ==== */
+const DEFAULT_CYLINDERS = [
+  {
+    id: "6kg",
+    label: "6kg Cylinder",
+    sizeText: "6kg",
+    stationPrice: 130,
+    imageHint: "small cylinder"
+  },
+  {
+    id: "12_5kg",
+    label: "12.5kg Cylinder",
+    sizeText: "12.5kg",
+    stationPrice: 250,
+    imageHint: "family cylinder"
+  },
+  {
+    id: "15kg",
+    label: "15kg Cylinder",
+    sizeText: "15kg",
+    stationPrice: 300,
+    imageHint: "medium cylinder"
+  },
+  {
+    id: "45kg",
+    label: "45kg Cylinder",
+    sizeText: "45kg",
+    stationPrice: 850,
+    imageHint: "commercial cylinder"
+  }
+];
+
+let cylinders = [...DEFAULT_CYLINDERS];
+let selectedCylinder = null;
+let chosenAmount = null;
+let chosenAmountType = null; // "station" | "custom"
+const HUBTEL_FN_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
+const PICKME_CONTACT_NUMBER = "0550000000"; // change to your real PickMe number
+
+/* ==== DOM ==== */
+const carouselEl       = document.getElementById("cylinderCarousel");
+const refillNowBtn     = document.getElementById("refillNowBtn");
+const serviceStatusEl  = document.getElementById("serviceStatus");
+const noGasWrap        = document.getElementById("noGasWrap");
+const gasMain          = document.getElementById("gasMain");
+
+/* Modal DOM */
+const gasModal         = document.getElementById("gasModal");
+const modalTitle       = document.getElementById("modalTitle");
+const modalCloseBtn    = document.getElementById("modalCloseBtn");
+const step1El          = document.getElementById("step1");
+const step2El          = document.getElementById("step2");
+const step1ErrorEl     = document.getElementById("step1Error");
+const step2ErrorEl     = document.getElementById("step2Error");
+const nextBtn          = document.getElementById("nextBtn");
+const nextBtnText      = document.getElementById("nextBtnText");
+const backBtn          = document.getElementById("backBtn");
+
+const step1CylinderLabel = document.getElementById("step1CylinderLabel");
+const step1SizeText      = document.getElementById("step1SizeText");
+const stationPriceChip   = document.getElementById("stationPriceChip");
+const cardStation        = document.getElementById("cardStation");
+const cardCustom         = document.getElementById("cardCustom");
+const customAmountInput  = document.getElementById("customAmountInput");
+
+const step2CylinderLabel = document.getElementById("step2CylinderLabel");
+const step2SizeText      = document.getElementById("step2SizeText");
+const step2AmountSummary = document.getElementById("step2AmountSummary");
+
+const customerNameInput  = document.getElementById("customerName");
+const momoNumberInput    = document.getElementById("momoNumber");
+const deliveryAddressInp = document.getElementById("deliveryAddress");
+const contactNumberInput = document.getElementById("contactNumber");
+
+/* Success modal DOM */
+const successModal       = document.getElementById("successModal");
+const successCloseBtn    = document.getElementById("successCloseBtn");
+const successOkBtn       = document.getElementById("successOkBtn");
+const pickmeNumberDisp   = document.getElementById("pickmeNumberDisplay");
+pickmeNumberDisp.textContent = PICKME_CONTACT_NUMBER;
+
+/* ==== Helpers ==== */
+function money(n){
+  const v = Number(n||0);
+  return v;
+}
+function formatMoney(n){
+  const v = money(n);
+  return v.toFixed(2).replace(/\.00$/,'');
+}
+function slugify(s){
+  return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function normalizeGhanaNumber(input){
+  let s = String(input||"").trim().replace(/[\s-]/g,'');
+  if (!s) return null;
+  if (s.startsWith('+233')) return { e164: s };
+  if (s.startsWith('233'))  return { e164: '+'+s };
+  if (/^0\d{9}$/.test(s))   return { e164: '+233'+s.slice(1) };
+  if (/^\d{9}$/.test(s))    return { e164: '+233'+s };
+  const d = s.replace(/\D/g,'');
+  if (d.startsWith('233'))  return { e164: '+'+d };
+  if (d.length===10 && d.startsWith('0')) return { e164:'+233'+d.slice(1) };
+  return null;
+}
+
+/* ==== Render cylinders ==== */
+function renderCylinders(){
+  carouselEl.innerHTML = "";
+  cylinders.forEach(cyl => {
+    const card = document.createElement("div");
+    card.className = "cylinder-card";
+    card.dataset.id = cyl.id;
+    card.innerHTML = `
+      <div class="cylinder-card-content">
+        <div>
+          <div class="cylinder-size">${cyl.sizeText}</div>
+          <div class="cylinder-meta">
+            <div class="cylinder-tag">
+              <span>⛽</span>
+              <span>${cyl.label}</span>
+            </div>
+          </div>
+        </div>
+        <div class="cylinder-price-line">
+          <div class="cylinder-price-label">Station Price</div>
+          <div class="cylinder-price-value">GH₵ ${formatMoney(cyl.stationPrice)}</div>
+        </div>
+      </div>
+      <div class="card-check"><span>✔</span></div>
+    `;
+    card.addEventListener("click", ()=>selectCylinder(cyl.id));
+    carouselEl.appendChild(card);
+  });
+  updateSelectedUI();
+}
+
+function updateSelectedUI(){
+  const cards = carouselEl.querySelectorAll(".cylinder-card");
+  cards.forEach(card=>{
+    const id = card.dataset.id;
+    card.classList.toggle("selected", selectedCylinder && selectedCylinder.id === id);
+  });
+  refillNowBtn.disabled = !selectedCylinder || !currentServiceOpen;
+}
+
+/* ==== Load cylinder data from Firestore (admin overrides) ==== */
+async function loadCylinderSizes(){
+  cylinders = [...DEFAULT_CYLINDERS];
+  try{
+    const snap = await getDocs(gasSizesCol);
+    const arr = [];
+    snap.forEach(ds=>{
+      const d = ds.data();
+      if (!d || !d.sizeText || d.stationPrice == null) return;
+      if (d.active === false) return;
+      arr.push({
+        id: ds.id || slugify(d.sizeText),
+        label: d.label || (d.sizeText+" Cylinder"),
+        sizeText: d.sizeText,
+        stationPrice: Number(d.stationPrice) || 0,
+        imageHint: d.imageHint || ""
+      });
+    });
+    if (arr.length){
+      arr.sort((a,b)=> (a.order ?? 999) - (b.order ?? 999));
+      cylinders = arr;
+    }
+  }catch(e){
+    console.error("loadCylinderSizes error", e);
+  }
+  renderCylinders();
+}
+
+/* ==== Service settings (active / no gas) ==== */
+let currentNoGas = false;
+let currentServiceOpen = true;
+
+function applySettings(settings){
+  currentNoGas = !!settings.noGas;
+  currentServiceOpen = settings.serviceOpen !== false; // default open
+
+  if (currentNoGas){
+    // No gas: hide main, show no-gas card, hide button
+    gasMain.style.display = "none";
+    noGasWrap.style.display = "block";
+    return;
+  } else {
+    gasMain.style.display = "";
+    noGasWrap.style.display = "none";
+  }
+
+  // Service status text
+  if (!currentServiceOpen){
+    serviceStatusEl.innerHTML =
+      `<strong>Service status:</strong> Currently closed. ` +
+      (settings.closedMessage || "Please check back during our active hours.");
+  } else {
+    serviceStatusEl.innerHTML =
+      `<strong>Service status:</strong> We are accepting gas refill orders now.`;
+  }
+
+  refillNowBtn.disabled = !selectedCylinder || !currentServiceOpen;
+}
+
+async function loadSettings(){
+  try{
+    const snap = await getDoc(gasSettingsDoc);
+    if (!snap.exists()){
+      applySettings({});
+      return;
+    }
+    const d = snap.data() || {};
+    applySettings({
+      noGas: d.noGas ?? false,
+      serviceOpen: d.serviceOpen ?? true,
+      closedMessage: d.closedMessage || "",
+    });
+  }catch(e){
+    console.error("loadSettings error", e);
+    applySettings({});
+  }
+}
+
+/* ==== Selection & Modal Flow ==== */
+function selectCylinder(id){
+  const cyl = cylinders.find(c => c.id === id);
+  if (!cyl) return;
+  selectedCylinder = cyl;
+  chosenAmount = cyl.stationPrice;
+  chosenAmountType = "station";
+  updateSelectedUI();
+}
+
+function openModal(){
+  if (!selectedCylinder) return;
+  if (!currentServiceOpen){
+    alert("Refill service is currently closed. Please try again during working hours.");
+    return;
+  }
+  step1ErrorEl.style.display = "none";
+  step2ErrorEl.style.display = "none";
+
+  // Setup step 1 info
+  step1CylinderLabel.textContent = selectedCylinder.label;
+  step1SizeText.textContent = selectedCylinder.sizeText;
+  stationPriceChip.textContent = "GH₵ " + formatMoney(selectedCylinder.stationPrice);
+  customAmountInput.value = "";
+  chosenAmount = selectedCylinder.stationPrice;
+  chosenAmountType = "station";
+
+  setPriceCardSelection("station");
+
+  // Step 2 preview text
+  step2CylinderLabel.textContent = selectedCylinder.label;
+  step2SizeText.textContent = selectedCylinder.sizeText;
+  step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+
+  customerNameInput.value = "";
+  momoNumberInput.value = "";
+  deliveryAddressInp.value = "";
+  contactNumberInput.value = "";
+
+  showStep(1);
+  gasModal.classList.add("show");
+}
+
+function closeModal(){
+  gasModal.classList.remove("show");
+}
+
+function showStep(n){
+  if (n === 1){
+    step1El.classList.add("active");
+    step2El.classList.remove("active");
+    backBtn.style.display = "none";
+    nextBtnText.textContent = "Next";
+    modalTitle.textContent = "Choose amount";
+  } else {
+    step1El.classList.remove("active");
+    step2El.classList.add("active");
+    backBtn.style.display = "inline-flex";
+    nextBtnText.textContent = "Make payment";
+    modalTitle.textContent = "Delivery & payment details";
+  }
+}
+
+/* Price card selection */
+function setPriceCardSelection(type){
+  chosenAmountType = type;
+  cardStation.classList.toggle("selected", type === "station");
+  cardCustom.classList.toggle("selected", type === "custom");
+  if (type === "station"){
+    customAmountInput.disabled = true;
+    customAmountInput.style.opacity = "0.7";
+    chosenAmount = selectedCylinder ? selectedCylinder.stationPrice : 0;
+  } else {
+    customAmountInput.disabled = false;
+    customAmountInput.style.opacity = "1";
+    const val = Number(customAmountInput.value || 0);
+    chosenAmount = val > 0 ? val : null;
+  }
+  // Update step2 summary if already on step2
+  if (chosenAmount){
+    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+  }
+}
+
+cardStation.addEventListener("click", ()=>setPriceCardSelection("station"));
+cardCustom.addEventListener("click", ()=>{
+  setPriceCardSelection("custom");
+  customAmountInput.focus();
+});
+customAmountInput.addEventListener("input", ()=>{
+  if (chosenAmountType !== "custom"){
+    setPriceCardSelection("custom");
+  }
+  const v = Number(customAmountInput.value || 0);
+  chosenAmount = v > 0 ? v : null;
+  if (chosenAmount){
+    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+  }
+});
+
+/* Step1 validation */
+function validateStep1(){
+  step1ErrorEl.style.display = "none";
+  if (!selectedCylinder){
+    step1ErrorEl.textContent = "Please choose a cylinder size on the main page first.";
+    step1ErrorEl.style.display = "block";
+    return false;
+  }
+  if (chosenAmountType === "custom"){
+    const v = Number(customAmountInput.value || 0);
+    if (!v || v <= 0){
+      step1ErrorEl.textContent = "Please enter a valid custom amount.";
+      step1ErrorEl.style.display = "block";
+      return false;
+    }
+  }
+  return true;
+}
+
+/* Step2 validation */
+function validateStep2(){
+  step2ErrorEl.style.display = "none";
+  const name  = customerNameInput.value.trim();
+  const momo  = momoNumberInput.value.trim();
+  const addr  = deliveryAddressInp.value.trim();
+  const phone = contactNumberInput.value.trim();
+
+  if (!name){
+    step2ErrorEl.textContent = "Please enter your full name.";
+    step2ErrorEl.style.display = "block";
+    customerNameInput.focus();
+    return null;
+  }
+  const momoNorm = normalizeGhanaNumber(momo);
+  if (!momoNorm){
+    step2ErrorEl.textContent = "Please enter a valid Momo number.";
+    step2ErrorEl.style.display = "block";
+    momoNumberInput.focus();
+    return null;
+  }
+  if (!addr){
+    step2ErrorEl.textContent = "Please enter delivery address.";
+    step2ErrorEl.style.display = "block";
+    deliveryAddressInp.focus();
+    return null;
+  }
+  const contactNorm = normalizeGhanaNumber(phone);
+  if (!contactNorm){
+    step2ErrorEl.textContent = "Please enter a valid contact number.";
+    step2ErrorEl.style.display = "block";
+    contactNumberInput.focus();
+    return null;
+  }
+  if (!chosenAmount || chosenAmount <= 0){
+    step2ErrorEl.textContent = "Amount not set. Please go back and choose amount.";
+    step2ErrorEl.style.display = "block";
+    return null;
+  }
+  return {
+    name,
+    momoNorm,
+    contactNorm,
+    addr
+  };
+}
+
+/* Submit order + call Hubtel */
+async function submitOrder(){
+  const vals = validateStep2();
+  if (!vals) return;
+
+  nextBtn.disabled = true;
+  nextBtnText.textContent = "Processing…";
+
+  const orderRef = doc(gasOrdersCol); // auto-ID for admin area later
+  const orderId  = orderRef.id;
+
+  const payload = {
+    type: "gas-refill",
+    cylinderId: selectedCylinder.id,
+    cylinderLabel: selectedCylinder.label,
+    cylinderSize: selectedCylinder.sizeText,
+    stationPrice: money(selectedCylinder.stationPrice),
+    amountChosen: money(chosenAmount),
+    amountType: chosenAmountType,
+    customerName: vals.name,
+    momoNumber: vals.momoNorm.e164,
+    contactNumber: vals.contactNorm.e164,
+    deliveryAddress: vals.addr,
+    status: "payment_started",
+    createdAt: serverTimestamp()
+  };
+
+  try{
+    // Save order for admin panel
+    await setDoc(orderRef, payload);
+
+    // Start Hubtel payment
+    let res, json;
+    try{
+      res = await fetch(HUBTEL_FN_URL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({
+          amount: money(chosenAmount),
+          customerName: vals.name,
+          customerPhone: vals.momoNorm.e164,
+          shopName: "Gas Refill",
+          description: `Gas Refill - ${selectedCylinder.sizeText} cylinder`,
+          clientReference: `gas_${orderId}`,
+          channel: "mtn-gh"
+        })
+      });
+      json = await res.json().catch(()=> ({}));
+    }catch(e){
+      console.error("Hubtel fetch error", e);
+      step2ErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
+      step2ErrorEl.style.display = "block";
+      nextBtn.disabled = false;
+      nextBtnText.textContent = "Make payment";
+      return;
+    }
+
+    if (!res.ok){
+      console.error("Hubtel error response", json);
+      step2ErrorEl.textContent =
+        "We could not start the payment: " +
+        (json && (json.message || json.error) || "Please try again.");
+      step2ErrorEl.style.display = "block";
+      nextBtn.disabled = false;
+      nextBtnText.textContent = "Make payment";
+      return;
+    }
+
+    // At this point we assume Hubtel prompt has been sent.
+    // Backend (via webhook) should confirm success, update Firestore, send SMS to user & admin, etc.
+    closeModal();
+    openSuccessModal();
+
+  }catch(e){
+    console.error("submitOrder error", e);
+    step2ErrorEl.textContent = "Something went wrong sending your order. Please try again.";
+    step2ErrorEl.style.display = "block";
+    nextBtn.disabled = false;
+    nextBtnText.textContent = "Make payment";
+  }
+}
+
+/* Success modal helpers */
+function openSuccessModal(){
+  successModal.classList.add("show");
+}
+function closeSuccessModal(){
+  successModal.classList.remove("show");
+  // Reset page to fresh state
+  selectedCylinder = null;
+  chosenAmount = null;
+  chosenAmountType = null;
+  renderCylinders();
+  loadSettings(); // re-read, just in case
+}
+
+/* ==== Events ==== */
+refillNowBtn.addEventListener("click", openModal);
+modalCloseBtn.addEventListener("click", closeModal);
+backBtn.addEventListener("click", ()=>showStep(1));
+nextBtn.addEventListener("click", ()=>{
+  if (step1El.classList.contains("active")){
+    if (!validateStep1()) return;
+    // update step2 summary before switching
+    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+    showStep(2);
+  } else {
+    submitOrder();
+  }
+});
+gasModal.addEventListener("click", e=>{
+  if (e.target === gasModal) closeModal();
+});
+
+successCloseBtn.addEventListener("click", closeSuccessModal);
+successOkBtn.addEventListener("click", closeSuccessModal);
+successModal.addEventListener("click", e=>{
+  if (e.target === successModal) closeSuccessModal();
+});
+
+/* ==== Init ==== */
+(async () => {
+  renderCylinders();
+  await loadCylinderSizes(); // admin overrides, then re-render
+  await loadSettings();
+})();
+</script>
+
+</body>
+</html>
