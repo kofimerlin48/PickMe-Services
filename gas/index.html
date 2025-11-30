@@ -932,7 +932,7 @@ main#gasMain{
       <div class="totals-note">
         This is the final amount you’ll approve on your Mobile Money prompt.
       </div>
-      <div class="error-text" id="totalsError" style="display:none;"></div>
+      <div class="error-text" id="totalsError" style="display:none;margin-top:6px;"></div>
     </div>
     <div class="modal-footer">
       <button class="secondary-btn" id="totalsCancelBtn">Cancel</button>
@@ -1145,63 +1145,41 @@ function getDefaultImageForSize(sizeText){
   return "";
 }
 
-/* === LocalStorage image caching for cylinders === */
-const CYLINDER_IMG_CACHE_PREFIX = "pkm_gas_cyl_img_";
+/* ==== LocalStorage image cache for cylinder photos (no flashing / no stretching) ==== */
+const CYL_IMG_CACHE_PREFIX = "pkm_gas_cyl_img_";
 
-function getCylinderCacheKey(cyl){
-  const id = cyl?.id || slugify(cyl?.sizeText || "");
-  return CYLINDER_IMG_CACHE_PREFIX + id;
-}
-
-function getCachedImageForCylinder(cyl){
+function getCachedCylinderImage(id){
   try{
-    if (typeof localStorage === "undefined") return cyl.imageUrl;
-    const key = getCylinderCacheKey(cyl);
-    const cached = localStorage.getItem(key);
-    return cached || cyl.imageUrl;
+    const key = CYL_IMG_CACHE_PREFIX + id;
+    const val = localStorage.getItem(key);
+    return val || null;
   }catch(e){
-    return cyl.imageUrl;
+    return null;
   }
 }
 
-async function cacheCylinderImage(cyl){
-  try{
-    if (typeof localStorage === "undefined") return;
-    if (!cyl || !cyl.imageUrl) return;
-    const key = getCylinderCacheKey(cyl);
-    if (localStorage.getItem(key)) return;
+function blobToDataURL(blob){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onloadend = ()=>resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
-    const resp = await fetch(cyl.imageUrl, { mode: "cors" });
+async function cacheCylinderImage(id, url){
+  try{
+    if (!id || !url) return;
+    const key = CYL_IMG_CACHE_PREFIX + id;
+    if (localStorage.getItem(key)) return; // already cached
+    const resp = await fetch(url, { cache: "force-cache" });
     if (!resp.ok) return;
     const blob = await resp.blob();
-
-    await new Promise((resolve, reject)=>{
-      const reader = new FileReader();
-      reader.onload = () => {
-        try{
-          localStorage.setItem(key, reader.result);
-        }catch(e){
-          console.error("localStorage set error", e);
-        }
-        resolve();
-      };
-      reader.onerror = () => reject(reader.error || new Error("FileReader error"));
-      reader.readAsDataURL(blob);
-    });
+    const dataUrl = await blobToDataURL(blob);
+    localStorage.setItem(key, dataUrl);
   }catch(e){
     console.error("cacheCylinderImage error", e);
   }
-}
-
-function cacheAllCylinderImages(){
-  try{
-    if (typeof localStorage === "undefined") return;
-  }catch(e){
-    return;
-  }
-  cylinders.forEach(cyl => {
-    cacheCylinderImage(cyl);
-  });
 }
 
 /* Base fees per cylinder size */
@@ -1250,12 +1228,11 @@ function computeFeesForSelection(cyl, amount, amountType){
 function renderCylinders(){
   carouselEl.innerHTML = "";
   cylinders.forEach(cyl => {
+    const cached = getCachedCylinderImage(cyl.id);
+    const imgSrc = cached || cyl.imageUrl;
     const card = document.createElement("div");
     card.className = "cylinder-card";
     card.dataset.id = cyl.id;
-
-    const imgSrc = getCachedImageForCylinder(cyl);
-
     card.innerHTML = `
       <div class="cylinder-card-content">
         <div>
@@ -1279,9 +1256,11 @@ function renderCylinders(){
     `;
     card.addEventListener("click", ()=>selectCylinder(cyl.id));
     carouselEl.appendChild(card);
+
+    // warm cache in background (no DOM swapping -> no flash)
+    cacheCylinderImage(cyl.id, cyl.imageUrl);
   });
   updateSelectedUI();
-  cacheAllCylinderImages();
 }
 
 function updateSelectedUI(){
@@ -1441,13 +1420,19 @@ function openTotalsModal(vals){
 
   totalsPayBtn.disabled = false;
   totalsPayBtnText.textContent = "Make payment";
-  totalsErrorEl.style.display = "none";
-  totalsErrorEl.textContent = "";
+  if (totalsErrorEl){
+    totalsErrorEl.style.display = "none";
+    totalsErrorEl.textContent = "";
+  }
 
   totalsModal.classList.add("show");
 }
 function closeTotalsModal(){
   totalsModal.classList.remove("show");
+  if (totalsErrorEl){
+    totalsErrorEl.style.display = "none";
+    totalsErrorEl.textContent = "";
+  }
 }
 
 function showStep(n){
@@ -1572,17 +1557,23 @@ function validateStep2(){
 
 /* Submit order + call Hubtel (uses totals) */
 async function submitOrder(){
-  totalsErrorEl.style.display = "none";
-  totalsErrorEl.textContent = "";
+  if (totalsErrorEl){
+    totalsErrorEl.style.display = "none";
+    totalsErrorEl.textContent = "";
+  }
 
   if (!selectedCylinder){
-    totalsErrorEl.textContent = "Please choose a cylinder size again.";
-    totalsErrorEl.style.display = "block";
+    if (totalsErrorEl){
+      totalsErrorEl.textContent = "Please choose a cylinder size again.";
+      totalsErrorEl.style.display = "block";
+    }
     return;
   }
   if (!chosenAmount || chosenAmount <= 0){
-    totalsErrorEl.textContent = "Amount not set. Please choose amount again.";
-    totalsErrorEl.style.display = "block";
+    if (totalsErrorEl){
+      totalsErrorEl.textContent = "Amount not set. Please choose amount again.";
+      totalsErrorEl.style.display = "block";
+    }
     return;
   }
 
@@ -1647,35 +1638,40 @@ async function submitOrder(){
       payJson = await payRes.json().catch(()=> ({}));
     }catch(e){
       console.error("Hubtel fetch error", e);
-      totalsErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
-      totalsErrorEl.style.display = "block";
+      if (totalsErrorEl){
+        totalsErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
+        totalsErrorEl.style.display = "block";
+      }
       totalsPayBtn.disabled = false;
       totalsPayBtnText.textContent = "Make payment";
       return;
     }
 
-    // REAL PAYMENT CHECK (bypass by changing this line to: if (false) { ... })
+    // REAL PAYMENT CHECK – BYPASS VERSION (like groceries)
+    // Bypass: if (false) { ... }  -> this block never runs, Firestore + flow continue
     if (false) {
       console.error("Hubtel error response", payJson);
-      totalsErrorEl.textContent =
-        "We could not start the payment: " +
-        ((payJson && (payJson.message || payJson.error)) || "Please try again.");
-      totalsErrorEl.style.display = "block";
+      if (totalsErrorEl){
+        totalsErrorEl.textContent =
+          "We could not start the payment: " +
+          ((payJson && (payJson.message || payJson.error)) || "Please try again.");
+        totalsErrorEl.style.display = "block";
+      }
       totalsPayBtn.disabled = false;
       totalsPayBtnText.textContent = "Make payment";
       return;
     }
 
-    // At this point we assume Hubtel prompt has been sent.
-    // Backend (via webhook) should confirm success, update Firestore, send SMS to user & admin, etc.
     closeTotalsModal();
     closeModal();
     openSuccessModal();
 
   }catch(e){
     console.error("submitOrder error", e);
-    totalsErrorEl.textContent = "Something went wrong sending your order. Please try again.";
-    totalsErrorEl.style.display = "block";
+    if (totalsErrorEl){
+      totalsErrorEl.textContent = "Something went wrong sending your order. Please try again.";
+      totalsErrorEl.style.display = "block";
+    }
     totalsPayBtn.disabled = false;
     totalsPayBtnText.textContent = "Make payment";
   }
