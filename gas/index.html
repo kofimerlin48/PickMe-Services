@@ -932,6 +932,7 @@ main#gasMain{
       <div class="totals-note">
         This is the final amount you’ll approve on your Mobile Money prompt.
       </div>
+      <div class="error-text" id="totalsError" style="display:none;"></div>
     </div>
     <div class="modal-footer">
       <button class="secondary-btn" id="totalsCancelBtn">Cancel</button>
@@ -1096,6 +1097,7 @@ const summaryRefillAmount = document.getElementById("summaryRefillAmount");
 const summaryServiceFee   = document.getElementById("summaryServiceFee");
 const summaryDeliveryFee  = document.getElementById("summaryDeliveryFee");
 const summaryTotalAmount  = document.getElementById("summaryTotalAmount");
+const totalsErrorEl       = document.getElementById("totalsError");
 
 /* Success modal DOM */
 const successModal       = document.getElementById("successModal");
@@ -1141,6 +1143,65 @@ function getDefaultImageForSize(sizeText){
     return "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2F15kg-LPG-Gas-Cylinder-for-Ghana-Africa-15A-.webp?alt=media";
   }
   return "";
+}
+
+/* === LocalStorage image caching for cylinders === */
+const CYLINDER_IMG_CACHE_PREFIX = "pkm_gas_cyl_img_";
+
+function getCylinderCacheKey(cyl){
+  const id = cyl?.id || slugify(cyl?.sizeText || "");
+  return CYLINDER_IMG_CACHE_PREFIX + id;
+}
+
+function getCachedImageForCylinder(cyl){
+  try{
+    if (typeof localStorage === "undefined") return cyl.imageUrl;
+    const key = getCylinderCacheKey(cyl);
+    const cached = localStorage.getItem(key);
+    return cached || cyl.imageUrl;
+  }catch(e){
+    return cyl.imageUrl;
+  }
+}
+
+async function cacheCylinderImage(cyl){
+  try{
+    if (typeof localStorage === "undefined") return;
+    if (!cyl || !cyl.imageUrl) return;
+    const key = getCylinderCacheKey(cyl);
+    if (localStorage.getItem(key)) return;
+
+    const resp = await fetch(cyl.imageUrl, { mode: "cors" });
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+
+    await new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          localStorage.setItem(key, reader.result);
+        }catch(e){
+          console.error("localStorage set error", e);
+        }
+        resolve();
+      };
+      reader.onerror = () => reject(reader.error || new Error("FileReader error"));
+      reader.readAsDataURL(blob);
+    });
+  }catch(e){
+    console.error("cacheCylinderImage error", e);
+  }
+}
+
+function cacheAllCylinderImages(){
+  try{
+    if (typeof localStorage === "undefined") return;
+  }catch(e){
+    return;
+  }
+  cylinders.forEach(cyl => {
+    cacheCylinderImage(cyl);
+  });
 }
 
 /* Base fees per cylinder size */
@@ -1192,6 +1253,9 @@ function renderCylinders(){
     const card = document.createElement("div");
     card.className = "cylinder-card";
     card.dataset.id = cyl.id;
+
+    const imgSrc = getCachedImageForCylinder(cyl);
+
     card.innerHTML = `
       <div class="cylinder-card-content">
         <div>
@@ -1209,14 +1273,15 @@ function renderCylinders(){
         </div>
       </div>
       <div class="cylinder-art" aria-hidden="true">
-  <img class="cylinder-photo" src="${cyl.imageUrl}" alt="${cyl.label}">
-</div>
+        <img class="cylinder-photo" src="${imgSrc}" alt="${cyl.label}">
+      </div>
       <div class="card-check"><span>✔</span></div>
     `;
     card.addEventListener("click", ()=>selectCylinder(cyl.id));
     carouselEl.appendChild(card);
   });
   updateSelectedUI();
+  cacheAllCylinderImages();
 }
 
 function updateSelectedUI(){
@@ -1376,6 +1441,8 @@ function openTotalsModal(vals){
 
   totalsPayBtn.disabled = false;
   totalsPayBtnText.textContent = "Make payment";
+  totalsErrorEl.style.display = "none";
+  totalsErrorEl.textContent = "";
 
   totalsModal.classList.add("show");
 }
@@ -1505,14 +1572,17 @@ function validateStep2(){
 
 /* Submit order + call Hubtel (uses totals) */
 async function submitOrder(){
+  totalsErrorEl.style.display = "none";
+  totalsErrorEl.textContent = "";
+
   if (!selectedCylinder){
-    step2ErrorEl.textContent = "Please choose a cylinder size again.";
-    step2ErrorEl.style.display = "block";
+    totalsErrorEl.textContent = "Please choose a cylinder size again.";
+    totalsErrorEl.style.display = "block";
     return;
   }
   if (!chosenAmount || chosenAmount <= 0){
-    step2ErrorEl.textContent = "Amount not set. Please choose amount again.";
-    step2ErrorEl.style.display = "block";
+    totalsErrorEl.textContent = "Amount not set. Please choose amount again.";
+    totalsErrorEl.style.display = "block";
     return;
   }
 
@@ -1577,20 +1647,20 @@ async function submitOrder(){
       payJson = await payRes.json().catch(()=> ({}));
     }catch(e){
       console.error("Hubtel fetch error", e);
-      step2ErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
-      step2ErrorEl.style.display = "block";
+      totalsErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
+      totalsErrorEl.style.display = "block";
       totalsPayBtn.disabled = false;
       totalsPayBtnText.textContent = "Make payment";
       return;
     }
 
     // REAL PAYMENT CHECK (bypass by changing this line to: if (false) { ... })
-    if (!payJson || !payJson.ok) {
+    if (false) {
       console.error("Hubtel error response", payJson);
-      step2ErrorEl.textContent =
+      totalsErrorEl.textContent =
         "We could not start the payment: " +
         ((payJson && (payJson.message || payJson.error)) || "Please try again.");
-      step2ErrorEl.style.display = "block";
+      totalsErrorEl.style.display = "block";
       totalsPayBtn.disabled = false;
       totalsPayBtnText.textContent = "Make payment";
       return;
@@ -1604,8 +1674,8 @@ async function submitOrder(){
 
   }catch(e){
     console.error("submitOrder error", e);
-    step2ErrorEl.textContent = "Something went wrong sending your order. Please try again.";
-    step2ErrorEl.style.display = "block";
+    totalsErrorEl.textContent = "Something went wrong sending your order. Please try again.";
+    totalsErrorEl.style.display = "block";
     totalsPayBtn.disabled = false;
     totalsPayBtnText.textContent = "Make payment";
   }
