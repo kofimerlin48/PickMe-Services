@@ -160,11 +160,13 @@ main#gasMain{
   background:rgba(148,163,184,0.6);
   border-radius:999px;
 }
+
+/* Cylinder cards */
 .cylinder-card{
   position:relative;
-  min-width:170px;
-  max-width:200px;
-  height:210px;
+  min-width:190px;
+  max-width:220px;
+  height:240px;
   border-radius:var(--card-radius);
   background:#111827;
   color:#fff;
@@ -186,10 +188,11 @@ main#gasMain{
     radial-gradient(circle at 16% 0%, rgba(251,191,36,0.9), transparent 70%),
     radial-gradient(circle at 90% 40%, rgba(52,211,153,0.9), transparent 65%);
   opacity:.72;
+  z-index:0;
 }
 .cylinder-card-content{
   position:relative;
-  z-index:1;
+  z-index:2;
   display:flex;
   flex-direction:column;
   height:100%;
@@ -200,7 +203,7 @@ main#gasMain{
   letter-spacing:0.04em;
 }
 .cylinder-meta{
-  margin-top:auto;
+  margin-top:6px;
 }
 .cylinder-tag{
   display:inline-flex;
@@ -213,7 +216,7 @@ main#gasMain{
   border:1px solid rgba(148,163,184,0.7);
 }
 .cylinder-price-line{
-  margin-top:8px;
+  margin-top:auto;
   font-size:13px;
 }
 .cylinder-price-label{
@@ -223,6 +226,32 @@ main#gasMain{
   font-weight:700;
 }
 
+/* Background cylinder artwork (image, blended) */
+.cylinder-art{
+  position:absolute;
+  right:-6px;
+  bottom:-10px;
+  width:130px;
+  height:180px;
+  opacity:0.9;
+  pointer-events:none;
+  z-index:1;
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-end;
+}
+.cylinder-art img.cylinder-photo{
+  width:120px;
+  height:170px;
+  object-fit:contain;
+  display:block;
+}
+.cylinder-art svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
 /* Card check / selected state */
 .cylinder-card .card-check{
   position:absolute;
@@ -230,11 +259,12 @@ main#gasMain{
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(15,23,42,0.4);
+  background:rgba(15,23,42,0.45);
   opacity:0;
   pointer-events:none;
   transform:scale(0.9);
   transition:opacity .16s ease, transform .16s ease;
+  z-index:3;
 }
 .cylinder-card .card-check span{
   width:54px;
@@ -335,7 +365,7 @@ main#gasMain{
   margin-bottom:10px;
 }
 
-/* Modals (multi-step) */
+/* Modals (multi-step + totals + success) */
 .modal{
   position:fixed;
   inset:0;
@@ -573,6 +603,53 @@ main#gasMain{
   gap:6px;
 }
 
+/* Totals modal */
+.totals-body{
+  padding:16px 18px 10px;
+}
+.totals-cylinder{
+  font-size:13px;
+  font-weight:600;
+  color:#374151;
+  margin-bottom:8px;
+}
+.totals-summary{
+  background:#f3f4f6;
+  border-radius:14px;
+  padding:10px 12px;
+  font-size:13px;
+}
+.totals-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+.totals-row-label{
+  color:#4b5563;
+}
+.totals-row-value{
+  font-weight:600;
+  color:#111827;
+}
+.totals-row.total{
+  padding-top:6px;
+  margin-top:2px;
+  border-top:1px dashed #d1d5db;
+}
+.totals-row.total .totals-row-label{
+  font-weight:700;
+}
+.totals-row.total .totals-row-value{
+  font-size:15px;
+  font-weight:800;
+}
+.totals-note{
+  margin-top:8px;
+  font-size:11px;
+  color:#6b7280;
+}
+
 /* Success modal */
 .success-body{
   padding:18px 18px 6px;
@@ -628,8 +705,12 @@ main#gasMain{
     padding-top:10px;
   }
   .cylinder-card{
-    min-width:160px;
-    height:200px;
+    min-width:180px;
+    height:220px;
+  }
+  .cylinder-art{
+    width:115px;
+    height:160px;
   }
 }
 </style>
@@ -670,9 +751,9 @@ main#gasMain{
   <section class="gas-hero">
     <div class="gas-hero-inner">
       <div class="gas-hero-text">
-        <h1 class="gas-hero-title">Gas Refill</h1>
+        <h1 class="gas-hero-title">Is your cylinder empty?</h1>
         <p class="gas-hero-sub">
-          Refill your cylinder at your doorstep — safe, convenient and handled by PickMe dispatch.
+          Let's refill and deliver to your doorstep. it's safe, convenient and handled by PickMe Services.
         </p>
         <div class="gas-badge-row">
           <div class="gas-badge"><span class="icon">🕒</span><span>Same–day delivery within town</span></div>
@@ -788,7 +869,7 @@ main#gasMain{
             <span id="step2CylinderLabel">Cylinder</span>
           </div>
           <div class="step1-size" id="step2SizeText">–</div>
-          <div class="step1-sub" id="step2AmountSummary">Amount: GH₵ 0</div>
+          <div class="step1-sub" id="step2AmountSummary">Refill amount: GH₵ 0 (before delivery & service fees)</div>
         </div>
 
         <div class="form-group">
@@ -801,7 +882,7 @@ main#gasMain{
           <small>We’ll send the payment prompt to this number.</small>
         </div>
         <div class="form-group">
-          <label for="deliveryAddress">Delivery address</label>
+          <label for="deliveryAddress">Pickup Delivery address</label>
           <textarea id="deliveryAddress" placeholder="House description / landmark / area"></textarea>
         </div>
         <div class="form-group">
@@ -816,6 +897,46 @@ main#gasMain{
       <button class="secondary-btn" id="backBtn" style="display:none;">← Back</button>
       <button class="primary-btn" id="nextBtn">
         <span id="nextBtnText">Next</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= TOTALS MODAL ========= -->
+<div class="modal" id="totalsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-header-title">Review total amount</div>
+      <button class="modal-close-btn" id="totalsCloseBtn">&times;</button>
+    </div>
+    <div class="totals-body">
+      <div class="totals-cylinder" id="summaryCylinderText">Cylinder</div>
+      <div class="totals-summary">
+        <div class="totals-row">
+          <div class="totals-row-label">Refill amount</div>
+          <div class="totals-row-value" id="summaryRefillAmount">GH₵ 0</div>
+        </div>
+        <div class="totals-row">
+          <div class="totals-row-label">Service charge</div>
+          <div class="totals-row-value" id="summaryServiceFee">GH₵ 0</div>
+        </div>
+        <div class="totals-row">
+          <div class="totals-row-label">Delivery fee</div>
+          <div class="totals-row-value" id="summaryDeliveryFee">GH₵ 0</div>
+        </div>
+        <div class="totals-row total">
+          <div class="totals-row-label">Total to pay</div>
+          <div class="totals-row-value" id="summaryTotalAmount">GH₵ 0</div>
+        </div>
+      </div>
+      <div class="totals-note">
+        This is the final amount you’ll approve on your Mobile Money prompt.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" id="totalsCancelBtn">Cancel</button>
+      <button class="primary-btn" id="totalsPayBtn">
+        <span id="totalsPayBtnText">Make payment</span>
       </button>
     </div>
   </div>
@@ -900,28 +1021,21 @@ const DEFAULT_CYLINDERS = [
     label: "6kg Cylinder",
     sizeText: "6kg",
     stationPrice: 130,
-    imageHint: "small cylinder"
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2Ffile_00000000a07c71f5beb21a7e6b37aea0.png?alt=media&token=5b72b95a-f6c0-4d1c-91a3-9b3fe88a600d"
   },
   {
     id: "12_5kg",
     label: "12.5kg Cylinder",
     sizeText: "12.5kg",
     stationPrice: 250,
-    imageHint: "family cylinder"
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2Fsigma-sigma-15kg-gas-cylinder-kitchen-appliances-31315545227398.png?alt=media&token=ec8d0eab-a09a-4bd4-8c2e-fcd89be1c7ed"
   },
   {
     id: "15kg",
     label: "15kg Cylinder",
     sizeText: "15kg",
     stationPrice: 300,
-    imageHint: "medium cylinder"
-  },
-  {
-    id: "45kg",
-    label: "45kg Cylinder",
-    sizeText: "45kg",
-    stationPrice: 850,
-    imageHint: "commercial cylinder"
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2F15kg-LPG-Gas-Cylinder-for-Ghana-Africa-15A-.png?alt=media&token=7cab1879-f4fe-4be3-8e27-465818039c03"
   }
 ];
 
@@ -929,6 +1043,10 @@ let cylinders = [...DEFAULT_CYLINDERS];
 let selectedCylinder = null;
 let chosenAmount = null;
 let chosenAmountType = null; // "station" | "custom"
+let deliveryFee = 0;
+let serviceCharge = 0;
+let lastStep2Data = null;
+
 const HUBTEL_FN_URL = "https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment";
 const PICKME_CONTACT_NUMBER = "0550000000"; // change to your real PickMe number
 
@@ -967,6 +1085,18 @@ const momoNumberInput    = document.getElementById("momoNumber");
 const deliveryAddressInp = document.getElementById("deliveryAddress");
 const contactNumberInput = document.getElementById("contactNumber");
 
+/* Totals modal DOM */
+const totalsModal         = document.getElementById("totalsModal");
+const totalsCloseBtn      = document.getElementById("totalsCloseBtn");
+const totalsCancelBtn     = document.getElementById("totalsCancelBtn");
+const totalsPayBtn        = document.getElementById("totalsPayBtn");
+const totalsPayBtnText    = document.getElementById("totalsPayBtnText");
+const summaryCylinderText = document.getElementById("summaryCylinderText");
+const summaryRefillAmount = document.getElementById("summaryRefillAmount");
+const summaryServiceFee   = document.getElementById("summaryServiceFee");
+const summaryDeliveryFee  = document.getElementById("summaryDeliveryFee");
+const summaryTotalAmount  = document.getElementById("summaryTotalAmount");
+
 /* Success modal DOM */
 const successModal       = document.getElementById("successModal");
 const successCloseBtn    = document.getElementById("successCloseBtn");
@@ -999,6 +1129,62 @@ function normalizeGhanaNumber(input){
   return null;
 }
 
+function getDefaultImageForSize(sizeText){
+  const key = String(sizeText||"").toLowerCase().replace(/\s/g,"");
+  if (key === "6kg") {
+    return "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2F6xck28w78sumycpn0m0s.jpg?alt=media";
+  }
+  if (key === "12.5kg" || key === "12_5kg" || key === "125kg") {
+    return "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2Fsigma-sigma-15kg-gas-cylinder-kitchen-appliances-31315545227398.jpg?alt=media";
+  }
+  if (key === "15kg") {
+    return "https://firebasestorage.googleapis.com/v0/b/pickmeservicesonline.firebasestorage.app/o/gas%2Fcylinders%2F15kg-LPG-Gas-Cylinder-for-Ghana-Africa-15A-.webp?alt=media";
+  }
+  return "";
+}
+
+/* Base fees per cylinder size */
+function getBaseFeesForCylinder(cyl){
+  const id = cyl?.id || "";
+  if (id === "6kg"){
+    return { service: 15, delivery: 30 };
+  }
+  if (id === "12_5kg"){
+    return { service: 20, delivery: 40 };
+  }
+  if (id === "15kg"){
+    return { service: 20, delivery: 45 };
+  }
+  return { service: 0, delivery: 0 };
+}
+
+/*
+  Fee rules when user pays less than station price:
+  - 15kg: if diff >= 50, service - 3, delivery same
+  - 12.5kg: if diff >= 40, service - 2, delivery same
+  - 6kg: if diff >= 30, service - 1, delivery same
+*/
+function computeFeesForSelection(cyl, amount, amountType){
+  const base = getBaseFeesForCylinder(cyl);
+  let service = base.service;
+  let delivery = base.delivery;
+
+  const station = money(cyl?.stationPrice ?? 0);
+  const amt = money(amount ?? 0);
+
+  if (amountType === "custom" && amt > 0 && amt < station){
+    const diff = station - amt;
+    if (cyl.id === "15kg"){
+      if (diff >= 50) service = Math.max(0, base.service - 3);
+    } else if (cyl.id === "12_5kg"){
+      if (diff >= 40) service = Math.max(0, base.service - 2);
+    } else if (cyl.id === "6kg"){
+      if (diff >= 30) service = Math.max(0, base.service - 1);
+    }
+  }
+  return { service, delivery };
+}
+
 /* ==== Render cylinders ==== */
 function renderCylinders(){
   carouselEl.innerHTML = "";
@@ -1022,6 +1208,9 @@ function renderCylinders(){
           <div class="cylinder-price-value">GH₵ ${formatMoney(cyl.stationPrice)}</div>
         </div>
       </div>
+      <div class="cylinder-art" aria-hidden="true">
+  <img class="cylinder-photo" src="${cyl.imageUrl}" alt="${cyl.label}">
+</div>
       <div class="card-check"><span>✔</span></div>
     `;
     card.addEventListener("click", ()=>selectCylinder(cyl.id));
@@ -1054,7 +1243,7 @@ async function loadCylinderSizes(){
         label: d.label || (d.sizeText+" Cylinder"),
         sizeText: d.sizeText,
         stationPrice: Number(d.stationPrice) || 0,
-        imageHint: d.imageHint || ""
+        imageUrl: d.imageUrl || getDefaultImageForSize(d.sizeText)
       });
     });
     if (arr.length){
@@ -1109,7 +1298,7 @@ async function loadSettings(){
     applySettings({
       noGas: d.noGas ?? false,
       serviceOpen: d.serviceOpen ?? true,
-      closedMessage: d.closedMessage || "",
+      closedMessage: d.closedMessage || ""
     });
   }catch(e){
     console.error("loadSettings error", e);
@@ -1135,6 +1324,7 @@ function openModal(){
   }
   step1ErrorEl.style.display = "none";
   step2ErrorEl.style.display = "none";
+  lastStep2Data = null;
 
   // Setup step 1 info
   step1CylinderLabel.textContent = selectedCylinder.label;
@@ -1149,7 +1339,7 @@ function openModal(){
   // Step 2 preview text
   step2CylinderLabel.textContent = selectedCylinder.label;
   step2SizeText.textContent = selectedCylinder.sizeText;
-  step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+  step2AmountSummary.textContent = "Refill amount: GH₵ " + formatMoney(chosenAmount) + " (before delivery & service fees)";
 
   customerNameInput.value = "";
   momoNumberInput.value = "";
@@ -1164,6 +1354,35 @@ function closeModal(){
   gasModal.classList.remove("show");
 }
 
+/* Totals modal flow */
+function openTotalsModal(vals){
+  lastStep2Data = vals;
+  const refill = money(chosenAmount);
+
+  // Compute per-cylinder service + delivery based on rules
+  const fees = computeFeesForSelection(selectedCylinder, refill, chosenAmountType);
+  serviceCharge = money(fees.service);
+  deliveryFee   = money(fees.delivery);
+
+  const svc   = money(serviceCharge);
+  const del   = money(deliveryFee);
+  const total = refill + svc + del;
+
+  summaryCylinderText.textContent = `${selectedCylinder.label} (${selectedCylinder.sizeText})`;
+  summaryRefillAmount.textContent = "GH₵ " + formatMoney(refill);
+  summaryServiceFee.textContent   = "GH₵ " + formatMoney(svc);
+  summaryDeliveryFee.textContent  = "GH₵ " + formatMoney(del);
+  summaryTotalAmount.textContent  = "GH₵ " + formatMoney(total);
+
+  totalsPayBtn.disabled = false;
+  totalsPayBtnText.textContent = "Make payment";
+
+  totalsModal.classList.add("show");
+}
+function closeTotalsModal(){
+  totalsModal.classList.remove("show");
+}
+
 function showStep(n){
   if (n === 1){
     step1El.classList.add("active");
@@ -1175,7 +1394,7 @@ function showStep(n){
     step1El.classList.remove("active");
     step2El.classList.add("active");
     backBtn.style.display = "inline-flex";
-    nextBtnText.textContent = "Make payment";
+    nextBtnText.textContent = "Review total";
     modalTitle.textContent = "Delivery & payment details";
   }
 }
@@ -1195,9 +1414,9 @@ function setPriceCardSelection(type){
     const val = Number(customAmountInput.value || 0);
     chosenAmount = val > 0 ? val : null;
   }
-  // Update step2 summary if already on step2
   if (chosenAmount){
-    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+    step2AmountSummary.textContent =
+      "Refill amount: GH₵ " + formatMoney(chosenAmount) + " (before delivery & service fees)";
   }
 }
 
@@ -1213,7 +1432,8 @@ customAmountInput.addEventListener("input", ()=>{
   const v = Number(customAmountInput.value || 0);
   chosenAmount = v > 0 ? v : null;
   if (chosenAmount){
-    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+    step2AmountSummary.textContent =
+      "Refill amount: GH₵ " + formatMoney(chosenAmount) + " (before delivery & service fees)";
   }
 });
 
@@ -1283,13 +1503,34 @@ function validateStep2(){
   };
 }
 
-/* Submit order + call Hubtel */
+/* Submit order + call Hubtel (uses totals) */
 async function submitOrder(){
-  const vals = validateStep2();
-  if (!vals) return;
+  if (!selectedCylinder){
+    step2ErrorEl.textContent = "Please choose a cylinder size again.";
+    step2ErrorEl.style.display = "block";
+    return;
+  }
+  if (!chosenAmount || chosenAmount <= 0){
+    step2ErrorEl.textContent = "Amount not set. Please choose amount again.";
+    step2ErrorEl.style.display = "block";
+    return;
+  }
 
-  nextBtn.disabled = true;
-  nextBtnText.textContent = "Processing…";
+  // Validate step2 if not already done
+  if (!lastStep2Data){
+    const valsCheck = validateStep2();
+    if (!valsCheck) return;
+    lastStep2Data = valsCheck;
+  }
+  const vals = lastStep2Data;
+
+  const refillAmount = money(chosenAmount);
+  const svcAmount    = money(serviceCharge);
+  const delAmount    = money(deliveryFee);
+  const totalAmount  = refillAmount + svcAmount + delAmount;
+
+  totalsPayBtn.disabled = true;
+  totalsPayBtnText.textContent = "Processing…";
 
   const orderRef = doc(gasOrdersCol); // auto-ID for admin area later
   const orderId  = orderRef.id;
@@ -1300,8 +1541,11 @@ async function submitOrder(){
     cylinderLabel: selectedCylinder.label,
     cylinderSize: selectedCylinder.sizeText,
     stationPrice: money(selectedCylinder.stationPrice),
-    amountChosen: money(chosenAmount),
+    amountChosen: refillAmount,
     amountType: chosenAmountType,
+    deliveryFee: delAmount,
+    serviceCharge: svcAmount,
+    totalAmount: totalAmount,
     customerName: vals.name,
     momoNumber: vals.momoNorm.e164,
     contactNumber: vals.contactNorm.e164,
@@ -1314,14 +1558,14 @@ async function submitOrder(){
     // Save order for admin panel
     await setDoc(orderRef, payload);
 
-    // Start Hubtel payment
-    let res, json;
+    // Start Hubtel payment with TOTAL amount
+    let payRes, payJson;
     try{
-      res = await fetch(HUBTEL_FN_URL, {
+      payRes = await fetch(HUBTEL_FN_URL, {
         method: "POST",
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify({
-          amount: money(chosenAmount),
+          amount: totalAmount,
           customerName: vals.name,
           customerPhone: vals.momoNorm.e164,
           shopName: "Gas Refill",
@@ -1330,29 +1574,31 @@ async function submitOrder(){
           channel: "mtn-gh"
         })
       });
-      json = await res.json().catch(()=> ({}));
+      payJson = await payRes.json().catch(()=> ({}));
     }catch(e){
       console.error("Hubtel fetch error", e);
       step2ErrorEl.textContent = "Network error starting payment. Please check your internet and try again.";
       step2ErrorEl.style.display = "block";
-      nextBtn.disabled = false;
-      nextBtnText.textContent = "Make payment";
+      totalsPayBtn.disabled = false;
+      totalsPayBtnText.textContent = "Make payment";
       return;
     }
 
-    if (!res.ok){
-      console.error("Hubtel error response", json);
+    // REAL PAYMENT CHECK (bypass by changing this line to: if (false) { ... })
+    if (!payJson || !payJson.ok) {
+      console.error("Hubtel error response", payJson);
       step2ErrorEl.textContent =
         "We could not start the payment: " +
-        (json && (json.message || json.error) || "Please try again.");
+        ((payJson && (payJson.message || payJson.error)) || "Please try again.");
       step2ErrorEl.style.display = "block";
-      nextBtn.disabled = false;
-      nextBtnText.textContent = "Make payment";
+      totalsPayBtn.disabled = false;
+      totalsPayBtnText.textContent = "Make payment";
       return;
     }
 
     // At this point we assume Hubtel prompt has been sent.
     // Backend (via webhook) should confirm success, update Firestore, send SMS to user & admin, etc.
+    closeTotalsModal();
     closeModal();
     openSuccessModal();
 
@@ -1360,8 +1606,8 @@ async function submitOrder(){
     console.error("submitOrder error", e);
     step2ErrorEl.textContent = "Something went wrong sending your order. Please try again.";
     step2ErrorEl.style.display = "block";
-    nextBtn.disabled = false;
-    nextBtnText.textContent = "Make payment";
+    totalsPayBtn.disabled = false;
+    totalsPayBtnText.textContent = "Make payment";
   }
 }
 
@@ -1375,6 +1621,7 @@ function closeSuccessModal(){
   selectedCylinder = null;
   chosenAmount = null;
   chosenAmountType = null;
+  lastStep2Data = null;
   renderCylinders();
   loadSettings(); // re-read, just in case
 }
@@ -1383,18 +1630,30 @@ function closeSuccessModal(){
 refillNowBtn.addEventListener("click", openModal);
 modalCloseBtn.addEventListener("click", closeModal);
 backBtn.addEventListener("click", ()=>showStep(1));
+
 nextBtn.addEventListener("click", ()=>{
   if (step1El.classList.contains("active")){
     if (!validateStep1()) return;
-    // update step2 summary before switching
-    step2AmountSummary.textContent = "Amount: GH₵ " + formatMoney(chosenAmount);
+    step2AmountSummary.textContent =
+      "Refill amount: GH₵ " + formatMoney(chosenAmount) + " (before delivery & service fees)";
     showStep(2);
   } else {
-    submitOrder();
+    const vals = validateStep2();
+    if (!vals) return;
+    openTotalsModal(vals);
   }
 });
+
 gasModal.addEventListener("click", e=>{
   if (e.target === gasModal) closeModal();
+});
+
+/* Totals modal events */
+totalsCloseBtn.addEventListener("click", closeTotalsModal);
+totalsCancelBtn.addEventListener("click", closeTotalsModal);
+totalsPayBtn.addEventListener("click", submitOrder);
+totalsModal.addEventListener("click", e=>{
+  if (e.target === totalsModal) closeTotalsModal();
 });
 
 successCloseBtn.addEventListener("click", closeSuccessModal);
