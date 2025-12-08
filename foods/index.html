@@ -1,35 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PickMe Services - Food Service</title>
-    
-    <!-- Tailwind CSS -->
+    <title>PickMe Services</title>
+    <!-- Tailwind CSS (CDN for simplicity) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Error Handler -->
-    <script>
-      window.onerror = function(message, source, lineno, colno, error) {
-        console.error("Global Error:", message, error);
-      };
-      // Polyfill process.env for SDKs if needed
-      window.process = { env: { API_KEY: '' } };
-    </script>
-
-    <!-- Tailwind Config -->
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
-              primary: '#FF4500', // Orange Red
-              secondary: '#1F2937', // Dark Gray
-              accent: '#FBBF24', // Amber
+              primary: '#FF4500',
+              secondary: '#1F2937',
+              accent: '#FBBF24',
             },
             animation: {
               'fade-in': 'fadeIn 0.3s ease-out',
@@ -43,58 +28,22 @@
         }
       }
     </script>
-
-    <!-- Import Map -->
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
-  }
-}
-</script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+       // Polyfill for environment variables
+       window.process = { env: { API_KEY: '' } };
+    </script>
     <style>
-      body {
-        margin: 0;
-        font-family: 'Inter', sans-serif;
-        background: #f9f9f9;
-        /* Padding top to accommodate fixed header */
-        padding-top: 80px; 
-        padding-bottom: 80px; /* Space for footer */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      
+      body { margin: 0; font-family: 'Inter', sans-serif; background: #f9f9f9; padding-top: 80px; padding-bottom: 80px; }
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-      
-      /* Footer Wrapper */
       .footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999; height: 60px; background: white;}
-      
-      /* Header Placeholder */
-      #header-placeholder {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 10000;
-          background: white;
-          min-height: 60px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      }
+      #header-placeholder { position: fixed; top: 0; left: 0; right: 0; z-index: 10000; background: white; min-height: 60px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     </style>
-<link rel="stylesheet" href="/index.css">
-</head>
-<body class="bg-gray-50 text-gray-900 font-sans antialiased selection:bg-primary/20 selection:text-primary">
-    
-    <!-- ========= HEADER (Injected) ========= -->
+  </head>
+  <body>
+    <!-- Header Injection -->
     <div id="header-placeholder"></div>
     <script>
     (async () => {
@@ -102,34 +51,23 @@
         const response = await fetch('header.html');
         if(response.ok) {
             let html = await response.text();
-            html = html.replace(
-                /<h1[^>]*>.*?<\/h1>/i,
-                `<h1 style="margin:0;font-weight:800;color:#FF4500;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">PickMe Services</h1>`
-            );
+            html = html.replace(/<h1[^>]*>.*?<\/h1>/i, `<h1 style="margin:0;font-weight:800;color:#FF4500;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">PickMe Services</h1>`);
             document.getElementById('header-placeholder').innerHTML = html;
-            
-            document.querySelectorAll("#header-placeholder script").forEach(oldScript => {
-                const s = document.createElement("script");
-                if (oldScript.src) s.src = oldScript.src;
-                else s.textContent = oldScript.textContent;
-                oldScript.replaceWith(s);
-            });
         } else {
              document.getElementById('header-placeholder').innerHTML = `<div style="padding:15px; text-align:center; font-weight:bold; color:#FF4500; font-size:20px; background:white;">PickMe Services</div>`;
         }
-      } catch (err) {
-        console.error("Header load error:", err);
-      }
+      } catch (err) {}
     })();
     </script>
 
-    <!-- React App Root -->
     <div id="root"></div>
 
-    <!-- ========= FOOTER (Injected) ========= -->
+    <!-- Footer Injection -->
     <div class="footer-wrap">
         <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
     </div>
-<script type="module" src="/index.tsx"></script>
-</body>
+
+    <!-- THIS LINE IS CRITICAL: It tells Vite to load your App -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
