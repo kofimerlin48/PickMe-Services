@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PickMe Services - Food Service</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Babel for React Translation in Browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Error Handler -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global Error:", message, error);
+        // alert("App Error: " + message); // Uncomment for debugging on mobile
+      };
+      // Polyfill process.env
+      window.process = { env: { API_KEY: '' } };
+    </script>
+
+    <!-- Tailwind Config -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              primary: '#FF4500', // Orange Red
+              secondary: '#1F2937', // Dark Gray
+              accent: '#FBBF24', // Amber
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.3s ease-out',
+              'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            },
+            keyframes: {
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Import Map -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
+  }
+}
+</script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #f9f9f9;
+        padding-top: 80px; 
+        padding-bottom: 80px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+      
+      /* Footer Wrapper */
+      .footer-wrap{position:fixed;bottom:0;width:100%;z-index:9999; height: 60px; background: white;}
+      
+      /* Header Placeholder */
+      #header-placeholder {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 10000;
+          background: white;
+          min-height: 60px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased selection:bg-primary/20 selection:text-primary">
+    
+    <!-- ========= HEADER (Injected) ========= -->
+    <div id="header-placeholder"></div>
+    <script>
+    (async () => {
+      try {
+        const response = await fetch('header.html');
+        if(response.ok) {
+            let html = await response.text();
+            html = html.replace(
+                /<h1[^>]*>.*?<\/h1>/i,
+                `<h1 style="margin:0;font-weight:800;color:#FF4500;font-size:24px;position:absolute;left:50%;transform:translateX(-50%)">PickMe Services</h1>`
+            );
+            document.getElementById('header-placeholder').innerHTML = html;
+            
+            document.querySelectorAll("#header-placeholder script").forEach(oldScript => {
+                const s = document.createElement("script");
+                if (oldScript.src) s.src = oldScript.src;
+                else s.textContent = oldScript.textContent;
+                oldScript.replaceWith(s);
+            });
+        } else {
+             document.getElementById('header-placeholder').innerHTML = `<div style="padding:15px; text-align:center; font-weight:bold; color:#FF4500; font-size:20px; background:white;">PickMe Services</div>`;
+        }
+      } catch (err) {
+        console.error("Header load error:", err);
+      }
+    })();
+    </script>
+
+    <!-- React App Root -->
+    <div id="root"></div>
+
+    <!-- ========= FOOTER (Injected) ========= -->
+    <div class="footer-wrap">
+        <iframe src="footer.html" style="width:100%;height:60px;border:none;overflow:hidden" scrolling="no"></iframe>
+    </div>
+
+    <!-- MAIN APP SCRIPT -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { ShoppingBag, Star, Plus, Minus, ArrowRight, Trash2, Wine, ChevronLeft, MapPin, ChefHat, ArrowUp, ArrowDown, X, User, Receipt, Lock, CheckCircle, Wallet, Edit2, Loader2, MessageCircle, Send, Sparkles, GripVertical, Bot, Upload, Store, RefreshCw } from 'lucide-react';
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+        import { GoogleGenAI } from "@google/genai";
+
+        // ==========================================
+        // 1. DATA & CONSTANTS
+        // ==========================================
+        
+        const MOCK_RESTAURANTS = [
+          {
+            id: "r1",
+            name: "Burger & Co.",
+            cuisine: "American • Fast Food",
+            rating: 4.8,
+            reviewCount: 342,
+            deliveryFee: 15,
+            image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=800&q=80",
+            menu: [
+              {
+                id: "m1",
+                name: "The Classic Cheeseburger",
+                description: "Angus beef patty, cheddar cheese, lettuce, tomato, house sauce.",
+                price: 45,
+                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+                optionGroups: [],
+                packages: [
+                    {
+                        id: "pkg_std_m1",
+                        name: "Standard",
+                        price: 45,
+                        description: "The classic burger experience.",
+                        optionGroups: [
+                            {
+                                id: "opt1",
+                                name: "Choose a Side",
+                                required: true,
+                                maxSelection: 1,
+                                options: [ { id: "o1", name: "Fries", price: 0 }, { id: "o2", name: "Onion Rings", price: 5 }, { id: "o3", name: "Salad", price: 0 } ]
+                            },
+                            {
+                                id: "opt2",
+                                name: "Add Extras",
+                                required: false,
+                                maxSelection: 3,
+                                options: [ { id: "o4", name: "Extra Cheese", price: 5 }, { id: "o5", name: "Bacon", price: 10 } ]
+                            }
+                        ]
+                    }
+                ]
+              },
+              { 
+                id: "m2", 
+                name: "Crispy Chicken Sandwich", 
+                description: "Fried chicken breast, pickles, mayo, brioche bun.", 
+                price: 38, 
+                image: "https://images.unsplash.com/photo-1619250907409-943e8b4cf179?auto=format&fit=crop&w=800&q=80", 
+                optionGroups: [],
+                packages: [
+                    {
+                        id: "pkg_std_m2",
+                        name: "Standard",
+                        price: 38,
+                        description: "Sandwich only.",
+                        optionGroups: []
+                    },
+                    {
+                        id: "pkg_combo_m2",
+                        name: "Meal Combo",
+                        price: 55,
+                        description: "Sandwich + Fries + Drink.",
+                        optionGroups: []
+                    }
+                ]
+              }
+            ]
+          },
+          {
+            id: "r2",
+            name: "Sushi Zen",
+            cuisine: "Japanese • Healthy",
+            rating: 4.9,
+            reviewCount: 520,
+            deliveryFee: 25,
+            image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80",
+            menu: [
+              {
+                id: "m3",
+                name: "Dragon Roll",
+                description: "Eel, cucumber, topped with avocado and unagi sauce.",
+                price: 85,
+                image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&w=800&q=80",
+                optionGroups: [],
+                packages: [
+                    {
+                        id: "pkg_std_m3",
+                        name: "Standard Roll",
+                        price: 85,
+                        description: "8 pieces of Dragon Roll.",
+                        optionGroups: [ { id: "opt3", name: "Spiciness Level", required: true, maxSelection: 1, options: [ { id: "o6", name: "Mild", price: 0 }, { id: "o7", name: "Spicy", price: 0 } ] } ]
+                    }
+                ]
+              },
+              { 
+                id: "m4", 
+                name: "Salmon Nigiri Box", 
+                description: "6 pieces of fresh salmon nigiri.", 
+                price: 60, 
+                image: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=80", 
+                optionGroups: [],
+                packages: [
+                     {
+                        id: "pkg_std_m4",
+                        name: "Standard Box",
+                        price: 60,
+                        description: "6 pieces.",
+                        optionGroups: []
+                    },
+                    {
+                        id: "pkg_lrg_m4",
+                        name: "Large Box",
+                        price: 110,
+                        description: "12 pieces.",
+                        optionGroups: []
+                    }
+                ]
+              }
+            ]
+          },
+          {
+            id: "r3",
+            name: "Mama's Pot",
+            cuisine: "Local • Traditional",
+            rating: 4.6,
+            reviewCount: 128,
+            deliveryFee: 10,
+            image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
+            menu: [
+              {
+                id: "m5",
+                name: "Jollof Rice Special",
+                description: "Choose a package or build your own bowl.",
+                price: 50,
+                image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f1a?auto=format&fit=crop&w=800&q=80",
+                optionGroups: [],
+                packages: [
+                    {
+                        id: "pkg1",
+                        name: "Mini Lunch Pack",
+                        price: 65,
+                        description: "Standard portion with 1 protein choice.",
+                        optionGroups: [
+                            {
+                                id: "pg1",
+                                name: "Choose Protein",
+                                required: true,
+                                maxSelection: 1,
+                                options: [ { id: "p1", name: "Fried Fish", price: 0 }, { id: "p2", name: "Chicken", price: 0 } ]
+                            }
+                        ]
+                    },
+                    {
+                        id: "pkg2",
+                        name: "Jumbo Feast",
+                        price: 85,
+                        description: "Large portion with 2 proteins and salad.",
+                        optionGroups: [
+                            {
+                                id: "pg2",
+                                name: "Choose 2 Proteins",
+                                required: true,
+                                maxSelection: 2,
+                                options: [ { id: "p3", name: "Fried Fish", price: 0 }, { id: "p4", name: "Grilled Chicken", price: 0 }, { id: "p5", name: "Beef", price: 0 } ]
+                            },
+                            {
+                                id: "pg3",
+                                name: "Add-ons",
+                                required: false,
+                                maxSelection: 1,
+                                options: [ { id: "p6", name: "Coleslaw", price: 0 }, { id: "p7", name: "Spaghetti", price: 0 } ]
+                            }
+                        ]
+                    }
+                ],
+                customBuilder: {
+                    basePrice: 20,
+                    unitName: "Bowl",
+                    addonGroups: [
+                        {
+                            id: "ag1",
+                            name: "Proteins",
+                            options: [
+                                { id: "ap1", name: "Fried Fish", price: 15 },
+                                { id: "ap2", name: "Grilled Chicken", price: 20 },
+                                { id: "ap3", name: "Goat Meat", price: 25 },
+                                { id: "ap4", name: "Boiled Egg", price: 5 }
+                            ]
+                        },
+                        {
+                            id: "ag2",
+                            name: "Extras",
+                            options: [
+                                { id: "ex1", name: "Kelewele", price: 10 },
+                                { id: "ex2", name: "Salad", price: 5 }
+                            ]
+                        }
+                    ]
+                }
+              }
+            ]
+          }
+        ];
+
+        // ==========================================
+        // 2. SERVICES
+        // ==========================================
+
+        // --- FIREBASE ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyB2L649fIs0CS-fGDC0ybFeAO5Im5BEP_c",
+          authDomain: "pickmeservicesonline.firebaseapp.com",
+          projectId: "pickmeservicesonline",
+          storageBucket: "pickmeservicesonline.firebasestorage.app",
+          messagingSenderId: "265031616239",
+          appId: "1:265031616239:web:e2ef418704af5595aa7d1a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // WRITING TO 'Payments' COLLECTION FOR SAFETY (As per rules)
+        const paymentsCol = collection(db, "Payments");
+
+        const saveOrderToFirestore = async (orderId, items, amountBreakdown, customerDetails, isGeneralOrder) => {
+          try {
+            await addDoc(paymentsCol, {
+              type: 'food_order', // Distinguish record type
+              orderId,
+              items,
+              amountBreakdown, 
+              customerDetails,
+              status: 'pending_payment',
+              createdAt: serverTimestamp(),
+              isGeneralOrder
+            });
+            return true;
+          } catch (e) {
+            console.error("Error adding order: ", e);
+            throw e;
+          }
+        };
+
+        const saveRestaurantRequest = async (data) => {
+          try {
+            await addDoc(paymentsCol, {
+              type: 'partner_request', // Distinguish record type
+              ...data,
+              status: 'pending_review',
+              createdAt: serverTimestamp()
+            });
+            return true;
+          } catch (e) {
+            console.error("Error saving partner request: ", e);
+            throw e;
+          }
+        };
+
+        // --- GEMINI AI ---
+        let aiClient = null;
+        const getClient = () => {
+            if (!aiClient) aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+            return aiClient;
+        };
+
+        const SYSTEM_INSTRUCTION = `You are "PickMe Chef", a warm, human-like food concierge for PickMe Services.
+        GUIDELINES:
+        - Be concise. Keep answers short (under 3 sentences).
+        - Be warm and friendly.
+        - If users are stuck, ask if they need Support (0534742142).
+        - Guide users to "Add your Restaurant" if they ask about partnering.
+        KNOWLEDGE:
+        - Partners: Click "Add your Restaurant" at top or bottom.
+        - Payment: MTN MoMo, Telecel Cash, AT Money.
+        MENU DATA:
+        ${MOCK_RESTAURANTS.map(r => `Restaurant: ${r.name} (ID: ${r.id}). Menu: ${r.menu.map(m => m.name).join(', ')}`).join('\n')}
+        JSON FORMAT (Only if recommending ONE specific item): {"recommendedMealId": "ID", "recommendedRestaurantId": "ID"}`;
+
+        const createChatSession = () => {
+            const ai = getClient();
+            return ai.chats.create({
+                model: 'gemini-2.5-flash',
+                config: { systemInstruction: SYSTEM_INSTRUCTION, temperature: 0.7 }
+            });
+        };
+
+        const sendMessageToAI = async (chat, message) => {
+            try {
+                const response = await chat.sendMessage({ message });
+                const text = response.text || "Connection glitch. Try again?";
+                let recommendedMealId, recommendedRestaurantId, cleanText = text;
+                const jsonMatch = text.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+                if (jsonMatch && jsonMatch[1]) {
+                    try {
+                        const data = JSON.parse(jsonMatch[1]);
+                        recommendedMealId = data.recommendedMealId;
+                        recommendedRestaurantId = data.recommendedRestaurantId;
+                        cleanText = text.replace(/```json[\s\S]*?```/, '').trim();
+                    } catch (e) {}
+                }
+                return { text: cleanText, recommendedMealId, recommendedRestaurantId };
+            } catch (error) {
+                return { text: "Kitchen busy! Please ask again. 🍳" };
+            }
+        };
+
+        // ==========================================
+        // 3. COMPONENTS
+        // ==========================================
+
+        // --- MealCustomizer ---
+        const MealCustomizer = ({ meal, onClose, onConfirm, initialData, initialQuantity = 1, isEditing = false }) => {
+          const isComplex = (meal.packages && meal.packages.length > 0) || !!meal.customBuilder;
+          const [view, setView] = useState(isComplex && !isEditing ? 'SELECTION' : 'PACKAGE_CONFIG');
+          const [stdOptions, setStdOptions] = useState(isEditing && !isComplex ? initialData : {});
+          const [quantity, setQuantity] = useState(initialQuantity);
+          const [activePackage, setActivePackage] = useState(null);
+          const [pkgOptions, setPkgOptions] = useState({});
+          const [buildBaseQty, setBuildBaseQty] = useState(1);
+          const [buildAddons, setBuildAddons] = useState({});
+
+          useEffect(() => {
+              if (isEditing) {
+                  if (initialData.selectedPackageId) {
+                      const pkg = meal.packages?.find(p => p.id === initialData.selectedPackageId);
+                      if (pkg) { setActivePackage(pkg); setPkgOptions(initialData.selectedOptions); setView('PACKAGE_CONFIG'); }
+                  } else if (initialData.baseQuantity) {
+                      setBuildBaseQty(initialData.baseQuantity);
+                      setBuildAddons(initialData.selectedAddons);
+                      setView('BUILDER');
+                  } else { setView('PACKAGE_CONFIG'); }
+              }
+          }, [isEditing]);
+
+          const COLORS = ['from-blue-600 to-cyan-500', 'from-violet-600 to-fuchsia-500', 'from-emerald-600 to-teal-500', 'from-orange-500 to-amber-500'];
+
+          const handleOptionToggle = (opts, setOpts, grpId, opt, max) => {
+            setOpts(prev => {
+              const cur = prev[grpId] || [];
+              const ex = cur.find(o => o.id === opt.id);
+              let n = [];
+              if (max === 1) n = [opt];
+              else { if (ex) n = cur.filter(o => o.id !== opt.id); else n = cur.length < max ? [...cur, opt] : cur; }
+              return { ...prev, [grpId]: n };
+            });
+          };
+
+          const calculateTotal = () => {
+              if (view === 'BUILDER' && meal.customBuilder) {
+                  let t = meal.customBuilder.basePrice * buildBaseQty;
+                  Object.values(buildAddons).forEach(g => g.forEach(o => t += o.price));
+                  return t;
+              } else if (activePackage) return activePackage.price * quantity;
+              else {
+                  let t = meal.price;
+                  Object.values(stdOptions).forEach(g => g.forEach(o => t += o.price));
+                  return t * quantity;
+              }
+          };
+
+          const confirmSelection = () => {
+              if (view === 'BUILDER') onConfirm(meal, { baseQuantity: buildBaseQty, selectedAddons: buildAddons }, 1, isEditing, 'BUILD');
+              else if (activePackage) onConfirm(meal, { options: pkgOptions, packageId: activePackage.id }, quantity, isEditing, 'PACKAGE');
+              else onConfirm(meal, stdOptions, quantity, isEditing, 'STANDARD');
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black/80 z-[20000] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in" onClick={onClose}>
+              <div className="bg-white w-full max-w-lg sm:rounded-3xl rounded-t-3xl h-[85vh] sm:h-[750px] flex flex-col shadow-2xl animate-slide-up overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="relative h-40 shrink-0">
+                    <img src={meal.image} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"/>
+                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20">
+                         {view !== 'SELECTION' && isComplex ? <button onClick={() => { setView('SELECTION'); setActivePackage(null); }} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white"><ArrowLeft size={20}/></button> : <div className="w-10"></div>}
+                         <button onClick={onClose} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white"><X size={20}/></button>
+                    </div>
+                    <div className="absolute bottom-4 left-6 text-white"><h2 className="text-2xl font-extrabold shadow-sm">{meal.name}</h2></div>
+                </div>
+                
+                <div className="flex-1 overflow-hidden h-full">
+                    {view === 'SELECTION' && (
+                      <div className="flex flex-col h-full bg-gray-50">
+                          <div className="p-4 text-center"><h3 className="text-lg font-extrabold text-gray-900">Choose Option</h3></div>
+                          <div className="flex-1 overflow-x-auto custom-scrollbar px-6 pt-2 pb-6 flex gap-4 items-center">
+                              {meal.packages?.map((pkg, idx) => (
+                                  <div key={pkg.id} onClick={() => { setActivePackage(pkg); setView('PACKAGE_CONFIG'); }} className={`min-w-[160px] w-[160px] h-[240px] rounded-2xl p-4 flex flex-col cursor-pointer shadow-md hover:scale-[1.02] transition-transform relative overflow-hidden bg-gradient-to-br ${COLORS[idx % COLORS.length]}`}>
+                                      <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                                      <div className="relative z-10 flex-1 flex flex-col items-center text-center text-white">
+                                          <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm"><ChefHat size={16} /></div>
+                                          <h4 className="font-extrabold text-base mb-2 leading-tight">{pkg.name}</h4>
+                                          <p className="text-white/90 text-[10px] leading-relaxed mb-4 flex-1 line-clamp-4">{pkg.description}</p>
+                                          <div className="mt-auto"><span className="block text-white/80 text-[10px] font-bold uppercase mb-0.5">Price</span><span className="text-lg font-extrabold">GHS {pkg.price}</span></div>
+                                      </div>
+                                  </div>
+                              ))}
+                              {meal.customBuilder && (
+                                  <div onClick={() => setView('BUILDER')} className="min-w-[160px] w-[160px] h-[240px] bg-gray-900 text-white rounded-2xl p-4 flex flex-col cursor-pointer shadow-md hover:scale-[1.02] transition-transform relative overflow-hidden text-center">
+                                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-20"></div>
+                                      <div className="relative z-10 flex flex-col h-full items-center">
+                                           <div className="bg-white/10 w-8 h-8 rounded-full flex items-center justify-center mb-4 text-white backdrop-blur-sm border border-white/10"><Plus size={16} /></div>
+                                          <h4 className="font-extrabold text-base mb-2 leading-tight">Build Your Own</h4>
+                                          <p className="text-gray-400 text-[10px] leading-relaxed mb-4 flex-1">Customize everything.</p>
+                                          <button className="w-full py-2 bg-white text-gray-900 font-bold rounded-lg text-[10px] uppercase tracking-wide">Start</button>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                    )}
+
+                    {(view === 'PACKAGE_CONFIG' || view === 'BUILDER') && (
+                        <div className="flex flex-col h-full bg-white">
+                            <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+                                {view === 'BUILDER' ? (
+                                    <>
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                            <div className="flex justify-between items-center mb-2"><h4 className="font-bold text-gray-900 text-base">{meal.customBuilder.unitName}</h4><span className="font-bold text-primary text-sm">GHS {meal.customBuilder.basePrice} / unit</span></div>
+                                            <div className="flex items-center gap-4 mt-4">
+                                                <button onClick={() => setBuildBaseQty(Math.max(1, buildBaseQty - 1))} className="w-10 h-10 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-center"><Minus size={18}/></button>
+                                                <span className="font-extrabold text-xl flex-1 text-center">{buildBaseQty}</span>
+                                                <button onClick={() => setBuildBaseQty(buildBaseQty + 1)} className="w-10 h-10 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-center"><Plus size={18}/></button>
+                                            </div>
+                                        </div>
+                                        {meal.customBuilder.addonGroups.map(group => (
+                                            <div key={group.id}>
+                                                <h4 className="font-bold text-gray-900 text-base mb-3">{group.name}</h4>
+                                                <div className="space-y-3">
+                                                    {group.options.map(opt => {
+                                                        const count = buildAddons[group.id]?.filter(o => o.id === opt.id).length || 0;
+                                                        return (
+                                                            <div key={opt.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${count > 0 ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white'}`}>
+                                                                <div><span className="font-bold text-gray-900 block text-sm">{opt.name}</span><span className="text-xs font-bold text-gray-500">GHS {opt.price}</span></div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {count > 0 && <button onClick={() => setBuildAddons(p=>{const c=p[group.id]||[]; const i=c.findIndex(o=>o.id===opt.id); if(i===-1)return p; const n=[...c]; n.splice(i,1); return {...p,[group.id]:n}})} className="w-7 h-7 bg-white rounded-lg border border-gray-200 flex items-center justify-center shadow-sm"><Minus size={14}/></button>}
+                                                                    {count > 0 && <span className="font-bold text-gray-900 w-4 text-center text-sm">{count}</span>}
+                                                                    <button onClick={() => setBuildAddons(p=>{const c=p[group.id]||[]; return {...p,[group.id]:[...c,opt]}})} className={`w-7 h-7 rounded-lg flex items-center justify-center shadow-sm ${count > 0 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}><Plus size={14}/></button>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center justify-between"><h3 className="font-bold text-xl text-gray-900">{activePackage ? activePackage.name : meal.name}</h3>{!activePackage && <div className="text-xl font-extrabold text-primary">GHS {(activePackage ? activePackage.price : meal.price).toFixed(2)}</div>}</div>
+                                        {(activePackage ? activePackage.optionGroups : meal.optionGroups).map(group => (
+                                            <div key={group.id}>
+                                                <div className="flex justify-between mb-3 items-center"><h4 className="font-bold text-gray-900 text-base">{group.name}</h4><span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase tracking-wide">{group.required ? 'Required' : 'Optional'}</span></div>
+                                                <div className="space-y-2">{group.options.map(opt => {
+                                                    const isSel = (activePackage ? pkgOptions : stdOptions)[group.id]?.some(o => o.id === opt.id);
+                                                    return (
+                                                        <button key={opt.id} onClick={() => handleOptionToggle(activePackage?pkgOptions:stdOptions, activePackage?setPkgOptions:setStdOptions, group.id, opt, group.maxSelection)} className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer text-left ${isSel ? 'border-primary bg-primary/5' : 'border-gray-100'}`}>
+                                                            <div className="flex items-center gap-3"><div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSel ? 'border-primary bg-primary' : 'border-gray-300'}`}>{isSel && <CheckCircle size={12} className="text-white"/>}</div><span className="font-bold text-gray-800 text-sm">{opt.name}</span></div>
+                                                            <span className="text-xs font-bold text-gray-500">{!activePackage && opt.price > 0 ? `+ ${opt.price}` : ''}</span>
+                                                        </button>
+                                                    )
+                                                })}</div>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 shadow-lg z-30 bg-white">
+                                {view !== 'BUILDER' && (
+                                    <div className="flex justify-between items-center mb-4"><span className="font-bold text-gray-800 text-sm">Quantity</span><div className="flex items-center gap-3 bg-gray-100 p-1 rounded-xl"><button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-9 h-9 bg-white rounded-lg shadow-sm flex items-center justify-center"><Minus size={16}/></button><span className="font-extrabold text-lg w-6 text-center">{quantity}</span><button onClick={() => setQuantity(quantity + 1)} className="w-9 h-9 bg-white rounded-lg shadow-sm flex items-center justify-center"><Plus size={16}/></button></div></div>
+                                )}
+                                <button onClick={confirmSelection} className="w-full bg-primary text-white py-3.5 rounded-xl font-extrabold text-base shadow-lg hover:bg-red-600 transition-all flex justify-between px-6"><span>{isEditing ? 'Update' : (view === 'BUILDER' ? 'Complete Build' : 'Add to Order')}</span><span>GHS {calculateTotal().toFixed(2)}</span></button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // --- CheckoutModal ---
+        const CheckoutModal = ({ isOpen, onClose, subtotal, deliveryFee, serviceCharge, onConfirm, loading }) => {
+            const [step, setStep] = useState(1);
+            const [name, setName] = useState('');
+            const [momoNumber, setMomoNumber] = useState('');
+            const [address, setAddress] = useState('');
+            const [contact, setContact] = useState('');
+            const [network, setNetwork] = useState('');
+            const [netName, setNetName] = useState('');
+
+            useEffect(() => {
+                if(isOpen) setStep(1);
+                const clean = momoNumber.replace(/\D/g, '');
+                if (clean.length >= 3) {
+                    const p = clean.substring(0, 3);
+                    if (['024','054','055','059','025','053'].includes(p)) { setNetwork('mtn-gh'); setNetName('MTN MoMo'); }
+                    else if (['020','050'].includes(p)) { setNetwork('vodafone-gh'); setNetName('Telecel Cash'); }
+                    else if (['027','057','026','056'].includes(p)) { setNetwork('tigo-gh'); setNetName('AT Money'); }
+                    else { setNetwork(''); setNetName(''); }
+                } else { setNetwork(''); setNetName(''); }
+            }, [isOpen, momoNumber]);
+
+            if (!isOpen) return null;
+            const total = subtotal + deliveryFee + serviceCharge;
+
+            return (
+                <div className="fixed inset-0 bg-black/70 z-[10006] flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
+                    <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
+                        <div className="bg-white p-5 border-b border-gray-100 flex justify-between items-center shrink-0">
+                            <div className="flex items-center gap-2 text-primary">{step === 1 ? <User size={24} /> : <Receipt size={24} />}<h3 className="font-extrabold text-xl text-gray-900">{step === 1 ? 'Delivery Details' : 'Review & Pay'}</h3></div>
+                            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+                        </div>
+                        <div className="p-6 space-y-6 bg-white overflow-y-auto custom-scrollbar">
+                            {step === 1 ? (
+                                <div className="space-y-5">
+                                    <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 font-bold" placeholder="Full Name" value={name} onChange={e=>setName(e.target.value)} />
+                                    <div className="relative"><input className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 font-bold ${network ? 'border-green-500' : 'border-gray-200'}`} placeholder="MoMo Number" type="tel" maxLength={10} value={momoNumber} onChange={e=>setMomoNumber(e.target.value.replace(/\D/g,''))} />{netName && <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded shadow text-xs font-bold text-green-700 flex items-center gap-1"><Wallet size={12}/>{netName}</div>}</div>
+                                    <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 font-medium" placeholder="Delivery Address" value={address} onChange={e=>setAddress(e.target.value)} />
+                                    <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 font-bold" placeholder="Contact for Delivery" type="tel" maxLength={10} value={contact} onChange={e=>setContact(e.target.value.replace(/\D/g,''))} />
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
+                                        <div className="flex justify-between text-gray-600 text-sm font-medium"><span>Meal Total</span><span>GHS {subtotal.toFixed(2)}</span></div>
+                                        <div className="flex justify-between text-gray-600 text-sm font-medium"><span>Delivery Fee</span><span>GHS {deliveryFee.toFixed(2)}</span></div>
+                                        <div className="flex justify-between text-gray-600 text-sm font-medium"><span>Service Charge</span><span>GHS {serviceCharge.toFixed(2)}</span></div>
+                                        <div className="border-t border-gray-200 pt-3 flex justify-between items-center"><span className="font-bold text-gray-900">Total Amount</span><span className="text-2xl font-extrabold text-primary">GHS {total.toFixed(2)}</span></div>
+                                    </div>
+                                    <div className="text-xs text-gray-500 space-y-1 bg-blue-50 p-3 rounded-lg border border-blue-100"><p>Deliver to: {address}</p><p>Contact: {contact}</p><p>Payer: {netName} ({momoNumber})</p></div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-5 border-t border-gray-100 bg-white shrink-0">
+                            {step === 1 ? <button onClick={()=>setStep(2)} disabled={!name || !momoNumber || !network || !address || !contact} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-black disabled:opacity-50">Continue</button> : 
+                            <div className="flex gap-3"><button onClick={()=>setStep(1)} disabled={loading} className="px-6 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl">Back</button><button onClick={()=>onConfirm({name, momoNumber, network, deliveryAddress: address, deliveryContact: contact})} disabled={loading} className="flex-1 bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-red-600 disabled:opacity-50">{loading ? 'Processing...' : 'Make Payment'}</button></div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- RestaurantOnboarding ---
+        const RestaurantOnboarding = ({ isOpen, onClose }) => {
+            const [mode, setMode] = useState('SELECT');
+            const [step, setStep] = useState(1);
+            const [loading, setLoading] = useState(false);
+            const [isRenewalEdit, setIsRenewalEdit] = useState(false);
+            const [name, setName] = useState('');
+            const [phone, setPhone] = useState('');
+            const [image, setImage] = useState('');
+            const [restId, setRestId] = useState('');
+            const [netName, setNetName] = useState('');
+            const [menuItems, setMenuItems] = useState([]);
+            const [newItem, setNewItem] = useState({id:'', name:'', price:'', image:''});
+            const [plan, setPlan] = useState(null);
+            
+            const PLANS = [{id:'1_MONTH',label:'1 Month',price:50,desc:'Starter'},{id:'3_MONTHS',label:'3 Months',price:100,desc:'Save 33%'},{id:'6_MONTHS',label:'6 Months',price:150,desc:'Popular'},{id:'1_YEAR',label:'1 Year',price:200,desc:'Best Value'}];
+
+            useEffect(() => {
+                const clean = phone.replace(/\D/g, '');
+                if (clean.length >= 3) {
+                    const p = clean.substring(0, 3);
+                    if (['024','054','055','059','025','053'].includes(p)) setNetName('MTN MoMo');
+                    else if (['020','050'].includes(p)) setNetName('Telecel Cash');
+                    else if (['027','057','026','056'].includes(p)) setNetName('AT Money');
+                    else setNetName('');
+                } else setNetName('');
+            }, [phone]);
+
+            const compressImage = (file) => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = e => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scale = 600 / img.width;
+                        canvas.width = 600; canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }
+                }
+            });
+
+            const handlePay = async () => {
+                if(!plan) return;
+                setLoading(true);
+                const pObj = PLANS.find(p=>p.id===plan);
+                let fmtPhone = phone.replace(/\D/g,'');
+                if(fmtPhone.startsWith('0')) fmtPhone = '+233'+fmtPhone.substring(1);
+                
+                try {
+                    const res = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
+                        method: "POST", headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ amount: pObj.price, customerName: name, customerPhone: fmtPhone, shopName: "PickMe Services Partner", description: "Subscription", clientReference: `SUB-${Date.now()}`, channel: netName === 'MTN MoMo' ? 'mtn-gh' : (netName === 'Telecel Cash' ? 'vodafone-gh' : 'tigo-gh') })
+                    });
+                    const json = await res.json();
+                    if(json.ok || res.ok) {
+                        await saveRestaurantRequest({restaurantName: name, ownerPhone: fmtPhone, restaurantImage: image, menuItems, planId: plan, planAmount: pObj.price, isRenewal: mode === 'RENEW' && !isRenewalEdit, restaurantId: restId || null });
+                        alert(`Payment prompt sent to ${fmtPhone}.`);
+                        setMode('SUCCESS');
+                    } else alert("Failed: " + json.message);
+                } catch(e) { alert("Error connecting."); } finally { setLoading(false); }
+            };
+
+            if(!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 bg-black/80 z-[10010] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+                    <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-slide-up max-h-[90vh] flex flex-col" onClick={e=>e.stopPropagation()}>
+                        <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10"><div className="flex gap-2 text-primary font-bold"><ChefHat size={20}/> Partner Portal</div><button onClick={onClose}><X size={20}/></button></div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                            {mode === 'SELECT' && <div className="space-y-4"><h3 className="text-xl font-bold">Partner with us</h3><button onClick={()=>{setMode('REGISTER');setStep(1)}} className="w-full p-4 border rounded-xl hover:bg-gray-50 flex items-center gap-3"><Store className="text-primary"/><div className="text-left"><div className="font-bold">Add Restaurant</div></div></button><button onClick={()=>{setMode('RENEW');setStep(1)}} className="w-full p-4 border rounded-xl hover:bg-gray-50 flex items-center gap-3"><RefreshCw className="text-blue-500"/><div className="text-left"><div className="font-bold">Renew</div></div></button></div>}
+                            {(mode === 'REGISTER' || isRenewalEdit) && (
+                                <div className="space-y-4">
+                                    {step===1 && <div className="space-y-4"><h3 className="font-bold">Details</h3><input className="w-full border p-3 rounded-xl" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} /><div className="relative"><input className="w-full border p-3 rounded-xl" placeholder="MoMo" value={phone} onChange={e=>setPhone(e.target.value)} />{netName && <span className="absolute right-3 top-3 text-xs font-bold text-green-600">{netName}</span>}</div><div className="border-2 dashed p-6 text-center rounded-xl" onClick={()=>document.getElementById('imgUp').click()}>{image ? 'Image Added' : 'Upload Cover'}<input id="imgUp" type="file" hidden onChange={async e=>{if(e.target.files[0]) setImage(await compressImage(e.target.files[0]))}}/></div><button onClick={()=>setStep(2)} className="w-full bg-gray-900 text-white p-4 rounded-xl font-bold">Next</button></div>}
+                                    {step===2 && <div className="space-y-4"><h3 className="font-bold">Menu</h3><div className="flex gap-2"><input className="border p-2 rounded flex-1" placeholder="Item" value={newItem.name} onChange={e=>setNewItem({...newItem,name:e.target.value})}/><input className="border p-2 rounded w-20" placeholder="Price" value={newItem.price} onChange={e=>setNewItem({...newItem,price:e.target.value})}/></div><button onClick={()=>{if(newItem.name) setMenuItems([...menuItems,{...newItem,id:Date.now()}]); setNewItem({id:'',name:'',price:'',image:''})}} className="bg-gray-900 text-white p-2 rounded w-full">Add</button><div className="space-y-2">{menuItems.map(m=><div key={m.id} className="flex justify-between bg-gray-50 p-2 rounded"><span>{m.name}</span><span>{m.price}</span></div>)}</div><button onClick={()=>setStep(3)} className="w-full bg-gray-900 text-white p-4 rounded-xl font-bold">Next</button></div>}
+                                    {step===3 && <div className="space-y-4"><h3 className="font-bold">Plan</h3><div className="grid grid-cols-2 gap-2">{PLANS.map(p=><div key={p.id} onClick={()=>setPlan(p.id)} className={`border p-3 rounded-xl ${plan===p.id?'border-primary bg-primary/5':''}`}><b>{p.label}</b><br/>{p.price}</div>)}</div><button onClick={handlePay} disabled={loading} className="w-full bg-primary text-white p-4 rounded-xl font-bold">{loading?'...':'Pay'}</button></div>}
+                                </div>
+                            )}
+                            {mode === 'RENEW' && !isRenewalEdit && (
+                                <div className="space-y-4">{step===1 && <><input className="w-full border p-3 rounded-xl" placeholder="Restaurant ID" value={restId} onChange={e=>setRestId(e.target.value)} /><button onClick={()=>{setLoading(true);setTimeout(()=>{setName("Mama's Pot");setPhone("0551234567");setStep(2);setLoading(false)},1000)}} className="w-full bg-gray-900 text-white p-4 rounded-xl font-bold">{loading?'...':'Find'}</button></>}
+                                {step===2 && <><div className="border p-3 rounded-xl bg-gray-50"><p><b>{name}</b></p><p>{phone}</p></div><div className="flex gap-2"><button onClick={()=>{setIsRenewalEdit(true);setStep(1)}} className="border flex-1 p-3 rounded-xl font-bold">Edit Info</button><button onClick={()=>setStep(3)} className="bg-gray-900 flex-1 text-white p-3 rounded-xl font-bold">Proceed</button></div></>}
+                                {step===3 && <div className="space-y-4"><h3 className="font-bold">Renew Plan</h3><div className="grid grid-cols-2 gap-2">{PLANS.map(p=><div key={p.id} onClick={()=>setPlan(p.id)} className={`border p-3 rounded-xl ${plan===p.id?'border-primary bg-primary/5':''}`}><b>{p.label}</b><br/>{p.price}</div>)}</div><button onClick={handlePay} disabled={loading} className="w-full bg-primary text-white p-4 rounded-xl font-bold">{loading?'...':'Pay'}</button></div>}</div>
+                            )}
+                            {mode === 'SUCCESS' && <div className="text-center py-10"><CheckCircle size={48} className="mx-auto text-green-500 mb-4"/><h3 className="text-2xl font-bold">Success!</h3><button onClick={onClose} className="mt-8 bg-gray-900 text-white px-8 py-3 rounded-xl font-bold">Close</button></div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- AIAssistant ---
+        const AIAssistant = ({ onOpenRestaurant }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [msgs, setMsgs] = useState([]);
+            const [input, setInput] = useState("");
+            const [loading, setLoading] = useState(false);
+            const chatRef = useRef(null);
+            
+            useEffect(()=>{ if(!chatRef.current) chatRef.current = createChatSession(); },[]);
+            
+            const send = async () => {
+                if(!input.trim()) return;
+                const userM = {id: Date.now(), role:'user', text:input};
+                setMsgs(p=>[...p,userM]); setInput(""); setLoading(true);
+                const res = await sendMessageToAI(chatRef.current, userM.text);
+                setMsgs(p=>[...p, {id: Date.now()+1, role:'model', text:res.text, recId: res.recommendedRestaurantId, mealId: res.recommendedMealId}]);
+                setLoading(false);
+            }
+
+            return (
+                <div className={`fixed z-[11000] bottom-24 right-6 flex flex-col items-end`}>
+                    {isOpen && <div className="bg-white w-[85vw] max-w-sm h-96 rounded-2xl shadow-2xl mb-4 flex flex-col border overflow-hidden"><div className="bg-gray-900 p-3 text-white flex justify-between"><b>PickMe Chef</b><button onClick={()=>setIsOpen(false)}><X size={18}/></button></div><div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">{msgs.map(m=><div key={m.id} className={`p-2 rounded-xl text-sm max-w-[80%] ${m.role==='user'?'bg-gray-900 text-white self-end ml-auto':'bg-white border text-gray-800'}`}>{m.text}{m.recId && <button onClick={()=>onOpenRestaurant(m.recId, m.mealId)} className="block mt-2 text-xs bg-primary text-white px-2 py-1 rounded">View</button>}</div>)}{loading && <div className="text-xs text-gray-400 p-2">Thinking...</div>}</div><div className="p-2 bg-white flex gap-2"><input value={input} onChange={e=>setInput(e.target.value)} className="flex-1 border rounded-lg px-2" placeholder="Ask me..." /><button onClick={send} className="bg-primary text-white p-2 rounded-lg"><Send size={16}/></button></div></div>}
+                    {!isOpen && <button onClick={()=>setIsOpen(true)} className="bg-primary text-white p-4 rounded-full shadow-2xl hover:bg-red-600 transition-all flex gap-2 items-center"><MessageCircle size={24}/><span className="font-bold hidden sm:block">Chef</span></button>}
+                </div>
+            );
+        };
+
+        // --- APP ---
+        function App() {
+          const [view, setView] = useState('HOME');
+          const [activeRestaurantId, setActiveRestaurantId] = useState(null);
+          const [cart, setCart] = useState([]);
+          const [notification, setNotification] = useState(null);
+          
+          const [activeMeal, setActiveMeal] = useState(null);
+          const [editItem, setEditItem] = useState(null);
+          const [showCheckout, setShowCheckout] = useState(false);
+          const [checkoutItems, setCheckoutItems] = useState([]);
+          const [generalCheckout, setGeneralCheckout] = useState(false);
+          const [payLoad, setPayLoad] = useState(false);
+          const [delFee, setDelFee] = useState(0);
+          const [showClear, setShowClear] = useState(false);
+          const [showPartner, setShowPartner] = useState(false);
+          const [scrollDir, setScrollDir] = useState('DOWN');
+          const [showScroll, setShowScroll] = useState(false);
+
+          useEffect(() => {
+              const handleScroll = () => {
+                  const y = window.scrollY;
+                  const max = document.body.scrollHeight - window.innerHeight;
+                  setShowScroll(y > 100 && y < max - 10);
+                  setScrollDir(y > (window.oldY || 0) ? 'DOWN' : 'UP');
+                  window.oldY = y;
+              };
+              window.addEventListener('scroll', handleScroll);
+              return () => window.removeEventListener('scroll', handleScroll);
+          }, []);
+
+          const activeRestaurant = MOCK_RESTAURANTS.find(r => r.id === activeRestaurantId);
+
+          const handleAdd = (meal, data, qty, isUpd, type) => {
+              let price = 0;
+              if (type === 'BUILD') {
+                  price = meal.customBuilder.basePrice * data.baseQuantity;
+                  Object.values(data.selectedAddons).forEach(g => g.forEach(o => price += o.price));
+              } else if (type === 'PACKAGE') {
+                  const p = meal.packages.find(pk => pk.id === data.packageId);
+                  price = (p ? p.price : meal.price) * qty;
+              } else {
+                  let optP = 0; Object.values(data).forEach(g => g.forEach(o => optP += o.price));
+                  price = (meal.price + optP) * qty;
+              }
+
+              const newItem = {
+                  cartItemId: isUpd ? editItem.cartItemId : Math.random().toString(36).substr(2, 9),
+                  restaurantId: activeRestaurantId || MOCK_RESTAURANTS.find(r => r.menu.some(m => m.id === meal.id)).id,
+                  restaurantName: activeRestaurantId ? activeRestaurant.name : MOCK_RESTAURANTS.find(r => r.menu.some(m => m.id === meal.id)).name,
+                  meal,
+                  selectedOptions: type === 'PACKAGE' ? data.options : (type === 'BUILD' ? {} : data),
+                  quantity: type === 'BUILD' ? 1 : qty,
+                  totalPrice: price,
+                  selectedPackageId: type === 'PACKAGE' ? data.packageId : undefined,
+                  customBuild: type === 'BUILD' ? { baseQuantity: data.baseQuantity, selectedAddons: data.selectedAddons } : undefined
+              };
+
+              if (isUpd) setCart(prev => prev.map(i => i.cartItemId === editItem.cartItemId ? newItem : i));
+              else setCart(prev => [...prev, newItem]);
+              
+              setNotification(isUpd ? "Cart updated" : "Added to cart");
+              setTimeout(()=>setNotification(null), 3000);
+              setActiveMeal(null); setEditItem(null);
+          };
+
+          const checkout = (items, gen) => {
+              setCheckoutItems(items); setGeneralCheckout(gen);
+              const rIds = new Set(items.map(i => i.restaurantId));
+              let d = 0; rIds.forEach(id => d += MOCK_RESTAURANTS.find(r => r.id === id).deliveryFee);
+              setDelFee(d); setShowCheckout(true);
+          };
+
+          const processPay = async (d) => {
+              setPayLoad(true);
+              const sub = checkoutItems.reduce((s,i)=>s+i.totalPrice,0);
+              const tot = sub + delFee + 2; // +2 Service Charge
+              const oid = `FOOD-${Date.now()}`;
+              let ph = d.momoNumber.replace(/\D/g,''); if(ph.startsWith('0')) ph='+233'+ph.substring(1);
+              
+              try {
+                  const res = await fetch("https://us-central1-pickmeservicesonline.cloudfunctions.net/startPayment", {
+                      method: "POST", headers: {"Content-Type":"application/json"},
+                      body: JSON.stringify({ amount: tot, customerName: d.name, customerPhone: ph, shopName: "PickMe Services", description: "Food Order", clientReference: oid, channel: d.network })
+                  });
+                  if(res.ok) {
+                      await saveOrderToFirestore(oid, checkoutItems, {subtotal: sub, deliveryFee: delFee, serviceCharge: 2, totalAmount: tot}, {name: d.name, phone: ph, deliveryAddress: d.deliveryAddress, deliveryContact: d.deliveryContact, network: d.network}, generalCheckout);
+                      const ids = new Set(checkoutItems.map(i=>i.cartItemId));
+                      setCart(p=>p.filter(i=>!ids.has(i.cartItemId)));
+                      alert("Payment prompt sent."); setShowCheckout(false); setView('HOME');
+                  } else alert("Failed.");
+              } catch(e) { alert("Error."); } finally { setPayLoad(false); }
+          };
+
+          const CartComp = () => {
+              const grp = cart.reduce((a,i)=>{if(!a[i.restaurantId])a[i.restaurantId]=[]; a[i.restaurantId].push(i); return a;}, {});
+              const tot = cart.reduce((s,i)=>s+i.totalPrice,0);
+              return (
+                  <div className="pt-6 pb-32 px-4 max-w-3xl mx-auto min-h-screen animate-fade-in">
+                      <div className="flex justify-between items-center mb-8"><div className="flex gap-4 items-center"><button onClick={()=>setView(activeRestaurantId?'RESTAURANT':'HOME')} className="p-2 bg-white rounded-full border"><ChevronLeft/></button><h2 className="text-3xl font-bold">Cart</h2></div>{cart.length>0&&<button onClick={()=>setShowClear(true)} className="text-red-500 font-bold">Clear</button>}</div>
+                      {cart.length===0?<div className="text-center py-20"><ShoppingBag className="mx-auto text-gray-300 mb-4" size={48}/><p>Empty Cart</p></div>:
+                      <div className="space-y-6">{Object.keys(grp).map(rid=>(
+                          <div key={rid} className="bg-white rounded-2xl border overflow-hidden"><div className="bg-gray-50 p-4 border-b flex justify-between"><b>{grp[rid][0].restaurantName}</b><button onClick={()=>checkout(grp[rid],false)} className="text-xs bg-white border px-2 py-1 rounded text-primary font-bold">Pay Shop</button></div>
+                          <div className="p-2">{grp[rid].map(i=><div key={i.cartItemId} onClick={()=>{setEditItem(i);setActiveMeal(i.meal)}} className="flex gap-4 p-3 hover:bg-gray-50 rounded-xl"><img src={i.meal.image} className="w-16 h-16 rounded-lg object-cover"/><div className="flex-1"><b>{i.quantity}x {i.meal.name}</b><p className="text-xs text-gray-500">{i.totalPrice.toFixed(2)}</p></div><button onClick={e=>{e.stopPropagation();setCart(p=>p.filter(x=>x.cartItemId!==i.cartItemId))}} className="text-red-400"><Trash2 size={16}/></button></div>)}</div></div>
+                      ))}</div>}
+                      {cart.length>0 && <div className="fixed bottom-[60px] left-0 right-0 p-5 bg-white border-t z-[10002]"><div className="max-w-3xl mx-auto flex justify-between items-center"><div><p className="text-sm text-gray-500">Total</p><p className="text-2xl font-bold">GHS {tot.toFixed(2)}</p></div><button onClick={()=>checkout(cart,true)} className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold">Pay All</button></div></div>}
+                  </div>
+              );
+          };
+
+          return (
+            <>
+              {view!=='CART' && <button onClick={()=>setView('CART')} className="fixed top-24 right-4 z-[10001] bg-white p-3 rounded-full shadow-xl border-2 hover:scale-105 transition-all"><ShoppingBag/><span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">{cart.length}</span></button>}
+              {view==='HOME' && (
+                  <div className="pt-6 pb-24 px-4 max-w-7xl mx-auto animate-fade-in">
+                      <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-extrabold">Good day 👋</h2><button onClick={()=>setShowPartner(true)} className="text-xs border px-3 py-1.5 rounded-full flex gap-1 items-center font-bold text-gray-500">Add Restaurant <ArrowRight size={12}/></button></div>
+                      <div className="bg-gradient-to-r from-cyan-600 to-blue-700 p-8 rounded-2xl text-white mb-8 shadow-xl flex justify-between items-center cursor-pointer hover:scale-[1.01] transition-transform"><div><h3 className="text-2xl font-bold">Thirsty? Order Drinks 🍹</h3><p className="text-cyan-100">Premium beverages.</p></div><div className="bg-white/20 p-3 rounded-full"><ArrowRight/></div></div>
+                      <h3 className="text-xl font-bold mb-6 flex gap-2"><MapPin size={22} className="text-primary"/> Nearby</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{MOCK_RESTAURANTS.map(r=>(<div key={r.id} onClick={()=>{setActiveRestaurantId(r.id);setView('RESTAURANT')}} className="bg-white rounded-3xl shadow-sm border overflow-hidden cursor-pointer hover:shadow-xl transition-all"><div className="h-60 relative"><img src={r.image} className="w-full h-full object-cover"/><div className="absolute bottom-4 left-4 bg-white/30 backdrop-blur px-3 py-1 rounded-lg text-white font-bold flex gap-1 items-center"><Star size={14} className="fill-amber-300 text-amber-300"/>{r.rating}</div></div><div className="p-6"><h3 className="text-xl font-extrabold">{r.name}</h3><p className="text-gray-500 text-sm mb-4">{r.cuisine}</p><div className="flex justify-between text-sm font-bold text-gray-600"><span>{r.reviewCount} reviews</span><span>Del: GHS {r.deliveryFee}</span></div></div></div>))}</div>
+                      <div className="mt-12 bg-gray-900 rounded-3xl p-8 text-white flex justify-between items-center"><div><h3 className="text-2xl font-bold">Own a Restaurant?</h3><p className="text-gray-400">Join PickMe Services.</p></div><button onClick={()=>setShowPartner(true)} className="bg-white text-gray-900 px-6 py-3 rounded-xl font-bold flex gap-2"><ChefHat/> Add Restaurant</button></div>
+                  </div>
+              )}
+              {view==='RESTAURANT' && activeRestaurant && (
+                  <div className="min-h-screen bg-gray-50 animate-fade-in pb-24">
+                      <div className="fixed top-[80px] left-0 right-0 bg-white border-b z-50 px-4 py-3 flex items-center shadow-sm"><button onClick={()=>setView('HOME')} className="flex gap-2 text-sm font-bold bg-gray-100 px-3 py-2 rounded-xl"><ChevronLeft size={20}/> Back</button><span className="ml-4 font-bold">{activeRestaurant.name}</span></div>
+                      <div className="max-w-7xl mx-auto px-4 py-8 mt-16"><div className="bg-white rounded-3xl p-8 mb-8 shadow-sm flex flex-col md:flex-row gap-8 items-center"><img src={activeRestaurant.image} className="w-full md:w-56 h-56 object-cover rounded-2xl"/><div className="flex-1"><h1 className="text-4xl font-extrabold mb-2">{activeRestaurant.name}</h1><p className="text-gray-500 text-lg mb-4">{activeRestaurant.cuisine}</p><div className="flex gap-4"><span className="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold flex gap-1"><Star size={16} fill="currentColor"/> {activeRestaurant.rating}</span><span className="bg-gray-100 px-4 py-2 rounded-xl font-bold text-gray-700">Del: GHS {activeRestaurant.deliveryFee}</span></div></div></div><h2 className="text-2xl font-bold mb-6">Menu</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{activeRestaurant.menu.map(m=>(<div key={m.id} onClick={()=>setActiveMeal(m)} className="bg-white p-4 rounded-2xl border hover:border-primary cursor-pointer flex gap-4 h-40"><img src={m.image} className="w-32 h-32 rounded-xl object-cover bg-gray-100"/><div className="flex-1 flex flex-col"><h3 className="font-bold text-lg line-clamp-1">{m.name}</h3><p className="text-gray-500 text-sm line-clamp-2">{m.description}</p><div className="mt-auto self-end font-extrabold text-primary bg-primary/10 px-3 py-1 rounded-lg">GHS {m.price}</div></div></div>))}</div></div>
+                  </div>
+              )}
+              {view==='CART' && <CartComp/>}
+              
+              <AIAssistant onOpenRestaurant={(rid, mid)=>{setActiveRestaurantId(rid); setView('RESTAURANT'); if(mid){const m=MOCK_RESTAURANTS.find(r=>r.id===rid)?.menu.find(x=>x.id===mid); if(m) setActiveMeal(m);}}}/>
+              
+              <button onClick={()=>window.scrollTo({top: scrollDir==='UP'?0:document.body.scrollHeight, behavior:'smooth'})} className={`fixed left-1/2 -translate-x-1/2 bottom-24 z-[10000] p-3 bg-white/90 backdrop-blur rounded-full shadow-lg transition-all ${showScroll?'opacity-100':'opacity-0 pointer-events-none'}`}>{scrollDir==='UP'?<ArrowUp/>:<ArrowDown/>}</button>
+
+              {(activeMeal || editItem) && <MealCustomizer meal={activeMeal} onClose={()=>{setActiveMeal(null);setEditItem(null)}} onConfirm={handleAdd} initialData={editItem ? (editItem.selectedPackageId ? {selectedPackageId: editItem.selectedPackageId, selectedOptions: editItem.selectedOptions} : editItem.customBuild ? {baseQuantity: editItem.customBuild.baseQuantity, selectedAddons: editItem.customBuild.selectedAddons} : editItem.selectedOptions) : undefined} initialQuantity={editItem?.quantity} isEditing={!!editItem} />}
+              
+              <CheckoutModal isOpen={showCheckout} onClose={()=>setShowCheckout(false)} subtotal={checkoutItems.reduce((s,i)=>s+i.totalPrice,0)} deliveryFee={delFee} serviceCharge={2} onConfirm={processPay} loading={paymentLoading} />
+              
+              {showClear && <div className="fixed inset-0 bg-black/70 z-[10007] flex items-center justify-center p-4" onClick={()=>setShowClear(false)}><div className="bg-white p-6 rounded-2xl text-center w-full max-w-sm"><Trash2 className="mx-auto text-red-500 mb-4" size={32}/><h3 className="font-bold text-xl mb-2">Clear Cart?</h3><div className="flex gap-2"><button onClick={()=>setShowClear(false)} className="flex-1 bg-gray-100 py-3 rounded-xl font-bold">Cancel</button><button onClick={()=>{setCart([]);setShowClear(false);setNotification("Cart Cleared")}} className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold">Yes</button></div></div></div>}
+              
+              <RestaurantOnboarding isOpen={showPartner} onClose={()=>setShowPartner(false)} />
+              
+              {notification && <div className="fixed top-32 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-xl z-[100] font-bold text-sm animate-slide-up flex gap-2 items-center"><div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>{notification}</div>}
+            </>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
