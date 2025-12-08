@@ -11,12 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # 1. Install dependencies inside the 'foods' folder
       - run: npm ci
+        working-directory: ./foods
+
+      # 2. Build the app inside the 'foods' folder
       - run: npm run build
+        working-directory: ./foods
+
+      # 3. Deploy to Firebase
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # We changed the line below to look for the NEW secret
+          # Make sure this matches the secret name you created (FOOD or PICKMESERVICESONLINE)
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_FOOD }}'
           channelId: live
           projectId: pickmeservicesonline
+          # Tell Firebase where the built website is (inside foods/dist)
+          entryPoint: ./foods
