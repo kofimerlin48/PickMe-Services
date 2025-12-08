@@ -1,0 +1,185 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================
+    //  Helpers
+    // ==========================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Main admin (YOU)
+    function isAdmin() {
+      return isSignedIn() &&
+             request.auth.uid in [
+               "ItzBjZRihQXA9EKdEg0LAQ0m6rZ2"
+             ];
+    }
+
+    // ==========================
+    //  Public READ (site needs this)
+    //  Entire website depends on this for products, shops, adverts, etc.
+    // ==========================
+    match /{document=**} {
+      allow read: if true;
+    }
+
+    // ==========================
+    //  Adverts: /Adverts/items/{advertId}
+    // ==========================
+    match /Adverts/items/{advertId} {
+      allow read: if true;
+
+      allow create: if
+        request.resource.data.host is string &&
+        request.resource.data.event is string &&
+        request.resource.data.image is string &&
+        request.resource.data.addedAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  1. Short Links
+    // ==========================
+    match /{page}/Links/items/{linkId} {
+      allow create: if
+        request.resource.data.payload is map &&
+        request.resource.data.createdAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  2. OLD Numbers
+    // ==========================
+    match /{page}/Numbers/items/{phoneId} {
+      allow create: if
+        request.resource.data.whatsapp is string &&
+        request.resource.data.timestamp == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  3. ShopsMeta
+    // ==========================
+    match /{page}/ShopsMeta/items/{shopId} {
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---- Customers
+    match /{page}/ShopsMeta/items/{shopId}/customers/{phoneId} {
+      allow create: if
+        request.resource.data.whatsapp is string &&
+        request.resource.data.timestamp == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- Buyers
+    match /{page}/ShopsMeta/items/{shopId}/buyers/{phoneId} {
+      allow create: if
+        request.resource.data.whatsapp is string &&
+        request.resource.data.timestamp == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  4. Shop Items
+    // ==========================
+    match /{page}/Shops/items/{shopName}/items/{itemId} {
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.price is number &&
+        request.resource.data.desc is string &&
+        request.resource.data.category is string &&
+        request.resource.data.images is list &&
+        request.resource.data.createdAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  5. Generic Requests (future)
+    // ==========================
+    match /{page}/Requests/{requestId} {
+      allow create: if
+        request.resource.data.createdAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  6. Gas Refill Orders (NEW + SAFE)
+    //     /GasRefillOrders/{orderId}
+    // ==========================
+    match /GasRefillOrders/{orderId} {
+      // Website creates new gas orders
+      allow create: if
+        request.resource.data.createdAt == request.time;
+
+      // Admin can edit / delete
+      allow update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  7. Gas Settings / Sizes (Admin only)
+    //     /GasRefill/Settings
+    //     /GasRefillSizes/{sizeId}
+    // ==========================
+    match /GasRefill/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /GasRefillSizes/{sizeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==========================
+    //  8. Payments (Public create for orders)
+    // ==========================
+    match /Payments/{docId} {
+      // public create (only with createdAt == request.time)
+      allow create: if
+        request.resource.data.createdAt == request.time;
+
+      // Admin full access
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  9. Food Service (Orders & Partners)
+    // ==========================
+    match /Food/Orders/items/{orderId} {
+      allow create: if
+        request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /Food/Partners/items/{requestId} {
+      allow create: if
+        request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ==========================
+    //  10. Admin-only collections
+    // ==========================
+    match /Admin/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /Dashboard/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /SmsLogs/{docId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
