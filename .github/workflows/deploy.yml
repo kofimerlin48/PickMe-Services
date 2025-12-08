@@ -16,6 +16,7 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PICKMESERVICESONLINE }}'
+          # We changed the line below to look for the NEW secret
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_FOOD }}'
           channelId: live
           projectId: pickmeservicesonline
